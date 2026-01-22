@@ -1,0 +1,80 @@
+\section{Motivating Examples}
+
+\begin{figure}[!t]
+    \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    let rec merge (l1: int list) (l2: int list) : int list =
+      match l1, l2 with
+      | [], l2 -> l2
+      | l1, [] -> l1
+      | h1 :: t1, h2 :: t2 ->
+        if h1 < h2 then h1 :: h2 :: merge t1 t2
+        else h2 :: h1 :: merge t1 t2
+    
+    let rec merge (l1: int list) (l2: int list) : int list =
+        match l1, l2 with
+        | [], l2 -> l2
+        | l1, [] -> l1
+        | h1 :: t1, h2 :: t2 ->
+          if h1 < h2 then h1 :: merge t1 (h2 :: t2)
+          else h2 :: merge (h1 :: t1) t2
+
+    let sorted (l: int list) : bool =
+      match l with
+      | [] | [_] -> true
+      | h1 :: t ->
+        h1 <= (hd t) && sorted t
+    \end{minted}
+    \caption{
+    The $\Code{merge}$ function is supposed to merge two sorted lists. If either of the input lists is empty, \Code{merge} returns the other (lines $3$--$4$). Otherwise, the function merges the lists recursively (lines $6$--$8$). However, the first implementation is buggy: in the case $\Code{h1} < \Code{h2}$, it places $\Code{h2}$ before the result of merging $\Code{t1}$ and $\Code{t2}$, incorrectly assuming that $\Code{h2}$ is smaller than all elements in $\Code{t1}$. }
+    \label{fig:motivation}
+\end{figure}
+
+\paragraph{Verification Failure} We attempt to prove the \Code{merge} function preserves the sorting property, that is,
+\begin{align*}
+    \forall l_1\;l_2.\ \I{sorted}(l_1) \impl \I{sorted}(l_2) \impl \I{sorted}(\Code{merge}(l_1, l_2))
+\end{align*}\noindent
+or, equivalently, the following refinement type:
+\begin{align*}
+    \Code{merge} : \ort{il}{\I{sorted}(\vnu)} \sarr \ort{il}{\I{sorted}(\vnu)} \sarr \ort{il}{\I{sorted}(\vnu)}
+\end{align*}\noindent
+However, neither of the two implementations is typeable. The type check fails at the $\Code{::}$ constructor. For example, on line $14$ (the correct implementation), we cannot prove that the element $\Code{h1}$ is smaller than all elements in the result of the recursive call, whose type is just $\ort{il}{\I{sorted}(\vnu)}$. The first (buggy) implementation has the same problem, and we cannot distinguish between them.
+
+\paragraph{More Precise Type} This problem can be solved by providing a more precise type for the $\Code{merge}$ function. For example, we can additionally consider the membership.
+\begin{align*}
+    \Code{merge} : &l_1{:}\ort{il}{\I{sorted}(\vnu)} \sarr l_2{:}\ort{il}{\I{sorted}(\vnu)} \sarr 
+    \\&\ort{il}{\I{sorted}(\vnu) \land \I{elemSet}(l_1) \cup \I{elemSet}(l_2) = \I{elemSet}(\vnu)}
+\end{align*}\noindent
+where $\I{elemSet}(l)$ is the set of elements in the list $l$. However, coming up with this new predicate (measure) is not easy, and the relation between $\I{sorted}$ and $\I{elemSet}$ still requires additional lemmas (e.g., $\I{sorted}(x::l) \impl \forall y. y \in \I{elemSet}(l) \impl x \leq y$).
+
+\paragraph{Under-Approximation Type Shows Incorrectness} The first implementation is indeed buggy. One possible counterexample is $\Code{merge\;[3]\;[1;2] = [1;3;2]}$. We can use under-approximation reasoning to find a more general erroneous condition.
+\begin{align*}
+    \Code{merge}& : \ort{il}{\I{sorted}(\vnu) \land \vnu \not= [] } \sarr \urt{il}{\I{sorted}(\vnu)} \sarr \urt{il}{\neg \I{sorted}(\vnu)}
+    \\\Code{merge}& : \ort{il}{\vnu = [] } \sarr y{:}\ort{il}{\I{sorted}(\vnu)} \sarr \urt{il}{\vnu = y}
+    \\\Code{merge}& : x{:}\ort{il}{\I{sorted}(\vnu)} \sarr \ort{il}{\vnu = []} \sarr \urt{il}{\vnu = x}
+\end{align*}\noindent
+If the first list is not empty, there must exist a sorted list that makes the merge result unsorted. To prove the type, we need two overapproximated parameter types (shown above).
+
+\paragraph{Under-Approximation Helps Refine Correctness Specification} The second implementation is indeed correct, and under-approximation will fail to prove the reachability of any potential buggy path. For example, it fails to prove that $\Code{h1\;::\;merge\;t1\;(h2\;::\;t2)}$ is unsorted, which means that the list $l$ that makes $\Code{h1\;::l}$ unsorted is not reachable.
+\begin{align*}
+    \Code{merge}& : \Code{h1} \garr \ort{il}{\I{sorted}(\vnu) \land \Code{h1} \leq \I{hd}(\vnu)} \sarr \ort{il}{\I{sorted}(\vnu) \land \Code{h1} \leq \I{hd}(\vnu)} 
+    \\&\sarr \Code{Unreachable}(\urt{il}{\neg \I{sorted}(\Code{h1}::\vnu)})
+\end{align*}\noindent
+Note that $\Code{h1}$ is less than the head of the first list (according to the definition of $\Code{sorted}$ on line $21$), and also less than the head of the second list (since the head of the second list is less than the head of the first list). Then, we can use this fact to refine the original specification.
+\begin{align*}
+    \Code{merge}& : \Code{h1} \garr \ort{il}{\I{sorted}(\vnu) \land \Code{h1} \leq \I{hd}(\vnu)} \sarr \ort{il}{\I{sorted}(\vnu) \land \Code{h1} \leq \I{hd}(\vnu)} 
+    \\&\sarr \ort{il}{\I{sorted}(\Code{h1}::\vnu)}
+\end{align*}\noindent
+This refined specification is sufficient to make the type check succeed. For example, consider the branch on line $14$. We have:
+\begin{align*}
+    &\Code{h1}{:}\Int, \Code{h2}{:}\ort{\Int}{\Code{h1} \leq \vnu}, \Code{t1}{:}\ort{il}{\I{sorted}(\vnu) \land \Code{h1} \leq \I{hd}(\vnu)}, ...\vdash 
+    \\&\quad \Code{merge}\;\Code{t1}\;(\Code{h2}::\Code{t2}) : \ort{il}{\I{sorted}(\Code{h1}::\vnu)}
+\end{align*}\noindent
+Note that $\Code{h1} < \I{hd}(\vnu)$ and $\Code{h1} < \Code{h2} = \I{hd}(\Code{h2}::\Code{t2})$.
+On the other hand, for an arbitrary ghost variable $i$ that less than head elements of the two lists,
+\begin{align*}
+    &i{:}\ort{\Int}{\vnu \leq \Code{h1} \land \vnu \leq \Code{h2}}, \Code{h1}{:}\Int, ...\vdash 
+    \\&\quad (\Code{h1} :: \Code{merge}\;\Code{t1}\;(\Code{h2}::\Code{t2})) : \ort{il}{\I{sorted}(i::\Code{h1}::...)}
+\end{align*}\noindent
+This can be proved from the definition of $\Code{sorted}$ by the facts that $\Code{h1}::...$ is sorted (proved above), and $i$ is less than $\I{hd}(\Code{h1}::...) = \Code{h1}$.
+
+\paragraph{Discussion} Note that the refined specification is much weaker than the one considering membership; also, we do not add any new predicates (e.g., $\I{elemSet}$) to the specification, and no new lemmas are required.

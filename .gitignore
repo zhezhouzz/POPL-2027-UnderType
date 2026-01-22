@@ -1,0 +1,17 @@
+*.pdf
+*.fdb_latexmk
+*.fls
+*synctex.gz
+.vscode/*
+_minted/*
+*.aux
+*.bbl
+*blg
+*.log
+*.out
+/main.pdf
+/marple.pdf
+/_minted-marple/
+_minted-main/
+sections/auto/
+sections/_region_.tex

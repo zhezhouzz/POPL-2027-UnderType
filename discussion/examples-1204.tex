@@ -1,0 +1,51 @@
+\section{Examples}
+
+\begin{figure}[ht!]
+    \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos=true, fontsize=\footnotesize, escapeinside=??]{OCaml}
+(* Effects should be grouped, for framing rules to work *)
+type _ effRW = 
+  | Read : unit -> int option
+  | Write : int -> unit
+
+(* Effects should have an implementation (whatever it is written in AE) *)
+let internal_cell : int ref = ref 0
+let read () = !internal_cell
+let write v = internal_cell := v
+
+(* A Generator that writes different values to the cell *)
+let rec client () =
+    () ?$\oplus$?
+    match ?$\mykw{perform}$? Read with
+    | None -> Write 0; client ()
+    | Some x ->
+        let y = x + 1 in (* or, x + pos_gen () *)
+        ?$\mykw{perform}$? (Write y); client ()
+
+(* A Generator that writes different values to the cell *)
+    let rec no_read n =
+        () ?$\oplus$?
+        write n; no_read (n + 1)
+\end{minted}
+\end{figure}
+
+\paragraph{What guarantees do we get?} Assuming start from empty history trace,
+    \begin{enumerate}
+        \item \checkmark All possible natural numbers can be written eventually (\emph{coverage like}).
+        \item \checkmark Never write the same value twice (\emph{safety}).
+        \item \xmark Do we cover all traces that do not write the same value twice? \textbf{No.} For example, the trace \texttt{[write 0; write 0; write 1; ...]} is not covered by the generator.
+        \item \xmark Do we cover all traces that do not write the same value twice + eventually write arbitrary natural numbers? \textbf{No.} For example, the trace \texttt{[write 0; write 1; write 2]} (no read operations) is not covered by the generator.
+    \end{enumerate}
+
+\paragraph{Specification?} The set of traces that the client can generate.
+\begin{align*}
+    &T = \{ \alpha ~|~ \msteptr{[]}{\Code{client\;()}}{\alpha}{v} \}
+\end{align*}\noindent
+Coverage:
+\begin{align*}
+    &\Code{LastWrite}: \I{Tr} \to \I{Tr} \doteq \text{match the last write event}\\
+    &\Code{LastWrite}(T) \in \denot{\msg{write}{\vnu \geq 0}} (\text{denoted to a set of set of traces}) \\
+\end{align*}\noindent
+Safety?
+\begin{align*}
+    &\forall \alpha \in T. \forall m_1\;m_2 \in \alpha. m_1.v \not= m_2.v 
+\end{align*}\noindent

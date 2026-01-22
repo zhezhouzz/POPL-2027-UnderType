@@ -1,0 +1,333 @@
+\section{Details in Overview}\label{sec:tech:details-overview}
+
+We introduce how to use \tyName to specify the well-typedness of the De Bruijn STLC example introduced in the overview section.
+
+\begin{figure}[th!]
+  \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true,  escapeinside=??]{OCaml}
+    type ty = Int | Arr of ty * ty
+    type serialized_term = Const of int | Var of int | Abs of ty | EndAbs
+                         | App | AppL | AppR
+  \end{minted}
+  \vspace*{-.1in}
+  \caption{STLC terms in a serialized form.}
+  \label{fig:stlc-syntax}
+  \vspace*{-.1in}
+\end{figure}
+
+We explicitly define the syntax of the serialized STLC terms in \autoref{fig:stlc-syntax}. The definitions of constants and variables are standard, and variables
+carry their de Bruijn index. However, the usual function abstraction
+constructor ``$\Code{Abs\;\mykw{of}\;ty * term}$'' is now represented
+by two operations, ``$\Code{Abs\;\mykw{of}\;ty}$'' and
+``$\Code{EndAbs}$'', where the function body is the term that is
+generated between them. Similarly, the typical application constructor
+``$\Code{App\;\mykw{of}\;term * term}$'' is now captured by three
+operations: ``$\Code{App}$'', ``$\Code{AppL}$'', and ``$\Code{AppR}$''.
+Here, ``$\Code{App}$'' begins the application, ``$\Code{AppL}$'' marks the beginning of
+the argument, and ``$\Code{AppR}$'' signals the end of the application.
+
+An example of a serialized STLC term is shown below, where we color
+the corresponding parts of the term and the serialized term for better
+readability.
+\begin{align*}
+  \text{\textcolor{gray}{STLC term:}} \quad & \textcolor{blue}{(\lambda \Int}. \textcolor{orange}{[0]} \textcolor{blue}{)}\; \textcolor{DeepGreen}{3} \\
+  \text{\textcolor{gray}{serialized STLC term:}} \quad & \eff{app}; \textcolor{blue}{\zevent{abs}{\Int}}; \textcolor{orange}{\zevent{var}{0}}; \textcolor{blue}{\eff{endAbs}}; \eff{appL}; \textcolor{DeepGreen}{\zevent{const}{3}}; \eff{appR}
+\end{align*}
+\noindent
+We denote de Bruijn indices with ``$[...]$'' to distinguish them from
+constants. The interpreter accepts a
+serialized lambda term and evaluates it to a value. In the example
+above, the input sequence should be reduced as $(\lambda \Int. [0])\;3
+\hookrightarrow 3$.
+
+\begin{figure}[t!]
+  {\footnotesize
+    \begin{align*}
+      \eff{const} :~ &  x{:}\Int\sarr \uhat{\allA}{\Unit}{\msgA{const}{x}\msgAGray{ty}{\CInt}} \\
+      \eff{appR} :~ & \uhat{\allA\msgC{app}\allA  \msgAGray{ty}{\Code{Arr}(t_1, t_2)}  \msgC{appL}  \allA  \msgAGray{ty}{t_1}  }{\Unit}{\msgC{appR}  \msgAGray{ty}{t_2}} \\
+      \eff{endAbs} :~ & \uhat{\allA\msgAGray{depth}{d}\msgA{abs}{t_2}\msgAGray{depth}{d+1}\allA  \msgAGray{ty}{t_1}}{\Unit}{ \msgC{endAbs}\msgAGray{depth}{d}
+        \msgAGray{putTy}{\Code{Arr}(t_1,t_2)}} \\
+      \eff{var} :~ &  i{:}\urt{\Int}{\vnu \geq 0} \sarr \uhat{\underbrace{\allA\msgA{abs}{t}\msgAGray{depth}{d}(\anyA\setminus\msgC{endAbs})^*}_\text{type $t$ at the $d$ level is open}\underbrace{\msgAGray{depth}{d + i}}_\text{current level is $d + i$} }{\Unit}{\msgA{var}{i}\msgAGray{putTy}{t}  \allA}
+    \end{align*}
+  }
+  \caption{\tyName{} specifications of STLC operations. } %
+  \label{fig:stlc-spec}
+\end{figure}
+
+The types for STLC operations are shown in \autoref{fig:stlc-spec}. The type for $\eff{const}$ has no constraint on its prefix trace
+($\allA$), but records a $\textcolor{gray}{\eff{ty}}$ event in
+the trace that records the type of the output of the $\eff{const}$
+expression as $\Code{Int}$. The arguments to a ghost event are either
+serialized terms (like $\Code{Int}$) or ghost variables.
+Type-checking a trace using ghost events involves solving constraints
+over their arguments based on algebraic axiomatizations, examples of
+which are given below. The history and future regex of the $\eff{appR}$ type in
+\autoref{fig:stlc-spec} characterizes both the syntax and well-typing
+constraints of an STLC function application. It requires that (a)
+prior to evaluating a function argument ($\eff{appL}$), the type of
+the abstraction is \Code{Arr(t$_1$,t$_2$)}, i.e., the abstraction
+being applied is a function type ($\msgAGray{ty}{\Code{Arr}(t_1,t_2)}$); (b) after the argument is evaluated, its type is
+  determined to be \Code{t$_1$} ($\msgAGray{ty}{t_1}$); and (c)
+  the type of the application's result is \Code{t$_2$}
+  ($\msgAGray{ty}{t_2}$).
+
+The de Bruijn index constraint is captured via the $\eff{\textcolor{gray}{depth}}$ operation in the \tyName{}s of the $\eff{endAbs}$ and $\eff{var}$ operations. In addition to the well-typing constraint, the \tyName{} of the $\eff{endAbs}$ operation maintains the depth of nested function abstractions using $\eff{\textcolor{gray}{depth}}$. Specifically, its history regex obtains the current depth ($\msgAGray{depth}{d}$), increases it by one at the beginning of the function body, and restores it after the $\eff{endAbs}$ event.
+On the other hand, a valid index $i$ in $\eff{var}$ must be derived from an open abstraction at some depth in the prefix trace. The history regex of the $\eff{var}$ operation precisely characterizes this constraint: the abstraction at depth $d$ must be open ($\allA\msgA{abs}{t}\msgAGray{depth}{d}(\anyA\setminus\msgC{endAbs})^*$), and the current depth must be $d + i$.
+
+\section{Operational Semantics}\label{sec:tech:semantics}
+
+The small-step operational semantics of our core language are shown in
+\autoref{fig:semantics}.
+
+\begin{figure}[t!]
+    {\footnotesize
+    \vspace*{-.15in}
+    {\small\begin{flalign*}
+      &\text{\textbf{Handler Semantics }}\ 
+      \fbox{$\alpha \vDash \zevent{op}{\overline{c}} \Downarrow c$ \quad $\primop(\overline{c}) \Downarrow c$} &
+      \text{\textbf{Operational Semantics }}\ 
+      \fbox{$\steptr{\alpha}{e}{\alpha}{e}$}
+    \end{flalign*}}
+        \begin{prooftree}
+        \mhypo{30mm}
+        {
+          $\alpha \vDash \zevent{op}{\overline{c}} \Downarrow c'$
+        }
+          \infer1[\textsc{\small StEfOp}]{
+            \steptr{\alpha}{\eff{op}\;\overline{c}}{[\zevent{op}{\overline{c}\;c'}]}{c'}
+          }
+        \end{prooftree}
+          \quad
+          \mprooftr{35mm}{
+            $\primop\ \overline{c} \Downarrow c'$
+            }{StOp}
+            {$\steptr{\alpha}{\primop\ \overline{c}}{[]}{c'}$}
+            \quad
+    \\[0.8em]
+    \mprooftr{25mm}{
+    $\phi\Downarrow \top$
+    }{StAssume}{
+    $\steptr{\alpha}{\sassume{\phi}}{[]}{()}$
+    }
+    \quad
+    \mprooftr{25mm}{$\phi \Downarrow \top$}{StAssert}{
+    $\steptr{\alpha}{\sassert{\phi}}{[]}{()}$
+    }
+    \quad
+    \mprooftr{35mm}{$\phi \Downarrow \bot$}{StAssert}{
+    $\steptr{\alpha}{\sassert{\phi}}{[]}{\Code{raise\;Error}}$
+    }
+    \\[.8em]
+    \mprooftr{65mm}{
+      $\steptr{\alpha}{e_1}{\alpha'}{e_1'}$
+    }{StLetE1}{
+    $\steptr{\alpha}{\zlet{y}{e_1}{e_2}}{\alpha'}{\zlet{y}{e_1'}{e_2}}$
+    }\quad
+    \mprooftr{35mm}{}{StChoice1}{
+    $\steptr{\alpha}{(e_1 \oplus e_2)}{[]}{(e_1)}$
+    }
+    \\[0.8em]
+    \mprooftr{55mm}{}{StLetE2}{
+    $\steptr{\alpha}{\zlet{y}{v}{e_2}}{[]}{e_2[y\mapsto v]}$
+    }
+    \quad
+    \mprooftr{35mm}{}{StChoice2}{
+    $\steptr{\alpha}{(e_1 \oplus e_2)}{[]}{(e_2)}$
+    }
+    \\[0.8em]
+    \mprooftr{40mm}{}{StAppLam}{
+    $\steptr{\alpha}{\zlam{x}{s}{e_1}\ v_x}{[]}{e_1[x\mapsto v_x]}{e_2}$
+    }
+    \\[0.8em]
+    \mprooftr{80mm}{}{StAppFix}{
+    $\steptr{\alpha}{(\zfix{f}{s}{x}{s_x}{e_1})\ v_x}{[]}{(\zlam{f}{s}{e_1[x\mapsto v_x]}) \ (\zfix{f}{s}{x}{s_x}{e_1})}$
+    }
+}
+\caption{Full Operational Semantics}
+\label{fig:semantics}
+\end{figure}
+
+\newpage
+\section{Basic Typing Rules}\label{sec:tech:basic-typing}
+
+The basic typing rules of our core language and qualifiers are shown
+in \autoref{fig:basic-type-rules}. We use an auxiliary function
+$\Code{Ty}$ to provide a basic type for the primitives of our language,
+e.g., constants, built-in operators, and data constructors.
+
+\begin{figure}[h!]
+ {\footnotesize
+ {\small
+\begin{flalign*}
+ &\text{\textbf{Basic Typing }} & \fbox{$\Gamma \basicvdash e : s$ \quad $\Gamma \basicvdash \eff{op} : s$ \quad $\Gamma \basicvdash \primop : s$}
+\end{flalign*}}
+\\ \
+\begin{prooftree}
+\hypo{}
+\infer1[\textsc{BtConst}]{
+\Gamma \basicvdash c : \Code{Ty}(c)
+}
+\end{prooftree}
+\quad
+\begin{prooftree}
+\hypo{ \Gamma(x) = s }
+\infer1[\textsc{BtVar}]{
+\Gamma \basicvdash x : s
+}
+\end{prooftree}
+\quad
+\begin{prooftree}
+\hypo{ \Gamma, x{:}b \basicvdash e : s }
+\infer1[\textsc{BtFun}]{
+\Gamma \basicvdash \zlam{x}{b}{e} : b\sarr s
+}
+\end{prooftree}
+\quad
+\begin{prooftree}
+  \hypo{ \Gamma, f{:}b\sarr s, x{:}b \basicvdash e : s }
+  \infer1[\textsc{BtFix}]{
+  \Gamma \basicvdash \zfix{f}{b\sarr s}{x}{b}{e} : b\sarr s
+  }
+\end{prooftree}
+\\[0.8em]
+\begin{prooftree}
+  \hypo{\Code{Ty}(\eff{op}) = s}
+  \infer1[\textsc{BtEfOp}]{
+  \Gamma \basicvdash \eff{op} : s
+  }
+  \end{prooftree}
+\quad
+\begin{prooftree}
+  \hypo{\Code{Ty}(\primop) = s}
+  \infer1[\textsc{BtPrimOp}]{
+  \Gamma \basicvdash \primop : s
+  }
+\end{prooftree}
+\quad
+\begin{prooftree}
+  \hypo{\Gamma \basicvdash e_1 : s
+  \quad \Gamma \basicvdash e_2 : s}
+  \infer1[\textsc{BtChoice}]{
+  \Gamma \basicvdash e_1 \oplus e_2 : s
+  }
+\end{prooftree}
+\\[0.8em]
+\begin{prooftree}
+  \hypo{\Gamma \basicvdash \eff{op}: \overline{b_i}\sarr b \quad \forall i.\Gamma \basicvdash c_i : b_i}
+  \infer1[\textsc{BtEfOpApp}]{
+  \Gamma \basicvdash \eff{op}\;\overline{c_i} : b
+  }
+  \end{prooftree}
+\quad
+\begin{prooftree}
+\hypo{\Gamma \basicvdash \primop: \overline{s_i}\sarr s \quad \forall i.\Gamma \basicvdash v_i : s_i}
+\infer1[\textsc{BtPrimOpApp}]{
+\Gamma \basicvdash \primop\,\overline{v_i} : s
+}
+\end{prooftree}
+\\[0.8em]
+\begin{prooftree}
+\hypo{\Gamma \basicvdash \phi : \Code{bool}}
+\infer1[\textsc{BtAssume}]{
+\Gamma \basicvdash \sassume{\phi} : \Unit
+}
+\end{prooftree}
+\quad
+\begin{prooftree}
+\hypo{\Gamma \basicvdash \phi : \Code{bool}}
+\infer1[\textsc{BtAssert}]{
+\Gamma \basicvdash \sassert{\phi} : \Unit
+}
+\end{prooftree}
+\\[0.8em]
+\begin{prooftree}
+  \hypo{\Gamma\basicvdash e : s \quad \Gamma,y{:}s \basicvdash e' : s}
+  \infer1[\textsc{BtLetE}]{
+  \Gamma \basicvdash \zlet{y}{e}{e'} : s
+  }
+\end{prooftree}
+  \quad
+\begin{prooftree}
+  \hypo{\Gamma \basicvdash v_1 : s\sarr s' \quad \Gamma \basicvdash v_2 : s}
+  \infer1[\textsc{BtApp}]{
+  \Gamma \basicvdash v_1\;v_2 : \Unit
+  }
+\end{prooftree}
+}
+{\footnotesize
+ {\small
+\begin{flalign*}
+ &\text{\textbf{Basic Qualifier Typing }} & \fbox{$\Gamma \basicvdash \phi: s$}
+\end{flalign*}}
+\\ \
+\begin{prooftree}
+\hypo{\Code{Ty}(c) = s }
+\infer1[\textsc{BtLitConst}]{
+\Gamma \basicvdash c : s
+}
+\end{prooftree}
+\quad
+\begin{prooftree}
+\hypo{ \Gamma(x) = s }
+\infer1[\textsc{BtLitVar}]{
+\Gamma \basicvdash x : s
+}
+\end{prooftree}
+\quad
+\begin{prooftree}
+\hypo{ }
+\infer1[\textsc{BtTop}]{
+\Gamma \basicvdash \top : \Code{bool}
+}
+\end{prooftree}
+\quad
+\begin{prooftree}
+\hypo{ }
+\infer1[\textsc{BtBot}]{
+\Gamma \basicvdash \bot : \Code{bool}
+}
+\end{prooftree}
+\\ \ \\ \ \\
+\begin{prooftree}
+\hypo{\Code{Ty}(\primop) = \overline{s_i}{\sarr}s \quad \forall i. \Gamma \basicvdash l_i : s_i }
+\infer1[\textsc{BtLitOp}]{
+\Gamma \basicvdash \primop\,\overline{l_i} : s
+}
+\end{prooftree}
+\quad
+\begin{prooftree}
+\hypo{
+\Gamma \basicvdash \phi : \Code{bool} }
+\infer1[\textsc{BtNeg}]{
+\Gamma \basicvdash \neg \phi : \Code{bool}
+}
+\end{prooftree}
+\\ \ \\ \ \\
+\begin{prooftree}
+\hypo{
+\Gamma \basicvdash \phi_1 : \Code{bool} \quad
+\Gamma \basicvdash \phi_2 : \Code{bool} }
+\infer1[\textsc{BtAnd}]{
+\Gamma \basicvdash \phi_1 \land \phi_2 : \Code{bool}
+}
+\end{prooftree}
+\quad
+\begin{prooftree}
+\hypo{
+\Gamma \basicvdash \phi_1 : \Code{bool} \quad
+\Gamma \basicvdash \phi_2 : \Code{bool} }
+\infer1[\textsc{BtOr}]{
+\Gamma \basicvdash \phi_1 \lor \phi_2 : \Code{bool}
+}
+\end{prooftree}
+\quad
+\begin{prooftree}
+\hypo{
+\Gamma, x{:}b \basicvdash \phi : \Code{bool} }
+\infer1[\textsc{BtForall}]{
+\Gamma \basicvdash \forall x{:}b. \phi : \Code{bool}
+}
+\end{prooftree}
+}
+\caption{Basic Typing Rules and Qualifier Typing Rules}
+    \label{fig:basic-type-rules}
+\end{figure}

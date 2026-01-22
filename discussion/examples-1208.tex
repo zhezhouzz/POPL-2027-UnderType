@@ -1,0 +1,213 @@
+\section{Examples}
+
+\paragraph{Effect operators: with higher-functions and continuations} Previously, our effect operators are limited to first order, there are two interesting higher-order operators to explore.
+\begin{enumerate}
+    \item Iterators. Assume the $\Code{Set}$ module provides $4$ operators: $\eff{insert}$, $\eff{delete}$, and $\eff{iter}$. The $\eff{iter}: (\Int\sarr\Unit)$ can iterately apply a function to each element of the set, this function can also be effectful (e.g., use $\eff{iter}$ to implement a $\Code{sum}$ function).
+    \item Current Continuations. The effectful operators typically can catch the current continuation, for example, the $\eff{boolGen}$ should be an effectful operator that execute the continuation with both true and false (It seems that randomness should just be a normal effect). 
+\end{enumerate}
+
+\begin{example}[Iterators]
+    Consider the following program:
+    \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos=true, fontsize=\footnotesize, escapeinside=??]{OCaml}
+    let sum = ?$\eff{ref}$? 0 in
+    ?$\eff{insert}$? 1; ?$\eff{insert}$? 2;
+    let f x = 
+        let s = ?$\eff{deref}$? sum in
+        ?$\eff{updateRef}$? sum (s + x) in (* sum := s + x *)
+    ?$\eff{iter}$? f;
+    ?$\eff{deref}$? sum
+    \end{minted}
+    The following considerations:
+    \begin{enumerate}
+        \item How to specify the $\eff{ref}$ operator? The output label should be fresh and record a hidden cell.
+        \begin{enumerate}
+            \item A Hoare Type Theory style (assume the heap contains a map from labels to values):
+            \begin{align*}
+                & \eff{ref}: x{:}\tvar{a} \sarr \uhat{S}{l{:}\urt{\tvar{a}\;\Code{ref}}{\vnu \not\in \Code{Dom}(S)}}{l \mapsto x \star S} \\
+                & \eff{deref}: l{:}\tvar{a}\;\Code{ref} \sarr \uhat{l \mapsto x \star S}{\urt{\tvar{a}}{\vnu = x}}{l \mapsto x \star S}\\
+                & \eff{updateRef}: l{:}\tvar{a}\;\Code{ref} \sarr y{:}\tvar{a} \sarr \uhat{l \mapsto \_ \star S}{\Unit}{l \mapsto y \star S}
+            \end{align*}
+            \item A monadic style:
+            \begin{align*}
+                & M_{\Code{ref}}\;t = m{:}\Code{Map.t} \sarr t \times \Code{Map.t}  \quad \text{(basic type)} \\
+                & M_{\Code{ref}}\evparenth{P {:} \Code{Map.t}\sarr\Code{Prop}, Q {:}\eraserf{\tau}\sarr \Code{Map.t}\sarr \Code{Map.t}\sarr \Code{Prop}}\;\tau = \\
+                &\qquad m{:}\ort{\Code{Map.t}}{P\;\vnu} \sarr (r{:}\tau, \urt{\Code{Map.t}}{Q\;r\;m\;\vnu})  \quad \text{(refinement type)} \\
+                & \eff{ref}: x{:}\tvar{a} \sarr M_{\Code{ref}}\evparenth{\qt{\vnu{:}\Code{Map.t}}{\top}, \qt{r{:}\tvar{a}\;\Code{ref},m{:}\Code{Map.t},\vnu{:}\Code{Map.t}}{r \not\in \Code{Dom}(m) \land \vnu = m \cup (r, x)}} \;\urt{\tvar{a}\;\Code{ref}}{\top} \\
+                & \eff{deref}: l{:}\tvar{a}\;\Code{ref} \sarr M_{\Code{ref}}\evparenth{\qt{\vnu{:}\Code{Map.t}}{l \in \Code{Dom}(\vnu)}, \qt{r{:}\tvar{a},m{:}\Code{Map.t},\vnu{:}\Code{Map.t}}{r = m[l] \land \vnu = m}} \;\urt{\tvar{a}}{\top} \\
+                & \eff{updateRef}: l{:}\tvar{a}\;\Code{ref} \sarr y{:}\tvar{a} \sarr M_{\Code{ref}}\evparenth{\qt{\vnu{:}\Code{Map.t}}{l \in \Code{Dom}(\vnu)}, \qt{\_,m{:}\Code{Map.t},\vnu{:}\Code{Map.t}}{\vnu = m[l \mapsto y]}} \;\Unit
+            \end{align*}
+            Problem: it seems that not all values in the qualifiers are reachable -- is this a essential problem of underapproximate monad? Kind of like backward reasoning problem in IL.
+            \item Trace-based style:
+            \begin{align*}
+                & \eff{ref}: x{:}\tvar{a} \sarr H{:}\uhat{\top}{l{:}\urt{\tvar{a}\;\Code{ref}}{\forall e{:}\eff{ref}. e \in H \impl e.\I{label} \neq \vnu}}{\vnu = H \listconcat \msgA{ref}{x\;l}} \\
+                & \eff{deref}: l{:}\tvar{a}\;\Code{ref} \sarr H{:}\uhat{\exists x{:}\tvar{a}.\msg{ref}{x\;l} \in \vnu}{\urt{\tvar{a}}{ \exists x. \msg{ref}{x\;l} \in H \land \neg(\exists y. \msg{ref}{l\;y} \in H) \lor ... }}{...}\\
+                & \eff{updateRef}: l{:}\tvar{a}\;\Code{ref} \sarr y{:}\tvar{a} \sarr H{:}\uhat{\exists x{:}\tvar{a}.\msg{ref}{x\;l} \in \vnu}{\Unit}{...}
+            \end{align*}
+        \end{enumerate}
+        \item How to specify the $\eff{insert}$ operator?
+        \begin{enumerate}
+            \item Hoare Type Theory style:
+            \begin{align*}
+                & \eff{insert}: x{:}\Int \sarr \uhat{? \mapsto s \star S}{\Unit}{? \mapsto (s \cup \{x\}) \star S}
+            \end{align*}\noindent Problem: with is the pointer to the set?
+            \item Monadic style:
+            \begin{align*}
+                & M_{\Code{set}}\;t = s{:}\Code{Set.t} \sarr t \times \Code{Set.t}  \quad \text{(basic type)} \\
+                & M_{\Code{set}}\evparenth{P {:} \Code{Set.t}\sarr\Code{Prop}, Q {:}\eraserf{\tau}\sarr \Code{Set.t}\sarr \Code{Set.t}\sarr \Code{Prop}}\;\tau = \\
+                &\qquad s{:}\ort{\Code{Set.t}}{P\;\vnu} \sarr (r{:}\tau, \urt{\Code{Set.t}}{Q\;r\;s\;\vnu})  \quad \text{(refinement type)} \\
+                & \eff{insert}: x{:}\Int \sarr M_{\Code{set}}\evparenth{\qt{\vnu{:}\Code{Set.t}}{\top}, \qt{\_{:}\Unit,s{:}\Code{Set.t},\vnu{:}\Code{Set.t}}{\vnu = s \cup \{r\}}} \;\Unit
+            \end{align*}\noindent
+            \item Trace-based style:
+            \begin{align*}
+                & \eff{insert}: x{:}\Int \sarr H{:}\uhat{\top}{\Unit}{\vnu = H \listconcat \msgA{insert}{x}}
+            \end{align*}\noindent
+        \end{enumerate}
+        \item How to specify the $\eff{iter}$ operator? This operator should be able to work over all elements in the set.
+        \begin{enumerate}
+            \item Hoare Type Theory style:
+            \begin{align*}
+                & \eff{iter}: f{:}(x{:}t \sarr \tau) \sarr \uhat{? \mapsto s \star S}{\Unit}{? \mapsto ? \star S} \\
+                & \eff{iter}: f{:}(x{:}t \sarr \uhat{S_f \star S}{\Unit}{S_f' \star S}) \sarr \uhat{? \mapsto s \star S}{\Unit}{? \mapsto s \star S_f? \star S} \\
+                & \text{the footprint of $S_f$ cannot dependent on $x$, the layout of heap is hard to decide}
+            \end{align*}
+            \item Monadic style:
+             we still need to unfold the type of input function to decide the effects.
+            \begin{align*}
+                & \eff{iter}: f{:}(x{:}\Int\sarr M\evparenth{...}\; \tau) \sarr M_{\Code{ref}}\evparenth{\qt{\vnu{:}\Code{Map.t}}{\top}, \qt{\_,m{:}\Code{Map.t},\vnu{:}\Code{Map.t}}{\vnu = m}} \;M??
+            \end{align*}
+            Problem: it seems that the higher-order functions needs to match the monad type definition to decide the actual effects. Alternatively, we define monadic operator $M_\Code{iter}$ directly.
+            \item Trace-based style:
+            \begin{align*}
+                & \eff{iter}: f{:} (x{:}\Int \sarr \{H_f\}\Unit\{F_f\}) \sarr H{:}[\top]{\Unit}[
+                    \\&\quad  V \leftarrow \I{getSet}(H); A_0 \leftarrow H; \forall v_i \in V. A_{i{+}1} \leftarrow A_i \listconcat H_f(v_i); (\forall v_i \in V. A_i \subseteq H_f(v_i) \land \vnu = A_{n}) ]
+            \end{align*}
+            Pros: Can unify all effects as traces and concat traces directly.
+
+            Cons: What order shall we concat these traces? Or order is not important here (need abstraction)?
+
+            Cons: the specification language need to be more powerful, even like a programming language.
+
+            Cons: Need frame rules.
+        \end{enumerate}
+        \item How to specify this program? We need some approximation, for example, we don't care about the order of $\eff{iter}$. The reference cannot be access any more, need to ``free'' it.
+        \begin{enumerate}
+            \item Hoare Type Theory style:
+            \begin{align*}
+                & \uhat{? \mapsto s \star S}{\urt{\Int}{\vnu = \I{sum}(s)}}{? \mapsto s \star S}
+            \end{align*}
+            \item Monadic style:
+            \begin{align*}
+                M_{\Code{set}}\evparenth{\qt{\vnu{:}\Code{Set.t}}{\top}, \qt{\_,m{:}\Code{Set.t},\vnu{:}\Code{Set.t}}{\vnu = m}} \;\urt{\Int}{\vnu = \I{sum}(m)}
+            \end{align*}
+            Problem: still the dependency of the output value is hard to decide.
+
+            Problem: how to remove the $\eff{ref}$ effect from type?
+        \item Trace-based style:
+        \begin{align*}
+            & H{:}[\top]{\ort{\Int}{ V \leftarrow \I{getSet}(H); \vnu = \I{sum}(V) }}[??]
+        \end{align*}
+        Pros: We don't need to free the reference, since the function can return the $\Code{sum}$ label and no one can access it.
+
+        Considerations: it seems that $V$ is an state-based abstraction for it. The $\I{getSet}$ can be defined as a ``frame-function'' that only extract the set of values from the history.
+
+        Cons: What order shall we concat these traces? 
+        \end{enumerate}
+        \item How to implement the effect operators? Use trace (e.g., definition of our operational semantics) is not efficient, we need a more algorithmic way to implement the effect operators.
+        \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos=true, fontsize=\footnotesize, escapeinside=??]{OCaml}
+        primitive: ref, deref, updateRef, int_gen (* how to implement a int_gen? *)
+        let _set = ref []
+        let insert x =
+            let s = ?$\eff{deref}$? _set in
+            if List.mem x s then ()
+            else ?$\eff{updateRef}$? _set (x :: s)
+
+        let iter f =
+            let s = ?$\eff{deref}$? _set in
+            let rec loop s =
+                match s with
+                | [] -> ()
+                | x :: xs -> f x; loop xs in
+            loop s
+        \end{minted}
+        \item How to verify the implementation of the effect operators? The specification should be abstract enough: number of $\eff{deref}$, if the representation of the set.
+        \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos=true, fontsize=\footnotesize, escapeinside=??]{OCaml}
+        let _set = ref []
+        (* implementation 1 *)
+        let insert x =
+            let s = ?$\eff{deref}$? _set in
+            if List.mem x s then ()
+            else ?$\eff{updateRef}$? _set (x :: s)
+        (* implementation 2 *)
+        let insert x =
+            ?$\eff{updateRef}$? _set (x :: ?$\eff{deref}$? _set)
+        \end{minted}
+        \begin{enumerate}
+        \item Hoare Type Theory style:
+        \begin{align*}
+            & \eff{insert}: x{:}\Int \sarr 
+            \uhat{\Code{\_set} \mapsto l \star S}{\Unit}{\Code{\_set} \mapsto l' \star S \land \I{getSet}(l) \cup \{x\} = \I{getSet}(l') } 
+        \end{align*}
+        \item Monadic style:
+        \begin{align*}
+            & \eff{insert}: x{:}\Int \sarr M_{\Code{set}}\evparenth{\qt{\vnu{:}\Code{Set.t}}{\top}, \qt{\_{:}\Unit,s{:}\Code{Set.t},\vnu{:}\Code{Set.t}}{\vnu = s \cup \{x\}}} \;\Unit
+        \end{align*}\noindent Problem: needs to additionally connect the set in the monad to actually implementation (i.e., list).
+        \item Trace-based style:
+        \begin{align*}
+            & \eff{insert}: x{:}\Int \sarr H{:}\uhat{\top}{\Unit}{\I{getSet}(H) \cup \{x\} = \I{getSet}(\vnu)}
+        \end{align*}
+        The $\eff{iter}$ operator:
+        \end{enumerate}
+        \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos=true, fontsize=\footnotesize, escapeinside=??]{OCaml}
+            let _set = ref []
+            (* implementation 1 *)
+            let iter f =
+                let s = ?$\eff{deref}$? _set in
+                List.iter f s
+            (* implementation 2 *)
+            let insert x =
+                let s = ?$\eff{deref}$? _set in
+                let s = List.remove_dup s in
+                List.iter f s
+            (* implementation 3 *)
+                let iter f =
+                let s = ?$\eff{deref}$? _set in
+                List.iter f (List.rev s)
+            \end{minted}
+            \begin{enumerate}
+            \item Trace-based style:
+            \begin{align*}
+                & \eff{iter}: f{:} (x{:}\Int \sarr \{H_f\}\Unit\{F_f\}) \sarr H{:}[\top]{\Unit}[
+                    \\&\quad  V \leftarrow \I{getSet}(H); A_0 \leftarrow H; \forall v_i \in V. A_{i{+}1} \leftarrow A_i \listconcat H_f(v_i); (\forall v_i \in V. A_i \subseteq H_f(v_i) \land \vnu = A_{n}) ]
+            \end{align*}
+            Problem: how to directly verify the implementation? We can connect $\I{getSet}$ to $\Code{\_set}$.
+            \end{enumerate}
+    \end{enumerate}
+\end{example}
+
+\begin{example}[Multi-shot continuations]
+    Consider the following program:
+    \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos=true, fontsize=\footnotesize, escapeinside=??]{OCaml}    
+        let rec client () =
+            () ?$\oplus$?
+            match ?$\eff{deref}$? () with
+            | None -> ?$\eff{updateRef}$? 0; client ()
+            | Some x ->
+                ?$\eff{updateRef}$? (x + 1); client ()
+    \end{minted}
+\end{example}
+
+\begin{align*}
+    & \oplus: k_1{:}(\Unit\sarr\tvar{a}) \sarr k_2{:}(\Unit\sarr\tvar{a}) \sarr \tvar{a} \\
+    & \oplus: k_1{:}(\Unit\sarr H{:}\uhat{\top}{\tau_1}{F_1(H)}) \sarr k_2{:}(\Unit\sarr H{:}\uhat{\top}{\tau_2}{F_2(H)}) \sarr \\
+    & \quad H{:}\uhat{\top}{(\tau_1 \interty \tau_2)}{F_1(H) \seqA F_2(F_1(H)) \lor F_2(H) \seqA F_1(F_2(H))} \\
+\end{align*}\noindent
+Problem: Coverage?
+
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos=true, fontsize=\footnotesize, escapeinside=??]{OCaml}    
+    let rec client () =
+        let x = ?$\eff{int\_gen}$? () in
+        ?$\eff{print}$? x 
+\end{minted}
+\begin{align*}
+    \urt{\Int}{\top} \quad  [\top]\Unit[\forall i.\msg{print}{i} \in \vnu]
+\end{align*}\noindent

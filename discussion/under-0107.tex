@@ -1,0 +1,92 @@
+\section{Discussion Summary}
+
+\begin{itemize}
+    \item Focus primarily on refining the type denotation and semantics, postponing concrete syntax issues until later.
+    \item Leverage the perspective of higher-order symbolic execution to formalize the approach, aiming to provide theoretical guarantees and clarify how our previous examples and programs map to this framework.
+    \item Develop a more intuitive and user-friendly mechanism compared to traditional forward search strategies.
+    \item Explicitly address support for recursion in the type system and reasoning principles.
+\end{itemize}
+
+\section{Intuition}
+
+Design an underapproximate type system that is rich enough to solve programs from different domains—some interesting problems may require effects, higher-order, or relational features.
+
+\section{Examples}
+
+\paragraph{Trace Contracts} Numerous examples can be drawn from the literature on trace contracts and higher-order contracts. For instance, in dataflow analysis frameworks, proving algorithm termination often hinges on showing that the transfer function is monotonic. Beyond termination, one may also establish \emph{soundness} (i.e., that all output labels are reachable) and \emph{completeness} (all reachable labels can appear as output). 
+Although many contract examples are implemented in Racket...
+% they can be systematically translated into OCaml with the assistance of modern LLM tools.
+
+\paragraph{Completeness of Algorithms} A question is whether we can formally establish the completeness of standard algorithms. As a case in point, breadth-first search (BFS) is considered complete, even over infinite graphs—provided there exists a finite reachable path, BFS will eventually discover it. Conversely, depth-first search (DFS) is not complete, as it may traverse an infinite branch and never reach some nodes. Dijkstra's algorithm, by contrast, is both sound and complete under standard assumptions.
+
+\paragraph{Optimization and Reachability} Program optimization frequently relies on reasoning about reachability: is a particular code location necessarily (must) or possibly (may) reachable? Proving (un)reachability is central to dead code elimination and related analyses.
+
+\paragraph{Incorrectness} Many existing examples in intermediate languages focus on unsafe behaviors, although most of them are about memory safety violations.
+
+\paragraph{Unreachability and Divergence} Showing that a program may or must diverge (fail to terminate) is valuable for verifying liveness properties or for identifying infinite loops that might block further progress in a system.
+
+\paragraph{Security} We can reuse the IFC example. However, many security guarantees are inherently relational. On the other hand, taint analysis can be another example to consider (as far as I know, it is not sound).
+
+\section{Type}
+
+\newcommand{\divergeTy}[1]{\Code{diverge}^{#1}}
+\newcommand{\errTy}[1]{\Code{err}^{#1}}
+
+\begin{figure}[t!]
+    {\small
+    \begin{alignat*}{2}
+        \\\text{\textbf{Base Types}}& \quad & b  ::= \quad & \Int ~|~ \Bool ~|~ \Unit ~|~ ...
+        \\\text{\textbf{Basic Types}}& \quad & s  ::= \quad & b ~|~ t \sarr t
+        \\\text{\textbf{Refinement Types}}& \quad & t  ::= \quad & \divergeTy{s} ~|~ \errTy{s} ~|~ \rt{b}{\phi} ~|~
+        \\ & \quad & \quad & \ol{x}{:}t\sarr t ~|~ \ul{x}{:}t\sarr t ~|~ \ol{x}{:}b\garr t ~|~ \ul{x}{:}b\garr t ~|~ t \unionty t ~|~ t \interty t
+        \\\text{\textbf{Type Contexts}}& \quad &\Gamma ::= \quad  &\emptyset ~|~ \ol{x}{:}t, \Gamma ~|~ \ul{x}{:}t, \Gamma
+      \end{alignat*}
+    }
+    \vspace*{-.15in}
+    \caption{\DSL{} types}
+    \label{fig:type-syntax}
+    \vspace*{-.15in}
+    \end{figure}
+
+\paragraph{Type Syntax} Now the new types are more close to dependent types, however I believe there should still be some restrictions.
+
+\paragraph{Examples}
+\begin{enumerate}
+    \item Base coverage type: \\
+    $\urt{b}{\phi} \equiv r{:}b\olgarr \rt{b}{\phi \land \vnu = r}$.
+    \item Function coverage type: \\
+    $x{:}\ort{b_1}{\phi_1}\sarr\urt{b_2}{\phi_2} \equiv \ol{x}{:}\rt{b_1}{\phi_1}\sarr(\ol{r}{:}b_2\garr\rt{b_2}{\phi_2 \land \vnu = r})$.
+    \item Higher-order coverage type: \\
+    $y{:}(x{:}\ort{b_1}{\phi_1}\sarr\urt{b_2}{\phi_2})\sarr t \equiv \ol{y}{:}(\ol{x}{:}\rt{b_1}{\phi_1}\sarr(\ol{r}{:}b_2\garr\rt{b_2}{\phi_2 \land \vnu = r})) \sarr t$.
+    \item Incorrectness triple: \\
+    $[P(x)] y = f(x) [Q(y)] \equiv \ol{r}{:}b\garr \rt{b}{P(\vnu)} \ularr \rt{b}{Q(\vnu) \land \vnu = r}$. 
+    \item (New!) bound constraints \\
+    $\ul{r}{:}b\garr\rt{b}{\vnu > r}$: the term has a lower bound.
+    \item (New!) Existential higher parameter, higher-order symbolic execution \\
+    $\ul{f}{:}( ...) \sarr \Unit $: there exists a function $f$ that satisfies the given constraints can make the term terminate.
+\end{enumerate} 
+
+\paragraph{Type denotation} Assume there is no randomness in the language.
+\begin{align*}
+    \Code{Terminate}(e) &\doteq \exists v. \mstep{e'}{v} \lor \mstep{e}{\Code{err}} \\
+    \denotation{ \errTy{s} } &\doteq \{ e ~|~ \emptyset \basicvdash e : s \land \mstep{e}{\Code{err}} \} \\
+    \denotation{ \divergeTy{s} } &\doteq \{ e ~|~ \emptyset \basicvdash e : s \land \neg \Code{Terminate}(e) \} \\
+    \denotation{ \rt{b}{\phi} } &\doteq \{ e ~|~ \emptyset \basicvdash e : b \land \Code{Terminate}(e) \land \forall v. \mstep{e}{v} \implies \phi[\vnu \mapsto v] \} \\
+    \denotation{ \ol{x}{:}t_x\sarr t } &\doteq \{ e ~|~ \emptyset \basicvdash e : ... \land \forall v\in\denot{t_x}. e\ v \in \denot{t[x\mapsto v]} \} \\
+    \denotation{ \ul{x}{:}t_x\sarr t } &\doteq \{ e ~|~ \emptyset \basicvdash e : ... \land \exists v\in\denot{t_x}. e\ v \in \denot{t} \} \\
+    \denotation{ \ol{x}{:}b\garr t } &\doteq \{ e ~|~ \emptyset \basicvdash e : ... \land \forall v{:}b. e \in \denot{t[x\mapsto v]} \} \\
+    \denotation{ \ul{x}{:}b\garr t } &\doteq \{ e ~|~ \emptyset \basicvdash e : ... \land \exists v{:}b. e \in \denot{t[x\mapsto v]} \} \\
+    \denotation{ t \unionty t } &\doteq \denot{t} \cup \denot{t'} \\
+    \denotation{ t \interty t } &\doteq \denot{t} \cap \denot{t'}
+\end{align*}
+
+I don't believe the underapproximate parameter should be dependent, in a reverse hoare logic / IL, we say for all outputs, there exists inputs -- if the constraints of output is dependent on inputs values, it hard to express underapproximation. And I don't find any benefit of dependent underapproximate parameter. There are many difficulties that allowing a under variable to be refered by both term and its type.
+
+
+\paragraph{Typing} Variable.
+
+\begin{align*}
+    \ul{x}{:}\rt{b}{\phi}  &\vdash x : ? \\
+    \ol{x}{:}\rt{b}{\phi}  &\vdash x \typeinfer y{:}b\olgarr \rt{b}{\phi \land \vnu = y} \quad \text{the inferred type is independent from the $x$}\\
+    \ul{x}{:}\rt{b}{\phi}  &\vdash x \typeinfer \rt{b}{\vnu = x}\\
+\end{align*}

@@ -1,0 +1,568 @@
+\section{Formalization}\label{sec:formal}
+
+\begin{figure}[t!]
+  \vspace{-.3cm}
+{\footnotesize
+  \begin{alignat*}{2}
+    \text{\textbf{Variables }}& \quad &\quad& x, y, z, \vnu, ...
+    \\\text{\textbf{Base Types}}& \quad & b  ::= \quad &  \Code{unit} ~|~ \Code{bool} ~|~ \Code{nat} ~|~ \Code{int} ~|~ ...
+    \\\text{\textbf{Basic Types}}& \quad & s  ::= \quad &  b ~|~ s\sarr s
+    \\\text{\textbf{Pure Operations}}& \quad & \primop ::= \quad & {+} ~|~ {-} ~|~ {==} ~|~ {<} ~|~ {\leq} ~|~ ...
+    \\ \text{\textbf{Constants }}& \quad &c ::= \quad & () ~|~ \mathbb{B} ~|~ \mathbb{Z} ~|~ ...
+    \\ \text{\textbf{Qualifiers}}& \quad & \phi ::= \quad & c ~|~ x ~|~ \primop\;\overline{v} ~|~ \bot ~|~ \top  ~|~ \neg \phi ~|~ \phi \land \phi ~|~ \phi \lor \phi ~|~ \phi \impl \phi ~|~ \forall x{:}b.\, \phi
+    \\\text{\textbf{Effectful Operations}}& \quad & \eff{op} ::= \quad & \eff{readReq} ~|~ \eff{readRsp} ~|~ \eff{abs} ~|~ \eff{endAbs} ~|~ \effGray{ty} ~|~ \effGray{depth} ~|~ ...
+    % \\\text{\textbf{Event Kinds}}& \quad & k ::= \quad & \eff{gen} ~|~ \eff{obs}
+    \\ \text{\textbf{Values }}& \quad  & v ::= \quad & c ~|~ x ~|~ \zlam{x}{s}{e} ~|~ \zfix{f}{s}{x}{s}{e}
+    \\ \text{\textbf{Expressions}}& \quad & e ::=\quad & v ~|~ \zlet{x{:}b}{e}{e} ~|~ \zlet{x{:}b}{\primop\ \overline{v}}{e} ~|~ \zgen{op}{\overline{v}}{e} ~|~ \zobs{\overline{x{:}b}}{op}{e}
+    \\ & & \quad & |~  \zassume{\overline{x{:}b}}{\phi}{e} ~|~ \zassert{\phi}{e} ~|~ \zlet{x{:}b}{v\;v}{e}  ~|~ e \oplus e
+  \end{alignat*}}
+% \vspace*{-.15in}
+%   {\footnotesize\begin{flalign*}
+%     \text{\textbf{Syntax Sugar}}& \quad \mykw{let}\;\eff{op}\;\overline{v}\;\mykw{in}\;e \doteq \zgen{op}{\overline{v}}{e} \qquad\qquad  e_1;e_2 \doteq \zlet{\_}{e_1}{e_2}
+%   \end{flalign*}}
+\vspace*{-.25in}
+\caption{$\DSL$ syntax }
+\label{fig:term-syntax}
+\vspace*{-.1in}
+\end{figure}
+
+We formalize our approach using a core language, $\DSL$, for
+expressing test sequence generator programs that interact with a system under test via effectful operations. This language is an (asynchronous) event-driven calculus in A-normal form (ANF)\cite{FSDF93} that abstracts away the
+implementation details of the system that the generator interacts
+with, focusing only on the structure of the generator program
+itself. The syntax of $\DSL$ is shown in \autoref{fig:term-syntax};
+it includes both pure and effectful operations ($\primop$ and
+$\eff{op}$), non-deterministic choice ($\oplus$), assumptions and assertions. Effectful operations has an unit return type, are categorized as either \emph{generable} ($\eff{gen}$) or \emph{observable} ($\eff{obs}$). We omit the key words $\mykw{gen}$ and use $e_1;e_2$ to simplify the $\mykw{let}$-expression $\zlet{\_}{e_1}{e_2}$ when the bound variable is not be used in body term $e_2$.
+
+\begin{figure}[t!]
+\vspace*{-0.1in}
+{\footnotesize
+{\small
+\begin{flalign*}
+\text{\textbf{Events}} \ m ::= \  \zevent{op}{\overline{c}} &
+\parbox{7cm}{\centering$\text{\textbf{capability}}\  \beta \in \mathcal{P}(m)$}  &
+\text{\textbf{Traces}} \ \alpha ::= \ \emptr ~|~ m \;{::}\; \alpha ~|~ \alpha \listconcat \alpha &
+\end{flalign*}
+\vspace*{-.2in}
+\begin{flalign*}
+  &\text{\textbf{Operator Semantics }}\
+  \fbox{$\alpha \vDash \zevent{op}{\overline{c}} \Downarrow \beta$} &
+  \text{\textbf{Operational Semantics }}\
+  \fbox{$
+  % \phi \Downarrow c \quad
+  \steptr{\alpha}{(\buf, e)}{\alpha}{(\buf, e)}$}
+\end{flalign*}}
+\begin{prooftree}
+  \mhypo{50mm}
+  {$\buf = \{\zevent{op}{\overline{c}}\} \cup \buf' $ \quad
+    % $\alpha \vDash \zevent{op}{\overline{c}} \Downarrow \buf_2$ \quad
+    $e' = e[\overline{x \mapsto c}]$
+  }
+    \infer1[\textsc{\small StObs}]{
+      \steptr{\alpha}{(\buf,
+        \zobs{\overline{x}}{op}{e})}{[\zevent{op}{\overline{c}}]}{(\buf', e')}
+    }
+  \end{prooftree}
+\quad
+\begin{prooftree}
+  \hypo{\alpha \vDash \zevent{op}{\overline{c}} \Downarrow \beta' }
+  \infer1[\textsc{\small StGen}]{
+    \steptr{\alpha}{(\buf, \zgen{op}{\overline{c}}{e})}{[\zevent{op}{\overline{c}}]}{(\buf \cup \beta', e)}
+  }
+\end{prooftree}
+% \\[0.8em]
+% \mprooftr{58mm}{
+% $\phi\msubst{x}{c}\Downarrow \top$
+% }{StAssume}{
+% $\steptr{\alpha}{(\buf, \zassume{\overline{x}}{\phi}{e})}{[]}{(\buf, e\msubst{x}{c})}$
+% }
+% \quad
+% \mprooftr{44mm}{$\phi \Downarrow \top$}{StAssert}{
+% $\steptr{\alpha}{(\buf, \zassert{\phi}{e})}{[]}{(\buf, e)}$
+% }
+}
+\vspace*{-.05in}
+  \caption{Selected Operational Semantics.}
+  \label{fig:selected-semantics}
+\vspace*{-.2in}
+\end{figure}
+
+\paragraph{Operational Semantics} Events in $\DSL$ are operations
+applied to concrete values $(\zevent{op}{\overline{c}})$. Evaluating a
+$\DSL$ program depends on an context \emph{trace}, i.e., a sequence of
+events, and an \emph{observation capability}, i.e., a multiset of
+observable events. Each evaluation step produces an output trace and an updated
+capability. Traces are equipped with the standard list operations (i.e.,
+cons ${::}$ and concatenation $\listconcat{}$).  The operational
+semantics of $\DSL$ are defined by the small-step reduction relation:
+$\steptr{\alpha}{(\beta, e)}{~\alpha'}{(\beta', e')}$.  This judgment
+is read as: ``under the history trace $\alpha$ and observation capability
+$\beta$, $e$ steps to $e'$, emitting the trace $\alpha'$ and remaining
+the capability $\beta'$.'' Intuitively, the history trace $\alpha$
+represents the sequence of events visible to a operator, thereby
+determining its response; the capability $\beta$ contains events that
+are able to be observed in the future. The semantics uses an auxiliary judgement,
+$\alpha \vDash \zevent{op}{\overline{c}} \Downarrow \beta$, that
+specifies any new events that need to be added to the observation capability
+after handling a generative event $\eff{op}$.
+
+\autoref{fig:selected-semantics} presents the key rules of $\DSL$'s
+semantics,\footnote{The remaining rules are completely standard and
+  provided in the supplemental material.} which reflect the ``consume-and-produce'' semantics of
+observation capability.
+The rule for observable
+events (\textsc{StObs}) removes
+an event from the capability that matches the effectful operation $\eff{op}$,
+evaluates it under the current context, and substitutes the event
+payload $\overline{c}$ for the variables $\overline{x}$ in $e$, the
+body of the $\mykw{let}$ expression. In contrast, the rule for generable events (\textsc{StGen}) makes no assumptions on the observation capability, since these events can be directly
+performed by the generator. However, it may add new observable events to the
+resulting observation capability as a consequence of handling $\eff{op}\ \overline{c}$.
+
+% since these events can be directly
+% performed by the generator, the rule does not require a corresponding
+%  event in the capability.
+
+% Any new observable events generated as a
+% consequence of handling $\eff{op}\ \overline{c}$ are added to the
+% resulting  observation capability. 
+
+% is similar, but since these events can be directly
+% performed by the generator, the rule does not require a corresponding
+%  event in the capability.
+
+% The rule for observable
+% events (\textsc{StObs}) rule non-deterministically removes
+% a event in capability that matches the effectful operation $\eff{op}$,
+% evaluates it under the current context, and substitutes the event
+% payload $\overline{c}$ for the variables $\overline{x}$ in $e$, the
+% body of the $\mykw{let}$ expression. Any new observable events generated as a
+% consequence of handling $\eff{op}\ \overline{c}$ are added to the
+% resulting  observation capability.  The reduction rule for generable events
+% (\textsc{StGen}) is similar, but since these events can be directly
+% performed by the generator, the rule does not require a corresponding
+%  event in the capability.
+% The \textsc{StAssume} rule substitutes the
+% variables $\overline{x}$ with values $\overline{c}$ that satisfy the
+% qualifier $\phi$ in the body of an assume expression. The
+% \textsc{StAssert} rule, in contrast, requires the qualifier of an
+% assert expression to hold in order for it to make progress.
+
+\begin{example}[Auxiliary Operator Semantics]\label{ex:aux-semantics}
+The auxiliary semantics of the $\eff{readReq}$ and $\eff{readReq}$ operators in Example~\ref{ex:read-atomicity} can be defined as follows:
+
+{\footnotesize
+  \mprooftr{42mm}{}{OpWrite}{
+  $\alpha \vDash \zevent{writeReq}{v} \Downarrow \{ \zevent{writeRsp}{v} \}$
+  }
+  \quad
+  \mprooftr{62mm}{$\eff{writeRsp}\not\in \alpha_2$}{OpRead}{
+  $\alpha_1\listconcat\zevent{writeRsp}{v}\listconcat\alpha_2\vDash \zevent{readReq}{v} \Downarrow \{\zevent{readRsp}{v}\}$
+  }
+  \\[0.1em]
+  }\noindent
+
+\noindent 
+The database handles the $\eff{writeReq}$ event by simply adding a $\eff{writeRsp}$ event with the same payload to the capability. On the other hand, handling a $\eff{readReq}$ adds a $\eff{readRsp}$ event where the read value is the \emph{last} written value $v$ in the history trace.
+\end{example}
+
+% \begin{example}[Operational Semantics]\label{ex:semantics-stlc}
+% We show a program that generates STLC term $\lambda.[0]$.
+%   {\footnotesize
+%     \begin{flalign*}
+%       &[] \vDash
+%       (\emptyset, \zassume{x}{\top}{\eff{abs}\;x;\eff{var}\;0;\mykw{obs}\;\eff{endAbs}})
+%       \xhookrightarrow{[]} (\emptyset, \eff{abs}\;\Int;\eff{var}\;0;\mykw{obs}\;\eff{endAbs}) \tag{\textsc{StAssume}} &&
+%       \\[-0.4em]
+%       &\xhookrightarrow{[\zevent{abs}{\Int}]} (\{\eff{endAbs}\}, \eff{var}\;0;\mykw{obs}\;\eff{endAbs})  \xhookrightarrow{[\zevent{var}{0}]} (\{\eff{endAbs}\}, \mykw{obs}\;\eff{endAbs})
+%       \xhookrightarrow{[\eff{endAbs}]} (\emptyset, ()) \tag{\textsc{StGen, StObs}} &&
+%     \end{flalign*}
+%   }\noindent
+%     The program first instantiates $x$ with an arbitrary STLC type (e.g., $\Int$), applies $\eff{abs}$ to produce capability $\eff{endAbs}$, executes $\eff{var}$ which generates no new capability, and finally consumes $\eff{endAbs}$.
+% \end{example}
+
+\begin{example}[Strong consistency violation]\label{ex:semantics-async}
+  Our language also expresses asynchronous programs. The program below shows a strong consistency violation using $\eff{put}$, $\eff{ayncGet}$, and $\eff{get}$, which works like $\eff{getTy}$ in Example~\ref{ex:aux-semantics}.
+    {\footnotesize
+      \begin{flalign*}
+        &[\zevent{put}{1}] \vDash
+        (\emptyset, \eff{ayncGet};\eff{\textcolor{orange}{put}}\;2;\zobs{x}{get}{()}) \xhookrightarrow{[\eff{ayncGet}]} (\{\zevent{get}{1}\}, \eff{\textcolor{orange}{put}}\;2;\zobs{x}{get}{()}) \tag{\textsc{StGen}} &&
+        \\[-0.4em]
+        &\xhookrightarrow{[\zevent{put}{2}]} (\{\zevent{get}{1}\}, \zobs{x}{get}{()}) \xhookrightarrow{[\zevent{get}{1}]} (\emptyset, \eff{ayncGet};\zobs{y}{get}{()})  \tag{\textsc{StGen, StObs}} &&
+      \end{flalign*}
+    }\noindent
+  As shown above, the read value is not the latest value due to the $\eff{put}$ event happens between $\eff{ayncGet}$ and $\eff{get}$.
+  \end{example}
+
+% We show a program that generates the identity function $\lambda.[0]$ in the style of \autoref{fig:spec} as follows:
+% {\footnotesize
+%   \begin{flalign*}
+%     &[] \vDash
+%     (\emptyset, \zassume{x}{\top}{\eff{abs}\;x;\eff{var}\;0;\eff{putTy}\;x;\eff{ayncGetTy};\zlet{y}{\mykw{obs}\;\eff{getTy}}{\mykw{obs}\;\eff{endAbs};\eff{putTy}\;\Code{Arr}(x, y)}})\\[-0.4em]
+%     &\xhookrightarrow{[]} (\emptyset, \eff{abs}\;\Int;\eff{var}\;0;\eff{putTy}\;\Int;\eff{ayncGetTy};\zlet{y}{\mykw{obs}\;\eff{getTy}}{\mykw{obs}\;\eff{endAbs};\eff{putTy}\;\Code{Arr}(\Int, y)}) \tag{\textsc{StAssume}} &&
+%     \\[-0.4em]
+%     &\xhookrightarrow{[\zevent{abs}{\Int}]} (\{\eff{endAbs}\}, \eff{var}\;0;\eff{putTy}\;\Int;\eff{ayncGetTy};\zlet{y}{\mykw{obs}\;\eff{getTy}}{\mykw{obs}\;\eff{endAbs};\eff{putTy}\;\Code{Arr}(\Int, y)})  \tag{\textsc{StGen}} &&
+%     \\[-0.6em]
+%     &\xhookrightarrow{[\zevent{var}{0};\zevent{putTy}{\Int};\eff{ayncGetTy}]}^* (\{\eff{endAbs};\zevent{getTy}{\Int}\}, \zlet{y}{\mykw{obs}\;\eff{getTy}}{\mykw{obs}\;\eff{endAbs};\eff{putTy}\;\Code{Arr}(\Int, y)}) \tag{\textsc{StGen}} &&
+%     \\[-0.6em]
+%     &\xhookrightarrow{[\zevent{getTy}{\Int}]} (\{\eff{endAbs}\}, \mykw{obs}\;\eff{endAbs};\eff{putTy}\;\Code{Arr}(\Int, \Int)) \tag{\textsc{StObs}} &&
+%     \\[-0.4em]
+%     &\xhookrightarrow{[\eff{endAbs}]} (\emptyset, \eff{putTy}\;\Code{Arr}(\Int, \Int)) \xhookrightarrow{[\zevent{putTy}{\Code{Arr}(\Int, \Int)}]} (\emptyset, ()) \tag{\textsc{StObs, StGen}} &&
+%   \end{flalign*}
+% }\noindent
+%   The first step substitutes $x$ with an arbitrary STLC type (e.g., $\Int$). In the next steps, the program performs the generative operator $\eff{abs}$, which generates a new capability $\eff{endAbs}$ to be handled in the future. Similarly, the program performs $\eff{var}$, $\eff{putTy}$, and $\eff{ayncGetTy}$, where only the last operator generates a new capability, $\zevent{getTy}{\Int}$, whose payload is the last $\eff{put}$ type.
+%   The fourth step consumes the $\zevent{getTy}{\Int}$ event and substitutes $y$ with $\Int$ in the remaining program. The rest of the program is then executed, which ends the lambda abstraction and records the type of the generated STLC term as $\Code{Arr}(\Int, \Int)$.
+
+
+\subsection{Types}
+
+\begin{figure}[t!]
+{\small
+\begin{alignat*}{2}
+    % \\\text{\textbf{Symbolic Event}}& \quad &se  ::= \quad & \msgB{op}{\overline{x}}{\phi}
+    \text{\textbf{Symbolic Regex}}& \quad &H,A,F  ::= \quad & \emptyset ~|~ \epsilon ~|~ \msgB{op}{\overline{x}}{\phi} ~|~ A \lorA A ~|~ A \seqA A ~|~ A^* ~|~ A \setminus A ~|~ A \landA A ~|~ \anyA
+    % \\& \quad &  \quad & \text{\textcolor{gray}{in Symbolic LTL$_f$ }}  se ~|~ A \lorA A ~|~ \nextA A ~|~ A \untilA A ~|~ \negA A ~|~ A \landA A
+    \\\text{\textbf{Pure Refinement Types}}& \quad & t  ::= \quad & \rawnuot{b}{\phi} ~|~ x{:}\rawnuot{b}{\phi}\sarr t ~|~ x{:}\rawnuot{b}{\phi}\sarr \tau
+    \\ \text{\textbf{Prophecy Regex Types}}& \quad & \tau  ::= \quad & \rg{H}{A}{F} ~|~ x{:}b \garr \tau ~|~ \tau \interty \tau
+    \\\text{\textbf{Type Contexts}}& \quad &\Gamma ::= \quad  &\emptyset ~|~ x{:}t, \Gamma
+  \end{alignat*}
+  \vspace*{-.15in}
+  {\footnotesize\begin{flalign*}
+    {\small\text{\textbf{Type Alias}}}& \;\; \msg{op}{\phi} \doteq \msgB{op}{\overline{x}}{\phi} \;\; \msgA{op}{\overline{v}} \doteq \msgB{op}{\overline{x}}{\overline{x = v}} \;\; \msgC{op} \doteq \msgB{op}{\overline{x}}{\top} \;\; A_1 A_2 \doteq A_1 \seqA A_2 \;\; b \doteq \rawnuot{b}{\top}
+    % \;\; \tau \doteq x{:}b\garr\tau
+  \end{flalign*}}
+}
+\vspace*{-.15in}
+\caption{$\DSL{}$ types.}
+\label{fig:type-syntax}
+\vspace*{-.15in}
+\end{figure}
+
+
+The syntax of types in $\DSL{}$ is shown in \autoref{fig:type-syntax}.
+Types include \emph{pure} refinement types, which describe pure
+computations, and Prophecy Regex Types (\PAT{}s), which describe
+effectful computations.  Pure refinement types are similar to those
+found in other refinement type systems~\cite{JV21}, and allow base
+types (e.g., {\Code{int}}) to be further constrained by a logical
+formula or qualifier. Verification conditions generated by our
+type-checker can be encoded as effectively propositional (EPR)
+sentences~\cite{Ramsey1987}, which can be efficiently handled by an
+off-the-shelf theorem prover such as Z3~\cite{de2008z3}.
+
+\paragraph{Symbolic Regular Expression} Following other recent
+trace-based type systems\cite{ZYDJ24}, $\DSL{}$ uses \emph{Symbolic
+  Finite Automata} (SFAs)~\cite{Vea13,SFA-minimization,
+  SFA-Transducers} to qualify traces, similar to how standard
+refinement types use formulae to qualify the types of pure terms.
+We represent SFAs using a symbolic version of regular expressions (SRE); symbolic LTL$_f$ is also supported and can be translated to regex as needed.
+A \emph{symbolic event} $\msgB{op}{\overline{x}}{\phi}$ is an atomic predicate that
+describes an effectful operation {$\eff{op}$} whose inputs
+$\overline{x}$ must satisfy the qualifier $\phi$.
+\footnote{When the
+  fields of an event are clear from context, we omit its parameters
+  $\overline{x}$, e.g., $\msg{writeReq}{v > 0}$ means
+  $\msgB{writeReq}{v}{v > 0}$.}
+  The standard regex operators (i.e., empty set of traces $\emptyset$, empty trace $\epsilon$, union $A \lorA A$, sequence $A \seqA A$, and kleene star $A^*$) and various set operators (i.e., complement $\neg$, intersection $\land$, and an union of all symbolic events $\anyA$) are defined normally.
+
+% The standard temporal operators
+% (e.g., test $\evparenth{\phi}$, next $\nextA A$, until $\untilA$) and
+% various set operators (i.e., complement $\neg$, intersection $\land$,
+% and union $\lorA$) are defined normally. These operators are
+% sufficient to capture other modalities, e.g., eventually ($\finalA$),
+% globally ($\globalA$), and importantly, the singleton (last) modality
+% $$, which describes a singleton trace, i.e., one which prohibits
+% any subsequent effects~\cite{LTLf}. SREs can capture several common
+% patterns: the set of all possible traces \(\allTL\), the singleton set
+% containing the empty trace \(\epsilon\), and the empty set of traces and
+% \(\empTL\); these are analogous to the regular expressions \( .^* \),
+% \(\epsilon\), and \(\emptyset\), resp.
+
+
+
+\paragraph{Prophecy Regex Types} A \PAT{} $\rg{H}{A}{F}$ is
+comprised of three SREs: a \emph{history} SRE $H$ that captures the
+history traces (i.e., a sequence of visible, already handled events) in which a term can be executed, a \emph{current} SRE $A$ that
+describes newly handled  events that arise from executing a term, and
+a \emph{prophecy} SRE $F$ that characterizes events that have to be performed in the future.
+% When a \PAT has no contraint on future computation, we omit its prophecy regex as $\ha{H}{A}$.
+Function types use \PAT{}s in their result types
+to describe the effects they perform, when combined with intersection
+types ($\interty$), this allows users to express complex control
+flows. Function types also use \emph{ghost variables}
+($x{:}b \garr \tau$) to capture data dependencies among
+symbolic events; for example, the full signature of the $\eff{app}$
+operator from \autoref{sec:intro} uses the ghost variables $t_1$ and $t_2$.
+
+\begin{example}[Synchronized Operations]\label{ex:getty}
+The synchronized $\effGray{ayncGetTy}$ operation in Example~\ref{fig:aux-semantics} need to make sure the corresponding $\effGray{getTy}$ event is performed right after. This is captured by the following \PAT{}:{
+    \footnotesize
+    \begin{align*}
+      \eff{ayncGetTy} :~ & t{:}\Code{ty}\garr\rg{\allA\msgAGray{putTy}{t}(\anyA\setminus\msgCGray{putTy})^*}{\msgCGray{ayncGetTy}}{\msgA{getTy}{t}\allA}
+    \end{align*}}\noindent
+  The history regex get the most last $\msgA{putTy}{t}$ event in the history by requires there are no more $\eff{putTy}$ event happens after it (i.e., $(\anyA\setminus\msgCGray{putTy})^*$). Its prophecy regex requires that the $\msgA{getTy}{t}$ event happen first (i.e., $\msgAGray{getTy}{t}\allA$) in the future.
+  For brevity, we omit $\effGray{ayncGetTy}$ when the context is clear, as it always precedes $\effGray{getTy}$.
+\end{example}
+
+\subsection{Typing rules}
+Our typing judgment $\Gamma; \Delta; \Theta \vdash e: \capTau{\Theta', \tau}$ features three contexts: a type context $\Gamma$,
+a operator context $\Delta$, and a capability context $\Theta$. The
+type context, $\Gamma$ maps from variables to pure refinement types
+(i.e., $t$). As in other trace-based refinement type systems, contexts
+are not allowed to contain \PAT{}s--- doing so breaks several
+structural properties (e.g., weakening) that are used to prove type
+safety. The operator context, $\Delta$, provide the relation between operations, specification of its operator as a \PAT{}, and the operations
+its operator adds to the capability. The capability context, $\Theta$,
+records the multiset of operations could be observed. This context
+is used to ensure that every observation corresponds to a event that
+was triggered by a previous event.
+The typing judgment $\Gamma; \Delta; \Theta \vdash e: \capTau{\Theta', \tau}$ asserts that the capability $\Theta$ is sufficient for the term $e$ to consume, and that $e$ will leave the remaining capability $\Theta'$.
+The typing judgment for the effectful operator ($\Gamma; \Delta \vdash \eff{op}: \capTau{\Theta', \tau}$) is similar, but omits the capability context $\Theta$ since it is clear from the message kind.
+
+\begin{example} The operator context $\Delta$ for our running examples
+  augments the specifications from \autoref{fig:spec} as follows: %
+\par\nobreak {\small
+$
+  \Delta \doteq \{ (\eff{abs},  \{\eff{endAbs}\}, \ldots),%
+      (\eff{endAbs}, \emptyset, \ldots),%
+      (\eff{app}, \{\eff{appL}, \eff{appR}\},\ldots), %
+      (\eff{appL}, \emptyset, \ldots), \ldots \}
+$
+}
+\end{example}\vspace{-.2cm}
+
+\begin{figure}[!t]
+{\footnotesize
+{\footnotesize
+\begin{flalign*}
+ &\text{\textbf{Auxiliary Typing}} & & \fbox{$\Gamma \vdash A \subseteq A \quad \Gamma \vdash \tau <: \tau$} &\text{\textbf{Typing}} &  & \fbox{$\Gamma;\Delta\vdash \eff{op}: \capTau{\Theta, t} \quad \Gamma;\Delta;\Theta\vdash v : \capTau{\Theta, t} \quad \Gamma;\Delta;\Theta \vdash e: \capTau{\Theta, \tau}$}
+\end{flalign*}
+}
+\\ \
+\mprooftr{43mm}
+{$\Gamma \vdash H_2 \subseteq H_1$ \quad
+$\Gamma \vdash F_2 \subseteq F_1$ \quad
+$\Gamma \vdash A_1 \subseteq A_2$  }
+{SubHAF}
+{$\Gamma \vdash \rg{H_1}{A_1}{F_1} <: \rg{H_2}{A_2}{F_2}$}
+\quad
+\mprooftr{22mm}
+{$\Gamma; \Delta; \Theta \vdash e: \tau$ \quad
+$\Gamma; \vdash \tau <: \tau'$}
+{TSub}
+{$\Gamma; \Delta; \Theta \vdash e: \tau'$}
+\
+\mprooftr{30mm}
+{
+$\Gamma; \Delta; \Theta \vdash e_1 : \capTau{\Theta', \tau}$ \quad $\Gamma; \Delta; \Theta \vdash e_2 : \capTau{\Theta', \tau}$}
+{TChoice}
+{$\Gamma; \Delta; \Theta \vdash e_1 \oplus e_2 : \capTau{\Theta', \tau}$}
+\\[.8em]
+\mprooftr{35mm}
+{}
+{TRet}
+{$\Gamma; \Delta; \Theta \vdash () : \capTau{\Theta, \rg{\allA}{\epsilon}{\allA}}$}
+\quad
+\mprooftr{82mm}
+{
+$\Gamma; \Delta \vdash \eff{op} : \capTau{\Theta_{\eff{op}}, \overline{x_i{:}t_i}\sarr
+\rg{H}{\msg{op}{\phi}}{A\seqA F}}$ \quad
+$\forall i. \;\Gamma;\Delta;\emptyset \vdash v_i : \capTau{\emptyset, t_i}$ \quad
+$\Gamma; \Delta; \Theta \cup \Theta_{\eff{op}} \vdash e : \capTau{\Theta', \rg{H \seqA \msg{op}{\phi\msubst{x_i}{v_i}}}{A}{F}}$}
+{TGen}
+{$\Gamma; \Delta; \Theta \vdash \zgen{op}{\overline{v_i}}{e_1} : \capTau{\Theta', \rg{H}{\msg{op}{\phi\msubst{x_i}{v_i}} \seqA A}{F}}$}
+\\[.8em]
+\mprooftr{42mm}{
+ $\Gamma, x{:}t_x; \Delta; \Theta \vdash e : \capTau{\Theta', \tau}$
+}{TFun}{
+ $\Gamma; \Delta; \Theta \vdash \zlam{x}{\eraserf{t_x}}{e} : \capTau{\Theta', x{:}t_x\sarr \tau}$}
+\
+\mprooftr{77mm}{
+  $\Gamma; \Delta \vdash \eff{op} : \capTau{\Theta_{\eff{op}}, \overline{x_i{:}t_i}\sarr \rg{H}{\msgB{op}{\overline{y}}{\phi}}{A \seqA F}}$ \quad
+  $\Gamma, \overline{x{:}t}; \Delta; \Theta \cup \Theta_{\eff{op}} \vdash e : \capTau{\Theta', \rg{H \seqA \msgB{op}{\overline{y}}{\phi \land \overline{y = x}}}{A}{F}}$}
+{TObs}
+{
+  $\Gamma; \Delta; \{\eff{op}\} \cup \Theta \vdash \zobs{\overline{x}}{op}{e} : \capTau{\Theta', \rg{H}{\msgB{op}{\overline{y}}{\phi} \seqA A}{F}}$
+}
+\\[.8em]
+\mprooftr{40mm}{
+ $\Gamma, f{:}t; \Delta; \Theta \vdash \zlam{x}{b}{e} : \capTau{\Theta, t}$
+}{TFix}{
+ $\Gamma; \Delta; \Theta \vdash \zfix{f}{\eraserf{t}}{x}{b}{e} : \capTau{\Theta, t}$}
+\quad
+\mprooftr{60mm}{
+ $\Gamma; \Delta; \Theta \vdash v_1 : \capTau{\Theta', y{:}t_y\sarr\tau}$ \quad
+ $\Gamma; \Delta; \emptyset \vdash v_2 : \capTau{\emptyset, t_y}$ \quad
+ $\mykw{let}\; \rg{H}{A}{A' \seqA F} = \tau[y\mapsto v_2]$\quad
+ $\Gamma; \Delta; \Theta' \vdash e' : \capTau{\Theta'', \rg{H \seqA A}{A'}{F}}$
+}{TApp}{
+ $\Gamma; \Delta; \Theta \vdash \zlet{x}{v_1\;v_2}{e} : \capTau{\Theta'', \rg{H}{A \seqA A'}{F}}$}
+}
+% \vspace*{-.1in}
+\caption{Selected typing rules.}
+\label{fig:selected-typing-rules}
+\vspace*{-.15in}
+\end{figure}
+
+\paragraph{Auxiliary typing relations}
+Our system depends on three auxiliary relations: a well-formedness
+relation $\Gamma \wellfoundedvdash \tau$ which mostly ensures, e.g., that all
+qualifiers appearing in a type $\tau$ are closed under the current
+typing context $\Gamma$; an inclusion relation on SREs
+$\Gamma \vdash A \subseteq A$; and a mostly-standard semantic
+subtyping relation.
+\autoref{fig:selected-typing-rules} presents the key subtyping rule for \PAT{}s (\textsc{SubHAF}), which establishes subtyping by checking inclusion between their constituent regex under the current type context $\Gamma$.
+Following prior work~\cite{ZYDJ24}, our denotation of \tyName positions the future regex negatively (as an input premise), and the current and prophecy regexes positively (as output consequences). Thus, the history regex is contravariant and the current regex is covariant in the subtyping relation. The prophecy regex is also contravariant, as it \emph{underapproximates} the future traces that must be ensured by the continuation. The formal type denotation is presented at the end of this section.
+
+% Note that prophecy regex constrain possible future event interleavings, just as history regex constrain the history trace. Current regex, in contrast, overapproximate all traces that the term may produce. Thus, inclusion on the history and prophecy regex is
+% contravariant, while inclusion on current regex is covariant.
+
+
+% \paragraph{Effect Operator Framing}  The use of prophecy
+% regex in specifying operator behavior is very powerful.  However,
+% since it is a characterization of future events that must happen as a
+% consequence of executing a operator  event, it is important that the
+% specification does not overly constrain the effects that may be
+% produced by other operators that execute independently.  In other
+% words, a well-formed operator context (defined in the next
+% subsection) should have its prophecy regex be in the form
+% $\bigwedge_{i = 1 ... n} \finalA \msg{op_i}{\phi_i}$.  In order to
+% allow this type to adapt to independently occuring events in the
+% future, we introduce a framing rule \textsc{TEOpFrame} for operators
+% that allows the arbitrary insertion of other regex ($F_1
+% ... F_{n+1}$) between $\msg{op_i}{\phi_i}$.
+
+\paragraph{Typing Rules} A subset of our typing rules is shown in
+\autoref{fig:selected-typing-rules}.\footnote{The complete set of
+  typing rules is included in the \techreport{}.} All of our terms
+assume any types they use are well-formed, so we elide the
+corresponding well-formedness judgments from their premises.
+The rules for performing events, \textsc{TGen} and \textsc{TObs}, both extract the operator type $\rg{H}{\msg{op}{\phi}}{A \seqA F}$ and capability $\Theta_{\eff{op}}$ from operator context $\Delta$; and require that it aligns with the \PAT{} of the expression that the operation is being performed in:%
+% The rules for performing events, \textsc{TGen} and \textsc{TObs}, both extract
+% the type of the corresponding operator from $\Delta$,
+% $\rg{H}{\msg{op}{\phi}}{A \seqA F}$, and require that it aligns
+% with the \PAT{} of the expression that the operation is being
+% performed in:%
+\vspace{-.4cm} \par\nobreak {\footnotesize %
+  \begin{align*}
+    \text{\textcolor{gray}{(term's \PAT)}}
+    \underbrace{ H
+    }_\texttt{history}\;\seqA\;\underbrace{
+    \msg{op}{\phi\msubst{x_i}{v_i}} \seqA A }_\texttt{current}
+    \;\seqA\; \underbrace{ F }_\texttt{prophecy} \equiv \underbrace{ H
+    }_\texttt{history}\;\seqA\;\underbrace{
+    \msg{op}{\phi\msubst{x_i}{v_i}} }_\texttt{current} \;\seqA\;
+    \underbrace{ A \seqA F}_\texttt{prophecy}
+    \text{\textcolor{gray}{(operator's \PAT)}}
+  \end{align*}}\noindent %
+To type the rest of the expression, both rules move the symbolic event
+$\msg{op}{\phi\msubst{x_i}{v_i}}$ from the head of the current
+regex to the tail of the history regex and add any new
+capabilities to $\Theta$. In order to make an observation on
+$\eff{op}$, \textsc{TObs} additionally requires that the capability
+context has a corresponding capability ($\{\eff{op}\} \cup \Theta$). The
+standard subsumption rule \textsc{TSub} allows us to change the shape
+of a type that a term is being typed against. Generators always end in a
+unit value $()$; thus, the \textsc{TRet} rule requires the current
+regex of this term ($\epsilon$) to only accept the empty trace (i.e.,
+$[]$). The nondeterministic choice operator is typed using the
+\textsc{TChoice} rule, when combined with the subsumption rule, this
+allows generators to explore different event orderings.
+The nondeterministic loop aligns with the Kleene star in SRE, and thus can be straightforwardly typed by the \textsc{TLoop} rule.
+Since the loop body $e$ may be executed an unbounded number of times, the typing judgment for $e$ requires that an unbounded number of iterations may have already been performed ($H \seqA \textcolor{orange}{A^*}$) and may occur in the future ($\textcolor{orange}{A^*} \seqA A' \seqA F$). Additionally, the input and output capability contexts must be identical, ensuring that $e$ replenishes any capabilities it consumes.
+
+% of observing effect operator $\eff{op}$ from the typing
+% context with the help of effect operator typing
+% $\textsc{TEOp}$. Besides requiring the arguments ($\overline{v_i}$) is
+% well-typed against parameter types ($\overline{t_i}$) as application
+% rules in standard refinement typing, it additionally
+
+\begin{example}[Generator Typing] We provide an informal typing
+  derivation of the generator in \autoref{fig:stlc-gen} against a \PAT{} that encodes the global property \ref{prop:stlc} as $\rg{\epsilon}{A_\Code{STLC}}{\epsilon}$. The first step of our derivation uses \textsc{TSub} to refine our target type to a \PAT{} that better aligns with the generator code: %
+  \vspace{-.4cm} \par\nobreak  {\footnotesize %
+    \begin{align*}
+      \underbrace{\msgAGray{putDepth}{0}}_\texttt{$A_1$} \underbrace{ \msgC{app}}_\texttt{$A_2$}
+      \underbrace{\allA\msgC{abs}\allA\msgAGray{getTy}{\Code{Arr}(\Int, \Int)}\msgC{appL}\allA\msgAGray{getTy}{\Int}\msgC{appR}\msgAGray{putTy}{\Int}\msgAGray{getTy}{\Int}}_\texttt{$A_3$}
+      % \\&\subseteq \msgAGray{putDepth}{0}\allA \eff{abs} \allA \msgAGray{getTy}{\Int} = A_\Code{STLC}
+      \tag{$A_\Code{typing}$}
+    \end{align*}}\noindent
+   According to \textsc{TGen}, we type check the $\effGray{putDepth}\;0$ event against $\rg{A_1}{A_2A_3}{\epsilon}$. After retrieving the specification of $\effGray{putDepth}$ which has no constraints on the history and future traces from $\Delta$, we use \textsc{TSub} to adjust it into a shape consistent with $A_\Code{STLC}'$.
+   \vspace{-.4cm} \par\nobreak {\footnotesize
+    \begin{align*}
+      &\Gamma; \Delta \vdash \effGray{putDepth} : \langle \emptyset, x\hasnty{int}
+        \sarr \rg{\allA}{\msgAGray{putDepth}{x}}{\allA} \rangle <: \langle \emptyset, x{:}\nuot{int}{\vnu = 0}\sarr \rg{\epsilon}{A_1}{A_2A_3} \rangle \\
+      &\underline{\makebox[0.8\linewidth][l]{$\Gamma \vdash 0 : \nuot{int}{\vnu = 0} \quad \Gamma;\Delta; \emptyset \vdash \eff{app};... : \rg{A_1}{A_2 A_3}{\epsilon} \tag{\textsc{TGen}}$}} \\
+      &\Gamma;\Delta; \emptyset \vdash \effGray{putDepth}\;0;\eff{app};... : \rg{\epsilon}{A_1 A_2 A_3}{\epsilon} <: \rg{\epsilon}{A_\Code{STLC}}{\epsilon}
+    \end{align*}
+  }\noindent
+  Since the type of $\effGray{putDepth}$ aligns with the target type, we continue typing the rest of the generator against the \PAT{} $\rg{A_1}{A_2A_3}{\epsilon}$ in the same way.
+  \vspace{-.4cm} \par\nobreak {\footnotesize
+    \begin{align*}
+      &\Gamma; \Delta \vdash \eff{app} : \langle \{\eff{appL}, \eff{appR}\}, t_1{:}\Code{ty}\sarr t_2{:}\Code{ty}\sarr \rg{\allA}{\msgC{app}}{\allA  \msgAGray{getTy}{\Code{Arr}(t_1, t_2)}  \msgC{appL}  \allA  \msgAGray{getTy}{t_1}  \msgC{appR}  \msgAGray{putTy}{t_2}  \allA}  \rangle \\
+      &\qquad\qquad <: \langle \{\eff{appL}, \eff{appR}\}, \rg{A_1}{A_2}{A_3} \rangle \\
+      &\underline{\makebox[0.8\linewidth][l]{$\Gamma;\Delta; \{\eff{appL}, \eff{appR}\} \vdash ... : \rg{A_1A_2}{A_3}{\epsilon} $} \tag{\textsc{TGen}}} \\
+      &\Gamma;\Delta; \emptyset \vdash \eff{app};... : \rg{A_1}{A_2 A_3}{\epsilon}
+    \end{align*}
+  }\noindent %
+\end{example}
+
+\subsection{Type Soundness}
+
+% \begin{figure}[h!]
+%   \vspace*{-.15in}
+
+%   \vspace*{-.15in}
+%   \caption{Selected type denotation.}
+%   \label{fig:selected-denotation}
+%   \vspace*{-.15in}
+%   \end{figure}
+
+\paragraph{Type denotations} Similar to other refinement type systems~\cite{JV21},
+types in $\DSL$ are denoted as their inhabitants (i.e., $\denot{t}$ and $\denot{\tau}$).  The capability context is denoted as  observation capabilitys (i.e., $\denot{\Theta}$), while the type context $\Gamma$ is denoted as \emph{substitution} $\sigma$ (i.e., $[x_1\mapsto v_1, x_2\mapsto v_2]$) that provides the assignments for binding variables in $\Gamma$. Moreover, the denotation (denoted language) of SREs is the set of traces. Then, regex
+inclusion under a type context is defined as $\Gamma \vdash A \subseteq
+A' \doteq \forall \sigma \in \denot{\Gamma}. \denot{\sigma(A)}
+\subseteq \denot{\sigma(B)}$.
+The type denotation of $\rg{H}{A}{F}$ is defined as follows:
+% {\small\begin{align*}
+%   &\denot{\rg{H}{A}{F}}_{(\Theta, \Theta')} \doteq \{(e,  e_f) ~|~ \emptyset \basicvdash e : \Code{unit} \land
+%   \\&\qquad \forall \alpha \in \denot{A}. \exists \alpha_h \in\denot{H}.\exists \alpha_f \in \denot{F}. \exists \beta \in \denot{\Theta}. \exists \beta' \in \denot{\Theta'}. \msteptr{\alpha_h}{(\beta, e;e_f)}{\alpha}{(\beta',  e_f)}\mharr{\alpha_f}{(\emptyset, ())} \}
+% \end{align*}}\noindent
+{\small\begin{align*}
+  &\denot{\pret{H}{A}} \doteq \{e ~|~ \emptyset \basicvdash e : \Code{unit} \land \forall \alpha \in \denot{A}. \exists \alpha_h \in\denot{H}. \exists \beta\;\beta'. \msteptr{\alpha_h}{(\beta, e)}{\alpha}{(\beta',  ())} \}
+\end{align*}}\noindent
+A term $e$ and its continuation $e_f$ inhabits $\rg{H}{A}{F}$ iff, for trace $\alpha$ accepted by $A$, there exists history trace $\alpha_h$ and future trace $\alpha_f$ accept by $H$ and $F$, such that the execution of $e;e_f$ under history trace produces the trace $\alpha $ and $\alpha_f$ consecutively.
+\footnote{The details of these definition can be found in our \techreport{}.} 
+In contrast to incorrectness logic~\cite{OHP19}, which explicitly models effects via program states, our latent effect semantics require executions to terminate with an empty capability context. Permitting termination with a non-empty capability (e.g., $\{\eff{readRsp}\}$) would leave latent effects from asynchronous actions (such as $\eff{readReq}$) unobserved. Thus, we explicitly denote the \tyName with term and its continuation $e_f$ to capture the entire execution. The $\beta$ and $\beta'$ are the capability before and after execution of $e$; since it is always valid to add unused capability to both sides, thus this denotation is parameterized by capability context $\Theta_A$ and $\Theta_F$.
+Underapproximating specifications, as in our approach, must exclude unreachable states or unrealizable traces, since $A$ cannot include them. To improve expressiveness and usability, our tool allows users to specify an overapproximated style global property $P$ and verifies that $A \subseteq P$.
+
+%  A term $e$ inhabits $\rg{H}{A}{F}$ iff, for all realizable (i.e., producible by the execution of some program) history traces $\alpha_h$ accept by $H$, the current trace $\alpha$ produced by $e$ is accepted by $A$, and all future traces $\alpha_f$ accepted by $F$ are also realizable.\footnote{The details of these definition can be found in our \techreport{}.} 
+ 
+%  Unlike the current regex, which overapproximates the set of traces produced by $e$, the prophecy regex denotes an underapproximation of realizable future traces. Analogous to coverage types~\cite{CoverageType}, this underapproximation imposes a lower bound on the future generator $e_f$, specifying the minimal set of traces that $e_f$ must generate. Then, rather than generating all possible traces (i.e.,$\allA$), a user may instantiate a more specific future generator that only covers the traces accepted by $F$. 
+%  In Example~\ref{ex:push-pop}, the prophecy regex for $\eff{push}$ encodes the knowledge that the violation of the stack property should be revealed by a future $\eff{pop}$ event. This hint can guide the test generator to avoid exploring uninteresting cases, e.g., traces that don't contain $\eff{pop}$ event.
+
+%  $e_f$ must be in the denotation of $F$, i.e., $\alpha_f \in\denot{F}$.
+
+%  traces where, during test generation, $e$ should be explored further, as there exists a continuation $e_f$ that extends the current trace to satisfy the prophecy constraint. For example, in Example~\ref{ex:read-atomicity}, the prefix trace $\zevent{readReq}{\tau_2};\zevent{readRsp}{\tau_2,3};\zevent{readReq}{\tau_2};\ldots$ admits a possible future in which the read atomicity property holds (with a suffix $\,\ldots;\zevent{readRsp}{\tau_2,3}$), although there also exists realizable futures that violate this property.
+
+% \paragraph{Operator context}
+% We expect the trace produced by our test generator to be consistent with the operator context $\Delta$; i.e., each event in the trace must be consistent with corresponding $\PAT$ in $\Delta$.
+
+% \begin{definition}[Trace consistent with operator context]
+%   \label{lemma:trace-conistency}
+%   A trace $\alpha$ is consistent with a operator context $\Delta$
+%   (written $\traceDelta{\Delta}{\alpha}$) iff for every
+%   $\zevent{op}{\overline{c_i}}$ in $\alpha$ (i.e., $\alpha = \alpha_h
+%   \listconcat [\zevent{op}{\overline{c_i}}] \listconcat \alpha_f$),
+%   there exists $\overline{x{:}t} \sarr \rg{H}{\msg{op}{\phi}}{F}$ and
+%   capability $\Theta$ in $\Delta$ such that the following hold: %
+%   \vspace{-.4cm} \par\nobreak {\small %
+%     \begin{align*}
+%     \alpha_h \in \denot{H\msubst{x_i}{c_i}} \land \alpha_f \in \denot{F\msubst{x_i}{c_i}} \land \Theta \subseteq \{ \eff{op} ~|~ \zevent{op}{\overline{c}} \in \alpha_f\} \land \phi\msubst{x_i}{c_i} \land \forall i. c_i \in \denotation{t_i}
+% \end{align*}}
+% \end{definition}
+ 
+\begin{theorem}[Fundamental Theorem]\label{theorem:fundamental}A well-typed term, i.e., \(\Gamma; \Delta; \Theta \vdash e : \capTau{\Theta', \rg{H}{A}{F}}\), generates traces consistent with the \PAT: $\forall \sigma \in \denotation{\Gamma}. \exists e_f. (\sigma(e), e_f) \in \denotation{\sigma(\rg{H}{A}{F})}_{(\Theta, \Theta')}$.\footnote{The proofs of all theorems in this paper are provided in the \techreport{}.}
+\end{theorem}
+
+\begin{corollary}[Type Soundness]\label{theorem:sound} Given a operator context \(\Delta\), a generator \(e\) that satisfies \(\emptyset;\Delta;\emptyset \vdash e : \capTau{\emptyset, \rg{\epsilon}{A}{\epsilon}}\) must produce all traces accepted by $A$, i.e., $\forall \alpha. \alpha \in \denot{A} \impl \exists \beta.\msteptr{[]}{(\emptyset, e)}{\alpha}{(\beta, ())}$.
+\end{corollary}

@@ -1,0 +1,402 @@
+\newpage
+\section{Declarative Typing Rules}\label{sec:tech:typing}
+
+\begin{figure}[!t]
+{\footnotesize
+{\small\begin{flalign*}
+ &\text{\textbf{Type Erasure}} & \fbox{$\eraserf{t} \quad \eraserf{\tau} \quad \eraserf{\Gamma}$}
+\end{flalign*}}
+\vspace{-1em}
+\begin{alignat*}{4}
+    \eraserf{\urt{b}{\phi}} &\doteq b \quad&
+    \eraserf{x{:}t \sarr \tau} &\doteq \eraserf{t}\sarr\eraserf{\tau} \quad&
+    \eraserf{x{:}b \garr t} &\doteq \eraserf{t} \quad&
+    \eraserf{\uhat{H}{x{:}t}{F}} &\doteq \eraserf{t}
+    \\\eraserf{ \tau_1 \interty \tau_2 } &\doteq \eraserf{\tau_1} \quad&
+    \eraserf{\emptyset} &\doteq \emptyset \quad&
+    \eraserf{x{:}t, \Gamma} &\doteq x{:}\eraserf{t}, \eraserf{\Gamma} \quad& \quad&
+\end{alignat*}
+{\small\begin{flalign*}
+  &\text{\textbf{Ghost Event Erasure}} & \fbox{$\eraseGhost{\alpha}$}
+ \end{flalign*}}
+ \vspace{-1em}
+ \begin{alignat*}{4}
+     \eraseGhost{[\;]} &\doteq [\;] \quad&
+     \eraseGhost{\zevent{op}{\overline{c}}\cons \alpha} &\doteq \zevent{op}{\overline{c}}\cons \eraseGhost{\alpha} \quad&
+     \eraseGhost{\zeventGray{op}{\overline{c}}\cons \alpha} &\doteq \eraseGhost{\alpha} \quad&
+     \eraseGhost{\alpha_1 \listconcat \alpha_2} &\doteq \eraseGhost{\alpha_1} \listconcat \eraseGhost{\alpha_2}
+ \end{alignat*}
+{\small
+\begin{flalign*}
+ &\text{\textbf{Well-formedness}} & \fbox{$\Gamma \wellfoundedvdash A \quad \Gamma \wellfoundedvdash \tau \quad \Gamma \wellfoundedvdash t$}
+\end{flalign*}
+}
+\\ \
+\begin{prooftree}
+\hypo{
+\S{Ty}(\eff{op}) = \overline{x_i{:}b_i}\sarr b \quad  \eraserf{\Gamma}, \overline{x_i{:}b_i}, \vnu{:}b \basicvdash \phi : \Code{bool}
+}
+\infer1[\textsc{WfEvent}]{
+\Gamma \wellfoundedvdash \msgB{op}{\overline{x_i\;\vnu}}{\phi}
+}
+\end{prooftree}
+\quad
+\begin{prooftree}
+\hypo{
+\Gamma \wellfoundedvdash A_1 \quad \Gamma \wellfoundedvdash A_2
+}
+\infer1[\textsc{WfOr}]{
+\Gamma \wellfoundedvdash A_1 \lor A_2
+}
+\end{prooftree}
+\\[.8em]
+ \begin{prooftree}
+\hypo{
+\Gamma \wellfoundedvdash A_1 \quad \Gamma \wellfoundedvdash A_2
+}
+\infer1[\textsc{WfConcat}]{
+\Gamma \wellfoundedvdash A_1\seqA A_2
+}
+\end{prooftree}
+\quad
+\begin{prooftree}
+\hypo{}
+\infer1[\textsc{WfEmpty}]{
+\Gamma \wellfoundedvdash \emptyset
+}
+\end{prooftree}
+\quad
+\begin{prooftree}
+\hypo{}
+\infer1[\textsc{WfEpsilon}]{
+\Gamma \wellfoundedvdash \epsilon
+}
+\end{prooftree}
+\quad
+\begin{prooftree}
+\hypo{\Gamma \wellfoundedvdash A}
+\infer1[\textsc{WfStar}]{
+\Gamma \wellfoundedvdash A^*
+}
+\end{prooftree}
+\\[.8em]
+\begin{prooftree}
+\hypo{
+\eraserf{\Gamma}, \vnu{:}b \basicvdash \phi : \Code{bool}
+}
+\infer1[\textsc{WfPBase}]{
+\Gamma \wellfoundedvdash \urt{b}{\phi}
+}
+\end{prooftree}
+\quad
+\begin{prooftree}
+\hypo{
+\Gamma \wellfoundedvdash t_x
+}
+\hypo{
+\Gamma, x{:}\eraserf{t_x} \wellfoundedvdash t
+}
+\infer2[\textsc{WfPArr}]{
+\Gamma \wellfoundedvdash x{:}t_x \sarr t
+}
+\end{prooftree}
+\\[.8em]
+\begin{prooftree}
+\hypo{
+\parbox{50mm}{\center
+$\Gamma,x{:}t \wellfoundedvdash H$ \quad
+$\Gamma \wellfoundedvdash t$ \quad
+$\Gamma,x{:}t \wellfoundedvdash F$
+}
+}
+\infer1[\textsc{WfHF}]{
+\Gamma \wellfoundedvdash \uhat{H}{x{:}t}{F}
+}
+\end{prooftree}
+\quad
+\begin{prooftree}
+  \hypo{
+    \Gamma, \effGray{op}{:}s \wellfoundedvdash t
+  }
+  \infer1[\textsc{WfGEvent}]{
+  \Gamma \wellfoundedvdash \effGray{op}:s\garr t
+  }
+  \end{prooftree}
+\\[.8em]
+\begin{prooftree}
+\hypo{
+\Gamma \wellfoundedvdash \tau
+}
+\hypo{
+\Gamma, x{:}\eraserf{t_x} \wellfoundedvdash \tau
+}
+\infer2[\textsc{WfEfArr}]{
+\Gamma \wellfoundedvdash x{:}t_x \sarr \tau
+}
+\end{prooftree}
+\quad
+\begin{prooftree}
+\hypo{
+\Gamma \wellfoundedvdash \tau
+}
+\hypo{
+\Gamma, x{:}b \wellfoundedvdash t
+}
+\infer2[\textsc{WfGArr}]{
+\Gamma \wellfoundedvdash x{:}b \garr t
+}
+\end{prooftree}
+\quad
+\begin{prooftree}
+\hypo{
+\parbox{30mm}{\center
+  $\Gamma \wellfoundedvdash \tau_1$\quad
+  $\Gamma \wellfoundedvdash \tau_2$ \quad
+  $\eraserf{\tau_1} = \eraserf{\tau_2}$
+}
+}
+\infer1[\textsc{WFInter}]{
+\Gamma \wellfoundedvdash \tau_1 \interty \tau_2
+}
+\end{prooftree}
+}
+\caption{Full set of well-formedness typing rules.}
+\label{fig:full-wf-rules}
+\end{figure}
+
+The full set of rules for our auxiliary typing relations are shown in
+\autoref{fig:full-wf-rules} and \autoref{fig:full-sub-rules}. The full
+set of declarative typing rules are shown in
+\autoref{fig:full-typing-rules}. We elide the basic typing relation
+({\small$\emptyset \basicvdash e : s$}) in the premises of the rules
+in \autoref{fig:full-typing-rules}; all of these rules assume any
+terms they reference have a basic type.
+
+\begin{figure}[!t]
+{\footnotesize
+{\small
+\begin{flalign*}
+&\text{\textbf{Automata Inclusion }} & \fbox{$\Gamma \vdash A \subseteq A$}\quad
+&\text{\textbf{Subtyping }} & \fbox{$\Gamma \vdash t <: t \quad \Gamma \vdash \tau <: \tau$}
+\end{flalign*}
+}
+\\ \
+\begin{prooftree}
+\hypo{
+\forall \sigma_2 \in  \denotation{\Gamma}.\exists \sigma_1 \in \denotation{\Gamma}.\denot{\sigma_2(A_2)} \subseteq \denot{\sigma_1(A_1)}
+}
+\infer1[\textsc{SubAutomata}]{
+\Gamma \vdash A_1 \subseteq A_2
+}
+\end{prooftree}
+\quad
+\begin{prooftree}
+\hypo{
+\parbox{50mm}{\center
+  $\Gamma \vdash t_1 <: t_2$ \quad
+$\Gamma,x{:}t_1 \vdash F_2 \subseteq F_1$ \quad
+$\Gamma,x{:}t_1 \vdash H_1 \subseteq H_2$
+}
+}
+\infer1[\textsc{SubHF}]{
+\Gamma \vdash \uhat{H_1}{x{:}t_1}{F_1} <: \uhat{H_2}{x{:}t_2}{F_2}
+}
+\end{prooftree}
+\\[.8em]
+\begin{prooftree}
+\hypo{}
+\infer1[\textsc{SubIntLL}]{
+\Gamma \vdash \tau_1 \interty \tau_2 <: \tau_1
+}
+\end{prooftree}
+\quad
+\begin{prooftree}
+\hypo{}
+\infer1[\textsc{SubIntLR}]{
+\Gamma \vdash \tau_1 \interty \tau_2 <: \tau_2
+}
+\end{prooftree}
+\quad
+\begin{prooftree}
+\hypo{
+\parbox{33mm}{\center
+  $\Gamma \vdash \tau <: \tau_1 $ \quad
+  $\Gamma \vdash \tau <: \tau_2 $
+}
+}
+\infer1[\textsc{SubIntR}]{
+\Gamma \vdash \tau <: \tau_1 \interty \tau_2
+}
+\end{prooftree}
+\\[.8em]
+\begin{prooftree}
+\hypo{
+\parbox{30mm}{\center
+$\Gamma \vdash t_2 <: t_1$ \quad
+$\Gamma, x{:}t_2 \vdash \tau_1 <: \tau_2$
+}
+}
+\infer1[\textsc{SubArr}]{
+\Gamma \vdash x{:}t_1\sarr \tau_1 <: x{:}t_2\sarr \tau_2
+}
+\end{prooftree}
+\quad
+\begin{prooftree}
+\hypo{
+\Gamma, x{:}\urt{b}{\top} \vdash t_1 <: t_2
+}
+\infer1[\textsc{SubGRight}]{
+\Gamma \vdash t_1 <: x{:}b\garr t_2
+}
+\end{prooftree}
+\quad
+\begin{prooftree}
+\hypo{
+\parbox{30mm}{\center
+  $\Gamma \wellfoundedvdash t[x\mapsto v]$
+}
+}
+\infer1[\textsc{SubG}]{
+\Gamma \vdash x{:}b\garr t <: t[x\mapsto v]
+}
+\end{prooftree}
+\\[.8em]
+\begin{prooftree}
+  \hypo{
+    \Gamma \vdash t_1 <: t_2}
+  \infer1[\textsc{SubGEvent}]{
+  \Gamma \vdash \effGray{op}:s\garr t_1 <: \effGray{op}:s\garr t_2
+  }
+  \end{prooftree}
+\quad
+\begin{prooftree}
+\hypo{
+\forall \sigma_2 \in\denot{\Gamma}. \exists \sigma_1 \in\denot{\Gamma}. \sigma_1(\phi_2) \implies \sigma_2(\phi_2)
+}
+\infer1[\textsc{SubPBase}]{
+\Gamma \vdash \urt{b}{\phi_1} <: \urt{b}{\phi_2}
+}
+\end{prooftree}
+\\[.8em]
+\begin{prooftree}
+\hypo{
+\parbox{45mm}{\center
+$\Gamma \vdash t_2 <: t_1$ \quad
+$\Gamma, x{:}t_2 \vdash \tau_1 <: \tau_2$
+}
+}
+\infer1[\textsc{SubPArr}]{
+\Gamma \vdash x{:}t_1\sarr \tau_1 <: x{:}t_2\sarr \tau_2
+}
+\end{prooftree}
+}
+\caption{Full set of subtyping rules.}
+\label{fig:full-sub-rules}
+\end{figure}
+
+\begin{figure}[!t]
+  {\footnotesize
+  {\footnotesize
+  \begin{flalign*}
+   &\text{\textbf{Auxiliary Typing}} & & \fbox{$\Gamma \wfvdash \tau \quad \Gamma \vdash A \subseteq A \quad \Gamma \vdash \tau <: \tau$} &\text{\textbf{Typing}} &  & \fbox{$\Gamma\vdash \eff{op}: t \quad \Gamma\vdash v : t \quad \Gamma \vdash e: \tau$}
+  \end{flalign*}
+  }
+  \\ \
+  \mprooftr{20mm}
+  {$\Gamma\vdash v : t$}
+  {TRet}
+  {$\Gamma\vdash v : \uhat{H}{t}{\epsilon}$}
+  \quad
+  \mprooftr{15mm}
+  {$\Delta(\eff{op}) = t$}
+  {TOpCtx}
+  {$\Gamma\vdash \eff{op} : t$}
+  \quad
+  \mprooftr{58mm}
+  {
+  $\Gamma \vdash \eff{op} : \overline{x_i{:}t_i}\sarr \uhat{H}{t}{\msgA{op}{\overline{x_i}} \seqA F}$ \quad
+  $\forall i. \;\Gamma \vdash v_i : t_i$}
+  {TEffOp}
+  {$\Gamma\vdash \eff{op}{\;\overline{v_i}} : \uhat{H}{t}{\msgA{op}{\overline{v_i}} \seqA F}$}
+  \\[.8em]
+  \mprooftr{35mm}
+{
+$\Gamma\vdash e_1 : \tau_1$ \quad $\Gamma\vdash e_2 : \tau_2$}
+{TChoice}
+{$\Gamma\vdash e_1 \oplus e_2 : \tau_1 \interty \tau_2$}
+\quad
+\mprooftr{66mm}{
+  $\Gamma\vdash e_1 : \uhat{H}{x{:}t_x}{F_1}$ \quad
+  $\Gamma, x{:}t_x\vdash e_2 : \uhat{H \seqA F_1}{t}{F_2}$}
+{TLet}
+{
+  $\Gamma\vdash \zlet{x}{e_1}{e_2} : \uhat{H}{t}{F_1 \seqA F_2}$
+}
+\\[.8em]
+\mprooftr{22mm}{
+ $\Gamma, x{:}t_x\vdash e : \tau$
+}{TFun}{
+ $\Gamma\vdash \zzlam{x}{e} : x{:}t_x\sarr \tau$}
+\
+\mprooftr{47mm}{
+}{TFixBase}{
+ $\Gamma\vdash \zzfix{f}{x}{e} : \overline{x{:}s}\sarr\uhat{H}{\urt{b}{\bot}}{\emptyset}$}
+\
+\mprooftr{27mm}{
+ $\Gamma\vdash \zzfix{f}{x}{e} : t$ \quad
+ $\Gamma, f{:}t\vdash \zzlam{x}{e} : t'$
+}{TFixInd}{
+ $\Gamma\vdash \zzfix{f}{x}{e} : t'$}
+ \\[.8em]
+\mprooftr{25mm}
+{$\eraserf{\Gamma} \basicvdash c : b$}
+{TConst}
+{$\Gamma \vdash c : \urt{b}{\vnu = c}$}
+\quad
+\mprooftr{25mm}
+{$\eraserf{\Gamma} \basicvdash x : b$}
+{TVar}
+{$\Gamma \vdash x : \urt{b}{\vnu = x}$}
+\quad
+   \mprooftr{30mm}{
+   $\Gamma v_1 : x{:}t_2 \sarr \tau$ \quad
+   $\Gamma \vdash v_2 : t_2$
+  }{TAppEff}{
+   $\Gamma\vdash v_1 v_2 : \tau[x\mapsto v_2]$}
+\\[.8em]
+\mprooftr{52mm}
+{
+$\Gamma \vdash \primop : \overline{y{:}t_i}\sarr t$ \quad
+$\forall i. \Gamma \vdash v_i : t_i$
+}
+{TOpApp}
+{$\Gamma\vdash \primop\ \overline{v} : t$}
+\quad
+\mprooftr{17mm}
+{$\Delta(\primop) = t$}
+{TPureOp}
+{$\Gamma \vdash \primop : t$}
+\\[.8em]
+\mprooftr{18mm}
+{$\Gamma \vdash v : t$ \quad
+$\Gamma \vdash t <: t'$}
+{TPureSub}
+{$\Gamma \vdash v : t'$}
+\quad
+\mprooftr{18mm}
+{$\Gamma \vdash e : \tau$ \quad
+$\Gamma \vdash \tau <: \tau'$}
+{TSub}
+{$\Gamma \vdash e : \tau'$}
+\quad
+\mprooftr{38mm}
+{$\Gamma \vdash \eff{op} : \overline{x{:}t_x}\sarr\uhat{H}{t}{F}$ \quad
+$\Gamma,\overline{x{:}t_x} \vdash H' \subseteq H$
+\quad
+$\Gamma,\overline{x{:}t_x} \not\vdash H' \subseteq \emptyset$}
+{TOpHis}
+{$\Gamma\vdash \eff{op} : \overline{x{:}t_x}\sarr\uhat{H'}{t}{F}$}
+}
+\caption{Full set of typing rules.}
+\label{fig:full-typing-rules}
+\end{figure}

@@ -1,0 +1,140 @@
+\paragraph{Call-by-Value Semantics} Let's add a new type (qualifier) to express unreachable.
+\begin{align*}
+    \text{Unreachable type} & ::= \lightning \quad (\text{diverse or stuck})
+    \\ \text{Over type} & ::= \ort{b}{\phi}  (\text{guarantee termination})
+    \\ \text{Normal refinement type} & ::= \lightning \unionty \ort{b}{\phi}
+    \\ \text{Under type} & ::= \ort{b}{\vnu = c} 
+    \\ & \quad (\text{in deterministic language, a term can only evaluate to one single value})
+\end{align*}\noindent
+A more interesting under approximate type can only happens in function types. In this style, we can do similar verification as ``ill-typing''.
+
+\paragraph{Parameter types} the under- and over- is unified for base type, let's then take a look at function types. In order to simplify the problem, we only consider singleton return type. Intuitively, we have ``universal'' and ``existential'' parameter types.
+\begin{align*}
+    \Code{prec} :\;& x{:}\ort{\Nat}{\vnu = 1} \sarr \ort{\Nat}{\vnu = 0} \\
+    \Code{prec} :\;& x{:}\ort{\Nat}{\vnu = 0} \sarr \ort{\Nat}{\vnu = 0} \\
+    \Code{prec} :\;& \urt{\Nat}{\vnu = 0} \sarr \ort{\Nat}{\vnu = 0} \\
+    \Code{prec} :\;& \urt{\Nat}{\vnu \geq 0} \sarr \ort{\Nat}{\vnu = 0}
+\end{align*}\noindent
+These types indicates different reachability statement for a $0$ return value.
+
+\paragraph{Return types} what happens when the return type is not singleton types?
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    let main (x: int) =
+      let z = f x in
+      if (z > 4) then error
+\end{minted}
+In order to prove the incorrectness of this program, we what to show there \emph{exists some} return value that greater than $4$. The qualifier $\vnu > 4$ cannot be an postcondition in IL, since not all values greater than $4$ are reachable. In this case, the expected type of function $f$ should be $\urt{\Int}{\top} \sarr \ort{\Int}{\vnu > 4}$.
+
+On the other hand, when we need an ``under'' return type? I believe it is actually an approximation, or an precision loss. For example, we have
+\begin{align*}
+    \Code{prec} :\;& x{:}\ort{\Nat}{\vnu = 1} \sarr \ort{\Nat}{\vnu = 0} \tag{$\tau_1$}\label{ty-1} \\
+    \Code{prec} :\;& x{:}\ort{\Nat}{\vnu = 2} \sarr \ort{\Nat}{\vnu = 1} \tag{$\tau_2$}\label{ty-2} \\
+    \Code{prec} :\;& x{:}\ort{\Nat}{\vnu = 3} \sarr \ort{\Nat}{\vnu = 2} \tag{$\tau_3$}\label{ty-3}
+\end{align*}\noindent
+And then we get an approximated type:
+\begin{align*}
+    \Code{prec} :\;& \urt{\Nat}{1 \leq \vnu \leq 3} \sarr \urt{\Nat}{0 \leq \vnu \leq 2} \tag{$\tau_4$}\label{ty-4}
+\end{align*}\noindent
+We know $\tau_1 \interty \tau_2 \interty \tau_3 \impl \tau_4$, but the other direction is not true.
+
+Question: what happens for non-singleton parameter types?
+\begin{align*}
+    \Code{prec} :\;& x{:}\ort{\Nat}{\vnu = 1 \lor \vnu = 0} \sarr \ort{\Nat}{\vnu = 0} \\
+    \Code{prec} :\;& x{:}\ort{\Nat}{\vnu = 2} \sarr \ort{\Nat}{\vnu = 1}
+\end{align*}\noindent
+There are two possible (minimal) approximated types:
+\begin{align*}
+    \Code{prec} :\;& \urt{\Nat}{\vnu = 1 \lor \vnu = 2} \sarr \urt{\Nat}{0 \leq \vnu \leq 1}\\
+    \Code{prec} :\;& \urt{\Nat}{\vnu = 0 \lor \vnu = 2} \sarr \urt{\Nat}{0 \leq \vnu \leq 1}
+\end{align*}\noindent
+
+\paragraph{Mixed types} we can combine these types in arbitrary ways.
+\begin{align*}
+    \Code{plus} :\;& x{:}\ort{\Int}{\top} \sarr y{:}\ort{\Int}{\top} \sarr \underbrace{\ort{\Int}{\vnu = x + y}}_{(\text{can also be treated as an under type})} \\
+    \Code{plus} :\;& x{:}\ort{\Int}{\top} \sarr \urt{\Int}{\vnu > 0} \sarr \underbrace{\urt{\Int}{\vnu > x}}_{(\text{under type})} \\
+    \Code{plus} :\;& \urt{\Int}{\vnu > 0} \sarr \urt{\Int}{\vnu > 0} \sarr \underbrace{\urt{\Int}{\vnu > 2}}_{(\text{under type})} \\
+    \Code{divide} :\;& x{:}\ort{\Int}{\top} \sarr \urt{\Int}{\vnu = 0} \sarr \underbrace{\lightning}_{(\text{under type})} \quad (\text{unreachable}) \\
+    &\vdash \Code{eq} : x{:}\ort{\Int}{\vnu \geq 0} \sarr \urt{\Int}{\vnu \geq 0} \sarr \ort{\Bool}{\vnu = \true} \\
+    &\vdash \Code{eq} : \urt{\Int}{\vnu \geq 0} \sarr y{:}\ort{\Int}{\vnu \geq 0} \sarr \ort{\Bool}{\vnu = \true} \\
+\end{align*}\noindent
+The order to parameter seems not defines order of quantification ($\forall$ and $\exists$). Any solution in dependent type theory? (ghost variables can work around, or we limit our type system such that the prefix is always over then under).
+
+\paragraph{Recursion}
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    let rec toZero (x: int) =
+      if x > 0 then toZero (x - 1) 
+      else if x < 0 then toZero (x + 1)
+      else 0
+\end{minted}
+\begin{align*}
+    &\Code{toZero} : \urt{\Int}{\vnu  = 10} \sarr \ort{\Int}{\vnu = 0} \\
+    &\Code{toZero} : \forall i. \ort{\Int}{\vnu = i \land 0 \leq \vnu \leq 10} \sarr \ort{\Int}{\vnu = 0}
+\end{align*}\noindent
+Inductive invaraint:
+\begin{align*}
+    &\text{definition}: \forall i. \tau(i) \\
+    &\text{Base}: \vdash e {:} \tau(0) \\
+    &\text{Inductive}: \forall i. e{:}\tau(i) \vdash e {:} \tau(i + 1) \\
+\end{align*}\noindent
+when $i$ is free in $\tau$, it is normal inductive invariant.
+
+\paragraph{Dependency} Incorrectness logic defines a reversed semantics which is hard to define dependency precisely, especially for non-singleton return types.
+\begin{align*}
+    \Code{prec} :\;& \urt{\Nat}{1 \leq \vnu \leq 3} \sarr \urt{\Nat}{0 \leq \vnu \leq 2} \\
+    \Code{prec} :\;& \urt{\Nat}{\vnu = r + 1} \sarr r{:}\urt{\Nat}{0 \leq \vnu \leq 2} \\
+    \Code{prec} :\;& i{:}\Int \sarr \urt{\Nat}{\vnu = i + 1} \sarr r{:}\urt{\Nat}{\vnu = i \land 0 \leq \vnu \leq 2} \\
+\end{align*}\noindent
+In some sense, the depdency addes the precision back, seems conflict with the intuition of under- return type.
+
+\paragraph{Multiple types} Over types can be unioned into a single types, and equipped with one under type -- can we union muptiple under types?
+\begin{align*}
+    &\vdash \Code{prec} : x{:}\ort{\Int}{\vnu \geq 0} \interty \urt{\Int}{\vnu > 1} \sarr \ort{\Int}{\vnu \geq 0} \interty \urt{\Int}{\vnu > 0}
+\end{align*}\noindent
+ITP: control precisions and invariants.
+
+\paragraph{Typing} Typing rules for over-return types is retreat forward.
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    let prec (x: int) =
+      match x with
+      | 0 -> 0
+      | S n -> n
+\end{minted}
+For the example above, we want to type check:
+\begin{align*}
+    &\vdash \Code{prec} : x{:}\ort{\Int}{\vnu > 1} \sarr \ort{\Int}{\vnu > 0} \\
+    &(\text{like normal refinement type })
+\end{align*}\noindent
+\begin{align*}
+    &\vdash \Code{prec} : \urt{\Int}{\vnu \geq 0} \sarr \ort{\Int}{\vnu = 0} \\
+    x{:}\urt{\Int}{\vnu \geq 0} &\vdash \mykw{match}\; ... : ? \\
+    x{:}\urt{\Int}{\textcolor{red}{\vnu \geq 0}}, \Code{tmp}{:}\urt{\Unit}{x > 0} &\vdash \mykw{match}\;... : ? \\
+    x{:}\urt{\Int}{\textcolor{red}{\vnu \geq 0}}, \Code{tmp}{:}\urt{\Unit}{x > 0}, n{:}\urt{\Int}{S\;\vnu = x} &\vdash |~ S\;n \to n : ? \\
+    x{:}\urt{\Int}{\textcolor{red}{\vnu \geq 0}}, \Code{tmp}{:}\urt{\Unit}{x > 0}, n{:}\urt{\Int}{S\;\vnu = x} &\vdash |~ S\;n \to n : \ort{\Int}{\vnu = n} <: \ort{\Int}{\vnu = 0} \\
+    \exists x. x \geq 0 \land x > 0 \land \exists n. S\;n = x \land (\forall \vnu. \vnu = n \impl \vnu = 0)
+\end{align*}\noindent
+Question: it seems that the infered type are always singleton types?
+
+\paragraph{Non-singleton return typing} For example
+\begin{align*}
+    &\vdash \Code{prec} : \urt{\Int}{\vnu > 1} \sarr \urt{\Int}{\vnu > 0} \\
+    &r{:}\ort{\Int}{\vnu > 0} \vdash \Code{prec} : \urt{\Int}{\vnu > 1} \sarr \urt{\Int}{\vnu = r} \quad (\text{unfold unioned types}) \\
+\end{align*}\noindent
+
+\paragraph{Function application} For example
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    val f : ?$\urt{\Int}{\vnu > 1} \sarr \urt{\Int}{\vnu > 0}$?
+    val g : ?$\urt{\Int}{\vnu > 1} \sarr \urt{\Int}{\vnu > 0}$?
+    let main (x: int) =
+      let y = f x in
+      let z = g y in
+      y + z
+\end{minted}
+\begin{align*}
+    &x{:}\urt{\Int}{\top} \vdash \zlet{y}{f\;x}{e} : ? \\
+    &x{:}\ort{\Int}{\top}, y{:}\urt{\Int}{\vnu > 0} \vdash e : ? \\
+\end{align*}\noindent
+
+\paragraph{Type check multiple types} Over types can be unioned into a single types, and equipped with one under type -- can we union muptiple under types?
+\begin{align*}
+    &\vdash \Code{prec} : x{:}\ort{\Int}{\vnu \geq 0} \interty \urt{\Int}{\vnu > 1} \sarr \ort{\Int}{\vnu \geq 0} \interty \urt{\Int}{\vnu > 0} \\
+\end{align*}\noindent
