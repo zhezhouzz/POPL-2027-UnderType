@@ -78,3 +78,118 @@ On the other hand, for an arbitrary ghost variable $i$ that less than head eleme
 This can be proved from the definition of $\Code{sorted}$ by the facts that $\Code{h1}::...$ is sorted (proved above), and $i$ is less than $\I{hd}(\Code{h1}::...) = \Code{h1}$.
 
 \paragraph{Discussion} Note that the refined specification is much weaker than the one considering membership; also, we do not add any new predicates (e.g., $\I{elemSet}$) to the specification, and no new lemmas are required.
+
+\section{Old: Motivating Examples}
+
+\begin{figure}[!t]
+    \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    let rec merge (l1: int list) (l2: int list) : int list =
+      match l1, l2 with
+      | [], l2 -> l2
+      | l1, [] -> l1
+      | h1 :: t1, h2 :: t2 ->
+        if h1 < h2 then h1 :: h2 :: merge t1 t2
+        else if h1 > h2 then h2 :: h1 :: merge t1 t2
+        else h1 :: h2 :: merge t1 t2
+    
+    let rec mergesort (split: int list -> int list * int list) (l: int list) =
+        match l with
+        | [] | [_] -> l
+        | _ ->
+            let l1, l2 = split l in
+            merge (mergesort l1) (mergesort l2)
+    \end{minted}
+    \caption{\Code{mergesort} implements the merge sort algorithm: it splits the list, recursively sorts the sublists, and merges the results (lines $14$--$15$). \Code{mergesort} is parameterized by the input \Code{split} function, which can use different splitting strategies.
+    The $\Code{merge}$ function is supposed to merge two sorted lists. If either of the input lists is empty, \Code{merge} returns the other (lines $3$--$4$). Otherwise, the function merges the lists recursively (lines $6$--$8$). However, this implementation is buggy: in the case $\Code{h1} < \Code{h2}$, it places $\Code{h2}$ before the result of merging $\Code{t1}$ and $\Code{t2}$, incorrectly assuming that $\Code{h2}$ is smaller than all elements in $\Code{t1}$. }
+    \label{fig:motivation}
+\end{figure}
+
+\paragraph{Proving Incorrectness} We attempt to prove the incorrectness of \Code{mergesort}, as shown in Figure \ref{fig:motivation}; that is, it violates the sorting property.
+\begin{align*}
+    \text{sorting property: } & \forall l\;l'.\ l' = \Code{mergesort}\ l \impl \I{sorted}(l')
+    \\ \text{incorrectness: } & \exists l\;l'.\ l' = \Code{mergesort}\ l \land \neg \I{sorted}(l')
+\end{align*}\noindent
+More precisely, we would like to know under what conditions (e.g., shape of input list, properties of the \Code{split} function) the \Code{mergesort} function is incorrect.
+
+\paragraph{Example} For input $\Code{l1 = [1;2],\ l2 = [5;6]}$, the \Code{merge} function will produce the unsorted output $\Code{[1;5;2;6]}$. If we choose the second implementation of the \Code{split} function shown in Figure \ref{fig:split}, the \Code{mergesort} function will produce the unsorted list from the input $\Code{[2;1;6;5]}$.
+\begin{figure}[!t]
+    \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    (* the first list will not be less than the second list *)
+    let split (l: int list) : int list * int list =
+        let rec aux l1 l2 = function
+          | [] -> (l1, l2)
+          | [x] -> (x :: l1, l2)
+          | x :: y :: rest ->
+              aux (x :: l1) (y :: l2) rest
+        in
+        aux [] [] l
+
+    (* the first list will be no longer than the second list *)
+    let split (l: int list) : int list * int list =
+        let n = List.length l in
+        let n1 = n / 2 in
+        let n2 = n - n1 in
+        (List.sublist l 0 n1, List.sublist l n1 n)
+
+    (* random pick an element as pivot and split the list into two parts ... *)
+    \end{minted}
+    \caption{Two possible implementations of the \Code{split} function.}
+    \label{fig:split}
+\end{figure}
+
+\paragraph{Challenges} There are several challenges in proving incorrectness.
+\begin{enumerate}
+    \item Higher-order functions, which prevent traditional testing and symbolic execution approaches. We also want to reject some trivial invalid input functions.
+    \item Compositional reasoning: we would like to find a precise incorrectness precondition for \Code{mergesort} to enable further proofs over different implementations of \Code{split}. For example, the following specification is not allowed:
+    \begin{align*}
+        \Code{split} : \ort{\List[\Int]}{\top} \sarr \urt{\List[\Int]}{\top} \times \urt{\List[\Int]}{\top}
+    \end{align*}\noindent
+    where $\Code{split}$ should follow some basic properties, e.g., preserve membership of the input list.
+    Then the incorrectness precondition of $\Code{merge}$ should also be precise; i.e., it cannot just be 
+    \begin{align*}
+        \Code{merge} : \urt{\List[\Int]}{\top} \sarr \urt{\List[\Int]}{\top} \sarr \Code{unsorted}
+    \end{align*}\noindent
+    \item Recursive functions, where the incorrectness execution path involves multiple recursive calls. For some calls, we need a correctness specification; for others, we need an incorrectness specification.
+\end{enumerate}
+
+\paragraph{Solution: Using Over- and Under- Approximation}
+\begin{enumerate}
+    \item Higher-order function: We provide an ``over-style'' specification of the input function:
+    \begin{align*}
+        &\Code{mergesort}:
+        \\&\quad \ol{\Code{split}}{:}(\ol{l}{:}\rt{il}{\top} \sarr \ol{\Code{l1}}{:}\rt{il}{\top} \times \rt{il}{\I{len}(\vnu) = \I{len}(\Code{l1}) + \I{len}(\vnu) \land \I{mem}\ldots}) \sarr
+        \\&\quad \ol{\Code{l}}{:}\rt{il}{\top} \sarr
+        \\&\quad \rt{il}{\I{sorted}(\vnu)}
+    \end{align*}\noindent
+    Then we ``negate'' it to get the ``under-style'' specification:
+    \begin{align*}
+        &\Code{mergesort}:
+        \\&\quad \ul{\Code{split}}{:}(\ol{l}{:}\rt{il}{\top} \sarr \ol{\Code{l1}}{:}\rt{il}{\top} \times \rt{il}{\I{len}(\vnu) = \I{len}(\Code{l1}) + \I{len}(\vnu) \land \I{mem}\ldots}) \sarr
+        \\&\quad \ul{\Code{l}}{:}\rt{il}{\top} \sarr
+        \\&\quad \rt{il}{\neg \I{sorted}(\vnu)}
+    \end{align*}\noindent
+    Note that the function type of $\Code{split}$ is not flipped (it is still an over-style specification), but the way we treat the parameter $\Code{split}$ is changed to under-style (similar to higher-order model checking). Our proof should show that the program can be typechecked against some supertype of this type. Similarly, the $\Code{merge}$ function should have an over-style specification:
+    \begin{align*}
+        &\Code{merge}: \ol{\Code{l1}}{:}\rt{il}{\I{sorted}(\vnu)} \sarr \ol{\Code{l2}}{:}\rt{il}{\I{sorted}(\vnu)} \sarr \rt{il}{\top}
+    \end{align*}\noindent
+    \item Mixed specification: The $\Code{merge}$ function requires two parameters; if both of them are underapproximated, it is too specific and hard to match the actual implementation. For example, the two implementations of the $\Code{split}$ function shown in Figure \ref{fig:split} have different guarantees on the lengths of the output lists. However, the following specification is more general:
+    \begin{align*}
+        &\Code{merge}:
+        \\&\quad \ol{\Code{l1}}{:}\rt{il}{\I{len}(\vnu) \geq 2 \land \I{sorted}(\vnu)} \sarr \ul{\Code{l2}}{:}\rt{il}{\I{len}(\vnu) = 2 \land \I{sorted}(\vnu)} \sarr \rt{il}{\neg \I{sorted}(\vnu)}
+        \\&\quad \ol{\Code{l1}}{:}\rt{il}{\I{len}(\vnu) \geq 2 \land \I{sorted}(\vnu)} \sarr \ul{\Code{l2}}{:}\unionty_{i{:}\Int}\rt{il}{\I{len}(\vnu) = i \land i \geq 2 \land \I{sorted}(\vnu)} \sarr \rt{il}{\neg \I{sorted}(\vnu)}
+    \end{align*}\noindent
+    This can lead to a more general specification of the $\Code{split}$ function (i.e., the incorrectness precondition):
+    \begin{align*}
+        &\Code{split}:
+        \\&\quad \ul{l}{:}\rt{il}{\I{len}(\vnu) \geq 4} \sarr
+        \\&\quad \ol{\Code{l1}}{:}\rt{il}{\I{len}(\vnu) \geq 2} \times \urt{il}{\I{len}(\vnu) = 2}
+    \end{align*}\noindent
+    This type can fit both implementations of the $\Code{split}$ function shown in Figure \ref{fig:split}.
+    \item Intersection type: The recursive function $\Code{merge}$ also requires correctness specifications (otherwise, recursive calls cannot be typechecked):
+    \begin{align*}
+        &\Code{merge}:
+        \\&\quad \ol{\Code{l1}}{:}\rt{il}{\I{len}(\vnu) < 2 \land \I{sorted}(\vnu)} \sarr \ol{\Code{l2}}{:}\rt{il}{\I{len}(\vnu) < 2 \land \I{sorted}(\vnu)} \sarr 
+        \\&\quad \rt{il}{\I{sorted}(\vnu) \land \I{len}(\vnu) = \I{len}(\Code{l1}) + \I{len}(\Code{l2}) \land \I{mem}\ldots}
+    \end{align*}\noindent
+    Thus, the $\Code{merge}$ function should be annotated with intersected types.
+\end{enumerate}
