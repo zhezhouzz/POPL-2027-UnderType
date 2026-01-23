@@ -35,14 +35,14 @@
 \end{align*}\noindent
 or, equivalently, the following refinement type:
 \begin{align*}
-    \Code{merge} : \ort{il}{\I{sorted}(\vnu)} \sarr \ort{il}{\I{sorted}(\vnu)} \sarr \ort{il}{\I{sorted}(\vnu)}
+    \Code{merge} : \ort{il}{\I{sorted}(\vnu)} \sarr \ort{il}{\I{sorted}(\vnu)} \sarr \ort{il}{\I{sorted}(\vnu)} \tag{$\tau$}
 \end{align*}\noindent
 However, neither of the two implementations is typeable. The type check fails at the $\Code{::}$ constructor. For example, on line $14$ (the correct implementation), we cannot prove that the element $\Code{h1}$ is smaller than all elements in the result of the recursive call, whose type is just $\ort{il}{\I{sorted}(\vnu)}$. The first (buggy) implementation has the same problem, and we cannot distinguish between them.
 
 \paragraph{More Precise Type} This problem can be solved by providing a more precise type for the $\Code{merge}$ function. For example, we can additionally consider the membership.
 \begin{align*}
     \Code{merge} : &l_1{:}\ort{il}{\I{sorted}(\vnu)} \sarr l_2{:}\ort{il}{\I{sorted}(\vnu)} \sarr 
-    \\&\ort{il}{\I{sorted}(\vnu) \land \I{elemSet}(l_1) \cup \I{elemSet}(l_2) = \I{elemSet}(\vnu)}
+    \\&\ort{il}{\I{sorted}(\vnu) \land \I{elemSet}(l_1) \cup \I{elemSet}(l_2) = \I{elemSet}(\vnu)} \tag{$\tau_\Code{membership}$}
 \end{align*}\noindent
 where $\I{elemSet}(l)$ is the set of elements in the list $l$. However, coming up with this new predicate (measure) is not easy, and the relation between $\I{sorted}$ and $\I{elemSet}$ still requires additional lemmas (e.g., $\I{sorted}(x::l) \impl \forall y. y \in \I{elemSet}(l) \impl x \leq y$).
 
@@ -54,15 +54,34 @@ where $\I{elemSet}(l)$ is the set of elements in the list $l$. However, coming u
 \end{align*}\noindent
 If the first list is not empty, there must exist a sorted list that makes the merge result unsorted. To prove the type, we need two overapproximated parameter types (shown above).
 
-\paragraph{Under-Approximation Helps Refine Correctness Specification} The second implementation is indeed correct, and under-approximation will fail to prove the reachability of any potential buggy path. For example, it fails to prove that $\Code{h1\;::\;merge\;t1\;(h2\;::\;t2)}$ is unsorted, which means that the list $l$ that makes $\Code{h1\;::l}$ unsorted is not reachable.
+\paragraph{Under-Approximation Helps Refine Correctness Specification} The second implementation is indeed correct, and under-approximation will fail to prove the reachability of any potential buggy path. For example, it fails to prove that $\Code{h1\;::\;merge\;t1\;(h2\;::\;t2)}$ is sorted:
 \begin{align*}
-    \Code{merge}& : \Code{h1} \garr \ort{il}{\I{sorted}(\vnu) \land \Code{h1} \leq \I{hd}(\vnu)} \sarr \ort{il}{\I{sorted}(\vnu) \land \Code{h1} \leq \I{hd}(\vnu)} 
-    \\&\sarr \Code{Unreachable}(\urt{il}{\neg \I{sorted}(\Code{h1}::\vnu)})
+    \not\vdash \Code{merge}& : \Code{h1}{:}\ort{\Int}{\top} \garr \Code{t1}\ort{il}{\I{sorted}(\vnu)} \sarr \Code{l2}{:}\ort{il}{\I{sorted}(\vnu)} 
+    \\&\sarr \ort{il}{\I{sorted}(\Code{h1}::\vnu)} \tag{$\tau_\Code{over}$}
 \end{align*}\noindent
-Note that $\Code{h1}$ is less than the head of the first list (according to the definition of $\Code{sorted}$ on line $21$), and also less than the head of the second list (since the head of the second list is less than the head of the first list). Then, we can use this fact to refine the original specification.
+In order to get a more precise type than $\tau$, the type $\tau_\Code{over}$ above provide a good template. It shows that under some condition, $\Code{h1}$, $\Code{t1}$, and $\Code{l2}$ will leads unsorted list. If we can figure this condition out and rule out it from $\tau_\Code{over}$, then we get a refined over-style specification. Concretely, we preform underapproximation typecheck from the given type
+\begin{align*}
+    \not\vdash \Code{merge}& : \Code{h1}{:}\urt{\Int}{\top} \garr \Code{t1}\urt{il}{\I{sorted}(\vnu)} \sarr \Code{l2}{:}\urt{il}{\I{sorted}(\vnu)} 
+    \\&\sarr \ort{il}{\neg\I{sorted}(\Code{h1}::\vnu)} \tag{$\tau_\Code{under}$}
+\end{align*}\noindent
+The goal is (1) checks weather unsorted result is reachable (2) refine the input domain to get a more precise ``erroneous precondition''.
+
+Consider the control flow on line $3$ where $\Code{t1}$ is empty list, the merge result is just $\Code{l2}$, and we want to prove $\neg\I{sorted}(\Code{h1::l2})$. It easily to know the unsorted result is reachable, and the precondition $\Code{h1}{:}\urt{\Int}{\top}$ and be narrow down into $\Code{h1}> \I{hd}(\Code{l2})$ (according to the definition of $\I{sorted}$ on line $21$):
+\begin{align*}
+    \not\vdash \Code{merge}& : \Code{h1}{:}\urt{\Int}{\top} \garr \Code{t1}\urt{il}{\I{sorted}(\vnu) \land \Code{h1} > \I{hd}(\vnu)} \sarr \Code{l2}{:}\urt{il}{\I{sorted}(\vnu)} 
+    \\&\sarr \ort{il}{\neg\I{sorted}(\Code{h1}::\vnu)} \tag{$\tau_\Code{under}'$}
+\end{align*}\noindent
+
+Similarly, consider the control flow on line $4$, we get another erroneous precondition is $\Code{h1} > \I{hd}(\Code{t2})$.
+\begin{align*}
+    \not\vdash \Code{merge}& : \Code{h1}{:}\urt{\Int}{\top} \garr \Code{t1}\urt{il}{\I{sorted}(\vnu)} \sarr \Code{l2}{:}\urt{il}{\I{sorted}(\vnu) \land \Code{h1} > \I{hd}(\vnu)} 
+    \\&\sarr \ort{il}{\neg\I{sorted}(\Code{h1}::\vnu)} \tag{$\tau_\Code{under}''$}
+\end{align*}\noindent
+
+Now we rule out these two underapproximation types $\tau_\Code{under}'$ and $\tau_\Code{under}''$ from $\tau_\Code{over}$ and lead the following type:
 \begin{align*}
     \Code{merge}& : \Code{h1} \garr \ort{il}{\I{sorted}(\vnu) \land \Code{h1} \leq \I{hd}(\vnu)} \sarr \ort{il}{\I{sorted}(\vnu) \land \Code{h1} \leq \I{hd}(\vnu)} 
-    \\&\sarr \ort{il}{\I{sorted}(\Code{h1}::\vnu)}
+    \\&\sarr \ort{il}{\I{sorted}(\Code{h1}::\vnu)} \tag{$\tau_\Code{over}'$}
 \end{align*}\noindent
 This refined specification is sufficient to make the type check succeed. For example, consider the branch on line $14$. We have:
 \begin{align*}
