@@ -1,0 +1,103 @@
+\section{Entanglement of Underapproximated Variables}
+
+\begin{figure}[h]
+    \centering
+    \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    let f (low: int) (high: int) =
+      if high <= 0 then low
+      else ...
+    \end{minted}
+    \caption{A function that takes an interval as input.}
+    \label{fig:interval-cut}
+\end{figure}
+
+\paragraph{Example 1} Consider the function $f$ in Figure \ref{fig:interval-cut} that takes a valid interval $[\Code{low}, \Code{high}]$ as input, where an interval $[a, b]$ is valid when $a \leq b$. In overapproximation, we can easily express the ``valid interval'' constraint using the following type:
+\begin{align*}
+    f : \Code{low}{:}\ort{\Int}{\top} \sarr \Code{high}{:}\ort{\Int}{\Code{low} \leq \vnu} \sarr \tau
+\end{align*}\noindent
+Note that the parameters $\Code{low}$ and $\Code{high}$ are \emph{not independent}; if we add constraints to one, the other is also affected. For example, in the $\mykw{then}$ branch of line $2$, we add the constraint $\Code{high} \leq 0$, so $\Code{low}$ should also be less than or equal to $0$. Indeed, the state $\Code{low} > 0 \land \Code{high} \leq 0$ is not reachable.
+
+This is not a big deal in standard refinement types, since overapproximation can include unreachable states. For example, the following type judgment is valid:
+\begin{align*}
+    \Code{low}{:}\ort{\Int}{\top},  \Code{high}{:}\ort{\Int}{\Code{low} \leq \vnu} \vdash \mykw{then}\; \Code{low} : \ort{\Int}{\top}
+\end{align*}\noindent
+To enable a more precise overapproximation typecheck, traditional refinement types remember the path condition within the type context:
+\begin{align*}
+    \Code{low}{:}\ort{\Int}{\top},  \Code{high}{:}\ort{\Int}{\Code{low} \leq \vnu}, \Code{dummy}{:}\ort{\Unit}{\Code{high} \leq 0} \vdash \mykw{then}\; \Code{low} : \ort{\Int}{\vnu \leq 0}
+\end{align*}\noindent
+which leads to the following verification condition:
+\begin{align*}
+    \forall \Code{low}, \forall \Code{high}, \Code{low} \leq \Code{high} \impl \textcolor{red}{\Code{high} \leq 0} \impl \Code{low} \leq 0
+\end{align*}\noindent
+Note that, without the red formula, the verification condition will not hold. In summary, overapproximate typechecking considers two states ($\Code{low} \leq 0$ and $\Code{low} > 0$ (unreachable)) together and does not distinguish them.
+
+On the other hand, in underapproximation reasoning, we are more sensitive to unreachable states. One typical task is to find (refine) the ``erroneous precondition'' that leads to a (reachable) erroneous state. In this case, we want the type of $\Code{low}$ to be its actual reachable range, which is $\Code{low} \leq 0$. Also, from the efficiency perspective, having the type context only trace reachable states works like a pruning process. In short, we do not want a type context like
+\begin{align*}
+    \Code{low}{:}\urt{\Int}{\top},  \Code{high}{:}\urt{\Int}{\Code{low} \leq \vnu}, \Code{dummy}{:}\urt{\Unit}{\Code{high} \leq 0} \vdash \mykw{then}\; \Code{low} : ...
+\end{align*}\noindent
+but a type context like
+\begin{align*}
+    \Code{low}{:}\urt{\Int}{\vnu \leq 0},  \Code{high}{:}\urt{\Int}{\Code{low} \leq \vnu \land \vnu \leq 0} \vdash \mykw{then}\; \Code{low} : ...
+\end{align*}\noindent
+Inferring a correct qualifier for $\Code{low}$ is not trivial; it is equivalent to eliminating the quantifier $\exists \Code{high}$ from the formula $\exists \Code{high}. \Code{low} \leq \Code{high} \land \Code{high} \leq 0$. It is expensive; thus, we should do it lazily (only when needed). On the other hand, the program may also use $\Code{low}$ to refine the type of $\Code{high}$. For example, when $\Code{low}$ is positive, we can infer that $\Code{high}$ should also be positive.
+
+In summary, $\Code{low}$ and $\Code{high}$ should be at the same level (instead of one depending on the other), and we can freely refine one depending on the other according to the program under verification, but only perform this refinement as needed. I call this relation ``entanglement'', and I prefer to encode them as follows:
+\begin{align*}
+    \langle\Code{low}, \Code{high} \rangle {:} \urt{\Int*\Int}{\Code{low} \leq \Code{high} \land \Code{high} \leq 0} \vdash \mykw{then}\; \Code{low} : ...
+\end{align*}\noindent
+It works like a product type (although they are not ordered); we do not perform the quantifier elimination (e.g., to infer $\Code{low} \leq 0$) eagerly, but only when needed.
+
+\begin{figure}[h]
+    \centering
+    \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    let f (l: ?$\urt{\List[\Int]}{\top}$?) =
+      match l with
+      | [] -> ... 
+      | x :: xs ->
+        if sorted l then ...
+
+    let f (l: ?$\urt{\List[\Int]}{\top}$?) =
+      match l with
+      | [] -> ... 
+      | x :: xs -> (* l is not refered anymore *)
+    \end{minted}
+    \caption{Functions that take a list as input.}
+    \label{fig:list-sort}
+\end{figure}
+
+\paragraph{Datatype} Entanglement happens more frequently with datatypes. For example, consider the program in Figure \ref{fig:list-sort}. The three variables $\Code{x}$, $\Code{xs}$, and $\Code{l}$ are entangled with each other. On the $\mykw{then}$ branch (line $5$), we know that $\Code{x}$ is less than all elements in $\Code{xs}$, and also that $\Code{l}$ is not empty (inferred lazily):
+\begin{align*}
+    \langle\Code{x}, \Code{xs}, \Code{l} \rangle {:} \urt{\Int*\Int*\List[\Int]}{\Code{l = x::xs} \land \I{sorted}(\Code{l})} \vdash \mykw{then}\;  : ...
+\end{align*}\noindent
+Note that the fresh variables $\Code{x}$ and $\Code{xs}$ are not directly appended to the end of the type context, but are entangled with $\Code{l}$.
+On the other hand, on line $10$, if $l$ is not referred to anymore, then $\Code{x}$ can be ``disentangled'' from $\Code{xs}$, since they are totally independent at that point.
+\begin{align*}
+    \langle\Code{l}\rangle{:}\Code{Consumed}, \langle\Code{x}\rangle{:}\urt{\Int}{\top}, \langle\Code{xs}\rangle{:}\urt{\List[\Int]}{\top} \vdash \mykw{then}\;  : ...
+\end{align*}\noindent
+
+\begin{figure}[h]
+    \centering
+    \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    ?$\vdash$? g : ?$\urt{\Int}{0 \leq \vnu}$ $\sarr$ $\urt{\Int}{3 \leq \vnu}$?
+    ?$\vdash$? g : ?$\urt{\Int}{\vnu < 0}$ $\sarr$ $\urt{\Int}{\vnu < 10}$?
+
+    let f (x: ?$\urt{\Int}{\top}$?) =
+      let (y: int) = g x in
+      if 0 <= x then y + x
+      else y - x
+    \end{minted}
+    \caption{Functions with underapproximated parameters.}
+    \label{fig:function-entanglement}
+\end{figure}
+
+\paragraph{Function} Things get more interesting when we involve functions with underapproximated parameters. Consider the function $g$ in Figure \ref{fig:function-entanglement}, which has two incorrectness-logic-style function types. After function application, $y$ can cover both states $3 \leq y$ and $y < 10$. However, we cannot simply union them together, since $y$ is entangled with $x$. When $y$ belongs to the first region, $x$ is greater than or equal to $0$, and when $y$ belongs to the second region, $x$ is less than $0$ (but we cannot know the concrete value of $x$ here).
+\begin{align*}
+    &\langle\Code{y}, \Code{idx}\rangle{:} \urt{\Int*\Code{Index}}{\Code{idx} = 1 \land 3 \leq \Code{y} \lor \Code{idx} = 2 \land \Code{y} < 10}, 
+    \\&\Code{x}{:}\ort{\Int}{\Code{idx} = 1 \land 0 \leq \Code{x} \lor \Code{idx} = 2 \land \Code{x} < 0} \vdash ...
+\end{align*}\noindent
+Here, $\Code{idx}$ encodes which type we choose for $g$. Note that $y$ is actually entangled with the index, rather than $x$ directly, and $x$ falls back to an overapproximated type (no coverage).
+
+This analysis is precise enough to handle the following control flow: when $0 \leq \Code{x}$, we should choose the choice $\Code{idx} = 1$, and similarly for the else branch, even if $\Code{x}$ has an overapproximated type. (I am not sure how to express this in the type system.)
+Moreover, there is another application situation where $x$ covers all integers but $y$ is not certain about its value (for example, if $y$ is not used in the future).
+
+\paragraph{Subtyping} There should be some constrained form of subtyping involving entangled variables. This is related to our constrained subsumption rule in the coverage type system—it is not quite clear to me at this point.

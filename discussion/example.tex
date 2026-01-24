@@ -48,55 +48,43 @@ where $\I{elemSet}(l)$ is the set of elements in the list $l$. However, coming u
 
 \paragraph{Under-Approximation Type Shows Incorrectness} The first implementation is indeed buggy. One possible counterexample is $\Code{merge\;[3]\;[1;2] = [1;3;2]}$. We can use under-approximation reasoning to find a more general erroneous condition.
 \begin{align*}
-    \Code{merge}& : \ort{il}{\I{sorted}(\vnu) \land \vnu \not= [] } \sarr \urt{il}{\I{sorted}(\vnu)} \sarr \urt{il}{\neg \I{sorted}(\vnu)}
-    \\\Code{merge}& : \ort{il}{\vnu = [] } \sarr y{:}\ort{il}{\I{sorted}(\vnu)} \sarr \urt{il}{\vnu = y}
-    \\\Code{merge}& : x{:}\ort{il}{\I{sorted}(\vnu)} \sarr \ort{il}{\vnu = []} \sarr \urt{il}{\vnu = x}
+    \Code{merge}& : \urt{il}{\I{sorted}(\vnu) \land \vnu \not= [] } \sarr \urt{il}{\I{sorted}(\vnu)} \sarr \ort{il}{\neg \I{sorted}(\vnu)}
+    \\\Code{merge}& : \ort{il}{\vnu = [] } \sarr y{:}\ort{il}{\I{sorted}(\vnu)} \sarr \ort{il}{\vnu = y}
+    \\\Code{merge}& : x{:}\ort{il}{\I{sorted}(\vnu)} \sarr \ort{il}{\vnu = []} \sarr \ort{il}{\vnu = x}
 \end{align*}\noindent
 If the first list is not empty, there must exist a sorted list that makes the merge result unsorted. To prove the type, we need two overapproximated parameter types (shown above).
 
-\paragraph{Under-Approximation Helps Refine Correctness Specification} The second implementation is indeed correct, and under-approximation will fail to prove the reachability of any potential buggy path. For example, it fails to prove that $\Code{h1\;::\;merge\;t1\;(h2\;::\;t2)}$ is sorted:
+\paragraph{Under-Approximation Helps Refine Correctness Specification} The second implementation is indeed correct, and under-approximation will fail to prove the reachability of any potential buggy path.
 \begin{align*}
-    \not\vdash \Code{merge}& : \Code{h1}{:}\ort{\Int}{\top} \garr \Code{t1}\ort{il}{\I{sorted}(\vnu)} \sarr \Code{l2}{:}\ort{il}{\I{sorted}(\vnu)} 
-    \\&\sarr \ort{il}{\I{sorted}(\Code{h1}::\vnu)} \tag{$\tau_\Code{over}$}
+    \not\vdash \Code{merge}& : \Code{l1}{:}\urt{il}{\I{sorted}(\vnu)} \sarr \Code{l2}{:}\urt{il}{\I{sorted}(\vnu)} \sarr \ort{il}{\neg \I{sorted}(\vnu)} \tag{negation of $\tau$}
 \end{align*}\noindent
-In order to get a more precise type than $\tau$, the type $\tau_\Code{over}$ above provide a good template. It shows that under some condition, $\Code{h1}$, $\Code{t1}$, and $\Code{l2}$ will leads unsorted list. If we can figure this condition out and rule out it from $\tau_\Code{over}$, then we get a refined over-style specification. Concretely, we preform underapproximation typecheck from the given type
+Specifically, it fails to show that $\Code{h1\;::\;merge\;t1\;(h2\;::\;t2)}$ is unsorted (line 14 in Figure \ref{fig:motivation}), or:
 \begin{align*}
-    \not\vdash \Code{merge}& : \Code{h1}{:}\urt{\Int}{\top} \garr \Code{t1}\urt{il}{\I{sorted}(\vnu)} \sarr \Code{l2}{:}\urt{il}{\I{sorted}(\vnu)} 
-    \\&\sarr \ort{il}{\neg\I{sorted}(\Code{h1}::\vnu)} \tag{$\tau_\Code{under}$}
+    \Code{h1}{:}\urt{\Int}{\vnu \leq \Code{hd(t1)}} \not\vdash \Code{merge}& : \Code{t1}\urt{il}{\I{sorted}(\vnu)} \sarr \Code{l2}{:}\urt{il}{\I{sorted}(\vnu)} 
+    \\&\sarr \ort{il}{\neg (\Code{h1} \leq \Code{hd}(\vnu) \land \I{sorted}(\vnu))}
 \end{align*}\noindent
-The goal is (1) checks weather unsorted result is reachable (2) refine the input domain to get a more precise ``erroneous precondition''.
+The qualifier for $\Code{h1}$ and the return type can be derived directly from the definition of $\I{sorted}$.
+Since $\tau$ already requires that $\I{sorted}(\vnu)$ holds, this type judgment provides a template $\square \leq \Code{hd}(\vnu)$ (where $\Code{h1}$ does not belong to the parameters of $\Code{merge}$, so we use a placeholder $\square$) to indicate how we can refine the return type of $\tau$ to obtain a more precise ``postcondition.'' We can simply enumerate several possible type-safe candidates for the placeholder $\square$: $\Code{hd(t1)}$ and $\Code{hd(l2)}$ from the two parameters in the $\Code{merge}$ function. According to the qualifier of $\Code{h1}$ (i.e., $\Code{h1} \leq \Code{hd(t1)}$), it is easy to see that $\Code{hd(t1)}$ is the correct instantiation of $\square$, leading to the following refined type:
+\begin{align*}
+    \Code{merge}& : \Code{l1}{:}\ort{il}{\I{sorted}(\vnu)} \sarr \Code{l2}{:}\ort{il}{\I{sorted}(\vnu)} \sarr \ort{il}{\Code{hd(t1)} \leq \Code{hd(\vnu)} \land \I{sorted}(\vnu)} \tag{$\tau_1$}
+\end{align*}\noindent
+However, the overapproximation typecheck still fails for the refined type $\tau_1$. Naive search may easily get lost here, as we do not know if the current refined candidate type is on the correct track—we can either give up the current refined type or continue searching, which leads to an exponential search space. Fortunately, we can still use under-approximation typechecking to help us make the decision. For example, we find that the negation of $\tau_1$ is still unreachable:
+\begin{align*}
+    \not\vdash \Code{merge}& : \Code{l1}{:}\urt{il}{\I{sorted}(\vnu)} \sarr \Code{l2}{:}\urt{il}{\I{sorted}(\vnu)} \sarr \ort{il}{\neg (\Code{hd(l1)} \leq \Code{hd}(\vnu) \land \I{sorted}(\vnu))} \tag{negation of $\tau_1$}
+\end{align*}\noindent
+It means the refined type $\tau_1$ is valuable to keep.
+Specifically, it fails to show that $\Code{h2\;::\;merge\;(h1\;::\;t1)\;t2}$ is unsorted (line 15 in Figure \ref{fig:motivation}), or:
+\begin{align*}
+    \Code{h2}{:}\urt{\Int}{\vnu \leq \Code{hd(t2)}} \not\vdash \Code{merge}& : \Code{l1}\urt{il}{\I{sorted}(\vnu)} \sarr \Code{t2}{:}\urt{il}{\I{sorted}(\vnu)} 
+    \\&\sarr \ort{il}{\neg (\Code{h2} \leq \Code{hd(l1)} \land \Code{h2} \leq \Code{hd}(\vnu) \land \I{sorted}(\vnu))}
+\end{align*}\noindent
+Similarly, we can find that both $\I{sorted}(\vnu)$ and $\Code{h2} \leq \Code{hd(l1)}$ hold (according to the condition on line 14). We again get the refinement template $\square \leq \Code{hd(\vnu)}$, but now $\square$ should be instantiated as a different term, $\Code{hd(l2)}$. This leads to the following refined type:
+\begin{align*}
+    \Code{merge}& : \Code{l1}{:}\ort{il}{\I{sorted}(\vnu)} \sarr \Code{l2}{:}\ort{il}{\I{sorted}(\vnu)} \sarr \ort{il}{\Code{hd(l2)} \leq \Code{hd(\vnu)} \land \Code{hd(l1)} \leq \Code{hd(\vnu)} \land \I{sorted}(\vnu)} \tag{$\tau_2$}
+\end{align*}\noindent
+At this point, $\tau_2$ is sufficient to make the typecheck succeed. 
 
-Consider the control flow on line $3$ where $\Code{t1}$ is empty list, the merge result is just $\Code{l2}$, and we want to prove $\neg\I{sorted}(\Code{h1::l2})$. It easily to know the unsorted result is reachable, and the precondition $\Code{h1}{:}\urt{\Int}{\top}$ and be narrow down into $\Code{h1}> \I{hd}(\Code{l2})$ (according to the definition of $\I{sorted}$ on line $21$):
-\begin{align*}
-    \not\vdash \Code{merge}& : \Code{h1}{:}\urt{\Int}{\top} \garr \Code{t1}\urt{il}{\I{sorted}(\vnu) \land \Code{h1} > \I{hd}(\vnu)} \sarr \Code{l2}{:}\urt{il}{\I{sorted}(\vnu)} 
-    \\&\sarr \ort{il}{\neg\I{sorted}(\Code{h1}::\vnu)} \tag{$\tau_\Code{under}'$}
-\end{align*}\noindent
-
-Similarly, consider the control flow on line $4$, we get another erroneous precondition is $\Code{h1} > \I{hd}(\Code{t2})$.
-\begin{align*}
-    \not\vdash \Code{merge}& : \Code{h1}{:}\urt{\Int}{\top} \garr \Code{t1}\urt{il}{\I{sorted}(\vnu)} \sarr \Code{l2}{:}\urt{il}{\I{sorted}(\vnu) \land \Code{h1} > \I{hd}(\vnu)} 
-    \\&\sarr \ort{il}{\neg\I{sorted}(\Code{h1}::\vnu)} \tag{$\tau_\Code{under}''$}
-\end{align*}\noindent
-
-Now we rule out these two underapproximation types $\tau_\Code{under}'$ and $\tau_\Code{under}''$ from $\tau_\Code{over}$ and lead the following type:
-\begin{align*}
-    \Code{merge}& : \Code{h1} \garr \ort{il}{\I{sorted}(\vnu) \land \Code{h1} \leq \I{hd}(\vnu)} \sarr \ort{il}{\I{sorted}(\vnu) \land \Code{h1} \leq \I{hd}(\vnu)} 
-    \\&\sarr \ort{il}{\I{sorted}(\Code{h1}::\vnu)} \tag{$\tau_\Code{over}'$}
-\end{align*}\noindent
-This refined specification is sufficient to make the type check succeed. For example, consider the branch on line $14$. We have:
-\begin{align*}
-    &\Code{h1}{:}\Int, \Code{h2}{:}\ort{\Int}{\Code{h1} \leq \vnu}, \Code{t1}{:}\ort{il}{\I{sorted}(\vnu) \land \Code{h1} \leq \I{hd}(\vnu)}, ...\vdash 
-    \\&\quad \Code{merge}\;\Code{t1}\;(\Code{h2}::\Code{t2}) : \ort{il}{\I{sorted}(\Code{h1}::\vnu)}
-\end{align*}\noindent
-Note that $\Code{h1} < \I{hd}(\vnu)$ and $\Code{h1} < \Code{h2} = \I{hd}(\Code{h2}::\Code{t2})$.
-On the other hand, for an arbitrary ghost variable $i$ that less than head elements of the two lists,
-\begin{align*}
-    &i{:}\ort{\Int}{\vnu \leq \Code{h1} \land \vnu \leq \Code{h2}}, \Code{h1}{:}\Int, ...\vdash 
-    \\&\quad (\Code{h1} :: \Code{merge}\;\Code{t1}\;(\Code{h2}::\Code{t2})) : \ort{il}{\I{sorted}(i::\Code{h1}::...)}
-\end{align*}\noindent
-This can be proved from the definition of $\Code{sorted}$ by the facts that $\Code{h1}::...$ is sorted (proved above), and $i$ is less than $\I{hd}(\Code{h1}::...) = \Code{h1}$.
-
-\paragraph{Discussion} Note that the refined specification is much weaker than the one considering membership; also, we do not add any new predicates (e.g., $\I{elemSet}$) to the specification, and no new lemmas are required.
+\paragraph{Discussion} Note that the refined specification $\tau_2$ is much weaker than the one considering membership; also, we do not add any new predicates (e.g., $\I{elemSet}$) to the specification, and no new lemmas are required.
 
 \section{Old: Motivating Examples}
 
