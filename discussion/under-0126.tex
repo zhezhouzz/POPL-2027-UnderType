@@ -1,0 +1,142 @@
+\section{Quantifier Alternation}
+
+\paragraph{Decidable Type Context} In general, a subtyping judgment can be written as $\Gamma \vdash \ort{b}{\gamma_1} \leq \ort{b}{\gamma_2}$, where $\Gamma$ is a type context (underapproximation subtyping can be converted into this form by inverting the subtyping order). A type context that leads to a decidable verification condition query should be in the form
+\begin{align*}
+    \Gamma \doteq x_1{:}\ort{b}{\phi_1} \ldots x_n{:}\ort{b}{\phi_n}, y_1{:}\urt{b}{\psi_1} \ldots y_m{:}\urt{b}{\psi_m}
+\end{align*}\noindent
+where $\ort{b}{\phi}$ and $\urt{b}{\psi}$ are directly represented as universally and existentially quantified variables, respectively, leading to the following verification condition query:
+\begin{align*}
+    \forall x_1, \ldots, x_n.\; \textcolor{red}{\forall \vnu}.\; \exists y_1, \ldots, y_m.\; \phi_1 \land \ldots \land \phi_n \implies \psi_1 \land \ldots \land \psi_m \land (\gamma_1 \implies \gamma_2)
+\end{align*}\noindent
+where $\vnu$ is a newly introduced universally quantified variable. Then, it can be encoded as an SMT query of the form $\overline{\exists x}\; \exists \vnu.\; \overline{\forall y}$, i.e., in EPR. The ``evil'' case is when an underapproximated variable appears before an overapproximated variable, i.e., $\Gamma \doteq y{:}\urt{b}{\psi},\; x{:}\ort{b}{\phi}$. This leads to the following verification condition query:
+\begin{align*}
+    \exists y.\; \psi \land \forall x\;\vnu.\; \phi \implies (\gamma_1 \implies \gamma_2)
+\end{align*}\noindent
+which can lead to an undecidable SMT query.
+
+\example{Coverage type} For coverage types, the type context typically consists of parameters (overapproximated types) followed by local variables (underapproximated types).
+
+\begin{figure}[h]
+    \centering
+    \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    let f (x: int) (y: int) : int =
+      if y > 0 then 2 * x * y
+      else x - y
+    ?$\vdash$? f : ?$x{:}\urt{\Int}{\vnu \geq 0} \sarr y{:}\ort{\Int}{\top} \sarr \ort{\Int}{\vnu \geq 2}$?
+    \end{minted}
+    \caption{A function that takes an integer as input.}
+    \label{fig:quantifier-alternation}
+\end{figure}
+
+\paragraph{Undecidable Case} Consider the function shown in Figure \ref{fig:quantifier-alternation}, which exhibits undecidable quantifier alternation. In order to make it decidable, we would want to swap the parameters $x$ and $y$; however, this changes the meaning of the type:
+\begin{align*}
+    &x{:}\urt{\Int}{\vnu \geq 0} \sarr y{:}\ort{\Int}{\top} \sarr \ort{\Int}{\vnu \geq 2}
+    \\&\quad \text{There exists a natural number $x$ such that for all $y$, the application result is greater than or equal to $2$}
+    \\&y{:}\ort{\Int}{\top} \sarr x{:}\urt{\Int}{\vnu \geq 0} \sarr \ort{\Int}{\vnu \geq 2}
+    \\&\quad \text{For all $y$, there exists a natural number $x$ such that the application result is greater than or equal to $2$}
+\end{align*}\noindent
+The difference between the two types is that the first type requires the value assigned to $x$ to be the same for all possible values of $y$, while the second type is much weaker. This complexity is intrinsic: we cannot ask the SMT solver to provide the correct value for this ``unique $x$''—it should instead be handled by our type system.
+
+Here is one potential solution. We prove the overapproximated typed parameter over different control flow paths, and then combine them together.
+\begin{align*}
+    &x{:}\ort{\Int}{\vnu \geq 2},\; y{:}\ort{\Int}{\top \land \vnu > 0} \vdash \Code{2\;*\; x\; *\; y} : \ort{\Int}{\vnu \geq 2}
+    \\&x{:}\ort{\Int}{\vnu \geq 1},\; y{:}\ort{\Int}{\top \land \vnu \leq 0} \vdash \Code{x\; -\; y} : \ort{\Int}{\vnu \geq 2}
+    \\& \vdash \ort{\Int}{\vnu \geq 2} \interty \ort{\Int}{\vnu \geq 1} \neq \emptyset
+\end{align*}\noindent
+where we need to infer the qualifier of $x$ (i.e., $\vnu \geq 2$) via our type system. It is not clear if this is indeed better than other quantifier elimination methods.
+
+I do not find any particularly interesting solution here; perhaps we should avoid this ``truly undecidable case''.
+
+\paragraph{When can we swap the qualifiers?} Of course, the qualifier in the same polarity can be swapped.
+There are two simple and safe cases. If a parameter is not used in the body of the function or the rest of the function type, then we can freely move it to any position. Another interesting case is the ``singleton'' type, which can freely flip between over- and under-approximation. This is actually quite common; for example, the type of variable $x$ can be just $\ort{b}{\vnu = x}$, which may be treated as both over- and under-approximation.
+
+Now we consider a more general case. Qualifiers can come from both parameter types and local variables. For the former, we cannot reorder them, since in a dependent type the order is part of the semantics. For the latter, swapping them is equivalent to swapping two let-bindings:
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    let x = ... in
+    ...
+    let y = ... in
+    ...
+
+    let y = ... in
+    ...
+    let x = ... in
+    ...
+\end{minted}
+As long as these two programs are equivalent, we can swap them in the type context. For example, suppose $x:\urt{b}{\phi}$ and $y:\ort{b}{\psi}$,
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    let x = f 1 in
+    let y = g 2 in
+    ...
+\end{minted}
+We can swap $x$ and $y$. If there is control flow:
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    let x = f 1 in
+    if x > 0 then
+      let y = g 2 in
+      ...
+    else
+      let y = g 2 in
+      ...
+\end{minted}
+We can still swap $x$ and $y$, since the value of $y$ does not depend on the value of $x$. This is equivalent to:
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    let y = g 2 in
+    let x = f 1 in
+    if x > 0 then
+      ...
+    else
+      ...
+\end{minted}
+More interestingly, if we have control flow like:
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    let x = f 1 in
+    if x > 0 then
+      let y = g 2 in
+      ...
+    else
+      let y = g 3 in
+      ...
+\end{minted}
+Can we swap $x$ and $y$? It seems that $y$ depends on $x$, but we can analyze it more precisely. Consider a temporary variable $z$ that is equal to $x > 0$; note that it is a singleton type and can be treated as either over- or under-approximation. In this example, with $x:\urt{b}{\phi}$ and $y:\ort{b}{\psi}$, we assume $z$ has the same polarity as $x$.
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    let x = f 1 in
+    let z = x > 0 in
+    if z then
+      let y = g 2 in
+      e1
+    else
+      let y = g 3 in
+      e2
+\end{minted}
+We can swap $x$ and $z$, since they are both underapproximated, or equivalently, rewrite as follows:
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    let z = bool_gen z in
+    let x = f 1 in
+    if z then
+      let y = g 2 in
+      if z == (x > 0) then e1 else raise End
+    else
+      let y = g 3 in
+      if z == (x > 0) then e2 else raise End
+\end{minted}
+We can also move $x$ into the two branches:
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    let z = bool_gen z in
+    if z then
+      let x = f 1 in
+      let y = g 2 in
+      if z == (x > 0) then e1 else raise End
+    else
+      let x = f 1 in
+      let y = g 3 in
+      if z == (x > 0) then e2 else raise End
+\end{minted}
+Now we can swap $x$ and $y$. We can also eliminate the auxiliary quantified variable $z$ (since it has only two possible values). In general, I believe that control flow is not a barrier to swapping two variables.
+When can we not swap two variables? There is dependency from the function type:
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    let x = f 1 in
+    let y = g x in
+    ...
+\end{minted}
+In general, the function type defined expected dependency, and we should track that dependency in type context even after the function application be type checked.
+

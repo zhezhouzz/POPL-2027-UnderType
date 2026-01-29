@@ -1,0 +1,206 @@
+\section{Problem Setting and Type Semantics}
+
+We want to disprove the correctness of a program $e$ against a standard refinement type $x{:}\ort{b}{\phi} \sarr \ort{b'}{\phi'}$, which is equal to prove the reachability of $e$ against the following type:
+\begin{align*}
+    \ul{x}{:}\rt{b}{\phi} \sarr \ort{b'}{\neg \phi'}
+\end{align*}\noindent
+which means there exists an input $x$ such that the output is not in $\phi'$. Thus, the incorrectness specification can be expressed by ``underapproximated parameter'' plus the negation of overapproximated return type.
+
+Note that the inconsistency between the parameter and return type, which is not compositional. For example, consider the following program:
+
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+let f (x: int) = ...
+?$\vdash$? f : ?$\ul{x}{:}\rt{\Int}{\top} \sarr \ort{\Int}{\vnu > 0}$?
+
+let g (x: int) =
+  f (p x)
+p : _ ?$\vdash$? g : ?$\ul{x}{:}\rt{\Int}{\top} \sarr \ort{\Int}{\vnu > 0}$?
+\end{minted}
+
+We already proved that a function $f$ can reach a positive value with some integer input, then we also want to prove that the function $g$ can also reach a positive value. Note that $g$ returns an application of $f$, if we want to reuse the proof for $f$, we need to show $\Code{p\;x}$ covers all possible inputs of $f$. This example implies that compositional reasoning also requires underapproximated return type (similar to Incorrectness Logic).
+
+Assume there is no randomness, i.e., the program either termininates at one single value or diverge. Our type system should consist of three kinds of function types:
+\begin{enumerate}
+    \item Overapproximated parameter and overapproximated return type (standard refinement type).
+    \item Underapproximated parameter and overapproximated return type (negation of standard refinement type).
+    \item Underapproximated parameter and underapproximated return type (analogous to Incorrectness Triple).
+\end{enumerate}
+The ``coverage type'' is not considered.
+
+\section{Application}
+
+\begin{align*}
+    \ol{f}{:}\urt{\Bool}{\top}\sarr\urt{\Bool}{\top}, \ul{x}{:}\rt{\Bool}{\top} &\vdash \zlet{y}{f\;x}{e} : ?
+    \\ \ol{f}{:}\urt{\Bool}{\top}\sarr\urt{\Bool}{\top}, \ul{x}{:}\rt{\Bool}{\top}, \ul{y}{:}\rt{\Bool}{\top} &\vdash e : ?
+\end{align*}\noindent
+
+Last time I show an unsoundness example (above), there although both $x$ and $y$ can cover all possible boolean values, they are not \emph{independent} from each other, or they are not separated. If the control flows in $e$ take condition on $x$, the value of $y$ will also be affected.
+
+\paragraph{Separation} In the termilogy of seperational logic, the variables in the type context can be connected by two ways:
+\begin{align*}
+    &\ul{x}{:}\rt{\Bool}{\top} \sep \ul{y}{:}\rt{\Bool}{\top} : \quad \text{$x$ and $y$ are separated}
+    \\ &\ul{x}{:}\rt{\Bool}{\top} , \ul{y}{:}\rt{\Bool}{\top} : \quad \text{$x$ and $y$ are not separated}
+\end{align*}\noindent
+
+\paragraph{Difference between $\sep$ and $,$}
+We can understand these two type context from the perspective of proof obligation of reachability. Consider the reachability type judgement $\Gamma \vdash e(x, y) : \tau$, we want to show the reachability of $e$ against the type $\tau$ just need to show the existence of some $x$ and $y$. Although all $\rt{\Bool}{\top}$ in the type context means that any possible boolean value can be treated as an witness, the difference between $\sep$ and $,$ is:
+\begin{align*}
+    &\ul{x}{:}\rt{\Bool}{\top} \sep \ul{y}{:}\rt{\Bool}{\top} : \quad \text{both $x$ and $y$ can be any boolean value}
+    \\ &\ul{x}{:}\rt{\Bool}{\top}, \ul{y}{:}\rt{\Bool}{\top} : \quad \text{if $y$ can be any boolean value, then the value of $x$ is out of our control}
+\end{align*}\noindent
+Precisely, consider the assignments (store, substitution) of $x$ and $y$ in the type context:
+\begin{align*}
+    \text{Case}\sep : \quad \{[\true; \true], [\true; \false], [\false; \true], [\false; \false]\}
+\end{align*}\noindent
+We have freedom to choose one assignment $\sigma$ from the set above, and the proof obligation is to show $\vdash \sigma(x): \sigma(\tau)$.
+\begin{align*}
+    \text{Case}, : \quad \{&\{[\true; \true], [\true; \false]\}, \{[\true; \true], [\false; \false]\}, 
+    \\&\{[\false; \true], [\true; \false]\}, \{[\false; \true], [\false; \false]\}\}
+\end{align*}\noindent
+The proof obligation is devided into for sub tasks (i.e., $4$ sets above), for each sub task, we have freedom to choose one assignment from two concidate, and prove the reachability of $e$ against the type $\tau$ under the assignment. These $4$ sets means, we have freedom to choose assignment of $y$, however, we cannot choose assignment of $x$ any more -- then we need to enumerate all possible assignments of $x$ ($4$ choices).
+
+\paragraph{Exchange} In general, the $\sep$ is commutative, but $,$ is not (the bindings in dependent type context is not commutative because of varaible reference -- however, in our setting, it is not commutative even when there is no reference). For example, consider the following example:
+\begin{align*}
+    \ul{x}{:}\rt{\Bool}{\top} \sep \ul{y}{:}\rt{\Bool}{\top} = \ul{y}{:}\rt{\Bool}{\top} \sep \ul{x}{:}\rt{\Bool}{\top}
+\end{align*}\noindent
+Here $x$ and $y$ are independent, thus can be exchanged. On the other hand, the proof obligation indicated by the swapped type context
+\begin{align*}
+    \ul{y}{:}\rt{\Bool}{\top}, \ul{x}{:}\rt{\Bool}{\top} 
+\end{align*}\noindent
+is
+\begin{align*}
+    \text{Case swapped}, : \quad \{& \textcolor{red}{\{[\true; \true], [\false; \true]\}}, \{[\true; \true], [\false; \false]\}, 
+    \\&\{[\true; \false], [\false; \true]\}, \textcolor{red}{\{[\true; \false], [\false; \false]\}}\}
+\end{align*}\noindent
+As one example,
+\begin{align*}
+    \ol{f}{:}\urt{\Nat}{\top}\sarr\urt{\Nat}{\top}, \ul{x}{:}\rt{\Nat}{\top} &\vdash \zlet{y}{f\;x}{y} : \urt{\Nat}{\vnu = 0}
+    \\ ... \ul{x}{:}\rt{\Bool}{\top}, \ul{y}{:}\rt{\Bool}{\top} &\vdash y : \urt{\Nat}{\vnu = 0}
+\end{align*}\noindent
+The judgement is correct, since the return type of $f$ guanrante that $y$ can be any natural number, of course $y$ can be $0$. On the other hand, the following judgement is incorrect:
+\begin{align*}
+    \ol{f}{:}\urt{\Nat}{\top}\sarr\urt{\Nat}{\top}, \ul{y}{:}\rt{\Nat}{\top} &\vdash \zlet{x}{f\;y}{y} : \urt{\Nat}{\vnu = 0}
+    \\ ... \ul{y}{:}\rt{\Bool}{\top}, \ul{x}{:}\rt{\Bool}{\top} &\vdash y : \urt{\Nat}{\vnu = 0}
+\end{align*}\noindent
+Let $f \doteq \zzlam{y}{\mykw{if}\; y == 0 \;\mykw{then}\; \Code{err} \;\mykw{else}\; y - 1}$, easy to know that $f$ can still cover all possible natural numbers, but in this case $y = 0$ is not reachable.
+
+\paragraph{Over- Under- modality flip}
+In some sense, a more clear representation is
+\begin{align*}
+    \ol{f}{:}\urt{\Nat}{\top}\sarr\urt{\Nat}{\top}, \ul{x}{:}\rt{\Nat}{\top} &\vdash \zlet{y}{f\;x}{y} : \urt{\Nat}{\vnu = 0}
+    \\ ... \ol{x}{:}\rt{\Bool}{\top}, \ul{y}{:}\rt{\Bool}{\top} &\vdash y : \urt{\Nat}{\vnu = 0}
+\end{align*}\noindent
+where $x$ is now overapproximated.
+
+\paragraph{Function Type} We can try to understand the speration above in terms of function type. We interpret the function type $\urt{\Bool}{\top}\sarr\urt{\Bool}{\top}$ as sets of input-output pairs (for simplicity, we allow randomness here, otherwise it is hard to construct counterexample; however, even we disable randomness, the counterexample is still possible with infinite value domain, as the $\Nat$ example above).
+\begin{align*}
+    \text{case 1}\quad &\{[\true \sarr \true], [\true \sarr \false]\} \quad \text{$\false$ can be unreachable}
+    \\\text{case 2}\quad &\{[\true \sarr \true], [\false \sarr \false]\}
+    \\\text{case 3}\quad &\{[\false \sarr \true], [\true \sarr \false]\}
+    \\\text{case 4}\quad &\{[\false \sarr \true], [\false \sarr \false]\} \quad \text{$\true$ can be unreachable}
+\end{align*}\noindent
+We divide the inhabitations of $\urt{\Bool}{\top}\sarr\urt{\Bool}{\top}$ as the four cases above. Note that $\ol{f}$ is overapproximated labeled, it means that we don't know which case it should be. To be sound, we should consider all four cases, that is the reasoning the proof obligation is divided into four sub tasks. (Note, this example should be replaced with a deterministic one).
+
+I more interesting question is underapproximated function parameter $\ul{f}$ (higher-order symbolic execution), in that case, we just need to show there exists one case in above four cases, we can choose ``the most lucky one'' (i.e., case 2 or 3) which still lead all possible $x$ are reachable after applying $f\;x$.
+\begin{align*}
+    \ul{f}{:}\urt{\Bool}{\top}\sarr\urt{\Bool}{\top} \sep \ul{x}{:}\rt{\Bool}{\top} &\vdash \zlet{y}{f\;x}{e} : ?
+    \\ \ul{f}{:}\urt{\Bool}{\top}\sarr\urt{\Bool}{\top} \sep \ul{x}{:}\rt{\Bool}{\top} \sep \ul{y}{:}\rt{\Bool}{\top} &\vdash e : ?
+\end{align*}\noindent
+Note that $x$ and $y$ are true independent, $f$ can be freely choose between case 2 and 3, which exactly cover all possible combinations of $x$ and $y$.
+However, this is one potential unsoundness, that is we should record our assumption about the most lucky case (i.e., we should remember if we choose case 2 or 3). Otherwise, it leads the following type judgement:
+\begin{align*}
+    \ul{f}{:}\urt{\Bool}{\top}\sarr\urt{\Bool}{\top} \sep \ul{x}{:}\rt{\Bool}{\top} &\vdash (f\;x) == (f\;x) : \urt{\Bool}{\vnu = \false}
+\end{align*}\noindent
+Although $x$ and $f\;x$ are truely independent, two $f\;x$ are still dependent. There are two possible solutions, the first one is syntactically lift all $f\;x$ into the same value, a better solution is ``refine'' the type of $f$ after each application (higher-order symbolic execution).
+\begin{align*}
+    \ul{f}{:}\urt{\Bool}{\top}\sarr\urt{\Bool}{\top} \sep \ul{x}{:}\rt{\Bool}{\top} &\vdash \zlet{y}{f\;x}{e} : ?
+    \\ (\ul{f}{:}\urt{\Bool}{\top}\sarr\urt{\Bool}{\top}) \sep &
+    \\ (\ul{x}{:}\rt{\Bool}{\top} \sep \ul{y}{:}\rt{\Bool}{\top}, \ul{f}{:}\urt{\Bool}{\vnu = x}\sarr\urt{\Bool}{\vnu = y})   &\vdash e : ?
+\end{align*}\noindent
+There we add a new type for $f$ that records our ``lucky choice'' after each application.
+
+\paragraph{Reference is not seperation} Consider the following example:
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    let f (p: ?$\urt{\Int\times\Int}{\I{fst}(\vnu) < \I{snd}(\vnu)}$?) =
+      let x, y = p in
+      ...
+\end{minted}
+We will get the following type context:
+\begin{align*}
+    \ul{x}{:}\urt{\Int}{\top} \sep \ul{y}{:}\rt{\Int}{x < \vnu}
+\end{align*}\noindent
+Although the qualifier of $y$ is indeed depends on $x$, but $x$ and $y$ are still separated -- since the choice of $x$ doesn't affect the modality of $y$. Even we perform $g\;x$, we can still have freedom to choose the value of $y$ (in the domain $(x, \infty]$).
+
+On the other hand, when there are singleton type, the speration can be erase. For example, if $p$ has type $\urt{\Int\times\Int}{\I{fst}(\vnu) = \I{snd}(\vnu)}$, then $y$ is singleton, thus the seperation can be erased (but can also keep).
+
+\paragraph{Linearity} The semantics of $X \sep Y$ is $X$ and $Y$ are independent, in the previous example, $p$ is not indepdenent from $x$ and $y$. If we keep the following typing context:
+\begin{align*}
+    \ul{x}{:}\urt{\Int}{\top} \sep \ul{y}{:}\rt{\Int}{x < \vnu}
+\end{align*}\noindent
+$p$ cannot be in the portion out of $x$'s portion (otherwise that portion cannot $\sep$ with the portion of $x$), so does $y$. Thus, there is no place to put $p$, or $p$ is consumed.
+
+\paragraph{Compare with incorrectness logic} The funtion type is different from the incorrectness triple whose postcondition is required to be precisely discribe the irrelavent states. For example, the incorrectness triple for $f \doteq \zzlam{y}{\mykw{if}\; y == 0 \;\mykw{then}\; \Code{err} \;\mykw{else}\; y - 1}$ is
+\begin{align*}
+    [x \geq 0] y = f\;x [ y \geq 0 \land \textcolor{red}{x = y + 1}]
+\end{align*}\noindent
+The constraint colored in red cannot be omitted, otherwise this triple is unsound. The underapproximate type is more flexible, which leads more complicate structual rules.
+
+
+
+\paragraph{Currying} ?
+
+
+\section{Theory}
+
+We define a Kripke model for the underapproximate type context, we assume $\denot{\rt{b}{\phi}}$ provides the set of values that satisfies the refinement property $\phi$, the denotation of function type is in general allowed input-output pairs that satisfies the refinement property. We assume $x{:}\tau$ is the atomic predicate, it means $m(x) \in \denot{\tau}$ where $m$ is the model. We allowing two connectives for now:
+\begin{align*}
+    \Gamma \doteq \emptyset ~|~ \ol{x}{:}\tau ~|~ \ul{x}{:}\tau ~|~ \Gamma, \Gamma ~|~ \Gamma \sep \Gamma
+\end{align*}\noindent
+The $\Gamma_1, \Gamma_2 \sep \Gamma_3$ means $(\Gamma_1, \Gamma_2) \sep \Gamma_3$. We write $\Code{Dom}(\Gamma)$ as the set of variables in $\Gamma$.
+
+\paragraph{world} A world $w$ is a set of assignments (store, substitution), following the previous example
+\begin{align*}
+    \ul{x}{:}\rt{\Bool}{\top} \sep \ul{y}{:}\rt{\Bool}{\top}
+\end{align*}\noindent
+, it means ``a set of choices of substitutions that can freely choose''. For example, consider two variables $x$ and $y$, 
+\begin{align*}
+    w = \{ [\true; \true], [\true; \false], [\false; \true], [\false; \false] \}
+\end{align*}\noindent
+$w$ is a valid world for $\vdash x : \rt{\Bool}{\vnu = \true}$ and $\vdash y : \rt{\Bool}{\top}$.
+A type context can be denoted as a set of worlds, for example,
+\begin{align*}
+    \ul{x}{:}\rt{\Bool}{\top}, \ul{y}{:}\rt{\Bool}{\top}
+\end{align*}\noindent
+can be denoted as the following worlds:
+\begin{align*}
+    w_1 = &\{[\true; \true], [\true; \false]\}, 
+    \\w_2 = &\{[\true; \true], [\false; \false]\}, 
+    \\w_3 = &\{[\false; \true], [\true; \false]\}, 
+    \\w_4 = &\{[\false; \true], [\false; \false]\}
+\end{align*}\noindent
+
+\paragraph{Intuition} Consider the set of all possible assigmenet $\mathcal{P}(\sigma)$, a type judgement $\vdash e:\tau$ is valid under some substitution, or, the type judgement is isomorphic to a set of assignments:
+\begin{align*}
+    \denot{\vdash e:\tau} = \{ \sigma \in \mathcal{P}(\sigma) ~|~ \vdash \sigma(e) : \sigma(\tau) \}
+\end{align*}\noindent
+On the other hand, the type context $\Gamma$ can be denoted as the set of type judgements it can prove:
+\begin{align*}
+    \denot{\Gamma} = \{ \vdash e:\tau ~|~ \Gamma \vdash e:\tau \}
+\end{align*}\noindent
+Thus, the denotation of type context $\Gamma$ is in $\mathcal{P}(\mathcal{P}(\sigma))$.
+
+\paragraph{Partial Ordering} We define a partial ordering $\sqsubseteq$ that preserve the ``proof obligation'' naturally:
+\begin{align*}
+   &\{ [x=\true] \} \sqsubseteq
+   \\&\{ [x=\true, y=\true], [x=\true, y=\false] \} \sqsubseteq
+   \\&\{ [x=\true, y=\true], [x=\true, y=\false], [x=\false, y=\true], [x=\false, y=\false] \}
+\end{align*}\noindent
+If we can prove a judgement without $y$, then we can proof it with arbitrary $y$. If we can prove a judgement with less choice, then we can proof it with more choice.
+
+\paragraph{Composition} We can concatenate two worlds together $w \sep w$ which is a product of two worlds.
+\begin{align*}
+    w_1 \sep w_2 = \{ \sigma_1 \cup \sigma_2 ~|~ \sigma_1 \in w_1 \land \sigma_2 \in w_2 \}
+\end{align*}\noindent
+It is just the $\sep$ operation in the type context. The more complicate worlds (e.g., $w_1$) cannot be constructed by the concatenation of two worlds.
+
+\paragraph{Footprint} The seperational logic using Kripke model to express the heap structure, in general, we can consider the footprint to learn if two heap segment are disjointed. However, we use this model to track the application dependency, which is a feature of the program under verification; it is not very obvious how directly know if two type context $\Gamma_1$ and $\Gamma_2$ are disjointed.

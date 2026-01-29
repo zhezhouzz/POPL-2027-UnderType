@@ -685,9 +685,9 @@
 % monad
 % \newcommand{\ot}[3]{\otparenth{ {#1}{:}\;{#2}\, |\, {#3} }}
 \newcommand{\rt}[2]{\basicrt{\vnu}{#1}{#2}}
-\newcommand{\ort}[2]{\ot{\vnu}{#1}{#2}}
+\newcommand{\ort}[2]{\ol{\basicrt{\vnu}{#1}{#2}}}
 % \newcommand{\ut}[3]{\utparenth{ {#1}{:}\;{#2}\;|\;{#3} }}
-\newcommand{\urt}[2]{\ut{\vnu}{#1}{#2}}
+\newcommand{\urt}[2]{\ul{\basicrt{\vnu}{#1}{#2}}}
 
 \newcommand{\M}[1]{\mathcal{M}\;{#1}}
 \newcommand{\Murt}[2]{\M{\urt{#1}{#2}}}
@@ -731,3 +731,6 @@
 \newcommand{\cred}[1]{\textcolor{red}{#1}}
 \newcommand{\cblue}[1]{\textcolor{CobaltBlue}{#1}}
 \newcommand{\sev}[2]{ \evparenth{ \Code{#1}\;{#2} \eveq \vnu \,|\, {#2} }}
+
+% Separation logic
+\newcommand{\sep}{\;*\;}

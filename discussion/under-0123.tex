@@ -41,7 +41,20 @@ but a type context like
 \end{align*}\noindent
 Inferring a correct qualifier for $\Code{low}$ is not trivial; it is equivalent to eliminating the quantifier $\exists \Code{high}$ from the formula $\exists \Code{high}. \Code{low} \leq \Code{high} \land \Code{high} \leq 0$. It is expensive; thus, we should do it lazily (only when needed). On the other hand, the program may also use $\Code{low}$ to refine the type of $\Code{high}$. For example, when $\Code{low}$ is positive, we can infer that $\Code{high}$ should also be positive.
 
-In summary, $\Code{low}$ and $\Code{high}$ should be at the same level (instead of one depending on the other), and we can freely refine one depending on the other according to the program under verification, but only perform this refinement as needed. I call this relation ``entanglement'', and I prefer to encode them as follows:
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    let f (x: ?$\urt{\Int}{\top}$?)  =
+      let y = g x in
+      if x > 0 then ...
+      else ...
+\end{minted}
+
+Here is a more complicate example where these two design may lead unsound results. Consider the function $g$ has the type $\urt{\Int}{\top} \sarr \tau$, which requires that arguement must cover all possible integers (or, one secrete value can lead $y{:}\tau$ holds). In either later control flow, we cannot say $y$ has type $\tau$, $x$ cannot cover all possible integers anymore. Even $\tau$ may not refer $x$, but it still depends on $x$, and can potentially be cancelled out by later constraint on $x$.
+
+In summary, with underapproximation, we need to design a better way express the context change along control flow, maybe track the dependency between variables is a good idea.
+
+\section{Underapproximation Only Case}
+
+$\Code{low}$ and $\Code{high}$ should be at the same level (instead of one depending on the other), and we can freely refine one depending on the other according to the program under verification, but only perform this refinement as needed. I call this relation ``entanglement'', and I prefer to encode them as follows:
 \begin{align*}
     \langle\Code{low}, \Code{high} \rangle {:} \urt{\Int*\Int}{\Code{low} \leq \Code{high} \land \Code{high} \leq 0} \vdash \mykw{then}\; \Code{low} : ...
 \end{align*}\noindent
