@@ -1,3 +1,40 @@
+\section{Simpler Example}
+
+\begin{align*}
+    x{:}\ort{\Int}{\vnu > 1} \sarr \ort{\Int}{\vnu > 0} \tag{$\tau$}
+\end{align*}\noindent
+
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    let f1 (x: int) = x - 1
+
+    let f2 (x: int) = 2 - x
+
+    let f3 (x: int) =
+        f2 (f1 x)
+
+    let rec f4 (x: int) =
+        if x > 1 then f4 (x - 1)
+        else 1
+\end{minted}
+
+\begin{enumerate}
+    \item The program $\Code{f1}$ is consistent with the type $\tau$, and can be type checked by standard refinement type system.
+    \item The program $\Code{f2}$ is not consistent with the type $\tau$, one possible counterexample is $\Code{f2\;2 = 0}$. Thus standard refinement type system will fail to type check it. It can be type checked by underapproximated type system.
+    \begin{align*}
+        \vdash \Code{f2} : \urt{\Int}{\vnu > 1} \sarr \ort{\Int}{\vnu \leq 0} \tag{$\tau_{\neg}$}
+    \end{align*}\noindent
+    \item The program $\Code{f3}$ is not consistent with the type $\tau$, one possible counterexample is $\Code{f3\;3 = 0}$. If we want to reuse the under-type of $\Code{f2}$ in the underapproximation reasoning, we need
+    \begin{align*}
+        \vdash \Code{f1} : x{:}\urt{\Int}{\vnu > 1} \sarr \urt{\Int}{\vnu > 1}
+    \end{align*}\noindent
+    which says all possible interger greater than $1$ is reachable.
+    \item The program $\Code{f4}$ is consistent with the type $\tau$, but cannot be type checked by standard refinement type system. It needs a stronger type:
+    \begin{align*}
+        x{:}\ort{\Int}{\textcolor{red}{\vnu > 0}} \sarr \ort{\Int}{\vnu > 0} \tag{$\tau'$}
+    \end{align*}\noindent
+    Note that the recursive application has argument $x - 1$ that can be $1$ which is outside the precondition of the type $\tau$.
+\end{enumerate}
+
 \section{Motivating Examples}
 
 \begin{figure}[!t]

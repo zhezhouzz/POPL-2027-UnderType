@@ -188,6 +188,9 @@ On the other hand, the type context $\Gamma$ can be denoted as the set of type j
     \denot{\Gamma} = \{ \vdash e:\tau ~|~ \Gamma \vdash e:\tau \}
 \end{align*}\noindent
 Thus, the denotation of type context $\Gamma$ is in $\mathcal{P}(\mathcal{P}(\sigma))$.
+\begin{align*}
+    \forall w \in \denot{\Gamma}, \exists \sigma \in w. \vdash \sigma(e) : \sigma(\tau)
+\end{align*}\noindent
 
 \paragraph{Partial Ordering} We define a partial ordering $\sqsubseteq$ that preserve the ``proof obligation'' naturally:
 \begin{align*}
