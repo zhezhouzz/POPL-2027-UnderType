@@ -1,0 +1,327 @@
+\section{Function Types}
+
+\paragraph{Permission} Still we defined the permission as ``ability to decide a value'', and let's consider the following two types:
+\begin{align*}
+    &x{:}\ort{\Int}{\top} \sarr \rt{\Int}{\vnu = 4} \\
+    &x{:}\urt{\Int}{\top} \sarr \rt{\Int}{\vnu = 4}
+\end{align*}\noindent
+The first type means the function implementation has no permission to decide the value of $x$, and the second type means the function implementation has permission to decide the value of $x$. For a function $e \doteq \lambda x.x + 1$, assume $e$ want the application $e\;x$ be typechecked by its return type $\rt{\Int}{\vnu = 4}$, then the first function type disallow $e$ to choose the desired $x$ (i.e., $x = 3$), thus $e$ cannot have the first type. On the other hand, the second function type allows $e$ to choose the desired $x$ (i.e., $x = 3$), thus it means ``exists a $x$ (that is reachable)''.
+
+The bunched type is indeed different from linear type or resource counting, where the type
+\begin{align*}
+    &x{:}\urt{\Int}{\top} \sarr \rt{\Int}{\vnu = 4}
+\end{align*}\noindent
+doesn't \emph{label the variable $x$ as a resource that can only be used once} within the function body, but \emph{constraints during function application, the argument must be independent permission of the function implementation}. I copy one classical example from bunched type paper to show the difference:
+\begin{align*}
+    &x{:}\urt{\Int}{\top}, f{:}\ort{\Int}{\top} \sarr \ort{\Int}{\top} \sarr \tau \vdash f\;x\;x : \tau
+\end{align*}\noindent
+This judgement is valid, although we use underapproximated variable $x$ for twise; it is allowed because the function type doesn't require its two argument to be independent. It is consistent with ``over-parameter type'' can arbitrarily applied. On the other hand, if $f$ has type $\urt{\Int}{\top} \sarr \urt{\Int}{\top} \sarr \tau$, the application is not typable.
+
+It seems that the over- and under- modality is more about ``permission separation'' than resource counting relation over variables. Thus, it may suggest we put the modality on the arrows.
+\begin{align*}
+    &x{:}\ort{b}{\phi} \sarr \tau \doteq x{:}\rt{b}{\phi} \olarr \tau\\
+    &x{:}\urt{b}{\phi} \sarr \tau \doteq x{:}\rt{b}{\phi} \ularr \tau\\
+    &\ort{b}{\phi} \doteq \rt{b}{\phi} \\
+    &\urt{b}{\phi} \doteq \text{question, how to encode this type?}
+\end{align*}\noindent
+
+In short $\tau_1 \olarr \tau_2$ means $\tau_2$ and $\tau_1$ are living in the same fragment of world -- if we want to prove the an application $f\;x$ has type $\tau_2$, we the world is decided by $\tau_2$ thus we have no permission to choose a desirable assignment for $x$. On the other hand, $\tau_1 \ularr \tau_2$ means $\tau_2$ and $\tau_1$ are living in the different fragment of world -- these two fragments are even commutative, which enable an \emph{reversible} reasoning.
+
+\paragraph{Affine?} Shall we allow $x{:}\rt{b}{\phi} \olarr \tau$ to converted into $x{:}\rt{b}{\phi} \ularr \tau$, it seems that as long as $\phi$ is not empty... It means belong to the model (interpretation) of our type instead of a structural typing relation.
+
+\paragraph{Underapproximation return} In order to disprove the judgement $e : x{:}\ort{b_x}{\phi_x} \sarr \ort{b}{\phi}$, we need to negate this type above. However, it is also reasonable to consider to incorrectness style type that enable compositional reasoning:
+\begin{align*}
+    &x{:}\urt{b_x}{\phi_x} \sarr \ort{b}{\phi} \quad (\text{negated type})\\
+    &x{:}\urt{b_x}{\phi_x} \sarr \urt{b}{\phi} \quad (\text{incorrectness style type})
+\end{align*}\noindent
+Here we has a different reason to enable the underapproximation return type than coverage type, but it has a similar meaning. Assume a function $f$ has incorrectness style type $x{:}\urt{\Int}{\top} \sarr \urt{\Int}{\top}$, then we can also say $f\;(\Code{intGen\;()})$ cover all possible integers.
+We have unified the coverage type and incorrectness style type, the next problem is how to encode them in our type system. Consider the type denotation of a coverage type:
+\begin{align*}
+    \denot{\urt{b}{\phi}} &\doteq \{ e ~|~ \forall v. v \in \denot{\phi} \impl \mstep{e}{v} \}
+\end{align*}\noindent
+I would like to lift this $\forall x$ as a ghost overapproximated type:
+\begin{align*}
+    r{:}\rt{b}{\phi} \olgarr \rt{b}{\vnu = r}
+\end{align*}\noindent
+This means ``for all possible values $v$ satsify $\phi$, the program $e$ can terminate at $v$''. Note that the reachability is still needed to be guaranteed:
+\begin{align*}
+    \denot{\rt{b}{\phi}} &\doteq \{ e ~|~ \exists v. v \in \denot{\phi} \land \mstep{e}{v} \}
+\end{align*}\noindent
+which is different from the standard denotation of refinement type:
+\begin{align*}
+    \denot{\rt{b}{\phi}} &\doteq \{ e ~|~ \forall v. \mstep{e}{v} \implies v \in \denot{\phi} \} \quad (\text{standard denotation})
+\end{align*}\noindent
+These two are the same in a deterministic language (and guarantee termination), however, they are slightly different with randomness. For example,
+\begin{align*}
+    &\vdash \Code{intGen\;()} : \rt{\Int}{\vnu = 0} \quad (\text{correct in our system}) \\
+    &\vdash \Code{intGen\;()} : \rt{\Int}{\vnu = 0} \quad (\text{incorrect in standard refinement type system})
+\end{align*}\noindent
+Note that our denotation is consistent with our goal that is reachability reasoning, since a term $\Code{intGen\;()}$ can indeed reach a value $0$.
+
+\paragraph{Non-commutativity} I have proposed to encode the coverage type $\urt{b}{\phi}$ as $\rt{b}{\phi} \olgarr \rt{b}{\vnu = r}$, however, it is not the whole story. This definition is not consistent with function case:
+\begin{align*}
+    &x{:}\urt{b_x}{\phi_x} \sarr \urt{b}{\phi} \doteq x{:}\rt{b_x}{\phi_x} \ularr (\rt{b}{\phi} \olgarr \rt{b}{\vnu = r})
+\end{align*}\noindent
+Following the incorrectness logic, for a function $f$ has the type above, it should be
+\begin{align*}
+    \forall v. v\in \denot{\phi}. \exists x. x \in \denot{\phi_x} \land \mstep{f\;x}{v}
+\end{align*}\noindent
+However, this is inconsistent with the dependent order in our type system, where $x$ appear before the result $r$. We need to enable this ``reverse'' style reasoning, however, the dependent type has its order with parameter appears before the result. Ideally, we want:
+\begin{align*}
+    &x{:}\urt{b_x}{\phi_x} \sarr \urt{b}{\phi} \doteq \rt{b}{\phi} \olgarr x{:}\rt{b_x}{\phi_x} \ularr \rt{b}{\vnu = r}
+\end{align*}\noindent
+where the result $r$ is magically lift at the very beginning of the type. However, these two arrows at no in the same modality, thus we cannot commute them (similarlly, $\forall\exists$ is not equal to $\exists\forall$). It implies that the ghost arrow itself need to contain more information (or, it is not a commutative composition) -- assume we have ``left ghost arrow'' and ``right ghost arrow'':
+\begin{align*}
+    &\Gamma \vdash e : x{:}\urt{b_x}{\phi_x} \sarr \urt{b}{\phi} \\
+\end{align*}\noindent
+where the ``left ghost arrow'' is the one that is used to lift the result $r$ at the very beginning of the type, and the ``right ghost arrow'' is the one that is used to lift the parameter $x$ at the very end of the type.
+\begin{align*}
+    &\Gamma \vdash e : x{:}\rt{b}{\phi} (\olgarrL) \tau \quad \text{when} \quad  x{:}\rt{b}{\phi}, \Gamma \vdash e : \tau \\ 
+    &\Gamma \vdash e : x{:}\rt{b}{\phi} (\olgarr) \tau \quad \text{when} \quad  \Gamma, x{:}\rt{b}{\phi} \vdash e : \tau
+\end{align*}\noindent
+Following this definition, the coverage type should be
+\begin{align*}
+    &x{:}\urt{b_x}{\phi_x} \sarr \urt{b}{\phi} \doteq x{:}\rt{b_x}{\phi_x} \ularr (\rt{b}{\phi} (\olgarrL) \rt{b}{\vnu = r})
+\end{align*}\noindent
+The intuition is that the ghost varaible is not bind to a parameter within the function, thus it can be either left-hand side or right-hand side within a type context. We don't have this problem for over- or under- arrow type, since they are binding with some parameters (or we say all of them are right arrows).
+
+\section{Typechecking Examples}
+
+\paragraph{Type Syntax}
+\begin{alignat*}{2}
+    \text{\textbf{Variables }}& \quad &\quad& x, y, z, \vnu, ...
+    \\\text{\textbf{Base Types}}& \quad & b  ::= \quad &  \Code{unit} ~|~ \Code{bool} ~|~ \Code{nat} ~|~ \Code{int} ~|~ ...
+    \\\text{\textbf{Basic Types}}& \quad & s  ::= \quad &  b ~|~ s\sarr s
+    \\\text{\textbf{Pure Operations}}& \quad & \primop ::= \quad & {+} ~|~ {-} ~|~ {==} ~|~ {<} ~|~ {\leq} ~|~ ...
+    \\\text{\textbf{Refinement Type}}& \quad & \tau::= \quad & \rt{b}{\phi} ~|~ x{:}\tau \olarr \tau ~|~ x{:}\tau \ularr \tau ~|~ x{:}\tau \olgarr \tau ~|~ x{:}\tau (\olgarrL) \tau
+  \end{alignat*}
+
+\paragraph{Type context}
+We need to distinguished the two arrows $x{:}\tau_x \olarr \tau$ and $x{:}\tau_x \ularr \tau$ after introduce them into the potential empty type context. Conside the following problem caused by an empty type context,
+\begin{align*}
+    &\vdash \zzlam{x}{e} : x{:}\tau_x \olarr \tau \quad \text{when} \quad x{:}\tau_x \vdash e : \tau \\
+    &\vdash \zzlam{x}{e} : x{:}\tau_x \ularr \tau \quad \text{when} \quad x{:}\tau_x \vdash e : \tau
+\end{align*}\noindent
+Following bunched type, we introduce a ``left unit element $\diamond$'' for ``,'' composition, where $\diamond, \Gamma \equiv \Gamma$; however, we have $\diamond \sep \Gamma \neq \Gamma$. All type check required start from the $\diamond$ context, where we can have:
+\begin{align*}
+    &\diamond \vdash \zzlam{x}{e} : x{:}\tau_x \olarr \tau \quad \text{when} \quad \diamond, x{:}\tau_x \vdash e : \tau \\
+    &\diamond \vdash \zzlam{x}{e} : x{:}\tau_x \ularr \tau \quad \text{when} \quad \diamond \sep x{:}\tau_x \vdash e : \tau
+\end{align*}\noindent
+
+\begin{alignat*}{2}
+\\\text{\textbf{Type Context}}& \quad & \Gamma, \Delta ::= \quad & \diamond ~|~ x{:}\tau ~|~ \Gamma \sep \Gamma ~|~ \Gamma , \Gamma
+\end{alignat*}
+
+We write $x{:}\tau_x, (y{:}\tau_y, \Gamma)$ as $x{:}\tau_x, y{:}\tau_y, \Gamma$, it is associative and but not commutative. The $\sep$ operator is associative and commutative.
+We use $\Delta$ to express the type context doesn't has $\sep$ composition, it indicates a single fragment of context.
+
+\paragraph{Structural Rules} We can add new composition with $,$, but not $\sep$.
+
+\begin{figure}[!ht]
+\mprooftr{50mm}{
+ $\Delta, \Gamma \vdash e : \tau$ \quad $\Gamma \wellfoundedvdash e$ \quad $\Gamma \wellfoundedvdash \tau$
+}{ContractionL}{
+ $\Gamma \vdash e : \tau$}
+ \\[.8em]
+\mprooftr{50mm}{
+ $\Gamma, \Delta \vdash e : \tau$ \quad $\Gamma \wellfoundedvdash e$ \quad $\Gamma \wellfoundedvdash \tau$
+}{ContractionR}{
+ $\Gamma \vdash e : \tau$}
+\\[.8em]
+\mprooftr{30mm}{
+ $\Gamma \vdash e : \tau$ \quad $\Gamma \wellfoundedvdash \Delta$
+}{WeakeningL}{
+ $\Gamma, \Delta \vdash e : \tau$}
+\quad
+ \mprooftr{30mm}{
+  $\Gamma \vdash e : \tau$ \quad $\Gamma \wellfoundedvdash \Delta$
+ }{WeakeningR}{
+  $\Delta, \Gamma \vdash e : \tau$}
+\\[.8em]
+\mprooftr{55mm}{
+ $\Gamma_1 \sep \Gamma_2 \vdash e : \tau$ \quad $\Gamma \wellfoundedvdash e$ \quad $\Gamma \wellfoundedvdash \tau$
+}{Contraction}{
+ $\Gamma_1 \vdash e : \tau$}
+\quad
+ \mprooftr{40mm}{
+  $\Gamma_2 \sep \Gamma_1 \vdash e : \tau$
+ }{Exchange}{
+  $\Gamma_1 \sep \Gamma_2 \vdash e : \tau$}
+\\[.8em]
+  \mprooftr{60mm}{
+    $\Gamma_1 \vdash e : \tau$ \quad $\Gamma \vdash \Code{NotEmpty}(\Gamma_2)$
+   }{Weakening (Frame)}{
+    $\Gamma_1 \sep \Gamma_2 \vdash e : \tau$}
+\quad
+\\[.8em]
+\mprooftr{40mm}{
+ $\Gamma_1 \sep \Gamma_2 \vdash e : \tau$ \quad
+}{Normalize}{
+ $\Gamma_1 \sep (\Code{Over}(\Gamma_1), \Gamma_2) \vdash e : \tau$}
+\end{figure}
+
+We have seen lots of normalization examples, e.g.,
+\begin{align*}
+    &\diamond \sep x{:}\rt{\Int}{\vnu > 0} \sep y{:}\rt{\Int}{\vnu > x} \vdash e : \tau \\
+    &\diamond \sep x{:}\rt{\Int}{\vnu > 0} \sep (x{:}\rt{\Int}{\vnu > 0}, y{:}\rt{\Int}{\vnu > x}) \vdash e : \tau \\
+\end{align*}\noindent
+where the first example is normalized into the second example, and the second example is normalized into the third example.
+
+\paragraph{Typing rules for variables and arrow types}
+
+\begin{figure}[!ht]
+    \mprooftr{30mm}{
+     $\Gamma, x{:}\tau_x \vdash e : \tau$
+    }{TOArr}{
+     $\Gamma \vdash \zzlam{x}{e} : x{:}\tau_x \olarr \tau$}
+    \quad
+    \mprooftr{30mm}{
+     $\Gamma, x{:}\tau_x \vdash e : \tau$
+    }{TUArr}{
+     $\Gamma \vdash \zzlam{x}{e} : x{:}\tau_x \ularr \tau$}
+    \\[.8em]
+    \mprooftr{40mm}{
+     $x{:}\tau_x, \Gamma \vdash e : \tau$
+    }{TOGArrL}{
+     $x{:}\tau_x, \Gamma \vdash e : x{:}\tau_x (\olgarrL) \tau$}
+    \quad
+    \mprooftr{40mm}{
+     $\Gamma, x{:}\tau_x \vdash e : \tau$
+    }{TOGArrR}{
+     $\Gamma \vdash e : x{:}\tau_x \olgarr \tau$}
+    \\[.8em]
+    \mprooftr{30mm}{
+     $ \eraserf{\tau} \text{ is base type} $
+    }{TVar}{
+     $x{:}\tau \vdash x : \rt{b}{\vnu = x} $}
+    \quad
+    \mprooftr{30mm}{
+     $ \eraserf{\tau} \text{ is function type} $
+    }{TVar}{
+     $x{:}\tau \vdash x : \tau $}
+\end{figure}
+
+With most of types are straightforward, the rule for base typed variables are still distinct from the rule for functions, it simply because the core language can do pattern matching on a base typed variables, but cannot on a function. Consider the following example:
+\begin{align*}
+    &\diamond \vdash \zzlam{x}{x} : x{:}\rt{b}{\phi} \ularr \urt{b}{\phi} \quad (\text{desugar}) \\
+    &\diamond \vdash \zzlam{x}{x} : x{:}\rt{b}{\phi} \ularr (r{:}\rt{b}{\phi} (\olgarrL) \rt{\Int}{\vnu = r}) \quad (\textsc{TUArr}) \\
+    &\diamond \sep x{:}\rt{b}{\phi} \vdash x : r{:}\rt{b}{\phi} (\olgarrL) \rt{\Int}{\vnu = r} \quad (\textsc{TOGArrL}) \\
+    &r{:}\rt{b}{\phi}, (\diamond \sep x{:}\rt{b}{\phi}) \vdash x : \rt{\Int}{\vnu = r} \\
+    &\text{on the other hand,} \\
+    &r{:}\rt{b}{\phi}, (\diamond \sep x{:}\rt{b}{\phi}) \vdash x : \rt{\Int}{\vnu = x} \quad (\text{weakening left}) \\
+    &\diamond \sep x{:}\rt{b}{\phi} \vdash x : \rt{\Int}{\vnu = x} \quad (\text{frame rule}) \\
+    &x{:}\rt{b}{\phi} \vdash x : \rt{\Int}{\vnu = x} \quad (\textsc{TVar}) \\
+    &\text{we need to prove,} \\
+    &r{:}\rt{b}{\phi}, (\diamond \sep x{:}\rt{b}{\phi}) \vdash \rt{\Int}{\vnu = x} <: \rt{\Int}{\vnu = r} \\
+    &\forall r. \phi(r) \impl \exists x. \phi(x) \land x = r
+\end{align*}\noindent
+where the first example is normalized into the second example, and the second example is normalized into the third example.
+
+\paragraph{Typing rules for application}
+
+\begin{figure}[!ht]
+    \mprooftr{50mm}{
+     $\Gamma_1 \vdash v_f : x{:}\tau_x \olarr \tau$ \quad $\Gamma_2 \vdash x : \tau_x$
+    }{TOApp}{
+     $\Gamma_1, \Gamma_2 \vdash v_f\;x : \tau$}
+     \\[.8em]
+     \mprooftr{50mm}{
+        $\Gamma_1 \vdash v_f : x{:}\tau_x \ularr \tau$ \quad $\Gamma_2 \vdash x : \tau_x$
+       }{TUApp}{
+        $\Gamma_1 \sep \Gamma_2 \vdash v_f\;x : \tau$}
+    \\[.8em]
+        \mprooftr{60mm}{
+         $\Gamma_1 \vdash e_x : \tau_x$ \quad $\Gamma_2, x{:}\tau_x \vdash e : \tau$
+        }{TLetO}{
+         $\Gamma_1, \Gamma_2  \vdash \zlet{x}{e_x}{e_2} : \tau$}
+    \\[.8em]
+    \mprooftr{60mm}{
+         $\Gamma_1 \vdash e_x : r{:}\tau_x (\olgarrL) \rt{b}{\vnu = x} $ \quad $\Gamma_2 \sep x{:}\tau_x  \vdash e : \tau$
+        }{TLetU}{
+         $\Gamma_1, \Gamma_2  \vdash \zlet{x}{e_x}{e_2} : \tau$}
+    \\[.8em]
+         \mprooftr{60mm}{
+              $\Gamma \sep x{:}\tau_x \vdash e : \tau$
+             }{TExists}{
+              $\Gamma \sep x{:}\tau_x \vdash e : \Code{exists}(x{:}\tau_x, \tau)$}
+\end{figure}
+
+The rule \textsc{TGApp} allows us to introduce an coverage result back to the type context. Consider the following example:
+\begin{align*}
+    &f:\Int \ularr \Int \sep x{:}\Int  \vdash (f\;x) + (f\;x) : ... 
+\end{align*}\noindent
+This one cannot be type checked, since $f\;x$ requires that $f$ and $x$ are in the different fragement, and $f$ is at the same fragment, thus it means two $x$ are in different fragement, which is impossible.
+\begin{align*}
+    &f:\Int \olarr \Int \sep x{:}\Int  \vdash (f\;x) + (f\;x) : ... 
+\end{align*}\noindent
+This one is possible, since $f$ doesn't requires it at the different fragement than $x$. We can even have:
+\begin{align*}
+    &(f:\Int \olarr \Int, x{:}\Int)  \vdash (f\;x) + (f\;x) : \tau_p \quad (\text{here we calculate precise value for each possible $x$}) \\
+    &f:\Int \olarr \Int \sep (f:\Int \olarr \Int, x{:}\Int)  \vdash (f\;x) + (f\;x) : \tau_p \quad (\text{frame}) \\
+    &f:\Int \olarr \Int \sep (f:\Int \olarr \Int, x{:}\Int) \vdash (f\;x) + (f\;x) : \exists f. \exists x. \tau_p \quad (\textsc{TExists}) \\
+    &f:\Int \olarr \Int \sep x{:}\Int \vdash (f\;x) + (f\;x) : \exists f. \exists x. \tau_p \quad (\textsc{Normalize}) \\
+\end{align*}\noindent
+
+% \begin{align*}
+%     &\diamond \sep  \vdash \zlet{x}{\Code{intGen}\;()}{f\;x} : \urt{\Int}{\vnu > 0} \quad \\
+%     &\text{we assume:} (\diamond, \Code{intGen}{:}..., f{:}...) \vdash (\Code{intGen\;()}): \urt{\Int}{\top} \\
+%     &\text{According to \textsc{TLetU}, we need prove:} (\diamond, \Code{intGen}{:}..., f{:}...) \sep x{:}\rt{\Int}{\top} \vdash (\Code{intGen\;()}): \rt{\Int}{\vnu = x} \\
+%     &\textsc{TLet}: (\diamond, \Code{intGen}{:}..., f{:}...) \sep x{:}\rt{\Int}{\top} \vdash x: \rt{\Int}{\vnu > 0}  \\ \\
+%     &\text{According to \textsc{TAppU}, we need prove:} \\
+%     &\diamond, \Code{intGen}{:}..., f{:}... \vdash f: x{:}\rt{\Int}{\vnu > 0} \ularr \urt{\Int}{\vnu > 0} \quad (\textsc{TVar}) \\
+%     &\text{And:} \\
+%     &x{:}\rt{\Int}{\top} \vdash x: \rt{\Int}{\vnu = x} \quad (\textsc{TVar}) \\
+%     &(\diamond, \Code{intGen}{:}..., f{:}...) \sep x{:}\rt{b}{\top} \vdash x: \rt{b}{\vnu = x} <: \rt{b}{\vnu > 0} \quad (VC: \forall ... \exists x. x > 0) \\
+%     &(\diamond, \Code{intGen}{:}..., f{:}...) \sep (\diamond, \Code{intGen}{:}..., f{:}..., x{:}\rt{b}{\top}) \vdash x: \rt{\Int}{\vnu = x} \quad (\text{Contraction}) \\
+%     &(\diamond, \Code{intGen}{:}..., f{:}...) \vdash x: x{:}\rt{\Int}{\top}(\olgarrL)\rt{\Int}{\vnu = x} \quad (\text{TGApp}) \\
+%     &(\diamond, \Code{intGen}{:}..., f{:}...) \vdash (\Code{intGen\;()}): \urt{\Int}{\top} \\
+% \end{align*}\noindent
+
+\section{Permission and Fragment}
+
+\paragraph{Over- and Under-approximation as Permission} Inspired by treating $x \mapsto v$ as a permission (ownership) to access a heap location $x$ in separation logic, we can view over- and under-approximation as permission to ``decide (write)'' the value of a bound variable. A context in program verification can be abstracted as a substitution $\sigma$ (e.g., $\vdash e : \tau$ requires $\sigma$ to provide assignments for free variables). Deciding the assignment of a variable $x$ in a context can be seen as a ``write operation''; however, this ``write'' cannot be performed arbitrarily. The following constraints apply:
+\begin{itemize}
+    \item We cannot assign a value more than once. For example, when type checking $\vdash x : \rt{\Int}{\vnu > x}$, we cannot assume $x$ is both $2$ and $1$, which would lead to the unreasonable judgment $\vdash 2 : \rt{\Int}{\vnu > 1}$. 
+    \item Not all variables can be written. For example, when type checking $x{:}\ort{\Int}{\vnu > 0} \vdash x : \rt{\Int}{\vnu = 3}$, although letting $x$ be $3$ would make the type judgment valid, we do not have the permission to decide $x$ to be $3$ in the context (since it is overapproximated). In short, we only have the permission to assign values to underapproximated variables.
+    \item Alternatively, we have ``read permission'' for overapproximated variables, which means that somebody else (another fragment of the context, or even an ``attacker'') has already determined the value, and we can only read it. In the example above, imagine an ``attacker'' whose goal is to make the type judgment invalid: since we do not know their decision, the only thing we can do is ensure $\vdash x : \rt{\Int}{\vnu = 3}$ works for all possible values of $x$. Obviously, this is impossible in this case. However, consider another example:
+    \begin{align*}
+        x{:}\ort{\Int}{\vnu > 0},\; y{:}\urt{\Int}{\vnu > 0} \vdash x - y : \rt{\Int}{\vnu = 0}
+    \end{align*}\noindent
+    Suppose an ``attacker'' has already decided $x$ to be some value; we cannot change it but can read it (i.e., know the value of $x$). On the other hand, we have permission to choose any value for $y$. With this permission, we can let $y \mapsto \Code{read}(x)$ to make the type judgment valid.
+    \item The ``write'' permission is also an obligation, it must be performed. For example, the following type context cannot prove anything: $y{:}\urt{\Int}{\bot}$.
+\end{itemize}
+In short, a type context gives read permission for overapproximated variables and write permission for underapproximated variables. Unlike fractional permissions, ``read'' and ``write'' are not exclusive. However, ``write'' and ``write'' are exclusive, and multiple ``reads'' are not exclusive.
+
+Here are some examples:
+\begin{enumerate}
+    \item $x{:}\urt{\Int}{\vnu > 0} \sep y{:}\urt{\Int}{\vnu > 0}$: the type context can make two independent decisions for $x$ and $y$; we use $\sep$ to connect two fragments of context.
+    \item $x{:}\urt{\Int}{\top} \sep x{:}\ort{\Int}{\vnu > 0},\; y{:}\urt{\Int}{\vnu > x}$: the type context can make two dependent decisions for $x$ and $y$. The second fragment of context has read permission for $x$ and write permission for $y$. Note that ``read'' and ``write'' are not exclusive, so these two fragments can be safely composed. It is acceptable for the qualifiers of the two $x$ bindings to differ.
+    \item $x{:}\ort{\Int}{\top} \sep x{:}\ort{\Int}{\vnu > 0}$: this means the judgment holds if we ``read'' any value for $x$, and also holds if we ``read'' a positive value for $x$. Although these can be combined into a single fragment $x{:}\ort{\Int}{\top}$.
+    \item We also allow the following compositions:
+    \begin{align*}
+        &x{:}\ort{\Int}{\vnu > 0} \sep x{:}\ort{\Int}{\vnu > 0},\; y{:}\urt{\Int}{\vnu > x} \sep x{:}\ort{\Int}{\vnu > 0},\; z{:}\urt{\Int}{\vnu > x} \\
+        & \quad \text{(read the same $x$)}  \\
+        &x{:}\ort{\Int}{\vnu > 0} \sep y{:}\urt{\Int}{\vnu > 0} \\ 
+        &y{:}\urt{\Int}{\vnu > 0} \sep x{:}\ort{\Int}{\vnu > 0} \text{(exchange)}
+    \end{align*}\noindent
+    The meanings of these are straightforward.
+\end{enumerate}
+
+We can normalize the type context into the following form:
+\begin{align*}
+    \underbrace{(x{:}\ort{b}{\phi},\, x'{:}\ort{b'}{\phi'},\, \ldots,\, \underbrace{y{:}\urt{b}{\phi}}_{\texttt{single or no underapproximation}})}_{\texttt{fragment}} \sep \ldots
+\end{align*}\noindent
+where the context consists of multiple fragments, each with a prefix of overapproximations and a single (or zero) underapproximation.
+
+\paragraph{Properties} The dependency is nicely separated from the permission, so we have the following properties:
+\begin{itemize}
+    \item Exchange: $\Gamma_1 \sep \Gamma_2 \vdash e : \tau \iff \Gamma_2 \sep \Gamma_1 \vdash e : \tau$.
+    \item Frame (weakening): $\Gamma_1 \vdash e : \tau \implies \Gamma_1 \sep \Gamma_2 \vdash e : \tau$. This enables local reasoning.
+    \item Contraction: $\Gamma_1 \vdash e : \tau \iff \Gamma_1 \sep \Gamma_1 \vdash e : \tau$ when $\Gamma_1$ has no underapproximations.
+\end{itemize}
+Within a fragment $x{:}\ort{b}{\phi},\, x'{:}\ort{b'}{\phi'},\, \ldots,\, y{:}\urt{b}{\phi}$:
+\begin{itemize}
+    \item Exchange is disallowed, so the bindings can have dependencies.
+    \item Weakening is allowed for overapproximated variables and non-empty underapproximated variables (otherwise we cannot have a value to write; the write permission is also an obligation).
+    \item Contraction is still only allowed for overapproximated variables.
+\end{itemize}

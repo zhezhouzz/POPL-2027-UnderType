@@ -1,0 +1,545 @@
+\documentclass{beamer}
+
+% Packages likely needed by refinementtydef.sty and common usage
+\usepackage{amsmath, amsfonts, mathrsfs, mathtools, stmaryrd, pifont, xcolor}
+\usepackage{pict2e}
+\usepackage{xspace}
+\usepackage{tikz}
+\usepackage{minted} 
+% Note: minted requires -shell-escape flag when compiling
+
+% Beamer theme settings
+\usetheme{Madrid}
+\usecolortheme{default}
+
+% Import the custom definitions
+\usepackage{hyperref, wrapfig, amsthm, pict2e, booktabs, subcaption,
+  subfiles, rotating, pifont, indentfirst, amsmath, amsfonts,
+  mathrsfs, adjustbox, mathtools,booktabs, microtype, ebproof,
+  enumitem, multirow, multicol, setspace, xcolor, lineno, listings,
+  stmaryrd, xspace, stackengine, makecell}
+
+\usepackage{empheq}
+\newcommand*\widefbox[1]{\fbox{\hspace{2em}#1\hspace{2em}}}
+\usepackage[tableposition=top]{caption}
+\usepackage{tikz-cd}
+\usetikzlibrary{decorations.pathmorphing}
+\usepackage[ruled,linesnumbered,vlined]{algorithm2e}
+\newcommand\mycommfont[1]{\footnotesize\ttfamily\textcolor{DeepGreen}{#1}}
+\SetCommentSty{mycommfont}
+\usepackage{graphicx}
+\urlstyle{same}
+\usepackage{minted}
+\usemintedstyle{borland}
+\usepackage{tikz}
+\newcounter{markeq}
+\setcounter{markeq}{0}
+\usepackage{spacingtricks}
+\newcommand*\tstrut[1]{\vstrut{#1}}
+\newcommand*\bstrut[1]{\vstrut[#1]{0pt}}
+\usepackage[T1]{fontenc}
+\newcommand*\mystrut[1]{\vrule width0pt height0pt depth#1\relax}
+% \usepackage{bm}
+
+\newcommand{\tyName}{\mbox{\textsf{u}\textsc{Hat}}\xspace}
+
+% ZZ's Macros
+\usepackage{spacingtricks, commands, refinementtydef}
+
+\title{UnderType}
+\author{Zhe Zhou}
+\date{\today}
+
+\begin{document}
+
+\frame{\titlepage}
+
+\begin{frame}
+\frametitle{What is resource in undertype?}
+
+We are actually verifying the following VCs: 
+\begin{align*}
+\forall x_1. \exists x_2. \forall x_3. \exists x_4. e : \tau 
+\end{align*}
+
+We interpret $\forall x$ as ``read permission'', i.e., someone decides the value of 
+$x$ and we can only read it. We interpret $\exists x$ as ``write permission'', i.e., we decide the value of $x$ that we want.
+
+Why different?
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Resource Interpretation}
+    
+Consider the following example:
+\begin{align*}
+    \Gamma \vdash x - y : \rt{\Int}{\vnu = 0}
+\end{align*}
+\begin{itemize}
+    \item If we have write permission for both $x$ and $y$, we can set $x = 3$ and $y = 3$, then the type judgment is valid.
+    \item If we have read permission for $x$ and write permission for $y$, we can set $y = \Code{read}(x)$, then the type judgment is valid.
+    \item If we only have read permission for both $x$ and $y$, we cannot do anything. Since we cannot control the value we read, we cannot prove the type judgment.
+    \item If we have write permission for $x$ and read permission for $y$, we still cannot do anything. Since the read happens \textbf{after} the write, we cannot ``guess'' the value of $y$.
+\end{itemize}
+    
+\end{frame}
+
+\begin{frame}
+    \frametitle{Terminology}
+    
+The bunched type and the bunched implication share the same key idea (combine two modalities within one system) but one in type theory and one in logic. 
+
+Bunched type plays lots of games with type context (it has two unit contexts for two different monoids), which makes it much less intuitive than separation logic. 
+
+I also assume you are more familiar with separation logic, so I will use separation logic to explain my idea.
+
+Note that classical separation logic (bunched implication, bunched type) is incompariable with linear type, thus I won't use their terminology (e.g., number of resources one can use). Although introducing the $!$ operator is reasonable (persistently modality in Iris), I don't do that for now.
+    
+\end{frame}
+
+\begin{frame}
+    \frametitle{Terminology: Variables and Heaps}
+    
+In SL, we have two worlds: pure logic world ($x = 4$), and heap world ($x \mapsto 4$). One can be duplicated and the other cannot. We also introduce two forms of type annotations:
+\begin{itemize}
+    \item $x : \tau$ similar to $x = 4$: we have read permission to get an assignment of $x$ consistent with $\tau$.
+    \item $x \mapsto \tau$ similar to $x \mapsto 4$: we have write permission to decide the assignment of $x$ to a value consistent with $\tau$. (For now we assume $\mapsto$ only works with base type)
+\end{itemize}
+
+Similar to SL, we can duplicate $x : \tau$ (I can read multiple times) but not $x \mapsto \tau$ (I can only decide once).
+
+Note that this permission is not ``affine'', which means we cannot give up the write permission. If we want to type check a function $\lambda x.e$ whose under-style parameter type is $\rt{b}{\bot}$, we cannot find such an assignment for $x$ (and we cannot give up), thus the type check should fail.
+\end{frame}
+
+\begin{frame}
+    \frametitle{Terminology: Actions and Randomness}
+
+Each action means one truly random choice.
+
+The right way to precisely define it is that the player action is a deterministic function (winning strategy) 
+\[ f: \overline{x} \to \Code{seed} \to \overline{y} \]
+where $\overline{x}$ are the variables to read and $\overline{y}$ are the variables to write. The result of written values depends on the random seed.
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Terminology: Connectives}
+    
+In SL, we have two connectives: $\land$ and $\sep$. 
+
+$P \sep Q$ means heap $P$ and $Q$ are disjoint, however, $\land$ doesn't guarantee this disjointness. In our two-player game, one player can make player actions (i.e., decide a value to write); heap means action, and disjoint means in two different actions.
+
+We also introduce two similar connectives in UnderType: $,$ and $\sep$.
+
+$\Delta_1, \Delta_2$ is similar to $P \land Q$, it means that $\Delta_1$ and $\Delta_2$ are in the same player action. Note that $\Delta_1, \Delta_2$ is commutative only when $\Delta_2$ does not refer to the variables in $\Delta_1$.
+
+$\Gamma_1 \sep \Gamma_2$ is similar to $P \sep Q$, it means that $\Gamma_1$ and $\Gamma_2$ are in different player actions.
+\end{frame}
+
+\begin{frame}
+    \frametitle{Terminology: Connectives}
+    
+Following this idea, we normalize the type context language into a more restricted form:
+\begin{align*}
+    &\text{heap} \quad \Delta \doteq \overline{x{:}\tau},\Code{emp} ~|~ \overline{x{:}\tau}, y\mapsto \tau
+    \\&\text{type context} \quad \Gamma \doteq \Delta ~|~ \Gamma \sep \Gamma
+\end{align*}
+
+Each (nonempty) heap (action) means reading some variables ($\overline{x}$) that are connected with $,$ and then writing to a variable ($y$). 
+
+We also have empty heap $\Code{emp}$ which means no write operations; it is for a pure over-approximated type context.
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Terminology: Connectives}
+    
+Intuitively, this definition forces dividing each potential $\mapsto$ operation into different heaps. This disallows the following case:
+\begin{align*}
+    y_1 \mapsto \Int, y_2 \mapsto \Int
+\end{align*}
+
+The meaning of this type context is: we want to write both $y_1$ and $y_2$, however they probably are in the same action. According to the definition of action, it means that $y_1$ and $y_2$ may depend on the same random seed, thus they are not truly random (independent).
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Terminology: Connectives}
+    
+Compared with SL, $x \mapsto 3 \land y \mapsto 4$ in standard SL is impossible since $x \mapsto 3$ means this is a single address in the current heap. The $\land$ means both $x$ and $y$ are the same address and $3 = 4$.
+
+In SL, we hardly see a formula like this.
+
+In our setting $x \mapsto \Int \land y \mapsto \Int$, we don't have a universal namespace (store) and treat variable names more flexibly, i.e., $x$ and $y$ can be different variables with different assignments. It means they are entangled in an unknown way (e.g., there exists an unknown deterministic function $g$ where $g(x) = y$).
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Terminology: Connectives}
+
+Although our interpretation allows $x \mapsto \Int \land y \mapsto \Int$, it is a little bit weird to write two variables in the same action, since in our incorrectness reasoning setting, all parameters can have independent random choices. One workaround is 
+\begin{align*}
+    y_1: \Int, y_2 \mapsto \Int
+\end{align*}
+where we make $y_1$ fall back to a read variable.
+
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Structural Rules: Exchange}   
+
+\begin{figure}[!ht]
+    \mprooftr{30mm}{
+     $\Delta_2, \Delta_1 : e : \tau$ \quad
+     $\wfvdash \Delta_1$ 
+    }{ExchangeO}{
+     $\Delta_1, \Delta_2 : e : \tau$}
+\quad
+\mprooftr{30mm}{
+     $\Gamma_2 \sep \Gamma_1 : e : \tau$
+    }{ExchangeU}{
+     $\Gamma_1 \sep \Gamma_2 : e : \tau$}
+\end{figure}
+
+The $,$ connective is commutative only when $\Delta_1$ doesn't refer to the variables in $\Delta_2$.
+    
+\end{frame}
+
+\begin{frame}
+    \frametitle{Structural Rules: Contraction}   
+
+\begin{figure}[!ht]
+    \mprooftr{40mm}{
+     $\Delta_1, \Delta_1, \Delta_2 \vdash : e : \tau$ 
+    }{ContractionLeft}{
+     $\Delta_1, \Delta_2 : e : \tau$}
+\quad
+\mprooftr{40mm}{
+    $\Delta_1, \Delta_2, \Delta_2 \vdash : e : \tau$ \quad
+    $\mapsto \notin \Delta_2$
+    }{ContractionRight}{
+     $\Delta_1, \Delta_2 : e : \tau$}
+\quad
+\mprooftr{40mm}{
+    $\Gamma \sep (\Code{Over}(\Gamma), \Code{emp})\vdash : e : \tau$ 
+    }{ContractionEmp}{
+     $\Gamma : e : \tau$}
+\end{figure}
+
+The contraction rule defines what we can duplicate; any $x \mapsto \tau$ can be duplicated. The $\Code{emp}$ and read variables can be duplicated. 
+Here $\Code{Over}(\Gamma)$ means we keep all variables in $\Gamma$ with read permission.
+\end{frame}
+
+\begin{frame}
+    \frametitle{Structural Rules: Weakening}   
+
+\begin{figure}[!ht]
+    \mprooftr{40mm}{
+     $\Delta_2 \vdash : e : \tau$ 
+    }{WeakeningLeft}{
+     $\Delta_1, \Delta_2 : e : \tau$}
+\quad
+\mprooftr{40mm}{
+    $\Delta_1 \vdash : e : \tau$ \quad
+    $\mapsto \notin \Delta_2$
+    }{WeakeningRight}{
+     $\Delta_1, \Delta_2 : e : \tau$}
+\quad
+\mprooftr{50mm}{
+    $\Gamma \vdash : e : \tau$ \quad
+    $\Gamma'$ is not empty
+    }{Frame}{
+     $\Gamma \sep \Gamma' : e : \tau$}
+\end{figure}
+
+The weakening rule defines what we can drop, which is similar to contraction rules. One difference is that the weakening rule for $\sep$ (frame rule) requires that the dropped context is not empty (e.g., $x\mapsto\rt{\Int}{\bot}$).
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Typing}   
+
+I would like to solve the following typing examples, where $f$ and $g$ can be assigned with different function types:
+
+\begin{minted}{ocaml}
+let y1 = f x in
+let y2 = g x in
+x
+\end{minted}
+
+We want to show:
+\begin{itemize}
+    \item if $f$ and $g$ both have under-parameters, this typecheck should fail.
+    \item if $f$ and $g$ both have over-parameters, this typecheck should succeed.
+    \item if $f$ and $g$ one has over-parameter and the other has under-parameter, this typecheck should succeed. 
+    It looks like we separate a read permission to the over-parameter function, and later recover the write permission back.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Function Typing}   
+
+Before talking about the typing, we introduce the function types.
+
+Similar to how we have normal implication ($\impl$) and magic wand ($\wand$, it is actually linear arrow) in separation logic, we have two arrow types:
+\begin{align*}
+    &\tau_1 \doteq x{:}\Int \sarr \Int \quad (over-to-under, coverage type)
+    \\&\tau_2 \doteq (x\mapsto\Int) \wand \Int \quad (under-to- under, incorrectness triple)
+\end{align*}
+
+How should we interpret these two types? 
+
+The first means if we read arbitrary integer value for $x$, we can get a random integer value (or a new permission to make a decision). 
+
+The second means permission transfer, we consume the permission to decide $x$, but get a fresh permission.
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Other potential function types}   
+
+There are two types allowed by the syntax
+\begin{align*}
+    &\tau_1 \doteq x{:}\Int \wand \Int 
+    \\&\tau_2 \doteq (x\mapsto\Int) \sarr \Int 
+\end{align*}
+
+The first type requires the ``separation'', but its argument is pure (based on the empty action $\Code{emp}$), thus it is equal to $x{:}\Int \sarr \Int$. (Similar in SL).
+
+The second type requires no ``separation'', however connected two actions, which may lead the type context like $x\mapsto\Int, y\mapsto\Int$ -- we already shown some examples about it, it is quite annoying thus I disallow it for now.
+
+\textbf{Remark:} I simplify all parameters in form $x{:}\tau_x$ from now, where the relation between $x$ and $\tau_x$ is clear according to the later types. (Actually, the bunched type can only use $,$ and $\sep$ to distinguish all $x:\tau$ and $x\mapsto\tau$ even in type context, but it is not clear for presentation).
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Missing function types}   
+
+The ``over'' returned function type is missing, it can be expressed as:
+\begin{align*}
+    &f_1: x{:}\urt{\Int}{\top} \sarr \ort{\Int}{\top} \doteq x{:}\Int \wand (\Int, \Code{emp})
+    \\&f_2: x{:}\urt{\Int}{\top} \sarr \urt{\Int}{\top} \doteq x{:}\Int \wand \Int
+\end{align*}
+
+Here we highlight the return value ($\Int$) has only read permission (only pure constraint can connected with $\Code{emp}$ with $,$). To show the difference we (informally) have:
+\begin{align*}
+    &\vdash \Code{let\;y\;=f_1\;RandomInt in e} : \tau \implies y:\Int, \Code{emp} \vdash e : \tau
+    \\&\vdash \Code{let\;y\;=f_2\;RandomInt in e} : \tau \implies y\mapsto\Int \sep \Code{emp} \vdash e : \tau
+\end{align*}
+
+It is similar to $\{x \mapsto -\} \text{ free(x) } \{\text{emp}\}$ in SL, where we drop one write permission after apply $f_1$.
+
+There are many possible syntactic choices we can make here; in this presentation we mostly consider under-return, thus $x{:}\Int \wand \Int$ by default means under-return.
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Function Typing}   
+
+    \begin{figure}[!ht]
+        \mprooftr{50mm}{
+         $\Gamma \sep \Code{Over}(\Gamma), x{:}\tau_x  \vdash : e : \tau$ 
+        }{TFunO}{
+         $\Gamma \vdash \zzlam{x}{e} : x{:}\tau_x \sarr \tau$}
+    \quad
+        \mprooftr{50mm}{
+         $\Gamma \sep \Code{Over}(\Gamma), x \mapsto \tau_x  \vdash : e : \tau$ 
+        }{TFunU}{
+         $\Gamma \vdash \zzlam{x}{e} : x{:}\tau_x \wand \tau$}
+    \end{figure}
+
+Here $\Code{Over}(\Gamma)$ means we keep all variables in $\Gamma$ with read permission, only make the $\tau_x$ be closed. I will omit this part for simplicity.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Function Typing}   
+
+    \begin{figure}[!ht]
+    \mprooftr{40mm}{$ $
+           }{TVarO}{
+            $x:\tau_x \vdash x : \tau$}
+    \quad
+    \mprooftr{40mm}{$ $
+           }{TVarU}{
+            $x \mapsto \tau_x \vdash x \mapsto \tau$}
+    \\[.8em]
+    \mprooftr{70mm}{
+            $\Delta_1 \vdash : v_f : y{:}\tau_y \sarr \tau_x$ \quad
+            $\Gamma_2 \vdash : v : \tau_y$ \quad
+            $\Gamma_3 \sep x \mapsto \tau_x \vdash : e : \tau$
+           }{TAppO}{
+            $(\Delta_1, \Gamma_2) \sep \Gamma_3 \vdash \zzlam{x}{v_f\;v}{e} : \tau$}
+    \quad
+    \mprooftr{70mm}{
+            $\Gamma_1 \vdash : v_f : y{:}\tau_y \wand \tau_x$ \quad
+            $\Gamma_2 \vdash : v \wand \tau_y$ \quad
+            $\Gamma_3 \sep x \mapsto \tau_x \vdash : e : \tau$
+           }{TAppU}{
+            $(\Gamma_1 \sep \Gamma_2) \sep \Gamma_3 \vdash \zzlam{x}{v_f\;v}{e} : \tau$}
+    \end{figure}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Example}
+
+    Assume type check the following program under type context $x\mapsto\Int$ against the type $\Int$.
+
+    \begin{minted}{ocaml}
+    P:
+        let y1 = f x in
+        let y2 = g x in
+        y2
+    \end{minted}
+    
+    Case 1: when
+    \begin{align*}
+        f{:}\Int \wand \Int, g{:}\Int \wand \Int
+    \end{align*}
+
+    According to \textsc{TFunU}, the argument should be type checked from a heap ($\Gamma_2$) disjoint from other heaps. The two arguments are both $x$, it means the type context should contain $(\Delta_1, x\mapsto\Int) \sep (\Delta_2, x\mapsto\Int)$ which is impossible.
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Example}
+    
+    Case 2: when
+    \begin{align*}
+        f{:}\Int \sarr \Int, g{:}\Int \sarr \Int
+    \end{align*}
+    where $f$ and $g$ work like two random generators.
+
+    According to \textsc{TFunO}, we can use a single empty heap $(\Delta_1, \Gamma_2)$ to provide the type for the application.
+
+    \begin{align*}
+        &f{:}..., g{:}..., x \mapsto \Int \vdash P \mapsto \Int \iff 
+        \\&(f{:}..., x: \Int) \sep f{:}..., g{:}..., x \mapsto \Int \vdash P \mapsto \Int
+    \end{align*}
+    Then according to \textsc{TAppO}, we just need to prove
+    \begin{align*}
+        &(f{:}..., g{:}..., x \mapsto \Int) \sep y_1\mapsto\Int \vdash ... \mapsto \Int
+        \\&(f{:}..., g{:}..., x \mapsto \Int) \sep y_1\mapsto\Int, y_2\mapsto\Int \vdash y_2 \mapsto \Int
+    \end{align*}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Example}
+    
+    Case 3: when
+    \begin{align*}
+        f{:}\Int \sarr \Int, g{:}\Int \wand \Int
+    \end{align*}
+
+    Again, according to \textsc{TAppO}, we just need to prove
+    \begin{align*}
+        &(f{:}..., g{:}..., x \mapsto \Int) \sep y\mapsto\Int \vdash ... \mapsto \Int
+    \end{align*}
+    We still use the structural rules:
+    \begin{align*}
+        &(g{:}...) \sep (f{:}..., g{:}..., x \mapsto \Int) \sep y_1\mapsto\Int \vdash ... \mapsto \Int
+    \end{align*}
+    Then according to \textsc{TAppU}, we have
+    \begin{align*}
+        &y_1\mapsto\Int \sep y_2 \mapsto \Int \vdash y_2 \mapsto \Int
+    \end{align*}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Example}
+    
+    Case 4: when
+    \begin{align*}
+        f{:}\Int \sarr \Int, g{:}\Int \wand \Int
+    \end{align*}
+
+    According to the structural rules (especially the \textsc{ContractionEmp} rule):
+    \begin{align*}
+        &(f{:}...) \sep (f{:}..., g{:}..., x \mapsto \Int) \sep (g{:}..., x:\Int) \vdash P \mapsto \Int
+    \end{align*}
+    According to the \textsc{TAppU} rule, we have
+    \begin{align*}
+        &(g{:}..., x:\Int) \sep y_1\mapsto\Int \vdash ... \mapsto \Int
+    \end{align*}
+    Then according to \textsc{TAppO}, we have
+    \begin{align*}
+        &y_1\mapsto\Int \sep y_2 \mapsto \Int \vdash y_2 \mapsto \Int
+    \end{align*}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Example}
+    
+    Case 5: when
+    \begin{align*}
+        f{:}\Int \sarr \Int, g{:}\Int \wand (\Int, \Code{emp})
+    \end{align*}
+
+    According to the structural rules (especially the \textsc{ContractionEmp} rule):
+    \begin{align*}
+        &(f{:}...) \sep (f{:}..., g{:}..., x \mapsto \Int) \sep (g{:}..., x:\Int) \vdash P \mapsto \Int
+    \end{align*}
+    According to the \textsc{TAppU} rule, we have
+    \begin{align*}
+        &(g{:}..., x:\Int) \sep y_1\mapsto\Int \vdash ... \mapsto \Int
+    \end{align*}
+    Then according to \textsc{TAppO}, we have
+    \begin{align*}
+        & y_2 \mapsto \Int , y_1:\Int \vdash y_2 \mapsto \Int
+    \end{align*}
+
+    The type check will fail.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Additional Rules}   
+
+    \begin{figure}[!ht]
+    \mprooftr{70mm}{
+        $x{:}\rt{b}{\phi}, \Gamma \vdash e : \rt{b}{\vnu = x}  $
+           }{Under}{
+            $\Gamma \vdash e \mapsto \rt{b}{\phi} $}
+    \end{figure}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Track data flow}   
+
+Now I want to explore a little bit more than my current setting, that is what can we gain from the data flow tracking?
+
+\begin{minted}{ocaml}
+fun x -> 
+  let y = f x in
+  let z = g x in
+  (y, z)
+\end{minted}
+
+Assume that we really need to consume $x$ twice, where
+\begin{align*}
+    &f{:}\Int\wand\Int, g{:}\Int\wand\Int, x \mapsto \Int \vdash ... \\
+    &f{:}\Int\wand\Int, g{:}\Int\wand\Int, x\mapsto\Int, y\mapsto\Int, z\mapsto\Int \vdash (y, z) \\
+\end{align*}
+where $x, y, z$ are entangled in an unknown way. Here we probably cannot get any reasonable result for the output pair.
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Track data flow}   
+
+Consider another example:
+
+\begin{minted}{ocaml}
+fun x -> 
+  let y = f x in
+  let z = f x in
+  (y, z)
+\end{minted}
+
+Here the two applications are the same, if $f$ is deterministic, we can say that $y = z$, which is potentially useful information for the output pair.
+
+With more information about the functions (e.g., $f$ is deterministic), we can get more precise constraints for the entangled variables.
+
+\end{frame}
+
+\end{document}

@@ -15,3 +15,7 @@ _minted/*
 _minted-main/
 sections/auto/
 sections/_region_.tex
+*.nav
+*.snm
+*.toc
+*.vrb

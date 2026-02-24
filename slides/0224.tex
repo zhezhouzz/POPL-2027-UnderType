@@ -1,0 +1,299 @@
+\newcommand{\store}[1]{\langle #1 \rangle}
+
+\begin{frame}[fragile]
+    \frametitle{Kripke's Semantics}
+
+\textbf{Idea:} Encode the set of values $x\mapsto \{1,2,3\}$ as a set of worlds: $\{ [x\mapsto 1], [x\mapsto 2], [x\mapsto 3] \}$.
+
+\textbf{Relation over worlds:} For underapproximation, we care about a set of worlds instead of a single world, which can be expressed as an equivalence class.
+
+\textbf{Existing approaches:} 
+\begin{itemize}
+    \item Classical modal logic S5, where the relation over worlds is an equivalence relation.
+    \item Epistemic logic, which includes knowledge and belief.
+    \begin{itemize}
+        \item The knowledge operator $K$ is a modal operator, interpreted as ``I know that'', which is modeled by an equivalence relation.
+        \item The belief operator $B$ is a modal operator, interpreted as ``I believe that'', which is symmetric and transitive, but not necessarily reflexive (allowing for misunderstanding).
+        \begin{align*}
+            B\phi \not\models \phi
+        \end{align*}
+    \end{itemize}
+\end{itemize}
+        
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Kripke's Semantics}
+
+\textbf{Idea:} Introduce a new underapproximation modality $\boxtimes$; consider the following model:
+
+% https://tikzcd.yichuanshen.de/#N4Igdg9gJgpgziAXAbVABwnAlgFyxMJZABgBpiBdUkANwEMAbAVxiRAHcB9ARkQAJkADz4AdEQFs6aODgh9uFEAF9S6TLnyEU3Ugur1mrRB04BmFILGTpsvqcUq12PASIAmclVqMWbLm-4hKykZCDcHLxgoAHN4IlAAMwAnCHEkMhBZJB0QBiwwIxAoCCYAIwZWagALGDooNkgCkGocOiwGBoJWRxBk1KQPTIhs6tr640bK3PzC4rKK5sy2jomu5VVelLTEDKzEQbym4znyqZq6zqaW5cvuiiUgA
+\begin{tikzcd}
+    {w_1: [x \mapsto 1]} \arrow[rd, no head] \arrow[rr, no head] &                    & {w_2: [x\mapsto2]} \arrow[ld, no head] \\
+                                                                                         & {w_3:[x\mapsto 3]} &                                                   
+    \end{tikzcd}
+
+\textbf{Example:} 
+\begin{itemize}
+    \item $w_1 \models 1 \leq x \leq 10$ means the value of $x$ in world $w_1$ is in the range $1$ to $10$.
+    \item $w_1 \models \boxtimes (1 \leq x \leq 3)$ means all worlds that satisfy $1 \leq x \leq 3$ are equivalent to $w_1$.
+    \item $w_1 \models \square (1 \leq x \leq 3)$ (the standard S5 necessity modality) means all worlds equivalent to $w_1$ satisfy $1 \leq x \leq 3$.
+    \item Note that $w_1 \models \square (1 \leq x \leq 10)$ holds; however, $w_1 \models \boxtimes (1 \leq x \leq 10)$ does not hold.
+\end{itemize}
+ 
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Local Reasoning}
+
+\textbf{Idea:} We still want to enable local reasoning (frame rules and other substructural rules); that is, consider ``pieces of worlds (heaps)''.
+
+\textbf{Problem:} The current definition of $\boxtimes$ is too strong. For example, consider $w_1 \models \boxtimes (1 \leq x \leq 3)$. 
+
+\vspace{0.5cm}
+% https://tikzcd.yichuanshen.de/#N4Igdg9gJgpgziAXAbVABwnAlgFyxMJZABgBpiBdUkANwEMAbAVxiRAHcB9ARkQAJkADz4AdEQFs6aODgh9uFEAF9S6TLnyEU3Ugur1mrRB04BmFILGTpsvqcUq12PASIAmclVqMWbLm-4hKykZCDcHVRAMZ013XS8DX2MuABYLYJs5UwBuPgBPUQkQ2wBWBy8YKABzeCJQADMAJwhxJDIQWSQdEAYsMCMQOAheqBBqAAsYOlHjSH6xjrosBjY51kcQJpakDw6ILompmfACVmpe+eMhkYWcJZXZ0+VIrdbEds7EXcnp1aeN14HPZIUyHX6IMBMBgMfQ+AYAfmUFCUQA
+\begin{tikzcd}
+    {w_1: [x \mapsto 1]} \arrow[rd, no head] \arrow[rr, no head] &                                   & {w_2: [x\mapsto2]} \arrow[ld, no head] \\
+                                                                 & {w_3:[x\mapsto 3]} \arrow[r, "?"] & {w_4:[x\mapsto 3; y \mapsto 5]}       
+    \end{tikzcd}
+
+\vspace{0.5cm}
+\textbf{Solution:} Not ``all worlds that satisfy $\phi$'', but ``all \textbf{minimal} worlds that satisfy $\phi$'', where $[x\mapsto 3; y \mapsto 5]$ is not a minimal world for $\boxtimes (1 \leq x \leq 3)$. 
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Better definition}
+
+\textbf{Base (Valuation Function):} A world can be represented as a substitution; $\Code{Dom}(\sigma)$ indicates the variables in the substitution.
+
+\textbf{Inclusion (Projection) relation:} $w_1 \subseteq w_2$ means all variables in $w_1$ have the same assignment in $w_2$; we also say $w_2$ can be projected to $w_1$.
+
+\textbf{Equivalence relation:} There is an equivalence relation $\sim$ over worlds $w_1$ and $w_2$. We require that equivalent worlds have the same domain, that is, $\Code{Dom}(w_1) = \Code{Dom}(w_2)$. The intuition is that only aligned assignments can be grouped together, or we can distinguish the set of variables but don't care about the actual assignment.
+
+\textbf{Preservation of projection relation:} Note that the equivalence relation preserves the projection relation: for all $w_1 \subseteq w_1'$, we have $w_2 \subseteq w_2'$.
+\begin{align*}
+    w_1' \sim w_2' \implies w_1 \sim w_2
+\end{align*}
+\noindent Note that the reverse is not true.
+
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Better definition}
+
+Consider a model $M_1$.
+
+% https://tikzcd.yichuanshen.de/#N4Igdg9gJgpgziAXAbVABwnAlgFyxMJZABgBpiBdUkANwEMAbAVxiRAHcB9ARkQAJkADz4AdEQFs6aODgh9uFEAF9S6TLnyEU3clVqMWbLgCZ+QsZOmzjilWux4CRMjer1mrRB04BmMwE9RCSkZOR9bVRAMB00iHVd9DyNOABYAoMtQvhSI+w0nbVIFNwNPbwA2M2ELENk+YwBuPn8aqzkc5Ujo-K1kYyK9d0MvLgB2KozauW4mluC27Nyo9UdesmLE4e8AVgnWrJnmyYXw5T0YKABzeCJQADMAJwhxJDIQWSQdEAALGDooNiQMCsOwgR7PJD9d4QJA+ai-f6AgggyLgl6IFLUD6IL4MLDAthQOhwX4A0FopCY6Gw6h4gleIkki6de5PdHbLEwxBvOllRmkllgtlIDnUxBwkC8wnEgXk4WIcqc160-F8mXMuUQhVKxBQqUM9Vk1HyxViqkIgFeIEgihKIA
+\begin{tikzcd}
+    {w_1: [x \mapsto 1]} \arrow[r, no head]                                                  & {w_2: [x\mapsto2]}                                                   &                                                                         \\
+    {w_5: [x \mapsto 1; y \mapsto 3]} \arrow[u, dashed] \arrow[d, dashed] \arrow[r, no head] & {w_6: [x \mapsto 2; y\mapsto 4]} \arrow[u, dashed] \arrow[d, dashed] & {w_7: [x \mapsto 1; y\mapsto 4]} \arrow[llu, dashed] \arrow[ld, dashed] \\
+    {w_3: [y \mapsto 3]} \arrow[r, no head]                                                  & {w_4: [y \mapsto 4]}                                                 &                                                                        
+    \end{tikzcd}
+    
+The equivalence class $\{w_5, w_6\}$ represents execution $(\lambda x.x+2)\;\{1,2\}$.
+\begin{itemize}
+    \item After projection, $\{w_1, w_2\}$ is still a valid equivalence class, indicating the input $\{1,2\}$.
+    \item After projection, $\{w_3, w_4\}$ is still a valid equivalence class, indicating the output $\{3,4\}$.
+    \item The set $\{w_5, w_7\}$ is not a valid equivalence class, although $w_3 \subseteq w_5$ and $w_4 \subseteq w_7$.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Better definition}
+
+% https://tikzcd.yichuanshen.de/#N4Igdg9gJgpgziAXAbVABwnAlgFyxMJZABgBpiBdUkANwEMAbAVxiRAHcB9ARkQAJkADz4AdEQFs6aODgh9uFEAF9S6TLnyEU3clVqMWbLgCZ+QsZOmzjilWux4CRMjer1mrRB04BmMwE9RCSkZOR9bVRAMB00iHVd9DyNOABYAoMtQvhSI+w0nbVIFNwNPbwA2M2ELENk+YwBuPn8aqzkc5Ujo-K1kYyK9d0MvLgB2KozauW4mluC27Nyo9UdesmLE4e8AVgnWrJnmyYXw5T0YKABzeCJQADMAJwhxJDIQWSQdEAALGDooNiQMCsOwgR7PJD9d4QJA+ai-f6AgggyLgl6IFLUD6IL4MLDAthQOhwX4A0FopCY6Gw6h4gleIkki6de5PdHbLEwxBvOllRmkllgtlIDnUxBwkC8wnEgXk4WIcqc160-F8mXMuUQhVKxBQqUM9Vk1HyxViqkIgFeIEgihKIA
+\begin{tikzcd}
+    {w_1: [x \mapsto 1]} \arrow[r, no head]                                                  & {w_2: [x\mapsto2]}                                                   &                                                                         \\
+    {w_5: [x \mapsto 1; y \mapsto 3]} \arrow[u, dashed] \arrow[d, dashed] \arrow[r, no head] & {w_6: [x \mapsto 2; y\mapsto 4]} \arrow[u, dashed] \arrow[d, dashed] & {w_7: [x \mapsto 1; y\mapsto 4]} \arrow[llu, dashed] \arrow[ld, dashed] \\
+    {w_3: [y \mapsto 3]} \arrow[r, no head]                                                  & {w_4: [y \mapsto 4]}                                                 &                                                                        
+    \end{tikzcd}
+    
+New definition of the $\boxtimes$ modality:
+\begin{itemize}
+    \item Minimal world: a world $w$ is minimal for a property $\phi$ iff $\Code{Dom}(w) = \Code{FV}(\phi)$.
+    \item $\boxtimes$ modality: $w \models \boxtimes \phi$ iff for all minimal worlds $w'$ that satisfy $\phi$, there exists a world $w''$ such that $w \sim w''$ and $w' \subseteq w''$.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Better definition}
+
+% https://tikzcd.yichuanshen.de/#N4Igdg9gJgpgziAXAbVABwnAlgFyxMJZABgBpiBdUkANwEMAbAVxiRAHcB9ARkQAJkADz4AdEQFs6aODgh9uFEAF9S6TLnyEU3clVqMWbLgCZ+QsZOmzjilWux4CRMjer1mrRB04BmMwE9RCSkZOR9bVRAMB00iHVd9DyNOABYAoMtQvhSI+w0nbVIFNwNPbwA2M2ELENk+YwBuPn8aqzkc5Ujo-K1kYyK9d0MvLgB2KozauW4mluC27Nyo9UdesmLE4e8AVgnWrJnmyYXw5T0YKABzeCJQADMAJwhxJDIQWSQdEAALGDooNiQMCsOwgR7PJD9d4QJA+ai-f6AgggyLgl6IFLUD6IL4MLDAthQOhwX4A0FopCY6Gw6h4gleIkki6de5PdHbLEwxBvOllRmkllgtlIDnUxBwkC8wnEgXk4WIcqc160-F8mXMuUQhVKxBQqUM9Vk1HyxViqkIgFeIEgihKIA
+\begin{tikzcd}
+    {w_1: [x \mapsto 1]} \arrow[r, no head]                                                  & {w_2: [x\mapsto2]}                                                   &                                                                         \\
+    {w_5: [x \mapsto 1; y \mapsto 3]} \arrow[u, dashed] \arrow[d, dashed] \arrow[r, no head] & {w_6: [x \mapsto 2; y\mapsto 4]} \arrow[u, dashed] \arrow[d, dashed] & {w_7: [x \mapsto 1; y\mapsto 4]} \arrow[llu, dashed] \arrow[ld, dashed] \\
+    {w_3: [y \mapsto 3]} \arrow[r, no head]                                                  & {w_4: [y \mapsto 4]}                                                 &                                                                        
+    \end{tikzcd}
+    
+Examples:
+\begin{itemize}
+    \item $w_1 \models \boxtimes (1 \leq x \leq 2)$ holds.
+    \item $w_5 \models \boxtimes (1 \leq x \leq 2)$ also holds. More generally, if $w \subseteq w'$ and $w \models \phi$, then $w' \models \phi$.
+    \item $w_6 \models \boxtimes (1 \leq x \leq 2)$ also holds. More generally, if $w \sim w'$ and $w \models \boxtimes\phi$, then $w' \models \boxtimes\phi$.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Separation}
+
+% https://tikzcd.yichuanshen.de/#N4Igdg9gJgpgziAXAbVABwnAlgFyxMJZABgBpiBdUkANwEMAbAVxiRAHcB9ARkQAJkADz4AdEQFs6aODgh9uFEAF9S6TLnyEU3clVqMWbLgCZ+QsZOmzjilWux4CRMjer1mrRB04BmMwE9RCSkZOR9bVRAMB00iHVd9DyNOABYAoMtQvhSI+w0nbVIFNwNPbwA2M2ELENk+YwBuPn8aqzkc5Ujo-K1kYyK9d0MvLgB2KozauW4mluC27Nyo9UdesmLE4e8AVgnWrJnmyYXw5T0YKABzeCJQADMAJwhxJDIQWSQdEAALGDooNiQMCsOwgR7PJD9d4QJA+ai-f6AgggyLgl6IFLUD6IL4MLDAthQOhwX4A0FopCY6Gw6h4gleIkki6de5PdHbLEwxBvOllRmkllgtlIDnUxBwkC8wnEgXk4WIcqc160-F8mXMuUQhVKxBQqUM9Vk1HyxViqkIgFeIEgihKIA
+\begin{tikzcd}
+    {w_1: [x \mapsto 1]} \arrow[r, no head]                                                  & {w_2: [x\mapsto2]}                                                   &                                                                         \\
+    {w_5: [x \mapsto 1; y \mapsto 3]} \arrow[u, dashed] \arrow[d, dashed] \arrow[r, no head] & {w_6: [x \mapsto 2; y\mapsto 4]} \arrow[u, dashed] \arrow[d, dashed] & {w_7: [x \mapsto 1; y\mapsto 4]} \arrow[llu, dashed] \arrow[ld, dashed] \\
+    {w_3: [y \mapsto 3]} \arrow[r, no head]                                                  & {w_4: [y \mapsto 4]}                                                 &                                                                        
+    \end{tikzcd}
+
+Now we compose two equivalence classes $\{w_1, w_2\}$ and $\{w_3, w_4\}$ in a complete way:
+\begin{itemize}
+    \item $W_1$ and $W_2$ are disjoint equivalence classes, that is,
+    \begin{align*}
+        \forall w_1 \in W_1, \forall w_2 \in W_2, \Code{Dom}(w_1) \cap \Code{Dom}(w_2) = \emptyset
+    \end{align*}
+    \item $W_1 \oplus W_2$ is defined as the set of worlds:
+    \begin{align*}
+        \{ w_1 \cup w_2 ~|~ w_1 \in W_1 \land w_2 \in W_2 \}
+    \end{align*}
+    and all worlds in $W_1\oplus W_2$ are equivalent to each other. We also use $w_1 \oplus w_2$ to indicate a world $w_1 \cup w_2$ as defined above.
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+    \frametitle{Separation}
+
+Consider a model $M_2$.
+
+% https://tikzcd.yichuanshen.de/#N4Igdg9gJgpgziAXAbVABwnAlgFyxMJZABgBpiBdUkANwEMAbAVxiRAHcB9ARkQAJkADz4AdEQFs6aODgh9uFEAF9S6TLnyEU3clVqMWbLgCZ+QsZOmzjilWux4CRMjer1mrRB04BmMwE9RCSkZOR9bVRAMB00iHVd9DyNOABYAoMtQvhSI+w0nbVIFNwNPbwA2M2ELENk+YwBuPn8aqzkc5Ujo-K1kYyK9d0MvLgB2KozauW4mluC27Nyo9UdesmLE4e8AVgnWrJnmyYXwzrzVoh8BkqSRzgAOZT0YKABzeCJQADMAJwhxJBkECyJA6EAACxgdCgbEgYFYdhAv3+SH6wIgSCuEKhMK8cIRkWRAMQKWoIMQYIYWHhbCgdDgkJhiKJSFJ6Mx1CpNK8dIZLzOSL+xO2ZIxiCBXLKvMZApZiBF7MQWMltPpMuZQqQ5VFgM51Klav5GpRiG1irRKp5hqZhM1pp1JOokOhsIIBO+drZ5IVztx4DdsrtCvJoydONdNKUFCUQA
+\begin{tikzcd}
+    {w_1: [x \mapsto 1]} \arrow[r, no head]                                                  & {w_2: [x\mapsto2]}                                                                      &                                                                                            &     \\
+    {w_5: [x \mapsto 1; y \mapsto 3]} \arrow[u, dashed] \arrow[d, dashed] \arrow[r, no head] & {w_6: [x \mapsto 2; y\mapsto 4]} \arrow[u, dashed] \arrow[d, dashed] \arrow[r, no head] & {w_7: [1; 4]} \arrow[llu, dashed] \arrow[ld, dashed] \arrow[r, no head] & {w_8: [2; 3]} \\
+    {w_3: [y \mapsto 3]} \arrow[r, no head]                                                  & {w_4: [y \mapsto 4]}                                                                    &                                                                                            &    
+    \end{tikzcd}
+
+Examples:
+\begin{itemize}
+    \item $w_1 \oplus w_3$ (i.e., $w_5$) $\models \boxtimes (1 \leq x \leq 2) * \boxtimes (3 \leq y \leq 4)$
+    \item $w_1 \oplus w_3$ (i.e., $w_5$) $\models (x : \urt{\Int}{1 \leq \vnu 2}) * (y : \urt{\Int}{3 \leq \vnu 4})$
+    \item $w_4 \models \boxtimes (x = 2) \wand \boxtimes (y = x + 2)$
+    \item Also, $w_3 \models \boxtimes (x = 2) \wand \boxtimes (y = x + 2)$
+    \item For all equivalence classes $W$ that make $\boxtimes(x = 2)$ hold and $W \cap \{w_3, w_4\} = \emptyset$, we have $W \oplus \{w_3, w_4\}$ makes $\boxtimes (y = x + 2)$ hold (since $w_3 \sim w_4$, and $x = 2 \implies y = x + 2$ in $w_4$). 
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Modeling Context}
+
+We use Kripke semantics to model context; that is, a (type) context is a set of models, where each model contains multiple equivalence classes.
+
+\textbf{Model:} A model is a tuple $(W, \sim, \sqsubseteq, w)$, where $W$ is a set of worlds, $\sim$ is an equivalence relation over $W$, $\sqsubseteq$ is a partial ordering over $W$, and $w$ is a world in $W$.
+
+\begin{itemize}
+    \item $x{:}\ort{\Int}{\vnu > 0}$ can be interpreted as $x > 0$, where
+    \begin{align*}
+        \denot{x > 0} \doteq \{ (\{[x\mapsto v]\}, \emptyset, \emptyset, [x\mapsto v]) ~|~ v > 0 \}
+    \end{align*}
+    \item Each model contains a single world; there is neither an equivalence nor a partial ordering relation.
+\end{itemize}
+
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Modeling Context}
+
+\textbf{Model:} A model is a tuple $(W, \sim, \sqsubseteq, w)$, where $W$ is a set of worlds, $\sim$ is an equivalence relation over $W$, $\sqsubseteq$ is a partial ordering over $W$, and $w$ is a world in $W$.
+
+\begin{itemize}
+    \item $x{:}\urt{\Int}{\vnu > 0}$ can be interpreted as $\boxtimes (x > 0)$, where
+    \begin{align*}
+        \denot{\boxtimes (x > 0)} \doteq \{ (\{[x\mapsto v] ~|~ v > 0\}, \_, \emptyset, [x\mapsto 1]) \}
+    \end{align*}
+    \item There is only one model, which contains all possible worlds $[x\mapsto v]$ where $v$ is a positive integer; all of these worlds are equivalent to each other.
+\end{itemize}
+
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Modeling Context}
+
+\textbf{Model:} A model is a tuple $(W, \sim, \sqsubseteq, w)$, where $W$ is a set of worlds, $\sim$ is an equivalence relation over $W$, $\sqsubseteq$ is a partial ordering over $W$, and $w$ is a world in $W$.
+
+\begin{itemize}
+    \item $x{:}\urt{\Int}{1 \leq \vnu \leq 2} * y{:}\urt{\Int}{3 \leq \vnu \leq 4}$ can be interpreted as $\boxtimes (1 \leq x \leq 2) * \boxtimes (3 \leq y \leq 4)$.
+    \item There is a single model (i.e., $M_2$), and all worlds are equivalent.
+    \item $x{:}\urt{\Int}{1 \leq \vnu \leq 2},\; y{:}\urt{\Int}{3 \leq \vnu \leq 4}$ can be interpreted as $\boxtimes (1 \leq x \leq 2) \land \boxtimes (3 \leq y \leq 4)$.
+    \item There are multiple models to consider; $M_1$ and $M_2$ are examples of them.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Operational Semantics under Context}
+
+Remember that we use Kripke semantics to express aligned multiple executions together. If we don't align them, we can simply express them as $\mathcal{P}(\mathcal{P}(\sigma))$.
+
+\textbf{Intuition:} A model can be extracted back to a set of substitutions (equivalence class).
+
+\textbf{Example:}
+\begin{align*}
+&\eraserf{M_1} = \{ [x\mapsto 1; y\mapsto 3], [x\mapsto 2; y\mapsto 4] \}
+\\&\eraserf{M_2} = \{ [x\mapsto 1; y\mapsto 3], [x\mapsto 1; y\mapsto 4], [x\mapsto 2; y\mapsto 3], [x\mapsto 2; y\mapsto 4] \}
+\end{align*}
+
+\textbf{Reduction under a model:}
+\begin{align*}
+    (W, \sim, \subseteq, w) \models \mstep{e}{v} \iff \exists w' \in W.\; w \sim w' \land \mstep{w'(e)}{v}
+\end{align*}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Type denotation}
+
+\textbf{Base Type:}
+\begin{align*}
+    \denot{\ort{b}{\phi}}_M &\doteq \{ e ~|~ \forall v. M \models \mstep{e}{v} \implies \phi[\vnu \mapsto v] \} \\
+    \denot{\urt{b}{\phi}}_M &\doteq \{ e ~|~ \forall v. \phi[\vnu \mapsto v] \implies M \models \mstep{e}{v} \}
+\end{align*}
+
+\textbf{Function Type:}
+\begin{align*}
+    \denot{x{:}\tau_x \sarr \tau}_M &\doteq \{ e ~|~ \forall v_x \in \denot{\tau_x}_M. (e\;x) \in \denot{\tau}_{M[x\mapsto v_x]} \} \\
+    \denot{x{:}\tau_x \wand \tau}_M &\doteq \{ e ~|~ \forall M'.\; \denot{x : \tau_x}_M.\; \Code{Dom}(M') \cap (\Code{Dom}(M) \cup \Code{FV}(\tau)) = \emptyset \implies 
+    \\&\qquad (e\;x) \in \denot{\tau}_{M \oplus M'} \}
+\end{align*}
+where $M[x\mapsto v_x]$ means to add $[x\mapsto v_x]$ to all worlds in $M$.
+
+\vspace{0.5cm}
+\textbf{Fundamental Theorem:}
+\begin{align*}
+    \Gamma \vdash e : \tau \implies \forall M.\; M \in \denot{\Gamma}.\; e \in \denot{\tau}_M
+\end{align*}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Type denotation}
+
+\textbf{Function Type Examples:}
+
+\begin{align*}
+    &\denot{x{:}\urt{b}{1 \leq \vnu \leq 2} \wand \urt{b}{3 \leq \vnu \leq 4}}_{\emptyset} 
+    \\\doteq &\{ e ~|~ \forall M'.\; \denot{\boxtimes (1 \leq x \leq 2)}_M.\; \Code{Dom}(M') \cap (\Code{Dom}(M) \cup \Code{FV}(\tau)) = \emptyset \implies 
+    \\& (e\;x) \in \denot{\tau}_{M \oplus M'} \}
+    \\&\text{Consider one model}~ M_0 = (\{[x\mapsto 1], [x\mapsto 2]\}, \sim, \emptyset, [x\mapsto 1])
+    \\\doteq &\{ e ~|~ (e\;x) \in \denot{\urt{b}{3 \leq \vnu \leq 4}}_{M_0} \}
+    \\ \doteq &\{ e ~|~ M_0 \models \mstep{e\;x}{3} \land M_0 \models \mstep{e\;x}{4} \}
+    \\ \doteq &\{ e ~|~ (\mstep{e\;1}{3} \lor \mstep{e\;2}{3}) \land (\mstep{e\;1}{4} \lor \mstep{e\;2}{4}) \}
+\end{align*}
+Which is consistent with incorrectness triples.
+
+\end{frame}

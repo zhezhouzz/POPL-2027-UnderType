@@ -1,0 +1,163 @@
+\newcommand{\store}[1]{\langle #1 \rangle}
+
+\begin{frame}[fragile]
+    \frametitle{New Operational Semantics}
+
+\textbf{The essence of reachability reasoning:} There exists an execution is equal to consider all possible executions and prove the set of executions is non-empty.
+
+\textbf{Advantage:} Avoid reverse execution.
+\begin{itemize}
+    \item A natural way to reason about reachability is start from the end point and show it can reversely execute to the start point.
+    \item However, the reverse semantics are counter-intuitive and difficult to express (not all functions are reversible).
+\end{itemize}
+
+\textbf{Work around reverse reasoning:}
+\begin{itemize}
+    \item IL: $[P] e [Q]$: $(P, e) \Downarrow (Q', \Code{SKIP})$, where $P$ is set of states, and we show $Q \subseteq Q'$ is non-empty.
+\end{itemize}
+        
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{New Operational Semantics}
+
+\textbf{How to consider multiple executions?} Instead of group them natively $\{\mstep{e}{v_1}, \mstep{e}{v_2}, ...\}$..., we find that they can be aligned.
+\begin{align*}
+    &\{\mstep{(\lambda x.x)\;1}{1}, \mstep{(\lambda x.x)\;2}{2}, ...\}
+    \\&\step{(\lambda x.x)\;\{1, 2\}}{\{1, 2\}}
+\end{align*}
+
+\textbf{Set of values:} $V$.
+\begin{itemize}
+    \item the set of values are not a random atomic term, which has more complicate semantics.
+    \item $\step{\Code{intGen}\;()}{1}$: convert a random term into a value, controlled by CBV or CBN (kind of limited).
+    \item Missing specification: $\step{\Code{intGen}\;()}{\Code{posGen}\;()}$.
+    \item Missing merge: $\mstep{e}{V_1} \land \mstep{e}{V_2} \iff \mstep{e}{V_1 \cup V_2}$.
+    \item Missing read and write.
+\end{itemize}
+        
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{New Operational Semantics}
+
+\textbf{Core challenge:} The substitution semantics is not sound in general.
+\begin{align*}
+    &\step{(\lambda x.e)\;V}{e[x\mapsto V]}
+\end{align*}
+This is not sound, for example:
+\begin{align*}
+    &\mstep{(\lambda x.(x, x))\;\{1,2\}}{({1,2}, {1, 2})}\hookrightarrow\{(1,1), (1,2), (2,1), (2,2)\}
+    \\&\neq \{(\lambda x.(x, x))\;1, (\lambda x.(x, x))\;2 \} = \{(1,1), (2,2)\}
+\end{align*}
+
+\textbf{Control evaluation in a more fine-grained way}:
+\begin{itemize}
+    \item A store $\sigma$ maps variables to set of values; or lazy computation.
+    \item Refer a variable in read permission ($!x$) with get lazy computation.
+    \item Refer a variable in write permission ($*x$), and trigger evaluation of dependent lazy computation.
+\end{itemize}
+        
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{New Operational Semantics}
+
+\begin{minted}{ocaml}
+    let f (x: int) = 
+      let y = !x + 1 in
+      let z = *x + 10 in
+      let w = !x - 1 in
+      (y, z, w)
+\end{minted}
+       
+\begin{align*}
+      &\store{\emptyset, f\;\{1,2\}} \hookrightarrow \store{x\mapsto\boxed{\{1,2\}}, \zlet{y}{!x + 1}{e}} \hookrightarrow
+    \\&\store{x\mapsto\boxed{\{1,2\}}, y\mapsto (x + 1), \zlet{z}{*x + 10}{e}} \hookrightarrow
+    \\&\text{Consume $x$, now $z$ is set of values and $x$ is dependent on $z$.}
+    \\&\store{z\mapsto\boxed{\{11,12\}}, x\mapsto(z - 10), y\mapsto (x + 1), \zlet{w}{!x - 1}{e}} \hookrightarrow
+    \\&\store{z\mapsto\boxed{\{11,12\}}, x\mapsto(z - 10), y\mapsto (x + 1), w\mapsto (x - 1), (y, z, w)} \hookrightarrow
+    \\&\store{z\mapsto\boxed{\{11,12\}}, (z - 9, z, z-11)}
+\end{align*}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{New Operational Semantics}
+
+The same program with different modality:
+\begin{minted}{ocaml}
+    let f (x: int) = 
+      let y = !x + 1 in
+      let z = !x + 10 in
+      let w = *x - 1 in
+      (y, z, w)
+\end{minted}
+       
+\begin{align*}
+      &\store{\emptyset, f\;\{1,2\}} \hookrightarrow \store{x\mapsto\boxed{\{1,2\}}, \zlet{y}{!x + 1}{e}} \hookrightarrow
+    \\&\store{x\mapsto\boxed{\{1,2\}}, y\mapsto (x + 1), \zlet{z}{!x + 10}{e}} \hookrightarrow
+    \\&\store{x\mapsto\boxed{\{1,2\}}, y\mapsto (x + 1), z\mapsto (x+10), \zlet{w}{*x - 1}{e}} \hookrightarrow
+    \\&\text{Consume $x$...}
+    \\&\store{w\mapsto\boxed{\{0,1\}}, x\mapsto(w + 1), y\mapsto (x + 1), z\mapsto (x+10), (y, z, w)} \hookrightarrow
+    \\&\store{w\mapsto\boxed{\{0,1\}}, (w+2, w+11, w)}
+\end{align*}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{New Operational Semantics}
+
+The same program with different modality:
+\begin{minted}{ocaml}
+    let f (x: int) = 
+      let y = !x + 1 in
+      let z = !x + 10 in
+      let w = !x - 1 in
+      (y, z, w)
+\end{minted}
+       
+\begin{align*}
+      &\store{\emptyset, f\;\{1,2\}} \hookrightarrow \store{x\mapsto\boxed{\{1,2\}}, \zlet{y}{!x + 1}{e}} \hookrightarrow
+    \\&\store{x\mapsto\boxed{\{1,2\}}, y\mapsto (x + 1), \zlet{z}{!x + 10}{e}} \hookrightarrow
+    \\&\store{x\mapsto\boxed{\{1,2\}}, y\mapsto (x + 1), z\mapsto (x+10), \zlet{w}{*x - 1}{e}} \hookrightarrow
+    \\&\store{x\mapsto\boxed{\{1,2\}}, y\mapsto (x + 1), z\mapsto (x+10), w\mapsto (x - 1), (y, z, w)} \hookrightarrow
+    \\&\store{x\mapsto\boxed{\{1,2\}}, (x+1, x+10, x-1)}
+\end{align*}
+
+\textbf{Insight:} the same set of executions can be aligned in different ways.
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{New Operational Semantics}
+
+Another example:
+\begin{minted}{ocaml}
+    let g (x: int) = 
+      let y = *x + 1 in
+      let z = *y + 2 in
+      z
+\end{minted}
+       
+\begin{align*}
+    &\store{\emptyset, g\;\{1,2\}} \hookrightarrow \store{x\mapsto\boxed{\{1,2\}}, \zlet{y}{*x + 1}{e}} \hookrightarrow
+    \\&\store{y\mapsto\boxed{\{2,3\}}, x\mapsto(y - 1), \zlet{z}{*y + 2}{e}} \hookrightarrow
+    \\&\store{z\mapsto\boxed{\{4,5\}},y\mapsto(z-2), x\mapsto(y - 1), z} \hookrightarrow 
+    \\&\store{z\mapsto\boxed{\{4,5\}}, z} \hookrightarrow \store{\emptyset, \{4,5\}}
+\end{align*}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{New Operational Semantics}
+
+       
+\begin{align*}
+    &x{:}\urt{b}{\phi} \wand \urt{b'}{\phi'} \doteq 
+    \\&\quad \{ e ~|~ \store{\emptyset, e\;\{\vnu:b ~|~ \phi \}} \hookrightarrow^* \store{\emptyset, \{\vnu:b' ~|~ \phi' \}} \}
+\end{align*}
+
+Question: variable reference?
+
+\end{frame}

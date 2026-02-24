@@ -1,0 +1,60 @@
+\documentclass{beamer}
+
+% Packages likely needed by refinementtydef.sty and common usage
+\usepackage{amsmath, amsfonts, mathrsfs, mathtools, stmaryrd, pifont, xcolor}
+\usepackage{pict2e}
+\usepackage{xspace}
+\usepackage{tikz}
+\usepackage{minted} 
+% Note: minted requires -shell-escape flag when compiling
+
+% Beamer theme settings
+\usetheme{Madrid}
+\usecolortheme{default}
+
+% Import the custom definitions
+\usepackage{hyperref, wrapfig, amsthm, pict2e, booktabs, subcaption,
+  subfiles, rotating, pifont, indentfirst, amsmath, amsfonts,
+  mathrsfs, adjustbox, mathtools,booktabs, microtype, ebproof,
+  enumitem, multirow, multicol, setspace, xcolor, lineno, listings,
+  stmaryrd, xspace, stackengine, makecell}
+
+\usepackage{empheq}
+\newcommand*\widefbox[1]{\fbox{\hspace{2em}#1\hspace{2em}}}
+\usepackage[tableposition=top]{caption}
+\usepackage{tikz-cd}
+\usetikzlibrary{decorations.pathmorphing}
+\usepackage[ruled,linesnumbered,vlined]{algorithm2e}
+\newcommand\mycommfont[1]{\footnotesize\ttfamily\textcolor{DeepGreen}{#1}}
+\SetCommentSty{mycommfont}
+\usepackage{graphicx}
+\urlstyle{same}
+\usepackage{minted}
+\usemintedstyle{borland}
+\usepackage{tikz}
+\newcounter{markeq}
+\setcounter{markeq}{0}
+\usepackage{spacingtricks}
+\newcommand*\tstrut[1]{\vstrut{#1}}
+\newcommand*\bstrut[1]{\vstrut[#1]{0pt}}
+\usepackage[T1]{fontenc}
+\newcommand*\mystrut[1]{\vrule width0pt height0pt depth#1\relax}
+% \usepackage{bm}
+
+\newcommand{\tyName}{\mbox{\textsf{u}\textsc{Hat}}\xspace}
+
+% ZZ's Macros
+\usepackage{spacingtricks, commands, refinementtydef}
+
+\title{UnderType}
+\author{Zhe Zhou}
+\date{\today}
+
+\begin{document}
+
+\frame{\titlepage}
+
+% \include{slides/0209}
+\include{slides/0224}
+
+\end{document}
