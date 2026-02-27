@@ -1,0 +1,511 @@
+\newcommand{\store}[1]{\langle #1 \rangle}
+
+\begin{frame}[fragile]
+    \frametitle{Theory}
+
+\textbf{Clearify:} We would like to build multiple layers of theory:
+\begin{itemize}
+    \item The \textbf{algebra} layer is a specialized \textbf{BI-resource algebra}, thus we can reuse lots of existing results in the \textbf{BI}.
+    \item The \textbf{Kripke semantics} layer provides the force relation (interpretation) from the algebra to the Kripke model.
+    \item The \textbf{concrete model} layer provides the concrete model for Kripke's semantics (i.e., what is a world).
+    \item The \textbf{type theory} layer defines atomic predicates (under/over types), type context, and type denotation.
+    \item Then the \textbf{declaritive type system} provides the fundamental thoerom.
+\end{itemize}
+        
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Resource Algebra}
+
+A \textbf{BI}-algebra is a Heyting algebra equipped with an additional residuated commutative monoid structure.
+
+\textbf{Adjunction:} Different from lattice, we have
+\begin{align*}
+    a \land b \sqsubseteq c \text{ iff } a \sqsubseteq b \impl c
+\end{align*}\noindent
+
+\textbf{BI has an additional adjunction:}
+\begin{align*}
+    &a * b \sqsubseteq c \text{ iff } a \sqsubseteq b \wand c
+\end{align*}\noindent
+
+\textbf{Lemma (Frame rule):} The $*$ operation preserves the pre-order: $a \sqsubseteq a'$ implies $a * b \sqsubseteq a' * b$.
+
+\textbf{Proof:} 
+\begin{align*}
+    &a' \sqsubseteq b \wand (a' * b)  \qquad \text{since } a' * b \sqsubseteq a' * b
+    \\&a \sqsubseteq b \wand (a' * b)  \qquad \text{since } a \sqsubseteq a'
+    \\&a * b \sqsubseteq a' * b 
+\end{align*}\noindent
+        
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Kripke Semantics}
+
+We define a Kripke's semantics for the BI-resource algebra, which provides the interpretation of the algebra to the Kripke model.
+
+\textbf{Problem:} BI-algebra uses pre-order $\sqsubseteq$ which indidate $S_4$, where underapproximation requires equivalence relation.
+
+\textbf{Solution:} A multi-modal (S4 + S5) Kripke's semantics is a tuple $(W, *, \sim, \sqsubseteq)$ such that:
+\begin{itemize}
+    \item $W$ is a set of worlds.
+    \item $*$ is a partial binary operation on $W$ (separation operation).
+    \item $\sim$ is an equivalence relation on $W$, $w_1 \sim w_2$ means world $w_1$ is entangled with world $w_2$ (relation in S5)
+    \item $\sqsubseteq$ is a pre-order on $W$ (relation in S4).
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Kripke Semantics}
+
+\textbf{Problem:} The combination of $\sim$ (core of underapproximation) and $*$ (core of separation) may not be well-behaved.
+
+\textbf{Ill-formed Model Example:} Assume $[x\mapsto 1] \sim [x\mapsto 2]$ and $[y\mapsto 3] \sim [y\mapsto 4]$. Note that $[x\mapsto 1] * [y\mapsto 3]$ can be not entangled to $[x\mapsto 2] * [y\mapsto 4]$. However, this violates our intuition that ``I can randomly choose $x$ and $y$ independently, then all possible combinations should be considered''.
+
+\textbf{Strong Congruence:} We requires the Kripke's semantics to be strong congruent
+\begin{align*}
+    w_1 \sim w_1' \text{ and } w_2 \sim w_2' \text{ implies } w_1 * w_2 \sim w_1' * w_2'
+\end{align*}\noindent
+And reversely (\textbf{Decomposition Consistency}):
+\begin{align*}
+    w \sim w_1 * w_2 \text{ implies } \exists w_1'\; w_2'. w = w_1' * w_2' \land w_1' \sim w_1 \land w_2' \sim w_2
+\end{align*}\noindent
+This is easily holds if we requires two equivalent worlds has the same domain (concrete model).
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Kripke Semantics}
+
+\textbf{Problem:} The combination of $\sim$ (core of underapproximation) and $\sqsubseteq$ (core of substructural rule) may not be well-behaved.
+
+\textbf{Ill-formed Model Example:} Assume $[x\mapsto 1; y \mapsto 3] \sim [x\mapsto 2; y \mapsto 4]$, the world $[x\mapsto 1]$ may not be entangled to $[x\mapsto 2]$. This violates our intuition that ``if I can choose from two configuration, I can also choose from the peice of these two configurations''.
+
+
+\textbf{Projection Consistency:} We requires the Kripke's semantics to be sub-resource consistent
+\begin{align*}
+    &w_1 \sim w_2 \text{ and } w_1' \sqsubseteq w_1 \text{ and } w_2' \sqsubseteq w_2 \text{ implies } w_1' \sim w_2' 
+    \\&\qquad (\text{if $w_1' \sim w_2'$ can be defined, i.e., has the same domain})
+\end{align*}\noindent
+
+\textbf{Unit Consistency:} And a trivial axiom about the unit element (empty world) $w_e$:
+\begin{align*}
+    &w \sim w_e \text{ implies } w = w_e
+    \\&w \sim w' \iff w * w_e \sim w' * w_e
+\end{align*}\noindent
+
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Force Relation}
+We can easily map \textbf{BI}-algebra into the multi-modal Kripke's semantics via a function $V$:
+\begin{itemize}
+    \item An element $m$ in \textbf{BI}-algebra is interpreted as a world $w$.
+    \item The unit element $\Code{emp}$ is interpreted as the empty world $w_e$.
+    \item The $m_1 * m_2$ is interpreted as $V(m_1) * V(m_2)$ (iff they can be defined).
+    \item The pre-order $m_1 \sqsubseteq m_2$ in \textbf{BI}-algebra is defined as: $V(m_1) \sqsubseteq V(m_2)$
+\end{itemize}
+
+\textbf{Note:} We don't explicitly relate the entanglement relation $\sim$ with the \textbf{BI}-algebra, however, the axioms shown above impilictly using $\sim$ to constrain the iff two worlds are separated (if $m_1 * m_2$ can be defined).
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Force Relation}
+Now we define the force relation $\models$ on the multi-modal Kripke's semantics.
+\begin{align*}
+    &\text{(same as Heyting algebra)}
+    \\w \models \phi_1 \land \phi_2 &\text{ iff } w \models \phi_1 \text{ and } w \models \phi_2
+    \\w \models \phi_1 \lor \phi_2 &\text{ iff } w \models \phi_1 \text{ or } w \models \phi_2
+    \\w \models \phi_1 \impl \phi_2 &\text{ iff } \forall w'. w' \sqsubseteq w \text{ and } w' \models \phi_1 \text{ implies } w' \models \phi_2
+    \\&\text{(same as SL)}
+    \\w \models \Code{emp} &\text{ iff } w \sqsubseteq w_e \text{(i.e., $w = w_e$)}
+    \\w \models \phi_1 * \phi_2 &\text{ iff } \exists w_1, w_2. w \sqsubseteq w_1 * w_2 \text{ and } w_1 \models \phi_1 \text{ and } w_2 \models \phi_2
+    \\w \models \phi_1 \wand \phi_2 &\text{ iff } \forall w'. w' \models \phi \text{ implies } w * w' \models \phi_2
+    \\&\text{New:}
+    \\w \models \boxtimes \phi &\text{ iff } \forall w'. w' \models \phi \text{ implies } \exists w_\text{base}\;w_\text{base}'. 
+    \\&w_\text{base} \sqsubseteq w \text{ and } w_\text{base} \sim w_\text{base}' \text{ and } w_\text{base}' \sqsubseteq w'
+\end{align*}\noindent
+
+For now, we don't define the relation from type context into the worlds, we will do this in the next layer.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Concrete Model}
+In SL, poeple use ``heap'' to represent the concrete model, two worlds can be combined with $*$ iff their footprint is disjoint.
+
+\textbf{Problem:} In the SL setting, there is only one model $M_\text{memory}$, since the operation $*$ is clearly defined. However, in our setting, if $[x \mapsto 1] * [y \mapsto 2]$ can be defined, depends on if $x$ and $y$ are independent variables. It is different depends on actual verification tasks.
+
+\textbf{Solution:} We also define a ``heap-like'' base model $M_\text{memory}$, and we additionally define the entanglement relation $\sim$, which can be different in different models. $w_1 * w_2$ can be defined when $w_1$ and $w_2$ can be defined in $M_\text{memory}$, i.e.,
+\begin{align*}
+    \Code{Dom}(w_1) \cap \Code{Dom}(w_2) = \emptyset
+\end{align*}\noindent
+and also $w_1 * w_2$ satisfies the axioms shown in the previous slide.
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Concrete Model}
+
+\textbf{Basic Model (same as SL):} 
+\begin{itemize}
+    \item A world $w$ is a partial function $\Code{Var}\sarr\Code{Val}$ (a substitution).
+    \item The empty world $w_e$ is the empty substitution $\emptyset$.
+    \item The $w_1 * w_2$ is defined as
+    \begin{align*}
+        w_1 * w_2 =& w_1 \cup w_2 \quad \text{ when } \Code{Dom}(w_1) \cap \Code{Dom}(w_2) = \emptyset
+        \\& \text{undefined otherwise}
+    \end{align*}\noindent
+    \item The pre-order $w_1 \sqsubseteq w_2$ is defined as $w_1 \subseteq w_2$.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Concrete Model}
+
+\textbf{Entanglement Relation:} 
+\begin{itemize}
+    \item We use a set of worlds $W$ to represent the entanglement relation $\sim$.
+    \item $\forall w_1\; w_2. w_1 \sim w_2 \implies \Code{Dom}(w_1) = \Code{Dom}(w_2)$.
+    \item $\forall w_1\; w_2. w_1 \in W \land w_2 \in W \implies w_1 \sim w_2$.
+    \item $\forall w_1\; w_2. w_1 \sim w_2 \implies \exists w_1'\;w_2'. w_1 \subseteq w_1' \land w_2 \subseteq w_2' \land w_1' \sim w_2'$.
+\end{itemize}
+All $\sim$ relations can be generated from the rules above, easily prove that the generated $\sim$ relation can satisfy the three axioms.
+
+\textbf{Compact Representation:} We directly use a set of worlds $W$ (they share the same domain) to represent a model, that is the basic model with domain $\Code{Dom}{W}$ plus the entanglement relation $\sim$ generated from the rules above.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Concrete Model}
+
+\textbf{Example:} $\{[x=1;y=1] \sim [x=1;y=2] \sim [x=2;y=1]\}$ represents the model:
+
+% https://tikzcd.yichuanshen.de/#N4Igdg9gJgpgziAXAbVABwnAlgFyxMJZABgBoBGAXVJADcBDAGwFcYkQAPAAgF4vyQAX1LpMufIRTkK1Ok1bsOPAExCRIDNjwEiZZbIYs2iEAE8eA4aK0Si0-TUMKT51VY1jtkkqWIH5xiAAOkEwALZoOKZwMDhq1uI6KGQAzP5GihYA3OaW6pqJ3tJpjgGZ5Dkq8R42ScjKpCVyGSZKypV5CV5EDVSlLZw8KdUF3SgNDs3OZkMjnrYoKY3p022VbrIwUADm8ESgAGYAThBhSACsNDgQSABsNAAWMPRQ7JBgbO7Hp3dXN4gAdkez1eJnen3U3zOiDIIGuSGkICeLzeBAhhxO0IacP+SyRINRHyElEEQA
+\begin{tikzcd}
+    \emptyset                  &                            &         &         \\
+    x = 1 \arrow[r, no head]   & x=2                        & x=3     &   ...      \\
+    y=1 \arrow[r, no head]     & y=2                        & y=3     &   ...      \\
+    x=1;y=1 \arrow[r, no head] & x=1;y=2 \arrow[r, no head] & x=2;y=1 & x=2;y=2 & ...
+    \end{tikzcd}
+
+    \textbf{Example:} $[x=1] * [y = 2]$ cannot be defined (not independent), since $[x=2;y=2]$ is not entangled to $[x=1;y=2]$.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Concrete Model}
+
+\textbf{Example:} $\{[x=1;y=1] \sim [x=1;y=2] \sim [x=2;y=1]\}$ represents the model:
+
+% https://tikzcd.yichuanshen.de/#N4Igdg9gJgpgziAXAbVABwnAlgFyxMJZABgBoBGAXVJADcBDAGwFcYkQAPAAgF4vyQAX1LpMufIRTkK1Ok1bsOPAExCRIDNjwEiZZbIYs2iEAE8eA4aK0Si0-TUMKT51VY1jtkkqWIH5xiAAOkEwALZoOKZwMDhq1uI6KGQAzP5GihYA3OaW6pqJ3tJpjgGZ5Dkq8R42ScjKpCVyGSZKypV5CV5EDVSlLZw8KdUF3SgNDs3OZkMjnrYoKY3p022VbrIwUADm8ESgAGYAThBhSACsNDgQSABsNAAWMPRQ7JBgbO7Hp3dXN4gAdkez1eJnen3U3zOiDIIGuSGkICeLzeBAhhxO0IacP+SyRINRHyElEEQA
+\begin{tikzcd}
+    \emptyset                  &                            &         &         \\
+    x = 1 \arrow[r, no head]   & x=2                        & x=3     &   ...      \\
+    y=1 \arrow[r, no head]     & y=2                        & y=3     &   ...      \\
+    x=1;y=1 \arrow[r, no head] & x=1;y=2 \arrow[r, no head] & x=2;y=1 & x=2;y=2 & ...
+    \end{tikzcd}
+
+    \textbf{Intuition:} A concrete model $W$ represent test (compute reachability) a program with a set of configurations in $W$. This representation is designed for the denotation of type context.
+\end{frame}
+
+
+\begin{frame}[fragile]
+    \frametitle{Type and Type Context}
+
+\textbf{Bunched Type / Implication:} There is only one modal (i.e., $M_\text{memory}$), a context $\Gamma$ is deonted as a set of worlds. A property holds when it is valid in all worlds. The following judgement holds:
+\begin{align*}
+    (P, Q) * R \vdash P * R 
+\end{align*}\noindent
+when \textbf{for all} worlds $w$, $w \models (P, Q) * R$ implies $w \models P * R$.
+
+\textbf{Problem:} The type context contains both over- and under-approximation, how to denote them into the concrete model?
+
+\textbf{Solution:} A type context is denoted as a set of \textbf{models}, the property holds in model when there \textbf{exists} a world makes the property valid.
+\begin{itemize}
+    \item A property $\phi$ holds in a model $M$ iff $\exists w \in M. w \models \phi$.
+    \item $\Gamma \vdash \phi$ iff $\forall M \in \denot{\Gamma}. M \models \phi$.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Type and Type Context}
+
+\textbf{Examples:} Consider the following type context ($\sep$ case is trivial)
+\begin{align*}
+    x{:}\ort{\Int}{1 \leq \vnu \leq 2}, y{:}\urt{\Int}{\vnu = x \lor \vnu = x + 1}
+\end{align*}\noindent
+Can be denoted as the followin models:
+\begin{itemize}
+    \item $\{[x=1;y=1] \sim [x=1;y=2]\}$
+    \item $\{[x=2;y=2] \sim [x=2;y=3]\}$
+\end{itemize}
+We requires that for all models above, there exists a world makes the type judgement valid.
+
+\textbf{Intuition:} The assignment of $x$ is $1$ and $2$ in this two models, thus it considers all possible assignments of $x$. In each model, we have freedom to choose $y$ to be $x$ or $x + 1$ according to the entanglement relation $\sim$.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Type and Type Context}
+
+\textbf{Examples:} Consider the following type context
+\begin{align*}
+    x{:}\urt{\Int}{1 \leq \vnu \leq 2}, y{:}\urt{\Int}{\vnu = 3 \lor \vnu = 4}
+\end{align*}\noindent
+Can be denoted as the followin models:
+\begin{itemize}
+    \item $\{[x=1;y=3] \sim [x=2;y=4]\}$
+    \item $\{[x=1;y=4] \sim [x=2;y=3]\}$
+    \item $\{[x=1;y=3] \sim [x=1;y=4] \sim [x=2;y=3]\}$, or missing one of other worlds.
+    \item $\{[x=1;y=3] \sim [x=1;y=4] \sim [x=2;y=3] \sim [x=2;y=4]\}$
+\end{itemize}
+We requires that for all models above, there exists a world makes the type judgement valid.
+
+\textbf{Intuition:} The data-dependent case is similar.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Type and Type Context}
+
+\textbf{Examples:} More complicate case:
+\begin{align*}
+    &x{:}\urt{\Int}{1 \leq \vnu \leq 2} \sep 
+    \\&(y{:}\ort{\Int}{x \leq \vnu \leq x + 2}, z{:}\urt{\Int}{\vnu = x + y \lor \vnu = x - y})
+\end{align*}\noindent
+Can be denoted as the followin models:
+{\small
+\begin{itemize}
+    \item $M_1: \{[x=1;y=1;z=1] \sim [x=1;y=1;z=0] \sim  [x=2;y=1;z=3]  \sim [x=2;y=1;z=1] \}$
+    \item $M_2: \{[x=1;y=2;z=3] \sim [x=1;y=2;z=-1] \sim  [x=2;y=3;z=5]  \sim [x=2;y=3;z=-1] \}$
+    \item $M_3: \{[x=1;y=3;z=4] \sim [x=1;y=3;z=-2] \sim  [x=2;y=4;z=6]  \sim [x=2;y=4;z=-2] \}$
+\end{itemize}}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Type Checking}
+    
+        \begin{minted}{ocaml}
+            let p x =
+                let y1 = f x in
+                let y2 = g x in
+                y2
+        \end{minted}
+
+Now we type check function $p$ against the type $\urt{\Int}{\top}\wand\urt{\Int}{\vnu > 0}$ under a type context $\Gamma$.
+    
+    We assume $f$ and $g$ are overly typed.
+    \begin{itemize}
+        \item $\Gamma \vdash f : \urt{\Int}{\vnu > 0}\wand\urt{\Int}{\vnu > 0}$
+        \item $\Gamma \vdash g : \ort{\Int}{\top}\sarr\urt{\Int}{\vnu > 0}$
+    \end{itemize}
+
+One possible model of $\Gamma$ is:
+\begin{itemize}
+    \item $M_1: \{[f=\lambda x.x; g = \lambda x.\Code{posGen()}]\}$
+\end{itemize}
+If they are under-typed, it will be a different model.
+\begin{itemize}
+    \item $M_2: \{[f=\lambda x.x; g = \lambda x.\Code{posGen()}] \sim [f=\lambda x.x; g = \lambda x-1.\Code{posGen()}] \sim [f=\lambda x.x-1; g = \lambda x.\Code{intGen()}] \sim ...\}$
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Type Checking}
+    
+    We have:
+    \\[.8em]
+    \begin{prooftree}
+        \hypo{
+            \Gamma, x{:}\urt{\Int}{\top} \vdash \zlet{y1}{f\;x}{...} : \urt{\Int}{\vnu > 0}
+        }
+        \infer1[TFun]{
+            \vdash p : x{:}\urt{\Int}{\top} \sarr \urt{\Int}{\vnu > 0} 
+        }
+    \end{prooftree}
+    \\[.8em]
+
+Then possible model of $\Gamma, x{:}\urt{\Int}{\top}$ is:
+\begin{itemize}
+    \item $\{[f=\lambda x.x; g = \lambda x.\Code{posGen()}; x=1] \sim [f=\lambda x.x; g = \lambda x.\Code{posGen()}; x=2] \sim ...\}$
+    \item $\{[f=\lambda x.x-1; g = \lambda x.\Code{posGen()}; x=1] \sim [f=\lambda x.x-1; g = \lambda x.\Code{posGen()}; x=2] \sim ...\}$
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Type Checking}
+    
+After the first application
+    \\[.8em]
+    \begin{prooftree}
+        \hypo{
+            \Gamma, ?? \vdash \zlet{y2}{g\;x}{...} : \urt{\Int}{\vnu > 0}
+        }
+        \infer1[TFun]{
+            \Gamma, x{:}\urt{\Int}{\top} \vdash \zlet{y1}{f\;x}{...} : \urt{\Int}{\vnu > 0}
+        }
+    \end{prooftree}
+    \\[.8em]
+
+In algebraic view, the actual possible models are:
+\begin{itemize}
+    \item $\{[f=\lambda x.x; g = \lambda x.\Code{posGen()}; x=1; y1=1] \sim [f=\lambda x.x; g = \lambda x.\Code{posGen()}; x=2; y1=2] \sim ...\}$
+    \item $\{[f=\lambda x.x-1; g = \lambda x.\Code{posGen()}; x=1; y1=0] \sim [f=\lambda x.x-1; g = \lambda x.\Code{posGen()}; x=2; y1=1] \sim ...\}$
+\end{itemize}
+
+\textbf{Precise type:} $\Gamma, x{:}\urt{\Int}{\vnu > 0}, y1{:}\urt{\Int}{\vnu = f\;x}$, which has function reference $f$.
+
+However, this one cannot be expressed by our type context. The relation between $x$ and $y1$ should be consistent with the value of $f$ (we don't have a way precisely constraint a function reference).
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Type Checking}
+
+    In algebraic view, the actual possible models are:
+    \begin{itemize}
+        \item $\{[f=\textcolor{red}{\lambda x.x}; g = \lambda x.\Code{posGen()}; \textcolor{red}{x=1; y1=1}] \sim [f=\textcolor{red}{\lambda x.x}; g = \lambda x.\Code{posGen()}; \textcolor{red}{x=2; y1=2}] \sim ...\}$
+        \item $\{[f=\textcolor{blue}{\lambda x.x-1}; g = \lambda x.\Code{posGen()}; \textcolor{blue}{x=1; y1=0}] \sim [f=\textcolor{blue}{\lambda x.x-1}; g = \lambda x.\Code{posGen()}; \textcolor{blue}{x=2; y1=1}] \sim ...\}$
+    \end{itemize}
+    However, this one cannot be expressed by our type context. The relation between $x$ and $y1$ should be consistent with the value of $f$.
+
+% \\[.8em]
+    
+\textbf{Potential representation}: $\Gamma, x{:}\urt{\Int}{\vnu > 0}, y1{:}\urt{\Int}{\vnu > 0}$ which will additionally allow more models:
+\begin{itemize}
+    \item $\{[f=\textcolor{blue}{\lambda x.x-1}; g = \lambda x.\Code{posGen()}; \textcolor{red}{x=1; y1=1}] \sim [f=\textcolor{blue}{\lambda x.x-1}; g = \lambda x.\Code{posGen()}; \textcolor{red}{x=2; y1=2}] \sim ...\}$
+\end{itemize}
+It is sound, but incomplete.
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Type Checking}
+
+    In algebraic view, the actual possible models are:
+    \begin{itemize}
+        \item $\{[f=\textcolor{red}{\lambda x.x}; g = \lambda x.\Code{posGen()}; \textcolor{red}{x=1; y1=1}] \sim [f=\textcolor{red}{\lambda x.x}; g = \lambda x.\Code{posGen()}; \textcolor{red}{x=2; y1=2}] \sim ...\}$
+        \item $\{[f=\textcolor{blue}{\lambda x.x-1}; g = \lambda x.\Code{posGen()}; \textcolor{blue}{x=1; y1=0}] \sim [f=\textcolor{blue}{\lambda x.x-1}; g = \lambda x.\Code{posGen()}; \textcolor{blue}{x=2; y1=1}] \sim ...\}$
+    \end{itemize}
+    However, this one cannot be expressed by our type context. The relation between $x$ and $y1$ should be consistent with the value of $f$.
+    
+    \textbf{More Imprecise representation}: $\Gamma, x{:}\ort{\Int}{\vnu > 0}, y1{:}\urt{\Int}{\vnu > 0}$ which will additionally allow more models:
+    \begin{itemize}
+        \item $\{[f=\textcolor{blue}{\lambda x.x-1}; g = \lambda x.\Code{posGen()}; \textcolor{red}{x=1; y1=1}] \sim [f=\textcolor{blue}{\lambda x.x-1}; g = \lambda x.\Code{posGen()}; \textcolor{red}{\textcolor{orange}{x=1}; y1=2}] \sim ...\}$
+    \end{itemize}
+
+    \textbf{Note:} Although flip the modality of types during function application sounds interesting, but I find it is very imprecise.
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Type Checking}
+    
+After the first application
+    \\[.8em]
+    \begin{prooftree}
+        \hypo{
+            \Gamma, ?? \vdash y2 : \urt{\Int}{\vnu > 0}
+        }
+        \infer1[TFun]{
+            \Gamma, x{:}\urt{\Int}{\vnu > 0}, y1{:}\urt{\Int}{\vnu > 0} \vdash  \zlet{y2}{g\;x}{y2} : \urt{\Int}{\vnu > 0}
+        }
+    \end{prooftree}
+    \\[.8em]
+
+In algebraic view, the actual possible models are:
+\begin{itemize}
+    \item $\{[f=\lambda x.x; g = \lambda x.\Code{posGen()}; x=1; y1=1; y2=1] \sim [f=\lambda x.x; g = \lambda x.\Code{posGen()}; x=1; y1=1; y2=2] \sim ...\}$
+\end{itemize}
+The value of $y2$ is totally independent from other assignments, thus we have:
+
+\begin{align*}
+&(\Gamma, x{:}\urt{\Int}{\vnu > 0}, y1{:}\urt{\Int}{\vnu > 0}) \sep y2{:}\urt{\Int}{\vnu > 0} 
+\\&\vdash y2 : \urt{\Int}{\vnu > 0}
+\end{align*}
+
+\textbf{Note:} if the returned value is $x$ or $y1$, the type checking also succeed; we only requires that $x$ and $y1$ are dependent. Note that $x$ cannot have type $\urt{\Int}{\top}$ anymore, since $\tau_f$ doesn't guarantee that $f\;0$ still terminates.
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Model Composition}
+
+For a models represented as a set of worlds,
+\begin{itemize}
+    \item $W * W'$ means
+    \begin{align*}
+        W * W' \doteq \{ w \cup w' ~|~ w \in W \land w' \in W'\}
+    \end{align*}
+    \item $W[x\mapsto v]$ means
+    \begin{align*}
+        W[x\mapsto v] \doteq \{ w[x\mapsto v] ~|~ w \in W \}
+    \end{align*}
+    \item $W , W'$ produces a set of models:
+    \begin{align*}
+        &W \in (W_1 , W_2) \iff \Code{Dom}(W) = \Code{Dom}(W_1) \cup \Code{Dom}(W_2) \land
+        \\&\Code{Proj}(\Code{Dom}(W_1), W) = W_1 \land \Code{Proj}(\Code{Dom}(W_2), W) = W_2 
+    \end{align*}
+\end{itemize}
+
+Empty model: $\{\emptyset\}$, a single world with empty assignment.
+
+Singleton world model: $\{[x = v]\}$.
+
+Singleton empty world model: $M_0 \doteq \{ w_0 \}$, in our case it seems equal to $\{\emptyset\}$. 
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Type denotation}
+
+\textbf{Base Type:}
+\begin{align*}
+    \denot{\ort{b}{\phi}}_M &\doteq \{ e ~|~ \forall v. M \models \mstep{e}{v} \implies \phi[\vnu \mapsto v] \} \\
+    \denot{\urt{b}{\phi}}_M &\doteq \{ e ~|~ \forall v. \phi[\vnu \mapsto v] \implies M \models \mstep{e}{v} \}
+\end{align*}
+
+\textbf{Function Type:}
+\begin{align*}
+    \denot{x{:}\tau_x \sarr \tau}_M &\doteq \{ e ~|~ \forall v_x \in \denot{\tau_x}_M. (e\;x) \in \denot{\tau}_{M[x\mapsto v_x]} \} \\
+    \denot{x{:}\tau_x \wand \tau}_M &\doteq \{ e ~|~ \forall M'.\; x\in\denot{\tau_x}_{M*M'}. (e\;x) \in \denot{\tau}_{M * M'} \}
+\end{align*}
+
+\textbf{Intuition:} The denotation of $\wand$ is quantified over models $M'$ instead of a value.
+
+\textbf{Missing Piece:} We assume $\urt{b}{\phi} \doteq \boxtimes \ort{b}{\phi}$, and there is missing an under arrow type $\boxtimes(x{:}\tau_x \sarr \tau)$.
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Type denotation}
+
+\textbf{Type Context}
+
+\begin{align*}
+    &\denot{\emptyset} \doteq \{M_0\} \\
+    &\denot{\Code{emp}} \doteq \{M_0\} \\
+    &\denot{x{:}\ort{b}{\phi}} \doteq \{ \{[x\mapsto v]\} ~|~ \phi(v) \} \\
+    &\denot{x{:}\urt{b}{\phi}} \doteq \{ \{[x\mapsto v] ~|~ \phi(v) \} \} \\
+    &\denot{\Gamma_1 \sep \Gamma_2} \doteq \{ M_1 * M_2 ~|~ M_1 \in \denot{\Gamma_1} \land M_2 \in \denot{\Gamma_2} \} \\
+    &\denot{\Gamma_1 , \Gamma_2} \doteq \{ M ~|~ M_1 \in \denot{\Gamma_1} \land M_2 \in \denot{\Gamma_2} \land M \in (M_1 , M_2) \} \\
+\end{align*}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Compare with Probabilistic Separation Logic}
+
+\textbf{PSL:} PSL is only based on S4 (same as SL). The internal structure of equivalent worlds are hidden as one world. We cannot shift between overapproximation and underapproximation.
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Next Step}
+
+\textbf{Higher-order case?} Persistency of function parameters? I will drive into Iris more deeply next week.
+
+\end{frame}
