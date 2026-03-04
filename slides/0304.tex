@@ -283,13 +283,13 @@ Consider $y = g\;x$ under type context $x{:}\urt{\Int}{\top} \vdash ...$.
 \begin{align*}
     w \models x : \urt{\Int}{0 \leq \vnu \leq 2}
 \end{align*}\noindent
-means ``for all worlds $w'$ such that $w' \models x : \urt{\Int}{0 \leq \vnu \leq 2}$, we have $w \sim w'$''.
+means ``for all worlds $w'$ such that $w' \models x : \ort{\Int}{0 \leq \vnu \leq 2}$, we have $w \sim w'$''.
 
 \textbf{Compare with Necessity modality:}
 \begin{align*}
     w \models x : \square\ort{\Int}{0 \leq \vnu \leq 2}
 \end{align*}\noindent
-means ``for all worlds $w'$ such that $w \sim w'$, we have $w' \models x : \urt{\Int}{0 \leq \vnu \leq 2}$''.
+means ``for all worlds $w'$ such that $w \sim w'$, we have $w' \models x : \ort{\Int}{0 \leq \vnu \leq 2}$''.
 
 \textbf{Intuition:} We do not need to distinguish $[x = 1]$ and $[x = 2]$ when checking $x : \urt{\Int}{0 \leq \vnu \leq 2}$, thus they are equivalent worlds. 
 \end{frame}
