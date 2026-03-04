@@ -1,0 +1,894 @@
+\newcommand{\store}[1]{\langle #1 \rangle}
+
+\begin{frame}[fragile]
+    \frametitle{Preliminaries: Coverage Type}
+
+\textbf{Test generators in PBT:} 
+\begin{itemize}
+    \item Test a $\Code{merge}: \List[\Int] \sarr \List[\Int] \sarr \List[\Int]$ function in the merge sort algorithm.
+    \item Use a test generator $g: \Unit \sarr \List[\Int]$ that produces sorted lists.
+    \item Specification: $\Unit \sarr \ort{\List[\Int]}{\I{sorted}(\vnu)}$.
+    \item $\lambda \_. []$ is safe, but not complete.
+\end{itemize}
+
+\textbf{Coverage Completeness} 
+\begin{itemize}
+    \item All sorted lists must be produced.
+    \item Overapproximation: $\forall v. \mstep{e}{v} \impl \I{sorted}(v)$.
+    \item Underapproximation: $\forall v. \I{sorted}(v) \impl \mstep{e}{v}$.
+    \item Coverage type: $\Unit \sarr \urt{\List[\Int]}{\I{sorted}(\vnu)}$. 
+\end{itemize}
+        
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Preliminaries: Incorrectness Logic}
+
+\textbf{Another underapproximate-style logic:} Assume $e$ is an imperative program over states.
+\begin{itemize}
+    \item $\{P\} e \{Q\}$ means $\forall s\;s'. P(s) \land \mstep{(s, e)}{(s', \Code{SKIP})} \impl Q(s')$.
+    \item $[P] e [Q]$ means $\forall s'. Q(s) \implies \exists s. \mstep{(s, e)}{(s', \Code{SKIP})} \land P(s)$.
+    \item Reverse-style interpretation: all states in $Q$ are reachable from some state in $P$.
+    \item Forward-style interpretation: applying $e$ over a set of states (i.e., $P$), then $Q$ is an underapproximation of the output states.
+\end{itemize}
+
+\textbf{Usage: Incorrectness reasoning} Avoid false positives in bug finding.
+\begin{itemize}
+    \item $[P] e [\Code{ErrorState}]$ means that indeed a bug can be triggered by some input in $P$.
+    \item A logical interpretation of symbolic execution (SE).
+\end{itemize}
+
+\textbf{Limitation:} No specification for functions, just unrolling (same as SE).   
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Setting: Type-based Incorrectness (Reachability) Reasoning}
+
+\textbf{Missing Piece:} Incorrectness-style specification for functions.
+\begin{itemize}
+    \item $\vdash f : x{:}\urt{\Int}{\vnu \geq 0} \sarr \urt{\Int}{\vnu \geq 0}$.
+    \item Reverse-style interpretation: all natural numbers can be returned by $f$ with some natural number input.
+    \item Forward-style interpretation: applying $f$ over all natural numbers, the output will also cover all natural numbers.
+    \item $\lambda x. x$ can have this type.
+    \item Sufficient to show incorrectness: $[x > 0]10 / (f\;x) [Error]$.
+\end{itemize}
+
+\textbf{Different from function coverage types:}
+\begin{itemize}
+    \item Function coverage types: $\vdash g : x{:}\ort{\Int}{\vnu \geq 0} \sarr \urt{\Int}{\vnu \geq 0}$:
+    \item Interpretation: whatever natural number input we give, the output will cover all natural numbers.
+    \item $\lambda x. \Code{nat\_gen()}$ can have this type.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Problem: Underapproximated Parameters}
+Assume $g$ has type $x{:}\urt{\Int}{\top}\sarr\urt{\Int}{\vnu = 0}$.
+\begin{itemize}
+    \item Reverse-style interpretation: there exists an integer $x$ that makes $g\;x$ return $0$.
+    \item Forward-style interpretation: applying $g$ over all integers will at least cover integer $0$.
+    \item $\Code{g1} \doteq \lambda x. \zif{x == 1}{0}{\Code{err}}$ can have this type.
+    \item $\Code{g2} \doteq \lambda x. \zif{x == 2}{0}{\Code{err}}$ can also have this type.
+    \item $\Code{g3} \doteq \lambda x. 0$ can also have this type.
+\end{itemize}
+
+Assume parameter $x$ has type $\urt{\Int}{\top}$...
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    let f (x: int) = 
+      let _ = g x in x
+\end{minted}
+\textbf{Problem:} Coverage of the return value of $f$?
+\begin{itemize}
+    \item If $g \doteq \Code{g1}$, then it can cover integer $1$.
+    \item If $g \doteq \Code{g2}$, then it can cover integer $2$.
+    \item If $g \doteq \Code{g3}$, then it can cover all integers.
+\end{itemize}
+
+\textbf{Observation:} It seems that $x$ is \textbf{consumed} after application.
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Problem: Underapproximated Parameters}
+Assume $g$ has type $x{:}\urt{\Int}{\top}\sarr\urt{\Int}{\top}$.
+\begin{itemize}
+    \item We assume the case where the parameter of $g$ will not be consumed after application.
+    \item That is, $g$ is a total function.
+    \item $\Code{g1} \doteq \lambda x. x$ can have this type.
+    \item $\Code{g2} \doteq \lambda x. x+1$ can also have this type.
+    \item $\Code{g3} \doteq \lambda x. \Code{int\_gen()}$ can also have this type.
+\end{itemize}
+
+Assume parameter $x$ has type $\urt{\Int}{\top}$...
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    let f (x: int) = (g x, x)
+\end{minted}
+\textbf{Problem:} Can $f$ cover all integer pairs?
+\begin{itemize}
+    \item If $g \doteq \Code{g1}$, then it can only cover $\{(0,0), (1,1), (2,2), \ldots\}$.
+    \item If $g \doteq \Code{g2}$, then it can only cover $\{(0,1), (1,2), (2,3), \ldots\}$.
+    \item If $g \doteq \Code{g3}$, then it can cover all integer pairs.
+\end{itemize}
+
+\textbf{Observation:} Sometimes the input is dependent on the output.
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Three modalities of functions}
+Assume $g$ has type $x{:}\urt{\Int}{\top}\sarr\urt{\Int}{\top}$. Consider $y = g\;x$ where $x$ has type $\urt{\Int}{\top}$. What is the type of $x$ and $y$ after application?
+\begin{itemize}
+    \item Modality 1: $x{:}\ort{\Int}{\top}$ and $y$ has type $\urt{\Int}{\top}$.
+    \item E.g., $g\doteq \lambda x. \zif{x == 0}{\Code{int\_gen()}}{\Code{err}}$.
+    \item Modality 2: $x{:}\urt{\Int}{\top}$ and $y$ has type $\urt{\Int}{\top}$.
+    \item E.g., $g\doteq \lambda x.\Code{int\_gen()}$.
+    \item Modality 3: $x{:}\urt{\Int}{\top}$ and $y$ has type $\urt{\Int}{\top}$, and they are ``entangled''. 
+    \item E.g., $g\doteq \lambda x.x$.
+\end{itemize}
+
+\textbf{Challenge:} How can we distinguish these three modalities? Especially the second and third modalities?
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Preliminaries: Bunched Implication}
+
+\textbf{Intuition:} We define two conjunctions: $a \land b$ means ``dependent and'', and $a * b$ means ``independent and''.
+
+    \textbf{Heyting algebra:} Compared with lattices, Heyting algebra has an adjunction:
+    \begin{align*}
+        a \land b \sqsubseteq c \text{ iff } a \sqsubseteq b \impl c
+    \end{align*}\noindent
+    where $\sqsubseteq$ can be interpreted as entailment here.
+    
+\textbf{Bunched Implication:}
+    A \textbf{BI}-algebra is a Heyting algebra equipped with an additional residuated commutative monoid structure.
+    \begin{align*}
+        &a * b \sqsubseteq c \text{ iff } a \sqsubseteq b \wand c
+    \end{align*}\noindent
+\textbf{Advantage:} We can define different structural rules for these two conjunctions.
+\begin{itemize}
+    \item $\land$ is the greatest lower bound, thus $x \sqsubseteq a \land b$ iff $x \sqsubseteq a$ and $x \sqsubseteq b$.
+    \item Contraction (duplication) rule: $a \sqsubseteq a \land a$, $*$ does not have this property.
+    \item Notion: the resource cannot be duplicated; it can express the ``consume'' property.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Preliminaries: Separation Logic}
+
+\textbf{Heap as resource:} A program (thread) owns a heap fragment.
+    \begin{itemize}
+        \item $x \mapsto 3$ means the program can access the address $x$.
+        \item $x \mapsto 3 \sep y \mapsto 4$ means the program can access two addresses $x$ and $y$.
+    \end{itemize}
+
+\textbf{Problem:} What happens when $x \mapsto 3 \sep x \mapsto 4$?
+
+\textbf{Intuition:} The two resources may not always be combined, i.e., $*$ is not a total function.
+\begin{itemize}
+    \item Two heaps can be combined iff their footprints are disjoint.
+\end{itemize}
+
+\textbf{Advantage:} Can help us express the ``entanglement'' and ``separation'' properties.
+\begin{itemize}
+    \item Assume we have two resources $x{:}\urt{\Int}{\top}$ and $y{:}\urt{\Int}{\top}$. Can we combine them into a single resource: $(x,y){:}\urt{\Int\times\Int}{\top}$?
+    \item It depends on whether $x$ and $y$ are dependent.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Problem Setting: A Modal Type System for Underapproximation Reasoning}
+
+\textbf{Contribution 1: Underapproximation as resource}
+\begin{itemize}
+    \item A \textbf{BI} resource algebra for our setting.
+    \item A Kripke's semantics that provides a model (interpretation) for the algebra.
+    \item Build modal operational semantics and a modal type system \textcolor{red}{(in Rocq/Iris)}.
+\end{itemize}
+
+\textbf{Contribution 2: Unified framework for over- and under-approximation reasoning}
+\begin{itemize}
+    \item Simulate refinement types, coverage types, and incorrectness logic.
+    \item Three modalities of function types.
+    \item \textcolor{gray}{Higher-order functions}.
+\end{itemize}
+
+\textbf{Contribution 3: Declarative type system and typing algorithms}
+\begin{itemize}
+    \item \textcolor{gray}{ A sound (and complete?) declarative type system}.
+    \item \textcolor{gray}{A (decidable?) bidirectional typing algorithm}.
+    \item \textcolor{gray}{Some case studies for incorrectness/coverage/reachability reasoning}.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Underapproximation Type as Resource}
+
+\textbf{Atomic predicate:}
+\begin{itemize}
+    \item In SL we have $x\mapsto 3 \vdash ...$ meaning the program can access the address $x$.
+    \item In our setting, we have $x{:}\urt{\Int}{\vnu > 0} \vdash ...$ meaning the program chooses the assignment of $x$ to be a positive integer as needed.
+    \item For example, if $x + 1$ wants to cover value $3$, then the value of $x$ can be freely chosen to be $2$.
+\end{itemize}
+
+\textbf{Star operation:}
+\begin{itemize}
+    \item $x\mapsto 3 * y\mapsto 4$ means the program can access the address $x$ and $y$.
+    \item $x{:}\urt{\Int}{\vnu > 0} \sep y{:}\urt{\Int}{\vnu > 0} \vdash ...$ means that $x$ and $y$ can freely choose their assignments as arbitrary positive integers, and they are \textbf{independent}.
+\end{itemize}
+
+\textbf{Normal Conjunction:}
+\begin{itemize}
+    \item $x\mapsto 3 \land y\mapsto 3$ means $x$ and $y$ are the same address.
+    \item $x{:}\urt{\Int}{\vnu > 0}, y{:}\urt{\Int}{\vnu > 0} \vdash ...$ means that $x$ and $y$ are \textbf{entangled}.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Underapproximation Type as Resource}
+
+Consider $y = g\;x$ under type context $x{:}\urt{\Int}{\top} \vdash ...$.
+\begin{itemize}
+    \item Modality 1: to $x{:}\ort{\Int}{\top}, y{:}\urt{\Int}{\top} \vdash ...$
+    \item Modality 2: to $x{:}\urt{\Int}{\top} \sep y{:}\urt{\Int}{\top} \vdash ...$
+    \item Modality 3: to $x{:}\urt{\Int}{\top}, y{:}\urt{\Int}{\top} \vdash ...$
+\end{itemize}
+
+\textbf{Function types:} Three modalities:
+\begin{itemize}
+    \item Modality 1: $g: x{:}\urt{\Int}{\top}\wand\urt{\Int}{\top}$. 
+    \item If you give me resource $x$, I return a resource $y$ (thus there is only one resource $y$ remaining).
+    \item \textbf{SL:} $(x \mapsto 3)\wand(y \mapsto 4)$ (informally) means $x$ is freed and $y$ is allocated.
+    \item Modality 2: $g: x{:}\ort{\Int}{\top}\sarr\urt{\Int}{\top}$. 
+    \item In coverage types, all resources are independent.
+    \item \textbf{SL:} $(x \mapsto 3)\wand(x \mapsto 3) * (y \mapsto 4)$ where the input resource is unchanged.
+    \item Modality 3: $g: x{:}\urt{\Int}{\top}\sarr\urt{\Int}{\top}$. 
+    \item There are two dependent resources, $x$ and $y$, after application.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Kripke's Semantics for Resource Algebra}
+
+\textbf{Beyond the algebra:} We already know that our setting can be encoded as a \textbf{BI}-resource algebra, but it seems we should have a different model.
+
+\textbf{Problem:} Our resource has quite different behavior from SL, so what is the actual semantics of our resource algebra?
+\begin{itemize}
+    \item \textbf{Challenge 1:} What is the meaning of ``entanglement'' (in SL this is an invalid case)?
+    \item \textbf{Challenge 2:} How can we decide if two resources can be combined?
+    \item \textbf{Challenge 3:} How do we connect our underapproximation modality? i.e., $\vdash 1 \oplus 2 : \urt{\Int}{\vnu = 1}$?
+\end{itemize}
+
+\textbf{Solution:} S4 + S5 Kripke's semantics.
+\begin{itemize}
+    \item \textbf{S4:} for \textbf{BI}-resource algebra, the relation is the pre-order $\sqsubseteq$ in algebra.
+    \item Example: $[x=1;y=3] \sqsubseteq [x = 1]$.
+    \item \textbf{S5:} for underapproximation modality, the relation is the equivalence relation $\sim$.
+    \item Example: $x{:}\urt{\Int}{0 \leq \vnu \leq 2}$ means $[x=1] \sim [x=2] \sim [x=3]$.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Kripke's Semantics for Resource Algebra}
+
+\textbf{Challenge 3: Underapproximation Modality:}
+\begin{align*}
+    w \models x : \urt{\Int}{0 \leq \vnu \leq 2}
+\end{align*}\noindent
+means ``for all worlds $w'$ such that $w' \models x : \urt{\Int}{0 \leq \vnu \leq 2}$, we have $w \sim w'$''.
+
+\textbf{Compare with Necessity modality:}
+\begin{align*}
+    w \models x : \square\ort{\Int}{0 \leq \vnu \leq 2}
+\end{align*}\noindent
+means ``for all worlds $w'$ such that $w \sim w'$, we have $w' \models x : \urt{\Int}{0 \leq \vnu \leq 2}$''.
+
+\textbf{Intuition:} We do not need to distinguish $[x = 1]$ and $[x = 2]$ when checking $x : \urt{\Int}{0 \leq \vnu \leq 2}$, thus they are equivalent worlds. 
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Kripke's Semantics for Resource Algebra}
+
+\textbf{Combining two resources:}
+\begin{align*}
+    &[x=1] \sim [x=2] \models x : \urt{\Int}{1 \leq \vnu \leq 2}
+    \\&[y=3] \sim [y=4] \models y : \urt{\Int}{3 \leq \vnu \leq 4}
+\end{align*}\noindent
+
+\textbf{There are multiple possible results:}
+\begin{itemize}
+    \item $[x=1;y=3] \sim [x=2;y=4]$, $x$ and $y$ are entangled.
+    \item $[x=1;y=3] \sim [x=2;y=3] \sim [x=2;y=4]$, $x$ and $y$ are entangled.
+    \item $[x=1;y=3] \sim [x=2;y=3] \sim [x=1;y=4] \sim [x=2;y=4]$, $x$ and $y$ are disjoint.
+\end{itemize}
+
+\textbf{Intuition:} If two resources are entangled, it depends on how they are combined (circular definition?).
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Kripke's Semantics for Resource Algebra}
+
+\textbf{Decompose-style interpretation:}
+\begin{itemize}
+    \item Assume we know how underapproximated variables are \textbf{eventually} combined together.
+    \item An equivalence class: $G = \{ w ~|~ \Code{w} = \text{all possible variables we will face}\}$.
+    \item Is $[x=1] \sim [x=2] * [y=3] \sim [y=4]$ valid?
+    \item It depends on whether $[x=1;y=3] \sim [x=2;y=3] \sim [x=1;y=4] \sim [x=2;y=4]$ is included in $G$.
+\end{itemize}
+
+\textbf{Intuition:}
+\begin{itemize}
+    \item Remember the forward interpretation of incorrectness reasoning:
+    \item $[P]e[Q]$: applying $e$ over a set of states (i.e., $P$), then $Q$ is an underapproximation of the output states.
+    \item Underapproximation reasoning is like ``testing the programs with a set of assignments (worlds)''.
+    \item For each test, we assume a world includes not only the assignment of all variables (including parameters and local variables); then the set of all worlds is this $G$.
+\end{itemize}
+
+\end{frame}
+
+% \textbf{Preliminaries:} Affine separation logic, which allows dropping resources.
+% \begin{align*}
+%     &[x=1;y=1] \sim [x=2;y=2] \models x : \urt{\Int}{1 \leq \vnu \leq 2}
+%     \\&\text{ and we know } [x=1] \sim [x=2] \sqsubseteq [x=1;y=1] \sim [x=2;y=2]
+% \end{align*}\noindent
+
+% \textbf{When $\sim$ is combined with $\sqsubseteq$:}
+% \begin{align*}
+%     &[x=1;y=1] \sim [x=2;y=2] \models x : \urt{\Int}{1 \leq \vnu \leq 2}
+%     \\&\text{ and we know } [x=1] \sim [x=2] \sqsubseteq [x=1;y=1] \sim [x=2;y=2]
+% \end{align*}\noindent
+
+% \begin{frame}[fragile]
+%     \frametitle{Resource algebra in Iris}
+% \textbf{Idea: Local view}
+
+% Assume $\Code{g1}$ and $\Code{g2}$ has type $x{:}\urt{\Int}{\top} \sarr \urt{\Int}{\top}$.
+
+% \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+%     let f (x: int) =
+%       let y = g1 x in
+%       let z = g2 y in
+%       (y, z)
+% \end{minted}
+
+% \begin{itemize}
+%     \item Assume we start from world $[x = 0]$ with local view $[x = 0] \sim [x = 1] \sim ...$.
+%     \item We compute $y$ we have $[y = 0]$ with local view $[x = 0; y = 0] \sim [x = 1; y = 1] \sim ...$.
+%     \item We compute $z$ we have $[y = 1]$ with local view $[x = 0; z = 0] \sim [x = 1; z = 2] \sim ...$.
+% \end{itemize}
+
+
+
+% \end{frame}
+
+
+% \begin{frame}[fragile]
+%     \frametitle{Resource algebra in Iris}
+
+% Iris defines resource algebra in a slightly different way:
+% \begin{itemize}
+%     \item More flexible disjointness: $\sep$ is a total function, and we add a validate function $V$ to check if a resource is valid.
+%     \item Higher-order resource: a resource can depend on properties in Iris.
+% \end{itemize}
+
+% \textbf{Idea: Local view}
+
+
+% \end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Theory}
+
+\textbf{Clarification:} We would like to build multiple layers of theory:
+\begin{itemize}
+    \item The \textbf{algebra} layer is a specialized \textbf{BI-resource algebra}, thus we can reuse many existing results in \textbf{BI}.
+    \item The \textbf{Kripke semantics} layer provides the force relation (interpretation) from the algebra to the Kripke model.
+    \item The \textbf{concrete model} layer provides the concrete model for Kripke's semantics (i.e., what is a world).
+    \item The \textbf{type theory} layer defines atomic predicates (under/over types), type context, and type denotation.
+    \item Then the \textbf{declarative type system} provides the fundamental theorem.
+\end{itemize}
+        
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Resource Algebra}
+
+A \textbf{BI}-algebra is a Heyting algebra equipped with an additional residuated commutative monoid structure.
+
+\textbf{Adjunction:} Different from lattices, we have
+\begin{align*}
+    a \land b \sqsubseteq c \text{ iff } a \sqsubseteq b \impl c
+\end{align*}\noindent
+
+\textbf{BI has an additional adjunction:}
+\begin{align*}
+    &a * b \sqsubseteq c \text{ iff } a \sqsubseteq b \wand c
+\end{align*}\noindent
+
+\textbf{Lemma (Frame rule):} The $*$ operation preserves the pre-order: $a \sqsubseteq a'$ implies $a * b \sqsubseteq a' * b$.
+
+\textbf{Proof:} 
+\begin{align*}
+    &a' \sqsubseteq b \wand (a' * b)  \qquad \text{since } a' * b \sqsubseteq a' * b
+    \\&a \sqsubseteq b \wand (a' * b)  \qquad \text{since } a \sqsubseteq a'
+    \\&a * b \sqsubseteq a' * b 
+\end{align*}\noindent
+        
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Kripke Semantics}
+
+We define a Kripke's semantics for the BI-resource algebra, which provides the interpretation of the algebra to the Kripke model.
+
+\textbf{Problem:} BI-algebra uses pre-order $\sqsubseteq$ which indicate $S_4$, whereas underapproximation requires an equivalence relation.
+
+\textbf{Solution:} A multi-modal (S4 + S5) Kripke semantics is a tuple $(W, *, \sim, \sqsubseteq)$ such that:
+\begin{itemize}
+    \item $W$ is a set of worlds.
+    \item $*$ is a partial binary operation on $W$ (separation operation).
+    \item $\sim$ is an equivalence relation on $W$, $w_1 \sim w_2$ means world $w_1$ is entangled with world $w_2$ (relation in S5).
+    \item $\sqsubseteq$ is a pre-order on $W$ (relation in S4).
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Kripke Semantics}
+
+\textbf{Problem:} The combination of $\sim$ (core of underapproximation) and $*$ (core of separation) may not be well-behaved.
+
+\textbf{Ill-formed Model Example:} Assume $[x\mapsto 1] \sim [x\mapsto 2]$ and $[y\mapsto 3] \sim [y\mapsto 4]$. Note that $[x\mapsto 1] * [y\mapsto 3]$ may not be entangled with $[x\mapsto 2] * [y\mapsto 4]$. However, this violates our intuition that ``I can randomly choose $x$ and $y$ independently, so all possible combinations should be considered''.
+
+\textbf{Strong Congruence:} We require the Kripke's semantics to be strongly congruent:
+\begin{align*}
+    w_1 \sim w_1' \text{ and } w_2 \sim w_2' \text{ implies } w_1 * w_2 \sim w_1' * w_2'
+\end{align*}\noindent
+And reversely (\textbf{Decomposition Consistency}):
+\begin{align*}
+    w \sim w_1 * w_2 \text{ implies } \exists w_1'\; w_2'. w = w_1' * w_2' \land w_1' \sim w_1 \land w_2' \sim w_2
+\end{align*}\noindent
+This easily holds if we require two equivalent worlds to have the same domain (in the concrete model).
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Kripke Semantics}
+
+\textbf{Problem:} The combination of $\sim$ (core of underapproximation) and $\sqsubseteq$ (core of substructural rules) may not be well-behaved.
+
+\textbf{Ill-formed Model Example:} Assume $[x\mapsto 1; y \mapsto 3] \sim [x\mapsto 2; y \mapsto 4]$, the world $[x\mapsto 1]$ may not be entangled with $[x\mapsto 2]$. This violates our intuition that ``if I can choose from two configurations, I can also choose from the piece of these two configurations''.
+
+\textbf{Projection Consistency:} We require the Kripke's semantics to be sub-resource consistent:
+\begin{align*}
+    &w_1 \sim w_2 \text{ and } w_1' \sqsubseteq w_1 \text{ and } w_2' \sqsubseteq w_2 \text{ implies } w_1' \sim w_2' 
+    \\&\qquad (\text{if $w_1' \sim w_2'$ can be defined, i.e., has the same domain})
+\end{align*}\noindent
+
+\textbf{Unit Consistency:} And a trivial axiom about the unit element (empty world) $w_e$:
+\begin{align*}
+    &w \sim w_e \text{ implies } w = w_e
+    \\&w \sim w' \iff w * w_e \sim w' * w_e
+\end{align*}\noindent
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Force Relation}
+We can easily map a \textbf{BI}-algebra into the multi-modal Kripke's semantics via a function $V$:
+\begin{itemize}
+    \item An element $m$ in the \textbf{BI}-algebra is interpreted as a world $w$.
+    \item The unit element $\Code{emp}$ is interpreted as the empty world $w_e$.
+    \item $m_1 * m_2$ is interpreted as $V(m_1) * V(m_2)$ (if they can be defined).
+    \item The pre-order $m_1 \sqsubseteq m_2$ in the \textbf{BI}-algebra is defined as: $V(m_1) \sqsubseteq V(m_2)$.
+\end{itemize}
+
+\textbf{Note:} We do not explicitly relate the entanglement relation $\sim$ with the \textbf{BI}-algebra. However, the axioms shown above implicitly use $\sim$ to constrain when two worlds are separated (if $m_1 * m_2$ can be defined).
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Force Relation}
+Now we define the force relation $\models$ on the multi-modal Kripke's semantics.
+\begin{align*}
+    &\text{(same as Heyting algebra)}
+    \\w \models \phi_1 \land \phi_2 &\text{ iff } w \models \phi_1 \text{ and } w \models \phi_2
+    \\w \models \phi_1 \lor \phi_2 &\text{ iff } w \models \phi_1 \text{ or } w \models \phi_2
+    \\w \models \phi_1 \impl \phi_2 &\text{ iff } \forall w'. w' \sqsubseteq w \text{ and } w' \models \phi_1 \text{ implies } w' \models \phi_2
+    \\&\text{(same as SL)}
+    \\w \models \Code{emp} &\text{ iff } w \sqsubseteq w_e \text{(i.e., $w = w_e$)}
+    \\w \models \phi_1 * \phi_2 &\text{ iff } \exists w_1, w_2. w \sqsubseteq w_1 * w_2 \text{ and } w_1 \models \phi_1 \text{ and } w_2 \models \phi_2
+    \\w \models \phi_1 \wand \phi_2 &\text{ iff } \forall w'. w' \models \phi_1 \text{ implies } w * w' \models \phi_2
+    \\&\text{New:}
+    \\w \models \boxtimes \phi &\text{ iff } \forall w'. w' \models \phi \text{ implies } \exists w_\text{base}\;w_\text{base}'. 
+    \\&w_\text{base} \sqsubseteq w \text{ and } w_\text{base} \sim w_\text{base}' \text{ and } w_\text{base}' \sqsubseteq w'
+\end{align*}\noindent
+
+For now, we have not defined the relation from the type context into the worlds; we will do this in the next layer.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Concrete Model}
+In SL, people use the ``heap'' to represent the concrete model. Two worlds can be combined with $*$ iff their footprints are disjoint.
+
+\textbf{Problem:} In the SL setting, there is only one model $M_\text{memory}$, since the operation $*$ is clearly defined. However, in our setting, whether $[x \mapsto 1] * [y \mapsto 2]$ can be defined depends on whether $x$ and $y$ are independent variables. It differs depending on the actual verification task.
+
+\textbf{Solution:} We also define a ``heap-like'' base model $M_\text{memory}$ and additionally define the entanglement relation $\sim$, which can differ for different models. $w_1 * w_2$ can be defined when $w_1$ and $w_2$ can be defined in $M_\text{memory}$, i.e.,
+\begin{align*}
+    \Code{Dom}(w_1) \cap \Code{Dom}(w_2) = \emptyset
+\end{align*}\noindent
+and also $w_1 * w_2$ satisfies the axioms shown on the previous slide.
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Concrete Model}
+
+\textbf{Basic Model (same as SL):} 
+\begin{itemize}
+    \item A world $w$ is a partial function $\Code{Var}\sarr\Code{Val}$ (a substitution).
+    \item The empty world $w_e$ is the empty substitution $\emptyset$.
+    \item The $w_1 * w_2$ is defined as
+    \begin{align*}
+        w_1 * w_2 =& w_1 \cup w_2 \quad \text{ when } \Code{Dom}(w_1) \cap \Code{Dom}(w_2) = \emptyset
+        \\& \text{undefined otherwise}
+    \end{align*}\noindent
+    \item The pre-order $w_1 \sqsubseteq w_2$ is defined as $w_1 \subseteq w_2$.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Concrete Model}
+
+\textbf{Entanglement Relation:} 
+\begin{itemize}
+    \item We use a set of worlds $W$ to represent the entanglement relation $\sim$.
+    \item $\forall w_1\; w_2. w_1 \sim w_2 \implies \Code{Dom}(w_1) = \Code{Dom}(w_2)$.
+    \item $\forall w_1\; w_2. w_1 \in W \land w_2 \in W \implies w_1 \sim w_2$.
+    \item $\forall w_1\; w_2. w_1 \sim w_2 \implies \exists w_1'\;w_2'. w_1 \subseteq w_1' \land w_2 \subseteq w_2' \land w_1' \sim w_2'$.
+\end{itemize}
+All $\sim$ relations can be generated from the rules above. It is easy to prove that the generated $\sim$ relation can satisfy the three axioms.
+
+\textbf{Compact Representation:} We directly use a set of worlds $W$ (they share the same domain) to represent a model, which is the basic model with domain $\Code{Dom}{W}$ plus the entanglement relation $\sim$ generated from the rules above.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Concrete Model}
+
+\textbf{Example:} $\{[x=1;y=1] \sim [x=1;y=2] \sim [x=2;y=1]\}$ represents the model:
+
+% https://tikzcd.yichuanshen.de/#N4Igdg9gJgpgziAXAbVABwnAlgFyxMJZABgBoBGAXVJADcBDAGwFcYkQAPAAgF4vyQAX1LpMufIRTkK1Ok1bsOPAExCRIDNjwEiZZbIYs2iEAE8eA4aK0Si0-TUMKT51VY1jtkkqWIH5xiAAOkEwALZoOKZwMDhq1uI6KGQAzP5GihYA3OaW6pqJ3tJpjgGZ5Dkq8R42ScjKpCVyGSZKypV5CV5EDVSlLZw8KdUF3SgNDs3OZkMjnrYoKY3p022VbrIwUADm8ESgAGYAThBhSACsNDgQSABsNAAWMPRQ7JBgbO7Hp3dXN4gAdkez1eJnen3U3zOiDIIGuSGkICeLzeBAhhxO0IacP+SyRINRHyElEEQA
+\begin{tikzcd}
+    \emptyset                  &                            &         &         \\
+    x = 1 \arrow[r, no head]   & x=2                        & x=3     &   ...      \\
+    y=1 \arrow[r, no head]     & y=2                        & y=3     &   ...      \\
+    x=1;y=1 \arrow[r, no head] & x=1;y=2 \arrow[r, no head] & x=2;y=1 & x=2;y=2 & ...
+    \end{tikzcd}
+
+    \textbf{Example:} $[x=1] * [y = 2]$ cannot be defined (not independent), since $[x=2;y=2]$ is not entangled with $[x=1;y=2]$.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Concrete Model}
+
+\textbf{Example:} $\{[x=1;y=1] \sim [x=1;y=2] \sim [x=2;y=1]\}$ represents the model:
+
+% https://tikzcd.yichuanshen.de/#N4Igdg9gJgpgziAXAbVABwnAlgFyxMJZABgBoBGAXVJADcBDAGwFcYkQAPAAgF4vyQAX1LpMufIRTkK1Ok1bsOPAExCRIDNjwEiZZbIYs2iEAE8eA4aK0Si0-TUMKT51VY1jtkkqWIH5xiAAOkEwALZoOKZwMDhq1uI6KGQAzP5GihYA3OaW6pqJ3tJpjgGZ5Dkq8R42ScjKpCVyGSZKypV5CV5EDVSlLZw8KdUF3SgNDs3OZkMjnrYoKY3p022VbrIwUADm8ESgAGYAThBhSACsNDgQSABsNAAWMPRQ7JBgbO7Hp3dXN4gAdkez1eJnen3U3zOiDIIGuSGkICeLzeBAhhxO0IacP+SyRINRHyElEEQA
+\begin{tikzcd}
+    \emptyset                  &                            &         &         \\
+    x = 1 \arrow[r, no head]   & x=2                        & x=3     &   ...      \\
+    y=1 \arrow[r, no head]     & y=2                        & y=3     &   ...      \\
+    x=1;y=1 \arrow[r, no head] & x=1;y=2 \arrow[r, no head] & x=2;y=1 & x=2;y=2 & ...
+    \end{tikzcd}
+
+    \textbf{Intuition:} A concrete model $W$ represents testing (computing reachability of) a program with a set of configurations in $W$. This representation is designed for the denotation of type contexts.
+\end{frame}
+
+
+\begin{frame}[fragile]
+    \frametitle{Type and Type Context}
+
+\textbf{Bunched Type / Implication:} There is only one model (i.e., $M_\text{memory}$), a context $\Gamma$ is denoted as a set of worlds. A property holds when it is valid in all worlds. The following judgement holds:
+\begin{align*}
+    (P, Q) * R \vdash P * R 
+\end{align*}\noindent
+when \textbf{for all} worlds $w$, $w \models (P, Q) * R$ implies $w \models P * R$.
+
+\textbf{Problem:} The type context contains both over- and under-approximation. How can we denote them in the concrete model?
+
+\textbf{Solution:} A type context is denoted as a set of \textbf{models}; the property holds in a model when there \textbf{exists} a world that makes the property valid.
+\begin{itemize}
+    \item A property $\phi$ holds in a model $M$ iff $\exists w \in M. w \models \phi$.
+    \item $\Gamma \vdash \phi$ iff $\forall M \in \denot{\Gamma}. M \models \phi$.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Type and Type Context}
+
+\textbf{Examples:} Consider the following type context ($\sep$ case is trivial):
+\begin{align*}
+    x{:}\ort{\Int}{1 \leq \vnu \leq 2}, y{:}\urt{\Int}{\vnu = x \lor \vnu = x + 1}
+\end{align*}\noindent
+Can be denoted as the following models:
+\begin{itemize}
+    \item $\{[x=1;y=1] \sim [x=1;y=2]\}$
+    \item $\{[x=2;y=2] \sim [x=2;y=3]\}$
+\end{itemize}
+We require that for all models above, there exists a world that makes the type judgement valid.
+
+\textbf{Intuition:} The assignment of $x$ is $1$ and $2$ in these two models, thus it considers all possible assignments of $x$. In each model, we have freedom to choose $y$ to be $x$ or $x + 1$ according to the entanglement relation $\sim$.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Type and Type Context}
+
+\textbf{Examples:} Consider the following type context:
+\begin{align*}
+    x{:}\urt{\Int}{1 \leq \vnu \leq 2}, y{:}\urt{\Int}{\vnu = 3 \lor \vnu = 4}
+\end{align*}\noindent
+Can be denoted as the following models:
+\begin{itemize}
+    \item $\{[x=1;y=3] \sim [x=2;y=4]\}$
+    \item $\{[x=1;y=4] \sim [x=2;y=3]\}$
+    \item $\{[x=1;y=3] \sim [x=1;y=4] \sim [x=2;y=3]\}$, or missing one of the other worlds.
+    \item $\{[x=1;y=3] \sim [x=1;y=4] \sim [x=2;y=3] \sim [x=2;y=4]\}$
+\end{itemize}
+We require that for all models above, there exists a world that makes the type judgement valid.
+
+\textbf{Intuition:} The data-dependent case is similar.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Type and Type Context}
+
+\textbf{Examples:} A more complicated case:
+\begin{align*}
+    &x{:}\urt{\Int}{1 \leq \vnu \leq 2} \sep 
+    \\&(y{:}\ort{\Int}{x \leq \vnu \leq x + 2}, z{:}\urt{\Int}{\vnu = x + y \lor \vnu = x - y})
+\end{align*}\noindent
+Can be denoted as the following models:
+{\small
+\begin{itemize}
+    \item $M_1: \{[x=1;y=1;z=1] \sim [x=1;y=1;z=0] \sim  [x=2;y=1;z=3]  \sim [x=2;y=1;z=1] \}$
+    \item $M_2: \{[x=1;y=2;z=3] \sim [x=1;y=2;z=-1] \sim  [x=2;y=3;z=5]  \sim [x=2;y=3;z=-1] \}$
+    \item $M_3: \{[x=1;y=3;z=4] \sim [x=1;y=3;z=-2] \sim  [x=2;y=4;z=6]  \sim [x=2;y=4;z=-2] \}$
+\end{itemize}}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Type Checking}
+    
+        \begin{minted}{ocaml}
+            let p x =
+                let y1 = f x in
+                let y2 = g x in
+                y2
+        \end{minted}
+
+Now we type check the function $p$ against the type $\urt{\Int}{\top}\wand\urt{\Int}{\vnu > 0}$ under a type context $\Gamma$.
+    
+    We assume $f$ and $g$ are over-typed.
+    \begin{itemize}
+        \item $\Gamma \vdash f : \urt{\Int}{\vnu > 0}\sarr\urt{\Int}{\vnu > 0}$
+        \item $\Gamma \vdash g : \ort{\Int}{\top}\sarr\urt{\Int}{\vnu > 0}$
+    \end{itemize}
+
+One possible model of $\Gamma$ is:
+\begin{itemize}
+    \item $M_1: \{[f=\lambda x.x; g = \lambda x.\Code{posGen()}]\}$
+\end{itemize}
+If they are under-typed, it will be a different model.
+\begin{itemize}
+    \item $M_2: \{[f=\lambda x.x; g = \lambda x.\Code{posGen()}] \sim [f=\lambda x.x; g = \lambda x-1.\Code{posGen()}] \sim [f=\lambda x.x-1; g = \lambda x.\Code{intGen()}] \sim ...\}$
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Type Checking}
+    
+    We have:
+    \\[.8em]
+    \begin{prooftree}
+        \hypo{
+            \Gamma, x{:}\urt{\Int}{\top} \vdash \zlet{y1}{f\;x}{...} : \urt{\Int}{\vnu > 0}
+        }
+        \infer1[TFun]{
+            \vdash p : x{:}\urt{\Int}{\top} \sarr \urt{\Int}{\vnu > 0} 
+        }
+    \end{prooftree}
+    \\[.8em]
+
+Then the possible models of $\Gamma, x{:}\urt{\Int}{\top}$ are:
+\begin{itemize}
+    \item $\{[f=\lambda x.x; g = \lambda x.\Code{posGen()}; x=1] \sim [f=\lambda x.x; g = \lambda x.\Code{posGen()}; x=2] \sim ...\}$
+    \item $\{[f=\lambda x.x-1; g = \lambda x.\Code{posGen()}; x=1] \sim [f=\lambda x.x-1; g = \lambda x.\Code{posGen()}; x=2] \sim ...\}$
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Type Checking}
+    
+After the first application,
+    \\[.8em]
+    \begin{prooftree}
+        \hypo{
+            \Gamma, ?? \vdash \zlet{y2}{g\;x}{...} : \urt{\Int}{\vnu > 0}
+        }
+        \infer1[TFun]{
+            \Gamma, x{:}\urt{\Int}{\top} \vdash \zlet{y1}{f\;x}{...} : \urt{\Int}{\vnu > 0}
+        }
+    \end{prooftree}
+    \\[.8em]
+
+In the algebraic view, the actual possible models are:
+\begin{itemize}
+    \item $\{[f=\lambda x.x; g = \lambda x.\Code{posGen()}; x=1; y1=1] \sim [f=\lambda x.x; g = \lambda x.\Code{posGen()}; x=2; y1=2] \sim ...\}$
+    \item $\{[f=\lambda x.x-1; g = \lambda x.\Code{posGen()}; x=1; y1=0] \sim [f=\lambda x.x-1; g = \lambda x.\Code{posGen()}; x=2; y1=1] \sim ...\}$
+\end{itemize}
+
+\textbf{Precise type:} $\Gamma, x{:}\urt{\Int}{\vnu > 0}, y1{:}\urt{\Int}{\vnu = f\;x}$, which refers to the function $f$.
+
+However, this cannot be expressed by our type context. The relation between $x$ and $y1$ should be consistent with the value of $f$ (we do not have a way to precisely constrain a function reference).
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Type Checking}
+
+    In the algebraic view, the actual possible models are:
+    \begin{itemize}
+        \item $\{[f=\textcolor{red}{\lambda x.x}; g = \lambda x.\Code{posGen()}; \textcolor{red}{x=1; y1=1}] \sim [f=\textcolor{red}{\lambda x.x}; g = \lambda x.\Code{posGen()}; \textcolor{red}{x=2; y1=2}] \sim ...\}$
+        \item $\{[f=\textcolor{blue}{\lambda x.x-1}; g = \lambda x.\Code{posGen()}; \textcolor{blue}{x=1; y1=0}] \sim [f=\textcolor{blue}{\lambda x.x-1}; g = \lambda x.\Code{posGen()}; \textcolor{blue}{x=2; y1=1}] \sim ...\}$
+    \end{itemize}
+    However, this cannot be expressed by our type context. The relation between $x$ and $y1$ should be consistent with the value of $f$.
+
+% \\[.8em]
+    
+\textbf{Potential representation}: $\Gamma, x{:}\urt{\Int}{\vnu > 0}, y1{:}\urt{\Int}{\vnu > 0}$, which will additionally allow more models:
+\begin{itemize}
+    \item $\{[f=\textcolor{blue}{\lambda x.x-1}; g = \lambda x.\Code{posGen()}; \textcolor{red}{x=1; y1=1}] \sim [f=\textcolor{blue}{\lambda x.x-1}; g = \lambda x.\Code{posGen()}; \textcolor{red}{x=2; y1=2}] \sim ...\}$
+\end{itemize}
+It is sound, but incomplete.
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Type Checking}
+
+    In the algebraic view, the actual possible models are:
+    \begin{itemize}
+        \item $\{[f=\textcolor{red}{\lambda x.x}; g = \lambda x.\Code{posGen()}; \textcolor{red}{x=1; y1=1}] \sim [f=\textcolor{red}{\lambda x.x}; g = \lambda x.\Code{posGen()}; \textcolor{red}{x=2; y1=2}] \sim ...\}$
+        \item $\{[f=\textcolor{blue}{\lambda x.x-1}; g = \lambda x.\Code{posGen()}; \textcolor{blue}{x=1; y1=0}] \sim [f=\textcolor{blue}{\lambda x.x-1}; g = \lambda x.\Code{posGen()}; \textcolor{blue}{x=2; y1=1}] \sim ...\}$
+    \end{itemize}
+    However, this cannot be expressed by our type context. The relation between $x$ and $y1$ should be consistent with the value of $f$.
+    
+    \textbf{More Imprecise representation}: $\Gamma, x{:}\ort{\Int}{\vnu > 0}, y1{:}\urt{\Int}{\vnu > 0}$, which will additionally allow more models:
+    \begin{itemize}
+        \item $\{[f=\textcolor{blue}{\lambda x.x-1}; g = \lambda x.\Code{posGen()}; \textcolor{red}{x=1; y1=1}] \sim [f=\textcolor{blue}{\lambda x.x-1}; g = \lambda x.\Code{posGen()}; \textcolor{red}{\textcolor{orange}{x=1}; y1=2}] \sim ...\}$
+    \end{itemize}
+
+    \textbf{Note:} Although flipping the modality of types during function application sounds interesting, I find it is very imprecise.
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Type Checking}
+    
+After the first application,
+    \\[.8em]
+    \begin{prooftree}
+        \hypo{
+            \Gamma, ?? \vdash y2 : \urt{\Int}{\vnu > 0}
+        }
+        \infer1[TFun]{
+            \Gamma, x{:}\urt{\Int}{\vnu > 0}, y1{:}\urt{\Int}{\vnu > 0} \vdash  \zlet{y2}{g\;x}{y2} : \urt{\Int}{\vnu > 0}
+        }
+    \end{prooftree}
+    \\[.8em]
+
+In the algebraic view, the actual possible models are:
+\begin{itemize}
+    \item $\{[f=\lambda x.x; g = \lambda x.\Code{posGen()}; x=1; y1=1; y2=1] \sim [f=\lambda x.x; g = \lambda x.\Code{posGen()}; x=1; y1=1; y2=2] \sim ...\}$
+\end{itemize}
+The value of $y2$ is totally independent from other assignments, thus we have:
+
+\begin{align*}
+&(\Gamma, x{:}\urt{\Int}{\vnu > 0}, y1{:}\urt{\Int}{\vnu > 0}) \sep y2{:}\urt{\Int}{\vnu > 0} 
+\\&\vdash y2 : \urt{\Int}{\vnu > 0}
+\end{align*}
+
+\textbf{Note:} If the returned value is $x$ or $y1$, the type checking also succeeds; we only require that $x$ and $y1$ are dependent. Note that $x$ can no longer have type $\urt{\Int}{\top}$, since $\tau_f$ does not guarantee that $f\;0$ still terminates.
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Model Composition}
+
+For models represented as sets of worlds,
+\begin{itemize}
+    \item $W * W'$ means
+    \begin{align*}
+        W * W' \doteq \{ w \cup w' ~|~ w \in W \land w' \in W'\}
+    \end{align*}
+    \item $W[x\mapsto v]$ means
+    \begin{align*}
+        W[x\mapsto v] \doteq \{ w[x\mapsto v] ~|~ w \in W \}
+    \end{align*}
+    \item $W , W'$ produces a set of models:
+    \begin{align*}
+        &W \in (W_1 , W_2) \iff \Code{Dom}(W) = \Code{Dom}(W_1) \cup \Code{Dom}(W_2) \land
+        \\&\Code{Proj}(\Code{Dom}(W_1), W) = W_1 \land \Code{Proj}(\Code{Dom}(W_2), W) = W_2 
+    \end{align*}
+\end{itemize}
+
+Empty model: $\{\emptyset\}$, a single world with an empty assignment.
+
+Singleton world model: $\{[x = v]\}$.
+
+Singleton empty world model: $M_0 \doteq \{ w_0 \}$, which in our case seems equal to $\{\emptyset\}$. 
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Type Denotation}
+
+\textbf{Base Types:}
+\begin{align*}
+    \denot{\ort{b}{\phi}}_M &\doteq \{ e ~|~ \forall v. M \models \mstep{e}{v} \implies \phi[\vnu \mapsto v] \} \\
+    \denot{\urt{b}{\phi}}_M &\doteq \{ e ~|~ \forall v. \phi[\vnu \mapsto v] \implies M \models \mstep{e}{v} \}
+\end{align*}
+
+\textbf{Function Types:}
+\begin{align*}
+    \denot{x{:}\tau_x \sarr \tau}_M &\doteq \{ e ~|~ \forall v_x \in \denot{\tau_x}_M. (e\;x) \in \denot{\tau}_{M[x\mapsto v_x]} \} \\
+    \denot{x{:}\tau_x \wand \tau}_M &\doteq \{ e ~|~ \forall M'.\; x\in\denot{\tau_x}_{M*M'}. (e\;x) \in \denot{\tau}_{M * M'} \}
+\end{align*}
+
+\textbf{Intuition:} The denotation of $\wand$ is quantified over models $M'$ instead of a value.
+
+\textbf{Missing Piece:} We assume $\urt{b}{\phi} \doteq \boxtimes \ort{b}{\phi}$, and there is a missing under-arrow type $\boxtimes(x{:}\tau_x \sarr \tau)$.
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Type Denotation}
+
+\textbf{Type Contexts}
+
+\begin{align*}
+    &\denot{\emptyset} \doteq \{M_0\} \\
+    &\denot{\Code{emp}} \doteq \{M_0\} \\
+    &\denot{x{:}\ort{b}{\phi}} \doteq \{ \{[x\mapsto v]\} ~|~ \phi(v) \} \\
+    &\denot{x{:}\urt{b}{\phi}} \doteq \{ \{[x\mapsto v] ~|~ \phi(v) \} \} \\
+    &\denot{\Gamma_1 \sep \Gamma_2} \doteq \{ M_1 * M_2 ~|~ M_1 \in \denot{\Gamma_1} \land M_2 \in \denot{\Gamma_2} \} \\
+    &\denot{\Gamma_1 , \Gamma_2} \doteq \{ M ~|~ M_1 \in \denot{\Gamma_1} \land M_2 \in \denot{\Gamma_2} \land M \in (M_1 , M_2) \} \\
+\end{align*}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Comparison with Probabilistic Separation Logic}
+
+\textbf{PSL:} PSL is only based on S4 (same as SL). The internal structure of equivalent worlds is hidden as one world. We cannot shift between overapproximation and underapproximation.
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Next Step}
+
+\textbf{Higher-order case?} Persistence of function parameters? I will dive into Iris more deeply next week.
+
+\end{frame}
