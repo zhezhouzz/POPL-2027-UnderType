@@ -1,0 +1,283 @@
+\newcommand{\compable}[2]{#1 \circ #2 \downarrow}
+\begin{frame}[fragile]
+    \frametitle{BI Resource Algebra}
+
+\begin{definition}[BI Resource Algebra (Pym 2004)]
+A BI Resource Algebra is a tuple $(M, \circ, \epsilon, \sqsubseteq)$ where:
+\begin{itemize}
+    \item $M$ is a set of worlds (resources).
+    \item $\circ: M \times M \rightharpoonup M$ is a \textbf{partial} binary operation. 
+          We write $\compable{m_1}{m_2}$ if the composition is defined.
+    \item $(M, \circ, \epsilon)$ forms a \textbf{partial commutative monoid}:
+    \begin{itemize}
+        \item \textit{Unit:} $\forall m \in M, \epsilon \circ m = m \circ \epsilon = m$ (and always defined).
+        \item \textit{Commutativity:} $m_1 \circ m_2 = m_2 \circ m_1$ (if one side is defined).
+        \item \textit{Associativity:} $(m_1 \circ m_2) \circ m_3 = m_1 \circ (m_2 \circ m_3)$ (if one side is defined).
+    \end{itemize}
+    \item $\sqsubseteq$ is a pre-order on $M$ satisfying \textbf{bifunctoriality}:
+    \begin{align*}
+    &m_1 \sqsubseteq m_1' \land m_2 \sqsubseteq m_2' \land \compable{m_1'}{m_2'} \implies 
+        (m_1 \circ m_2 \sqsubseteq m_1' \circ m_2')
+    \end{align*}
+\end{itemize}
+\end{definition}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Model: Base}
+
+\begin{definition}[Substitution]
+    A substitution $\sigma: \Code{Var} \rightharpoonup \Code{Value}$ is a partial function (mapping) from variables to resources.
+\end{definition}
+
+\begin{definition}[World]
+    A world $m = (\Sigma^+, \Sigma^-)$ consists of two set of substitions $\Sigma^+$ and $\Sigma^-$.
+    \begin{itemize}
+        \item $\Sigma^+$ is the set of substitutions that must happens.
+        \item $\Sigma^-$ is the set of substitutions that must not happens.
+    \end{itemize}
+\end{definition}
+
+\textbf{Intuition:} For worlds 
+\begin{itemize}
+    \item $m_1 = (\{[x\mapsto 1], [x\mapsto 2]\}, \{[x\mapsto 1,y\mapsto 3]\})$.
+    \item $m_2 = (\{[y\mapsto 4], [y\mapsto 5]\}, \emptyset)$.
+    \item $m_2' = (\{[y\mapsto 3], [y\mapsto 4]\}, \emptyset)$.
+    \item $\compable{m_1}{m_2}$ since all combinations are allowed; $\neg\compable{m_1}{m_2'}$ since the combination $[x\mapsto 1,y\mapsto 3]$ is not allowed by $m_1$.
+\end{itemize}
+        
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Model: Well-formedness}
+
+\textbf{Intuition:} Not all worlds are well-formed, for example, $(\{[x\mapsto 1]\}, \{[x\mapsto 1]\})$ whose positive substitution $[x\mapsto 1]$ is disallowed by its negative substitutions.
+
+\begin{definition}[Well-formedness]
+    A world $(\Sigma^+, \Sigma^-)$ is well-formed (i.e., $\wfvdash (\Sigma^+, \Sigma^-)$) iff:
+    \begin{itemize}
+        \item (1) $\forall \sigma_1\;\sigma_2 \in \Sigma^+.\Code{Dom}(\sigma_1) = \Code{Dom}(\sigma_2)$.
+        \item (2) $\forall \sigma\in \Sigma^+.\forall \sigma'\in \Sigma^-. \sigma' \subseteq \sigma \impl \sigma' \notin \Sigma^-$.
+        \item (3) $\forall \sigma. \Code{Dom}(\sigma) = \Code{Dom}(\Sigma^+) \implies \sigma \in \Sigma^+ \lor \sigma \in \Sigma^-$.
+    \end{itemize}
+\end{definition}
+
+\textbf{Intuition for (2):} If a substitution $[x\mapsto 1]$ is disallowed, then of course $[x\mapsto 1;y\mapsto 2]$ should be also be disallowed. On the other hand, if a substitution $\sigma$ is allowed, all subset of it should also be allowed.
+
+\textbf{Intuition for (3):} We want a substitution $\sigma$ be very clear if it is allowed or disallowed for the current domain (important for define $\sqsubseteq$).
+        
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Model: Well-formedness}
+
+\textbf{Omit the redundent part: } For a world $(\Sigma^+, \Sigma^-)$, the space that must be clear can be additionally be smaller as:
+\begin{align*}
+    O(\Sigma^+) \doteq \{ \sigma ~|~ \Code{Dom}(\sigma) = \Code{Dom}(\Sigma^+) \land \forall x. \exists \sigma' \in \Sigma^+. \sigma(x) = \sigma'(x) \}
+\end{align*}\noindent
+That is the space contains all substitutions with ``seen'' assignments, or we believe all unseen assignments are included in $\Sigma^-$. 
+
+\textbf{Examples:} For worlds 
+\begin{itemize}
+    \item $m_1 = (\{[x\mapsto 1], [x\mapsto 2]\}, \{[x\mapsto 1,y\mapsto 3]\})$, where we omit unseen assignments $[x\mapsto 3]$, $[x\mapsto 4]$ ...
+    \item $m_2 = (\{[x\mapsto 1;y\mapsto 3], [x\mapsto 2;y\mapsto 4]\}, \{[x\mapsto 1;y\mapsto 4], [x\mapsto 2;y\mapsto 3]\})$, where we omit unseen assignments $[x\mapsto 0;y\mapsto -8]$, $[x\mapsto 1;y\mapsto -8]$ ...
+\end{itemize}
+        
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Model: Composition}
+
+\textbf{Intuition:} When do composition, we not only compute the product of the corresponding positive substitutions, and also accumulate the negative substitutions.
+
+\begin{definition}[Composition]
+    The composition of two worlds $m_1 = (\Sigma_1^+, \Sigma_1^-)$ and $m_2 = (\Sigma_2^+, \Sigma_2^-)$ is defined as:
+    \begin{align*}
+    m_1 \circ m_2 = (\Sigma_1^+ \times \Sigma_2^+, \Sigma_1^- \cup \Sigma_2^-)
+    \end{align*}\noindent
+    where $\Sigma_1 \times \Sigma_2$ is defined as pointwise union.
+    \begin{align*}
+    \Sigma_1 \times \Sigma_2 = \{ \sigma_1 \cup \sigma_2 ~|~ \sigma_1 \in \Sigma_1 \land \sigma_2 \in \Sigma_2 \}
+    \end{align*}\noindent
+    $\compable{m_1}{m_2}$ iff $\wfvdash m_1 \circ m_2$ and $\Code{Dom}(m_1.\Sigma^+) \cap \Code{Dom}(m_2.\Sigma^+) = \emptyset$.
+\end{definition}
+
+\textbf{Lemma:} Easy know that $\wfvdash m_1 \circ m_2$ implies $\wfvdash m_1$ and $\wfvdash m_2$.
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Model: Unit}
+
+\textbf{Intuition:} According to the definition of composition, a unit resource should has positive unit for $\Sigma \times \Sigma$ and negative unit for $\Sigma \cup \Sigma$.
+
+\begin{definition}[Unit]
+    The unit resource is defined as:
+    \begin{align*}
+    \epsilon = (\{\emptyset\}, \emptyset)
+    \end{align*}\noindent
+\end{definition}
+
+\textbf{Lemma:} Easy know that $\wfvdash  (\{\emptyset\}, \emptyset)$.
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Model: Partial Commutative Monoid}
+
+\begin{lemma}[unit law]
+    For all world $m$, we have $m \circ \epsilon = \epsilon \circ m = m$.
+\end{lemma}
+Note that $\{\emptyset\} \times \Sigma = \Sigma$ and $\Sigma \cup \emptyset = \Sigma$.
+
+\begin{lemma}[associativity]
+    For all worlds $m_1, m_2, m_3$, we have $(m_1 \circ m_2) \circ m_3 = m_1 \circ (m_2 \circ m_3)$.
+\end{lemma}
+Note that $\times$ and $\cup$ are associative.
+
+\begin{lemma}[commutativity]
+    For all worlds $m_1, m_2$, we have $m_1 \circ m_2 = m_2 \circ m_1$.
+\end{lemma}
+Note that $\times$ and $\cup$ are commutative.
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Model: pre-order}
+
+\textbf{Intuition:} We consider positive substitutions first. $\emptyset \sqsubseteq \{[x\mapsto 1]\} \sqsubseteq \{[x\mapsto 1;y\mapsto 2], [x\mapsto 1;y\mapsto 3]\}$.
+
+\begin{definition}[Positive Subset Relation]
+$\Sigma_1 \sqsubseteq^+ \Sigma_2$ iff
+$\forall \sigma_1 \in \Sigma_1, \exists \sigma_2 \in \Sigma_2. \sigma_1 \subseteq \sigma_2$
+\end{definition}
+
+\textbf{Intuition:} If $m$ disallow $\{[x\mapsto 1]\}$, it also disallow $\{[x\mapsto 1;y\mapsto 2], [x\mapsto 1;y\mapsto 3]\}$.
+
+\textbf{Intuition:} If $m$ disallow $\{[x\mapsto 1],[x\mapsto 2]\}$, it also disallow $\{[x\mapsto 1]\}$.
+
+\begin{definition}[Negative Subset Relation]
+    $\Sigma_1 \sqsubseteq^- \Sigma_2$ iff
+    $\forall \sigma_2 \in \Sigma_2, \exists \sigma_1 \in \Sigma_1. \sigma_1 \subseteq \sigma_2$
+\end{definition}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Model: pre-order}
+
+\begin{definition}[pre-order]
+    For all worlds $m_1 = (\Sigma_1^+, \Sigma_1^-)$ and $m_2 = (\Sigma_2^+, \Sigma_2^-)$, we have $m_1 \sqsubseteq m_2$ iff
+    \begin{align*}
+    \Sigma_1^+ \sqsubseteq^+ \Sigma_2^+ \land \Sigma_2^- \sqsubseteq^- \Sigma_1^-
+    \end{align*}\noindent
+\end{definition}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Model: pre-order}
+
+\textbf{Examples:} For worlds 
+    \begin{itemize}
+        \item $m = (\{[x\mapsto 1;y\mapsto 3], [x\mapsto 2;y\mapsto 4]\}, \{[x\mapsto 1;y\mapsto 4], [x\mapsto 2;y\mapsto 3]\})$.
+        \item $m_1 = (\{[x\mapsto 1], [x\mapsto 2]\}, \{[x\mapsto 1;y\mapsto 4], [x\mapsto 2;y\mapsto 3]\})$.
+        \item $m_2 = (\{[x\mapsto 1], [x\mapsto 2]\}, \{[y\mapsto 4], [y\mapsto 3]\})$.
+        \item $m_3 = (\{[x\mapsto 1], [x\mapsto 2]\}, \{[y\mapsto 4], [y\mapsto 3], [y\mapsto 5]\})$.
+        \item We have $m_3 \sqsubseteq m_2 \sqsubseteq m_1 \sqsubseteq m$.
+\end{itemize}
+
+\textbf{Third Constraint in Well-formedness:} If we don't have the third constraint, then
+\begin{itemize}
+    \item $m' = (\{[x\mapsto 1;y\mapsto 3], [x\mapsto 2;y\mapsto 4]\}, \emptyset)$ can be valid world.
+    \item Ideally, we want to say $[x\mapsto 1;y\mapsto 4]$ is not covered in this world, since it is not included in the positive substitutions.
+    \item $m_1 = (\{[y\mapsto 3], [y\mapsto 4]\}, \emptyset\}) \sqsubseteq m$.
+    \item Here $m_1$ ``forgets'' that $[x\mapsto 1;y\mapsto 4]$ cannot be covered.
+    \item Assume $y = f\;x$, we don't want to forget $y$ is dependent on $x$.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Model: Bifunctoriality}
+
+\begin{lemma}[Monotonicity of Product]
+    $\Sigma_1 \sqsubseteq \Sigma_1' \land \Sigma_2 \sqsubseteq \Sigma_2' \impl \Sigma_1 \times \Sigma_2 \sqsubseteq \Sigma_1' \times \Sigma_2'$.
+\end{lemma}
+
+\begin{lemma}[Monotonicity of Union]
+    $\Sigma_1 \sqsubseteq \Sigma_1' \land \Sigma_2 \sqsubseteq \Sigma_2' \impl \Sigma_1 \cup \Sigma_2 \sqsubseteq \Sigma_1' \cup \Sigma_2'$.
+\end{lemma}
+
+\begin{lemma}[Downward Closure of Well-formedness]
+    $m_1 \sqsubseteq m_1' \land m_2 \sqsubseteq m_2' \land \compable{m_1'}{m_2'} \impl \compable{m_1}{m_2}$.
+\end{lemma}
+Let $m_1 \circ m_2 = (\Sigma^+, \Sigma^-)$ and $m_1' \circ m_2' = (\Sigma'^+, \Sigma'^-)$, we know $\Sigma^+ \sqsubseteq^+ \Sigma'^+$ and $\Sigma'^- \sqsubseteq^- \Sigma^-$.
+
+\begin{lemma}[bifunctoriality]
+    $m_1 \sqsubseteq m_1' \land m_2 \sqsubseteq m_2' \land \compable{m_1'}{m_2'} \impl m_1 \circ m_2 \sqsubseteq m_1' \circ m_2'$.
+\end{lemma}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Bunched Implication}
+
+\begin{definition}[Bunched Implication] The syntax of bunched implication is defined as:
+    \begin{align*}
+    \phi \doteq& \top ~|~ \bot ~|~ \phi \land \phi ~|~ \phi \lor \phi ~|~ \phi \impl \phi ~|~ \phi * \phi ~|~ \phi \wand \phi ~|~ \Code{emp}
+    \\&~|~ \diamond_5 \phi ~|~ \Box_5 \phi ~|~ \boxtimes_5 \phi ~|~ \Code{Pred}
+    \end{align*}\noindent
+\end{definition}
+
+\textbf{Intuition:} In each worlds, we only consider the positive substitutions.
+\begin{itemize}
+    \item $\diamond_5 \phi$ means there exists a positive substitution that satisfies $\phi$.
+    \item $\Box_5 \phi$ means all positive substitutions satisfy $\phi$.
+    \item $\boxtimes_5 \phi$ means all substitutions satisfy $\phi$ are included in the positive substitutions of the world.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Bunched Implication Semantics}
+
+\begin{definition}[Bunched Implication Semantics]
+    The semantics of bunched implication is defined as:
+    \begin{align*}
+    m \models \Code{emp} &\text{ iff } m \sqsubseteq \epsilon
+    \\m \models \phi_1 * \phi_2 &\text{ iff } \exists m_1, m_2. m \sqsubseteq m_1 \circ m_2 \text{ and } m_1 \models \phi_1 \text{ and } m_2 \models \phi_2
+    \\m \models \phi_1 \wand \phi_2 &\text{ iff } \forall m'. m' \models \phi_1 \text{ and } \compable{m'}{m} \impl m' \circ m \models \phi_2
+    \\(\Sigma^+, \Sigma^-) \models \Code{Pred} &\text{ iff } \forall \sigma \in \Sigma^+. \sigma(\Code{Pred})
+    \\(\Sigma^+, \Sigma^-) \models \diamond_5 \phi &\text{ iff } \exists \sigma \in \Sigma^+. (\sigma, \Sigma^-) \models \phi
+    \\(\Sigma^+, \Sigma^-) \models \Box_5 \phi &\text{ iff } \forall \sigma \in \Sigma^+. (\sigma, \Sigma^-) \models \phi
+    \\(\Sigma^+, \Sigma^-) \models \boxtimes_5 \phi &\text{ iff } \{\sigma ~|~ (\sigma, \Sigma^-) \models \phi \land \Code{Dom}(\sigma) = \Code{FV}(\phi) \} \sqsubseteq \Sigma^+
+    \end{align*}\noindent
+\end{definition}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Bunched Implication Semantics}
+
+\textbf{Examples:} Consider a world $m = (\{[x\mapsto 1;y\mapsto 3], [x\mapsto 2;y\mapsto 4]\}, \{[x\mapsto 1;y\mapsto 4], [x\mapsto 2;y\mapsto 3]\})$, we have:
+\begin{itemize}
+    \item $m \models \diamond_5 (x = 1)$.
+    \item $m \not\models \Box_5 (x = 1)$.
+    \item $m \models \boxtimes_5 (x = 1)$.
+    \item $m \models \boxtimes_5 (1 \leq x \leq 2)$.
+    \item $m \models \boxtimes_5 (3 \leq y \leq 4)$.
+    \item $m \models \boxtimes_5 (1 \leq x \leq 2) \land \boxtimes_5 (3 \leq y \leq 4)$.
+    \item $m \not\models \boxtimes_5 (1 \leq x \leq 2) * \boxtimes_5 (3 \leq y \leq 4)$.
+\end{itemize}
+
+\begin{definition}[Proof Judgement]
+We have:
+    \begin{align*}
+    &\vdash \phi \text{ iff } \forall m. \wfvdash m \impl m \models \phi
+    \\&\phi_1 \vdash \phi_2 \text{ iff } \forall m. \wfvdash m \land m \models \phi_1 \impl m \models \phi_2
+    \end{align*}\noindent
+\end{definition}
+
+\end{frame}
