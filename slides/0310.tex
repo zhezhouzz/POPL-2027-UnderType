@@ -178,13 +178,13 @@ We try to build a unified logic over this algebra.
 \begin{frame}[fragile]
     \frametitle{Denotation}
 
-\begin{definition}[Denotation] We define $\denot{\phi}$ as the set of resources that model $\phi$.
+\begin{definition}[Denotation] We define $\denot{\phi}$ as the set of resources that model $\phi$ (we assume all resource has the same domain with the properties).
 \begin{itemize}
     \item $\denot{\upperB\phi} = \bigcup_{m \in \denot{\phi}} \{ m' ~|~ m' \subseteq m \}$
     \item $\denot{\lowerB\phi} = \bigcup_{m \in \denot{\phi}} \{ m' ~|~ m \subseteq m' \}$
     \item $\denot{\phi_1 \land \phi_2} = \denot{\phi_1} \cap \denot{\phi_2}$, $\denot{\phi_1 \lor \phi_2} = \denot{\phi_1} \cup \denot{\phi_2}$
     \item $\denot{\phi_1 \implies \phi_2} = \denot{\phi_1} \subseteq \denot{\phi_2}$
-    \item $\denot{\true} = \{\textbf{1}\}$;  $\denot{\false} = \{\emptyset\}$
+    \item $\denot{\true} = M$;  $\denot{\false} = \{\mathbf{0}\}$
     \item $\denot{\phi_1 * \phi_2} = \{ m_1 \times m_2 ~|~ m_1 \in \denot{\phi_1} \land m_2 \in \denot{\phi_2} \}$
     \item $\denot{\phi_1 \oplus \phi_2} = \{ m_1 + m_2 ~|~ m_1 \in \denot{\phi_1} \land m_2 \in \denot{\phi_2} \}$
     \item $\denot{\phi_1 \wand \phi_2} = \{ m ~|~ \forall m_1 \in \denot{\phi_1}.\ m_1 \times m \in \denot{\phi_2} \}$
@@ -317,7 +317,7 @@ Consider the mixed case:
 \begin{proof}
     \begin{itemize}
         \item For all possible $m$, we have $m \subseteq \denot{p} \cup m$, and $\denot{p} \cup m \models \lowerB p$, thus $m \models \upperB(\lowerB p \lor \upperB q)$.
-        \item For all possible $m$, we have $m \subseteq \denot{q} \cap m$, and $\denot{q} \cap m \models \upperB q$, thus $m \models \lowerB(\lowerB p \lor \upperB q)$.
+        \item For all possible $m$, we have $\denot{q} \cap m \subseteq m$, and $\denot{q} \cap m \models \upperB q$, thus $m \models \lowerB(\lowerB p \lor \upperB q)$.
     \end{itemize}
 \end{proof}
 
