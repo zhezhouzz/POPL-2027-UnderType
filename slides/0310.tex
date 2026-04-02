@@ -1,6 +1,19 @@
 \newcommand{\substxy}[3]{\textcolor{#1}{[x\mapsto {#2}; y\mapsto {#3}]}}
 \newcommand{\upperB}{\boxed{o}}
 \newcommand{\lowerB}{\boxed{u}}
+
+\begin{frame}[fragile]
+    \frametitle{Preliminaries}
+
+\begin{definition}[Substitution] 
+    A substitution $\sigma: \Code{Var} \rightharpoonup \Code{Value}$ is a partial function (mapping) from variables to resources.
+\end{definition}
+
+\begin{definition}[Piontwise Union] $m_1 \times m_2 \doteq \{ \sigma_1 \cup \sigma_2 ~|~ \sigma_1 \in m_1 \land \sigma_2 \in m_2 \}$.
+\end{definition}
+    
+\end{frame}
+
 \begin{frame}[fragile]
     \frametitle{Choice Algebra}
 
@@ -15,10 +28,10 @@
         \begin{align*}
             &\Code{Dom}(m_1) \cap \Code{Dom}(m_2) = \emptyset
         \end{align*} 
-        \begin{align*}
-            &\forall \sigma_1 \in m_1, \forall \sigma_2 \in m_2. 
-            \\&\qquad \forall x. x \in \Code{Dom}(\sigma_1) \land x \in \Code{Dom}(\sigma_2) \implies \sigma_1(x) = \sigma_2(x)
-        \end{align*}
+        % \begin{align*}
+        %     &\forall \sigma_1 \in m_1, \forall \sigma_2 \in m_2. 
+        %     \\&\qquad \forall x. x \in \Code{Dom}(\sigma_1) \land x \in \Code{Dom}(\sigma_2) \implies \sigma_1(x) = \sigma_2(x)
+        % \end{align*}
     \end{itemize}
 \end{definition}
     
@@ -76,6 +89,9 @@ We try to build a unified logic over this algebra.
 \begin{frame}[fragile]
     \frametitle{Basic Choice Logic}
 
+\begin{definition}[Atomic Propositions] Atomic proposition $P: M \sarr \Bool$ is a predicate over resources.
+\end{definition}
+
 \begin{definition}[Basic Choice Logic] Basic choice logic has no approximation; everything needs to be precise.
 \end{definition}
 \begin{itemize}
@@ -104,7 +120,6 @@ We try to build a unified logic over this algebra.
         \item $\{\substxy{blue}{0}{1}, \substxy{orange}{1}{0}\} \models x < 2$.
     \end{itemize}
 \end{example}
-
 
 \end{frame}
 
@@ -150,6 +165,25 @@ We try to build a unified logic over this algebra.
 \begin{lemma}[Kripke's Monotonicity]
         $m \leq m'$ and $m \models\phi$ implies $m' \models\phi$.
 \end{lemma}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Pure Propositions}
+
+Assume we have an expressive enough atomic proposition $P: M \sarr \Bool$:
+\begin{align*}
+P \doteq \Code{Atom} ~|~ \Code{Dom}(X) ~|~ P \cap P ~|~ P \cup P ~|~ P \setminus P ~|~ P \times P
+\end{align*}
+where
+\begin{itemize}
+    \item $\Code{Atom}$ is an atomic proposition, e.g., $x < 2$.
+    \item $\Code{Dom}(X)$ make sure all substitutions has the same domain as $X$.
+    \item $P \cap Q$ is the intersection of $P$ and $Q$.
+    \item $P \cup Q$ is the union of $P$ and $Q$.
+    \item $P \setminus Q$ is the difference of $P$ and $Q$.
+    \item $P \times Q$ is the pointwise union of $P$ and $Q$.
+\end{itemize}
 
 \end{frame}
 
@@ -212,7 +246,7 @@ Let $p$ and $q$ be modality-free propositions (constructed from $P$, $\land$, $\
 
 \begin{lemma}[Overapproximation] Consider the modality-free propositions $p$ and $q$.
 \begin{itemize}
-    \item $\upperB p \land \upperB q \dashv\vdash \upperB(p \land q)$, thus $\upperB(\upperB p \land \upperB q) \dashv\vdash \upperB(p \land q)$. 
+    \item $\upperB p \land \upperB q \dashv\vdash \upperB(p \cap q)$, thus $\upperB(\upperB p \land \upperB q) \dashv\vdash \upperB(p \cap q)$. 
     \item $\upperB(\upperB p \lor \upperB q) \dashv\vdash \upperB p \lor \upperB q$.
     \item $\upperB p \implies \upperB q \dashv\vdash \upperB(p \implies q)$, similar to $\land$.
     \item $\upperB \true \dashv\vdash \true$; $\upperB \false \dashv\vdash \false$.
