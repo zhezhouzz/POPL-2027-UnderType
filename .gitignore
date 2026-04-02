@@ -1,4 +1,5 @@
 *.pdf
+!doc/*.pdf
 *.fdb_latexmk
 *.fls
 *synctex.gz
