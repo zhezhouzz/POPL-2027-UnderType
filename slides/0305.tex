@@ -57,9 +57,9 @@ A BI Resource Algebra is a tuple $(M, \circ, \epsilon, \sqsubseteq)$ where:
 \begin{definition}[Well-formedness]
     A world $(\Sigma^+, \Sigma^-)$ is well-formed (i.e., $\wfvdash (\Sigma^+, \Sigma^-)$) iff:
     \begin{itemize}
-        \item (1) $\forall \sigma_1\;\sigma_2 \in \Sigma^+.\Code{Dom}(\sigma_1) = \Code{Dom}(\sigma_2)$.
+        \item (1) $\forall \sigma_1\;\sigma_2 \in \Sigma^+.\Dom{\sigma_1} = \Dom{\sigma_2}$.
         \item (2) $\forall \sigma\in \Sigma^+.\forall \sigma'\in \Sigma^-. \sigma' \subseteq \sigma \impl \sigma' \notin \Sigma^-$.
-        \item (3) $\forall \sigma. \Code{Dom}(\sigma) = \Code{Dom}(\Sigma^+) \implies \sigma \in \Sigma^+ \lor \sigma \in \Sigma^-$.
+        \item (3) $\forall \sigma. \Dom{\sigma} = \Dom{\Sigma^+} \implies \sigma \in \Sigma^+ \lor \sigma \in \Sigma^-$.
     \end{itemize}
 \end{definition}
 
@@ -74,7 +74,7 @@ A BI Resource Algebra is a tuple $(M, \circ, \epsilon, \sqsubseteq)$ where:
 
 \textbf{Omit the redundent part: } For a world $(\Sigma^+, \Sigma^-)$, the space that must be clear can be additionally be smaller as:
 \begin{align*}
-    O(\Sigma^+) \doteq \{ \sigma ~|~ \Code{Dom}(\sigma) = \Code{Dom}(\Sigma^+) \land \forall x. \exists \sigma' \in \Sigma^+. \sigma(x) = \sigma'(x) \}
+    O(\Sigma^+) \doteq \{ \sigma ~|~ \Dom{\sigma} = \Dom{\Sigma^+} \land \forall x. \exists \sigma' \in \Sigma^+. \sigma(x) = \sigma'(x) \}
 \end{align*}\noindent
 That is the space contains all substitutions with ``seen'' assignments, or we believe all unseen assignments are included in $\Sigma^-$. 
 
@@ -100,7 +100,7 @@ That is the space contains all substitutions with ``seen'' assignments, or we be
     \begin{align*}
     \Sigma_1 \times \Sigma_2 = \{ \sigma_1 \cup \sigma_2 ~|~ \sigma_1 \in \Sigma_1 \land \sigma_2 \in \Sigma_2 \}
     \end{align*}\noindent
-    $\compable{m_1}{m_2}$ iff $\wfvdash m_1 \circ m_2$ and $\Code{Dom}(m_1.\Sigma^+) \cap \Code{Dom}(m_2.\Sigma^+) = \emptyset$.
+    $\compable{m_1}{m_2}$ iff $\wfvdash m_1 \circ m_2$ and $\Dom{m_1.\Sigma^+} \cap \Dom{m_2.\Sigma^+} = \emptyset$.
 \end{definition}
 
 \textbf{Lemma:} Easy know that $\wfvdash m_1 \circ m_2$ implies $\wfvdash m_1$ and $\wfvdash m_2$.
@@ -252,7 +252,7 @@ Let $m_1 \circ m_2 = (\Sigma^+, \Sigma^-)$ and $m_1' \circ m_2' = (\Sigma'^+, \S
     \\(\Sigma^+, \Sigma^-) \models \Code{Pred} &\text{ iff } \forall \sigma \in \Sigma^+. \sigma(\Code{Pred})
     \\(\Sigma^+, \Sigma^-) \models \diamond_5 \phi &\text{ iff } \exists \sigma \in \Sigma^+. (\sigma, \Sigma^-) \models \phi
     \\(\Sigma^+, \Sigma^-) \models \Box_5 \phi &\text{ iff } \forall \sigma \in \Sigma^+. (\sigma, \Sigma^-) \models \phi
-    \\(\Sigma^+, \Sigma^-) \models \boxtimes_5 \phi &\text{ iff } \{\sigma ~|~ (\sigma, \Sigma^-) \models \phi \land \Code{Dom}(\sigma) = \Code{FV}(\phi) \} \sqsubseteq \Sigma^+
+    \\(\Sigma^+, \Sigma^-) \models \boxtimes_5 \phi &\text{ iff } \{\sigma ~|~ (\sigma, \Sigma^-) \models \phi \land \Dom{\sigma} = \Code{FV}(\phi) \} \sqsubseteq \Sigma^+
     \end{align*}\noindent
 \end{definition}
 

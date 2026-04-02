@@ -23,14 +23,14 @@
         \item $M$ is the set of resources.
         \item $\mathbf{0}$ is $\emptyset$.
         \item $\mathbf{1}$ is $\{\emptyset\}$.
-        \item $+$ is the union operation; $\wfvdash m_1 + m_2$ iff $\Code{Dom}(m_1) = \Code{Dom}(m_2)$.
+        \item $+$ is the union operation; $\wfvdash m_1 + m_2$ iff $\Dom{m_1} = \Dom{m_2}$.
         \item $\times$ is the pointwise union operation; $\wfvdash m_1 \times m_2$ iff
         \begin{align*}
-            &\Code{Dom}(m_1) \cap \Code{Dom}(m_2) = \emptyset
+            &\Dom{m_1} \cap \Dom{m_2} = \emptyset
         \end{align*} 
         % \begin{align*}
         %     &\forall \sigma_1 \in m_1, \forall \sigma_2 \in m_2. 
-        %     \\&\qquad \forall x. x \in \Code{Dom}(\sigma_1) \land x \in \Code{Dom}(\sigma_2) \implies \sigma_1(x) = \sigma_2(x)
+        %     \\&\qquad \forall x. x \in \Dom{\sigma_1} \land x \in \Dom{\sigma_2} \implies \sigma_1(x) = \sigma_2(x)
         % \end{align*}
     \end{itemize}
 \end{definition}
@@ -63,7 +63,7 @@ We try to build a unified logic over this algebra.
     \[
     m_1 \leq m_2 \doteq
     \begin{cases}
-        \exists m_3.\ m_1 \times m_3 = m_2 & \text{when } \Code{Dom}(m_1) \subseteq \Code{Dom}(m_2) \\
+        \exists m_3.\ m_1 \times m_3 = m_2 & \text{when } \Dom{m_1} \subseteq \Dom{m_2} \\
         \text{undefined} & \text{otherwise}
     \end{cases}
     \]
@@ -73,12 +73,12 @@ We try to build a unified logic over this algebra.
     \begin{align*}
     &\Code{Proj}(X, \sigma) \doteq
         \begin{cases}
-            \bigcup_{x \in X} [x\mapsto \sigma(x)] & \text{when } X \subseteq \Code{Dom}(\sigma) \\
+            \bigcup_{x \in X} [x\mapsto \sigma(x)] & \text{when } X \subseteq \Dom{\sigma} \\
             \text{undefined} & \text{otherwise}
         \end{cases}
     \\&\Code{Proj}(X, m) \doteq
     \begin{cases}
-        \bigcup_{\sigma \in m} \{ \Code{Proj}(X, \sigma) \} & \text{when } X \subseteq \Code{Dom}(m_2) \\
+        \bigcup_{\sigma \in m} \{ \Code{Proj}(X, \sigma) \} & \text{when } X \subseteq \Dom{m_2} \\
         \text{undefined} & \text{otherwise}
     \end{cases}
     \end{align*}
@@ -98,7 +98,7 @@ We try to build a unified logic over this algebra.
     \item $m \models\phi * \psi$ iff $\exists m_1, m_2.\ m_1 \times m_2 \leq m \text{ and } m_1 \models\phi \text{ and } m_2 \models\psi$.
     \item $m \models\phi \wand \psi$ iff $\forall m'. m' \models\phi  \implies m' \times m \models\psi$.
     \item $m \models\phi \oplus \psi$ iff $\exists m_1, m_2.\ m_1 + m_2 \leq m \text{ and } m_1 \models\phi \text{ and } m_2 \models\psi$.
-    \item $m \models P$ iff $\{\sigma ~|~ \Code{Dom}(\sigma) = \Code{FV}(\phi) \land \sigma(P)\}\leq m$.
+    \item $m \models P$ iff $\{\sigma ~|~ \Dom{\sigma} = \Code{FV}(\phi) \land \sigma(P)\}\leq m$.
     \item $m \models\true$ always; $m \models\false$ \textcolor{red}{iff $m = \mathbf{0}$}.
     \item $m \models\phi \land \psi$ iff $m \models\phi$ and $m \models\psi$.
     \item $m \models\phi \implies \psi$ iff $m \models\phi$ implies $m \models\psi$.
@@ -173,12 +173,12 @@ We try to build a unified logic over this algebra.
 
 Assume we have an expressive enough atomic proposition $P: M \sarr \Bool$:
 \begin{align*}
-P \doteq \Code{Atom} ~|~ \Code{Dom}(X) ~|~ P \cap P ~|~ P \cup P ~|~ P \setminus P ~|~ P \times P
+P \doteq \Code{Atom} ~|~ \Dom{X} ~|~ P \cap P ~|~ P \cup P ~|~ P \setminus P ~|~ P \times P
 \end{align*}
 where
 \begin{itemize}
     \item $\Code{Atom}$ is an atomic proposition, e.g., $x < 2$.
-    \item $\Code{Dom}(X)$ make sure all substitutions has the same domain as $X$.
+    \item $\Dom{X}$ make sure all substitutions has the same domain as $X$.
     \item $P \cap Q$ is the intersection of $P$ and $Q$.
     \item $P \cup Q$ is the union of $P$ and $Q$.
     \item $P \setminus Q$ is the difference of $P$ and $Q$.
@@ -259,7 +259,7 @@ Let $p$ and $q$ be modality-free propositions (constructed from $P$, $\land$, $\
 \begin{frame}[fragile]
     \frametitle{Properties of Approximation}
 
-\begin{definition}[All] We introduce a new atomic predicate $\Code{All}$ parameterized by a set of variables: $m \models \Code{All}(X) \doteq m = \{\sigma ~|~ \Code{Dom}(\sigma) = X\}$.
+\begin{definition}[All] We introduce a new atomic predicate $\Code{All}$ parameterized by a set of variables: $m \models \Code{All}(X) \doteq m = \{\sigma ~|~ \Dom{\sigma} = X\}$.
 \end{definition}
 
 \begin{lemma}[Cancel Out]
@@ -267,7 +267,7 @@ Let $p$ and $q$ be modality-free propositions (constructed from $P$, $\land$, $\
 \end{lemma}
 \begin{proof}
 \begin{itemize}
-    \item For $m \models \upperB\lowerB p$, $\Code{FV}(p) \subseteq \Code{Dom}(m)$. Thus $m \subseteq \denot{\Code{All}(\Code{FV}(p))}$.
+    \item For $m \models \upperB\lowerB p$, $\Code{FV}(p) \subseteq \Dom{m}$. Thus $m \subseteq \denot{\Code{All}(\Code{FV}(p))}$.
     \item For $m \models \upperB \Code{All}(\Code{FV}(p))$, there exists $m' \doteq \denot{\Code{All}(\Code{FV}(p))}$ such that $m \subseteq m'$ and $\denot{p} \subseteq m'$.
     \item Note that for all $m$, $\textbf{0} \subseteq m$ and $\textbf{0} \subseteq \denot{p}$.
 \end{itemize}
@@ -360,12 +360,12 @@ Consider the mixed case:
 \begin{frame}[fragile]
     \frametitle{Properties of Approximation}
 
-\begin{lemma}[Mixed $*$] $\upperB(\lowerB p * \upperB q) \dashv\vdash \upperB (\Code{All}(\Code{Dom}(p)) * q)$ and $\lowerB(\lowerB p * \upperB q) \dashv\vdash \true$.
+\begin{lemma}[Mixed $*$] $\upperB(\lowerB p * \upperB q) \dashv\vdash \upperB (\Code{All}(\Dom{p}) * q)$ and $\lowerB(\lowerB p * \upperB q) \dashv\vdash \true$.
 \end{lemma}
 \begin{proof} 
     \begin{itemize}
-        \item \textbf{1. Forward:} $m\models \upperB(\lowerB p * \upperB q)$ means there exist $m_1, m_2$ such that $m \subseteq m_1 \times m_2$ and $m_1 \models \lowerB p$ and $m_2 \models \upperB q$. Thus $m_2 \subseteq \denot{q}$. It is easy to see that $m \subseteq \denot{\Code{All}(\Code{Dom}(p))} \times \denot{q}$. 
-        \item \textbf{1. Backward:} $m \models \upperB (\Code{All}(\Code{Dom}(p)) * q)$ means there exist $m_1, m_2$ with $m_1 \in \denot{\Code{All}(\Code{Dom}(p))}$ and $m_2 \in \denot{q}$ such that $m \subseteq m_1 \times m_2$. It is easy to see that $m_1 \models \lowerB p$ and $m_2 \models \upperB q$.
+        \item \textbf{1. Forward:} $m\models \upperB(\lowerB p * \upperB q)$ means there exist $m_1, m_2$ such that $m \subseteq m_1 \times m_2$ and $m_1 \models \lowerB p$ and $m_2 \models \upperB q$. Thus $m_2 \subseteq \denot{q}$. It is easy to see that $m \subseteq \denot{\Code{All}(\Dom{p})} \times \denot{q}$. 
+        \item \textbf{1. Backward:} $m \models \upperB (\Code{All}(\Dom{p}) * q)$ means there exist $m_1, m_2$ with $m_1 \in \denot{\Code{All}(\Dom{p})}$ and $m_2 \in \denot{q}$ such that $m \subseteq m_1 \times m_2$. It is easy to see that $m_1 \models \lowerB p$ and $m_2 \models \upperB q$.
         \item \textbf{2.} Note that $\textbf{0} = \denot{p} \times \textbf{0}$ and $\textbf{0} \models \upperB q$, thus $\textbf{0} \models \lowerB p * \upperB q$. 
     \end{itemize}
 \end{proof}
@@ -374,11 +374,11 @@ Consider the mixed case:
 \begin{frame}[fragile]
     \frametitle{Properties of Approximation}
 
-\begin{lemma}[Mixed $\oplus$] $\upperB(\lowerB p \oplus \upperB q) \dashv\vdash \upperB \Code{All}(\Code{Dom}(p))$ and $\lowerB(\lowerB p \oplus \upperB q) \dashv\vdash \lowerB p$.
+\begin{lemma}[Mixed $\oplus$] $\upperB(\lowerB p \oplus \upperB q) \dashv\vdash \upperB \Code{All}(\Dom{p})$ and $\lowerB(\lowerB p \oplus \upperB q) \dashv\vdash \lowerB p$.
 \end{lemma}
 \begin{proof} 
     \begin{itemize}
-        \item \textbf{1.} For all $m$ whose domain is $\Code{Dom}(p)$, we have $m \subseteq (m \cup \denot{p}) + \textbf{0}$.
+        \item \textbf{1.} For all $m$ whose domain is $\Dom{p}$, we have $m \subseteq (m \cup \denot{p}) + \textbf{0}$.
         \item \textbf{2. Forward:} $m\models\lowerB(\lowerB p \oplus \upperB q)$ means there exist $m_1, m_2$ such that $m_1 + m_2 \subseteq m$, $\denot{p} \subseteq m_1$, and $m_2 \subseteq \denot{q}$. We have $m_1 \subseteq m$.
         \item \textbf{1. Backward:} When $m\models \lowerB p$, we can choose $m + \textbf{0} \subseteq m$.
     \end{itemize}

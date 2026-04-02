@@ -251,6 +251,13 @@
 \newcommand{\ldenotation}{\llbracket}
 \newcommand{\rdenotation}{\rrbracket}
 \newcommand{\denotation}[1]{\ldenotation {#1} \rdenotation}
+% Domain (partial map, substitution, resource, map keys, etc.): prints \mathrm{dom}(\cdot).
+\providecommand{\Dom}[1]{\mathrm{dom}(#1)}
+% Restriction of a partial map to a set (standard | notation).
+\providecommand{\restrictTo}[2]{\left.{#1}\right|_{#2}}
+% Compatible partial maps, or (by overloading) substitution \emph{sets} whose
+% cross-pairs are all map-compatible. Same symbol $\uparrow$ in both readings.
+\providecommand{\mapCompat}[2]{#1 \mathrel{\uparrow} #2}
 \newcommand{\eraserf}[1]{\lfloor {#1} \rfloor}
 \newcommand{\eraseGhost}[1]{\lceil {#1} \rceil}
 \newcommand{\FV}{\textcolor{CobaltBlue}{\S{FV}}}

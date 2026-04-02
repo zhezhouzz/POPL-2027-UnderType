@@ -65,11 +65,11 @@
 \begin{frame}[fragile]
     \frametitle{Better definition}
 
-\textbf{Base (Valuation Function):} A world can be represented as a substitution; $\Code{Dom}(\sigma)$ indicates the variables in the substitution.
+\textbf{Base (Valuation Function):} A world can be represented as a substitution; $\Dom{\sigma}$ indicates the variables in the substitution.
 
 \textbf{Inclusion (Projection) relation:} $w_1 \subseteq w_2$ means all variables in $w_1$ have the same assignment in $w_2$; we also say $w_2$ can be projected to $w_1$.
 
-\textbf{Equivalence relation:} There is an equivalence relation $\sim$ over worlds $w_1$ and $w_2$. We require that equivalent worlds have the same domain, that is, $\Code{Dom}(w_1) = \Code{Dom}(w_2)$. The intuition is that only aligned assignments can be grouped together, or we can distinguish the set of variables but don't care about the actual assignment.
+\textbf{Equivalence relation:} There is an equivalence relation $\sim$ over worlds $w_1$ and $w_2$. We require that equivalent worlds have the same domain, that is, $\Dom{w_1} = \Dom{w_2}$. The intuition is that only aligned assignments can be grouped together, or we can distinguish the set of variables but don't care about the actual assignment.
 
 \textbf{Preservation of projection relation:} Note that the equivalence relation preserves the projection relation: for all $w_1 \subseteq w_1'$, we have $w_2 \subseteq w_2'$.
 \begin{align*}
@@ -113,7 +113,7 @@ The equivalence class $\{w_5, w_6\}$ represents execution $(\lambda x.x+2)\;\{1,
     
 New definition of the $\boxtimes$ modality:
 \begin{itemize}
-    \item Minimal world: a world $w$ is minimal for a property $\phi$ iff $\Code{Dom}(w) = \Code{FV}(\phi)$.
+    \item Minimal world: a world $w$ is minimal for a property $\phi$ iff $\Dom{w} = \Code{FV}(\phi)$.
     \item $\boxtimes$ modality: $w \models \boxtimes \phi$ iff for all minimal worlds $w'$ that satisfy $\phi$, there exists a world $w''$ such that $w \sim w''$ and $w' \subseteq w''$.
 \end{itemize}
 
@@ -152,7 +152,7 @@ Now we compose two equivalence classes $\{w_1, w_2\}$ and $\{w_3, w_4\}$ in a co
 \begin{itemize}
     \item $W_1$ and $W_2$ are disjoint equivalence classes, that is,
     \begin{align*}
-        \forall w_1 \in W_1, \forall w_2 \in W_2, \Code{Dom}(w_1) \cap \Code{Dom}(w_2) = \emptyset
+        \forall w_1 \in W_1, \forall w_2 \in W_2, \Dom{w_1} \cap \Dom{w_2} = \emptyset
     \end{align*}
     \item $W_1 \oplus W_2$ is defined as the set of worlds:
     \begin{align*}
@@ -267,7 +267,7 @@ Remember that we use Kripke semantics to express aligned multiple executions tog
 \textbf{Function Type:}
 \begin{align*}
     \denot{x{:}\tau_x \sarr \tau}_M &\doteq \{ e ~|~ \forall v_x \in \denot{\tau_x}_M. (e\;x) \in \denot{\tau}_{M[x\mapsto v_x]} \} \\
-    \denot{x{:}\tau_x \wand \tau}_M &\doteq \{ e ~|~ \forall M'.\; \denot{x : \tau_x}_M.\; \Code{Dom}(M') \cap (\Code{Dom}(M) \cup \Code{FV}(\tau)) = \emptyset \implies 
+    \denot{x{:}\tau_x \wand \tau}_M &\doteq \{ e ~|~ \forall M'.\; \denot{x : \tau_x}_M.\; \Dom{M'} \cap (\Dom{M} \cup \Code{FV}(\tau)) = \emptyset \implies 
     \\&\qquad (e\;x) \in \denot{\tau}_{M \oplus M'} \}
 \end{align*}
 where $M[x\mapsto v_x]$ means to add $[x\mapsto v_x]$ to all worlds in $M$.
@@ -287,7 +287,7 @@ where $M[x\mapsto v_x]$ means to add $[x\mapsto v_x]$ to all worlds in $M$.
 
 \begin{align*}
     &\denot{x{:}\urt{b}{1 \leq \vnu \leq 2} \wand \urt{b}{3 \leq \vnu \leq 4}}_{\emptyset} 
-    \\\doteq &\{ e ~|~ \forall M'.\; \denot{\boxtimes (1 \leq x \leq 2)}_M.\; \Code{Dom}(M') \cap (\Code{Dom}(M) \cup \Code{FV}(\tau)) = \emptyset \implies 
+    \\\doteq &\{ e ~|~ \forall M'.\; \denot{\boxtimes (1 \leq x \leq 2)}_M.\; \Dom{M'} \cap (\Dom{M} \cup \Code{FV}(\tau)) = \emptyset \implies 
     \\& (e\;x) \in \denot{\tau}_{M \oplus M'} \}
     \\&\text{Consider one model}~ M_0 = (\{[x\mapsto 1], [x\mapsto 2]\}, \sim, \emptyset, [x\mapsto 1])
     \\\doteq &\{ e ~|~ (e\;x) \in \denot{\urt{b}{3 \leq \vnu \leq 4}}_{M_0} \}

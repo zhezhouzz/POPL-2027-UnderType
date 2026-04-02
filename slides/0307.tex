@@ -32,8 +32,8 @@
 
 \begin{definition}[Addition and Multiplication] There are partial operations:
     \begin{itemize}
-        \item $m_1 + m_2 \doteq m_1 \cup m_2$ when $\Code{Dom}(m_1) = \Code{Dom}(m_2)$.
-        \item $m_1 \times m_2 \doteq \{ \sigma_1 \cup \sigma_2 ~|~ \sigma_1 \in m_1 \land \sigma_2 \in m_2 \}$ when $\Code{Dom}(m_1) \cap \Code{Dom}(m_2) = \emptyset$.
+        \item $m_1 + m_2 \doteq m_1 \cup m_2$ when $\Dom{m_1} = \Dom{m_2}$.
+        \item $m_1 \times m_2 \doteq \{ \sigma_1 \cup \sigma_2 ~|~ \sigma_1 \in m_1 \land \sigma_2 \in m_2 \}$ when $\Dom{m_1} \cap \Dom{m_2} = \emptyset$.
     \end{itemize}
 \end{definition}
         
@@ -75,7 +75,7 @@
 
 \textbf{Intuition:} The $m_1 \times m_2$ can contains useless choices ($m_2$). 
 
-\textbf{Observation:} If we have a set of choices $m_1 \times m_2$, we can projects thus choices into $\Code{Dom}(m_1)$ to recover $m_1$, the reverse is not true.
+\textbf{Observation:} If we have a set of choices $m_1 \times m_2$, we can projects thus choices into $\Dom{m_1}$ to recover $m_1$, the reverse is not true.
 
 \textbf{Intuition:} $m_1 \leq m_1 \times m_2 + m_3$.
 
@@ -105,7 +105,7 @@
 
 \begin{definition}[Underapproximation Modality]
     \begin{itemize}
-        \item $m \models \boxtimes_5 \phi$ iff $\{\sigma ~|~ \{\sigma\} \models \phi \land \Code{Dom}(\sigma) = \Code{FV}(\phi) \} \leq m$.
+        \item $m \models \boxtimes_5 \phi$ iff $\{\sigma ~|~ \{\sigma\} \models \phi \land \Dom{\sigma} = \Code{FV}(\phi) \} \leq m$.
     \end{itemize}
 \end{definition}
 
@@ -242,9 +242,9 @@
 
 \begin{definition}[Addition and Multiplication] There are partial operations:
     \begin{itemize}
-        \item $m_1 + m_2 \doteq m_1 \cup m_2$ when $\Code{Dom}(m_1) = \Code{Dom}(m_2)$.
+        \item $m_1 + m_2 \doteq m_1 \cup m_2$ when $\Dom{m_1} = \Dom{m_2}$.
         \item $m_1 \times m_2 \doteq \{ \sigma_1 \cup \sigma_2 ~|~ \sigma_1 \in m_1 \land \sigma_2 \in m_2 \}$
-        \item when $\forall \sigma_1 \in m_1, \forall \sigma_2 \in m_2. \forall x. x \in \Code{Dom}(\sigma_1) \land x \in \Code{Dom}(\sigma_2) \implies \sigma_1(x) = \sigma_2(x)$.
+        \item when $\forall \sigma_1 \in m_1, \forall \sigma_2 \in m_2. \forall x. x \in \Dom{\sigma_1} \land x \in \Dom{\sigma_2} \implies \sigma_1(x) = \sigma_2(x)$.
     \end{itemize}
 \end{definition}
 

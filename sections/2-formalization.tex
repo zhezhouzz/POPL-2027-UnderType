@@ -17,44 +17,88 @@ our working notes (slides of March~17).
 
 \subsection{Substitutions and pointwise combination}
 
+\begin{definition}[Compatible union of partial maps]\label{def:subst-compat}
+  Substitutions are partial maps $\Code{Var} \rightharpoonup \Code{Value}$.
+  Write $\mapCompat{\sigma_1}{\sigma_2}$ when $\sigma_1$ and $\sigma_2$ are
+  \emph{compatible}, i.e.\ they agree on the intersection of their domains.
+  \[
+    \mapCompat{\sigma_1}{\sigma_2}
+    \doteq
+    \forall x \in \Dom{\sigma_1} \cap \Dom{\sigma_2}.\; \sigma_1(x) = \sigma_2(x).
+  \]
+  Under $\mapCompat{\sigma_1}{\sigma_2}$, the \emph{union} of their graphs is
+  again a partial map, written $\sigma_1 \cup \sigma_2$ as usual.
+ \end{definition}
+
 We fix a set $\Code{Var}$ of variables and a domain $\Code{Value}$ of
 semantic values.
 A \emph{substitution} is a partial map
 $\subs : \Code{Var} \rightharpoonup \Code{Value}$.
-We write $\mathrm{dom}(\subs)$ for its domain.
+We write $\Dom{\subs}$ for its domain.
 
-\begin{definition}[Pointwise union]
-For sets $m_1$ and $m_2$, each a set of substitutions, define
+\begin{definition}[Resource compatibility and pointwise union]\label{def:resource-times}
+Let $m_1$ and $m_2$ be sets of substitutions.
+We reuse $\mapCompat{\cdot}{\cdot}$: for sets, $\mapCompat{m_1}{m_2}$ means that
+every cross-pair of substitutions is compatible (in the sense of
+\autoref{def:subst-compat}):
 \[
-  m_1 \times m_2 \;\doteq\; \{\, \subs_1 \cup \subs_2 \mid \subs_1 \in m_1,\; \subs_2 \in m_2 \,\}.
+  \mapCompat{m_1}{m_2}
+  \;\stackrel{\mathrm{def}}{\Longleftrightarrow}\;
+  \forall \subs_1 \in m_1.\;\forall \subs_2 \in m_2.\; \mapCompat{\subs_1}{\subs_2}.
+\]
+The \emph{pointwise union} $m_1 \times m_2$ is the partial binary operation
+\[
+  m_1 \times m_2 \;\doteq\;
+  \begin{cases}
+    \{\, \subs_1 \cup \subs_2 \mid \subs_1 \in m_1,\; \subs_2 \in m_2 \,\}
+      & \text{if } \mapCompat{m_1}{m_2}, \\
+    \text{undefined}
+      & \text{otherwise.}
+  \end{cases}
 \]
 \end{definition}
 
-When we need to restrict attention to variables in a finite set
-$X \subseteq_{\mathrm{fin}} \Code{Var}$, we use a $\mathrm{proj}$
-operator on substitutions and on sets of substitutions (undefined if
-the relevant variables are absent).
+Note that for any substitution $\sigma$, $\mapCompat{\sigma}{\sigma}$ always holds since they always agree on their domain. Similarly, singleton set $\{\sigma\}$ is compatible with itself. Thus, if $m$ is a singleton set, $m \times m = m$.
+
+\begin{definition}[Restriction to a variable set]\label{def:restriction}
+  Fix finite $X \subseteq_{\mathrm{fin}} \Code{Var}$.
+  For a substitution $\sigma$, write $\restrictTo{\sigma}{X}$ for the usual
+  restriction of the partial map~$\sigma$ to~$X$: domain
+  $\Dom{\sigma} \cap X$, and agreement with~$\sigma$ on that set (so
+  $X \subseteq \Dom{\sigma}$ is not required).
+  For a set $m$ of substitutions, set
+  \[
+    \restrictTo{m}{X} \;\doteq\; \{\, \restrictTo{\sigma}{X} \mid \sigma \in m \,\}.
+  \]
+\end{definition}
+
 
 \subsection{Choice algebra}
 
 \begin{definition}[Choice algebra]
-A \emph{(flat) choice algebra} consists of a carrier $\Res$ whose
-elements we call \emph{resources}, together with constants
-$\mathbf{0},\mathbf{1} \in \Res$, a partial binary sum $+$, a total
-binary product $\times$ as above, and a partial order $\leq$:
+A \emph{(flat) choice algebra} is a \emph{partial commutative semiring}
+$(\Res,{+},{\times},\mathbf{0},\mathbf{1})$: partial binary operations
+${+}$ and~${\times}$ and constants $\mathbf{0},\mathbf{1}$ such that,
+whenever the expressions involved are well-formed, the usual semiring
+laws hold---associativity and commutativity of ${+}$ and~${\times}$,
+identities $\mathbf{0}$ and~$\mathbf{1}$, distributivity of~${\times}$
+over~${+}$, and annihilation
+$m \times \mathbf{0} = \mathbf{0} \times m = \mathbf{0}$.
+We realize it as follows; elements of~$\Res$ are called \emph{resources}.
 \begin{itemize}
 \item Each resource $m \in \Res$ is a \emph{set of substitutions}
   (element of $\mathcal{P}(\Code{Var} \rightharpoonup \Code{Value})$).
 \item $\mathbf{0} = \emptyset$ and $\mathbf{1} = \{\emptyset\}$.
 \item $m_1 + m_2$ is set union, and is well-formed only when
-  $\mathrm{dom}(m_1) = \mathrm{dom}(m_2)$, where
-  $\mathrm{dom}(m) \doteq \bigcup_{\subs \in m} \mathrm{dom}(\subs)$.
-\item $\times$ is the pointwise union from
-  Definition~1.
-\item For $m_1,m_2 \in \Res$, define $m_1 \leq m_2$ to hold when
-  $\mathrm{dom}(m_1) \subseteq \mathrm{dom}(m_2)$ and there exists
-  $m_3 \in \Res$ such that $m_1 \times m_3 = m_2$.
+  $\Dom{m_1} = \Dom{m_2}$, where
+  $\Dom{m} \doteq \bigcup_{\subs \in m} \Dom{\subs}$.
+\item ${\times}$ is the pointwise union from \autoref{def:resource-times},
+  well-formed exactly on $\mapCompat{\cdot}{\cdot}$ pairs.
 \end{itemize}
+We also equip $\Res$ with a partial order $\leq$: for $m_1,m_2 \in \Res$,
+define $m_1 \leq m_2$ to hold when there exists a finite set
+$X \subseteq_{\mathrm{fin}} \Code{Var}$ such that
+$\restrictTo{m_1}{X} = m_2$.
 \end{definition}
 
 The order $\leq$ is the analogue of ``more information by enlarging the
@@ -70,10 +114,10 @@ propositions whose semantics are \emph{sets of substitutions}.
 Let atomic tests range over standard value predicates.
 A minimal grammar adequate for examples below is
 \[
-  \phi \;::=\; \mathsf{atom} \mid \mathrm{Dom}(X) \mid \phi \cap \phi
+  \phi \;::=\; \mathsf{atom} \mid \Dom{X} \mid \phi \cap \phi
     \mid \phi \cup \phi \mid \phi \setminus \phi \mid \phi \times \phi
 \]
-where $\mathrm{Dom}(X)$ asserts that every substitution in the denotation
+where $\Dom{X}$ asserts that every substitution in the denotation
 has domain exactly~$X$.
 Each $\phi$ denotes a set $\denot{\phi}$ of substitutions.
 \end{definition}

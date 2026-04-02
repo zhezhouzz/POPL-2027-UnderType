@@ -37,12 +37,12 @@
     \begin{align*}
     &\Code{Proj}(X, \sigma) \doteq
         \begin{cases}
-            \bigcup_{x \in X} [x\mapsto \sigma(x)] & \text{when } X \subseteq \Code{Dom}(\sigma) \\
+            \bigcup_{x \in X} [x\mapsto \sigma(x)] & \text{when } X \subseteq \Dom{\sigma} \\
             \text{undefined} & \text{otherwise}
         \end{cases}
     \\&\Code{Proj}(X, m) \doteq
     \begin{cases}
-        \bigcup_{\sigma \in m} \{ \Code{Proj}(X, \sigma) \} & \text{when } X \subseteq \Code{Dom}(m) \\
+        \bigcup_{\sigma \in m} \{ \Code{Proj}(X, \sigma) \} & \text{when } X \subseteq \Dom{m} \\
         \text{undefined} & \text{otherwise}
     \end{cases}
     \end{align*}
@@ -58,7 +58,7 @@
         \item A resource $m$ is a set of substitutions: $\mathcal{P}(\Code{Var} \rightharpoonup \Code{Value})$.
         \item $M$ is the set of resources.
         \item $\mathbf{0}$ is $\emptyset$; $\mathbf{1}$ is $\{\emptyset\}$.
-        \item $+$ is the union operation; $\wfvdash m_1 + m_2$ iff $\Code{Dom}(m_1) = \Code{Dom}(m_2)$.
+        \item $+$ is the union operation; $\wfvdash m_1 + m_2$ iff $\Dom{m_1} = \Dom{m_2}$.
         \item $\times$ is the pointwise union operation:
         \begin{align*}
         m_1 \times m_2 \doteq \{ \sigma_1 \cup \sigma_2 ~|~ \sigma_1 \in m_1 \land \sigma_2 \in m_2 \}
@@ -67,7 +67,7 @@
         \begin{align*}
         m_1 \leq m_2 \doteq
         \begin{cases}
-            \exists m_3.\ m_1 \times m_3 = m_2 & \text{when } \Code{Dom}(m_1) \subseteq \Code{Dom}(m_2) \\
+            \exists m_3.\ m_1 \times m_3 = m_2 & \text{when } \Dom{m_1} \subseteq \Dom{m_2} \\
             \text{undefined} & \text{otherwise}
         \end{cases}
         \end{align*}
@@ -81,12 +81,12 @@
 
 Assume we have an expressive enough pure propositional logic $\phi: (\Code{Var} \rightharpoonup \Code{Value}) \sarr \Bool$:
 \begin{align*}
-\phi \doteq \Code{Atom} ~|~ \Code{Dom}(X) ~|~ \phi \cap \phi ~|~ \phi \cup \phi ~|~ \phi \setminus \phi ~|~ \phi \times \phi
+\phi \doteq \Code{Atom} ~|~ \Dom{X} ~|~ \phi \cap \phi ~|~ \phi \cup \phi ~|~ \phi \setminus \phi ~|~ \phi \times \phi
 \end{align*}
 where
 \begin{itemize}
     \item $\Code{Atom}$ is an atomic proposition, e.g., $\denot{x < 2} = \{[x\mapsto 0], [x\mapsto 1]\}$.
-    \item $\Code{Dom}(X)$ ensures that all substitutions have the same domain as $X$.
+    \item $\Dom{X}$ ensures that all substitutions have the same domain as $X$.
     \item $\phi \cap \psi$ is the intersection of $\phi$ and $\psi$.
     \item $\phi \cup \psi$ is the union of $\phi$ and $\psi$.
     \item $\phi \setminus \psi$ is the difference of $\phi$ and $\psi$.
@@ -106,7 +106,7 @@ where
     \item $m \models p * q$ iff $\exists m_1, m_2.\ m_1 \times m_2 \leq m \text{ and } m_1 \models p \text{ and } m_2 \models q$.
     \item $m \models p \wand q$ iff $\forall m'. m' \models p  \implies m' \times m \models q$.
     \item $m \models p \oplus q$ iff $\exists m_1, m_2.\ m_1 + m_2 \leq m \text{ and } m_1 \models p \text{ and } m_2 \models q$.
-    \item $m \models \phi$ iff $\{\sigma ~|~ \Code{Dom}(\sigma) = \Code{FV}(p) \land \sigma(p)\}\leq m$.
+    \item $m \models \phi$ iff $\{\sigma ~|~ \Dom{\sigma} = \Code{FV}(p) \land \sigma(p)\}\leq m$.
     \item $m \models \true$ always; $m \models \false$ \textcolor{red}{iff $m = \mathbf{0}$}.
     \item $m \models p \land q$ iff $m \models p$ and $m \models q$.
     \item $m \models p \implies q$ iff $m \models p$ implies $m \models q$.
@@ -148,7 +148,7 @@ where
     \textbf{Variables} \quad x, y, z  \\
     \textbf{Variable Sets} \quad X, Y, Z \\
     \textbf{Constants} \quad c ::= & () ~|~ \mathbb{B} ~|~ \mathbb{Z} ~|~ ...  \\
-    \textbf{Pure Propositions} \quad \phi ::= & \Code{Atom} ~|~ \Code{Dom}(X)\\
+    \textbf{Pure Propositions} \quad \phi ::= & \Code{Atom} ~|~ \Dom{X}\\
     & ~|~ \phi \cap \phi ~|~ \phi \cup \phi ~|~ \phi \setminus \phi ~|~ \phi \times \phi \\
     \textbf{Resource Propositions} \quad p,q ::= & \upperB \phi ~|~ \lowerB \phi ~|~ p \land q ~|~ p \lor q ~|~ p \implies q \\
     &~|~ \forall x. p ~|~ \exists x. p ~|~ \true ~|~ \false \\
@@ -218,11 +218,11 @@ Some clarifications:
 
     Consider a resource application $\sigma = m(\sigma_0)$, we need to make sure that $m$ cannot change the $\sigma_0$ (read only), thus we add constraint:
     \begin{align*}
-        \forall \sigma_0, \Code{Dom}(\sigma_0) \land \Code{Dom}(m(\sigma_0)) 
+        \forall \sigma_0, \Dom{\sigma_0} \land \Dom{m(\sigma_0)} 
     \end{align*}
     which means that $m$ cannot produce substitutions with different domain.
 
-    We still defined $\Code{Dom}(m)$ as its output domain.
+    We still defined $\Dom{m}$ as its output domain.
 \end{definition}
 
 
@@ -408,12 +408,12 @@ We assume that the result of $f\;x$ can cover all integers; however, there are s
     \begin{align*}
         &f : x{:}\urt{\Int}{\top} \wand \urt{\Int}{\top}
     \\ \iff &\forall e_x. \denot{e_x : \urt{\Int}{\top}} \wand \denot{(f\;e_x) : \urt{\Int}{\top}}
-    \\ \iff &\forall e_x. (\denot{\vnu = e_x} \impl \lowerB \Code{Dom}(\{x\})) \wand \denot{(f\;e_x) : \urt{\Int}{\top}}
-    \\ \iff &\lowerB \Code{Dom}(\{x\}) \wand \denot{(f\;x) : \urt{\Int}{\top}}
-    \\ \iff &\lowerB \Code{Dom}(\{x\}) \wand \denot{\zif{x == 0}{\Code{int\_gen()}}{\Code{err}} : \urt{\Int}{\top}}
-    \\ \iff &\lowerB \Code{Dom}(\{x\}) \wand 
-    \\ & \quad (\upperB (x = 0) \land \Code{Dom}(\{\vnu\}) \oplus  \upperB (x \neq 0) \land \bot) \impl \lowerB \Code{Dom}(\{\vnu\})
-    \\ \iff &(x = 0 * \Code{Dom}(\{\vnu\})) \models \lowerB \Code{Dom}(\{\vnu\}) \text{ and } 
+    \\ \iff &\forall e_x. (\denot{\vnu = e_x} \impl \lowerB \Dom{\{x\}}) \wand \denot{(f\;e_x) : \urt{\Int}{\top}}
+    \\ \iff &\lowerB \Dom{\{x\}} \wand \denot{(f\;x) : \urt{\Int}{\top}}
+    \\ \iff &\lowerB \Dom{\{x\}} \wand \denot{\zif{x == 0}{\Code{int\_gen()}}{\Code{err}} : \urt{\Int}{\top}}
+    \\ \iff &\lowerB \Dom{\{x\}} \wand 
+    \\ & \quad (\upperB (x = 0) \land \Dom{\{\vnu\}} \oplus  \upperB (x \neq 0) \land \bot) \impl \lowerB \Dom{\{\vnu\}}
+    \\ \iff &(x = 0 * \Dom{\{\vnu\}}) \models \lowerB \Dom{\{\vnu\}} \text{ and } 
     \\ &(\lowerB (x \neq 0) * \bot) \models \lowerB \bot  
     \end{align*} 
 \end{example}
@@ -453,9 +453,9 @@ We assume that the result of $f\;x$ can cover all integers; however, there are s
     \begin{align*}
         &f : x{:}\urt{\Int}{\top} \sarr \urt{\Int}{\top}
     \\ \iff &\forall e_x. \denot{e_x : \urt{\Int}{\top}} \impl \denot{e_x : \urt{\Int}{\top}} \land \denot{(f\;e_x) : \urt{\Int}{\top}}
-    \\ \iff &\forall e_x. (\denot{\vnu = e_x} \impl \lowerB \Code{Dom}(\{x\})) \impl \denot{e_x : \urt{\Int}{\top}} \land \denot{(f\;e_x) : \urt{\Int}{\top}}
-    \\ \iff &\lowerB \Code{Dom}(\{x\}) \impl \lowerB \Code{Dom}(\{x\}) \land \denot{(f\;x) : \urt{\Int}{\top}}
-    \\ \iff &\lowerB \Code{Dom}(\{x\}) \impl \lowerB \Code{Dom}(\{x\}) \land \lowerB \Code{Dom}(\{x\})
+    \\ \iff &\forall e_x. (\denot{\vnu = e_x} \impl \lowerB \Dom{\{x\}}) \impl \denot{e_x : \urt{\Int}{\top}} \land \denot{(f\;e_x) : \urt{\Int}{\top}}
+    \\ \iff &\lowerB \Dom{\{x\}} \impl \lowerB \Dom{\{x\}} \land \denot{(f\;x) : \urt{\Int}{\top}}
+    \\ \iff &\lowerB \Dom{\{x\}} \impl \lowerB \Dom{\{x\}} \land \lowerB \Dom{\{x\}}
     \end{align*} 
 \end{example}
 
@@ -467,9 +467,9 @@ We assume that the result of $f\;x$ can cover all integers; however, there are s
 \begin{example}[Situation 2] Concrete example $f \doteq \lambda x. \zif{x == 0}{\Code{int\_gen()}}{\Code{err}}$:
     \begin{align*}
         &f : x{:}\urt{\Int}{\top} \sarr \urt{\Int}{\top}
-    \\ \iff &\lowerB \Code{Dom}(\{x\}) \impl 
-    \\ & \quad (\upperB (x = 0) \land \Code{Dom}(\{\vnu\}) \oplus  \upperB (x \neq 0) \land \bot) \impl \lowerB \Code{Dom}(\{x\}) \land \lowerB \Code{Dom}(\{\vnu\})
-    \\ \iff &(x = 0 \land \Code{Dom}(\{\vnu\})) \models x=0 \land \lowerB \Code{Dom}(\{\vnu\}) \text{ and } 
+    \\ \iff &\lowerB \Dom{\{x\}} \impl 
+    \\ & \quad (\upperB (x = 0) \land \Dom{\{\vnu\}} \oplus  \upperB (x \neq 0) \land \bot) \impl \lowerB \Dom{\{x\}} \land \lowerB \Dom{\{\vnu\}}
+    \\ \iff &(x = 0 \land \Dom{\{\vnu\}}) \models x=0 \land \lowerB \Dom{\{\vnu\}} \text{ and } 
     \\ &(\lowerB (x \neq 0) \land \bot) \models ??
     \end{align*} 
 \end{example}

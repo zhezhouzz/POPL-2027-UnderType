@@ -23,7 +23,7 @@
         \begin{enumerate}
             \item A Hoare Type Theory style (assume the heap contains a map from labels to values):
             \begin{align*}
-                & \eff{ref}: x{:}\tvar{a} \sarr \uhat{S}{l{:}\urt{\tvar{a}\;\Code{ref}}{\vnu \not\in \Code{Dom}(S)}}{l \mapsto x \star S} \\
+                & \eff{ref}: x{:}\tvar{a} \sarr \uhat{S}{l{:}\urt{\tvar{a}\;\Code{ref}}{\vnu \not\in \Dom{S}}}{l \mapsto x \star S} \\
                 & \eff{deref}: l{:}\tvar{a}\;\Code{ref} \sarr \uhat{l \mapsto x \star S}{\urt{\tvar{a}}{\vnu = x}}{l \mapsto x \star S}\\
                 & \eff{updateRef}: l{:}\tvar{a}\;\Code{ref} \sarr y{:}\tvar{a} \sarr \uhat{l \mapsto \_ \star S}{\Unit}{l \mapsto y \star S}
             \end{align*}
@@ -32,9 +32,9 @@
                 & M_{\Code{ref}}\;t = m{:}\Code{Map.t} \sarr t \times \Code{Map.t}  \quad \text{(basic type)} \\
                 & M_{\Code{ref}}\evparenth{P {:} \Code{Map.t}\sarr\Code{Prop}, Q {:}\eraserf{\tau}\sarr \Code{Map.t}\sarr \Code{Map.t}\sarr \Code{Prop}}\;\tau = \\
                 &\qquad m{:}\ort{\Code{Map.t}}{P\;\vnu} \sarr (r{:}\tau, \urt{\Code{Map.t}}{Q\;r\;m\;\vnu})  \quad \text{(refinement type)} \\
-                & \eff{ref}: x{:}\tvar{a} \sarr M_{\Code{ref}}\evparenth{\qt{\vnu{:}\Code{Map.t}}{\top}, \qt{r{:}\tvar{a}\;\Code{ref},m{:}\Code{Map.t},\vnu{:}\Code{Map.t}}{r \not\in \Code{Dom}(m) \land \vnu = m \cup (r, x)}} \;\urt{\tvar{a}\;\Code{ref}}{\top} \\
-                & \eff{deref}: l{:}\tvar{a}\;\Code{ref} \sarr M_{\Code{ref}}\evparenth{\qt{\vnu{:}\Code{Map.t}}{l \in \Code{Dom}(\vnu)}, \qt{r{:}\tvar{a},m{:}\Code{Map.t},\vnu{:}\Code{Map.t}}{r = m[l] \land \vnu = m}} \;\urt{\tvar{a}}{\top} \\
-                & \eff{updateRef}: l{:}\tvar{a}\;\Code{ref} \sarr y{:}\tvar{a} \sarr M_{\Code{ref}}\evparenth{\qt{\vnu{:}\Code{Map.t}}{l \in \Code{Dom}(\vnu)}, \qt{\_,m{:}\Code{Map.t},\vnu{:}\Code{Map.t}}{\vnu = m[l \mapsto y]}} \;\Unit
+                & \eff{ref}: x{:}\tvar{a} \sarr M_{\Code{ref}}\evparenth{\qt{\vnu{:}\Code{Map.t}}{\top}, \qt{r{:}\tvar{a}\;\Code{ref},m{:}\Code{Map.t},\vnu{:}\Code{Map.t}}{r \not\in \Dom{m} \land \vnu = m \cup (r, x)}} \;\urt{\tvar{a}\;\Code{ref}}{\top} \\
+                & \eff{deref}: l{:}\tvar{a}\;\Code{ref} \sarr M_{\Code{ref}}\evparenth{\qt{\vnu{:}\Code{Map.t}}{l \in \Dom{\vnu}}, \qt{r{:}\tvar{a},m{:}\Code{Map.t},\vnu{:}\Code{Map.t}}{r = m[l] \land \vnu = m}} \;\urt{\tvar{a}}{\top} \\
+                & \eff{updateRef}: l{:}\tvar{a}\;\Code{ref} \sarr y{:}\tvar{a} \sarr M_{\Code{ref}}\evparenth{\qt{\vnu{:}\Code{Map.t}}{l \in \Dom{\vnu}}, \qt{\_,m{:}\Code{Map.t},\vnu{:}\Code{Map.t}}{\vnu = m[l \mapsto y]}} \;\Unit
             \end{align*}
             Problem: it seems that not all values in the qualifiers are reachable -- is this a essential problem of underapproximate monad? Kind of like backward reasoning problem in IL.
             \item Trace-based style:

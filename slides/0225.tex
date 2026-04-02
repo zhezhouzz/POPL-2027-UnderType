@@ -141,7 +141,7 @@ In SL, poeple use ``heap'' to represent the concrete model, two worlds can be co
 
 \textbf{Solution:} We also define a ``heap-like'' base model $M_\text{memory}$, and we additionally define the entanglement relation $\sim$, which can be different in different models. $w_1 * w_2$ can be defined when $w_1$ and $w_2$ can be defined in $M_\text{memory}$, i.e.,
 \begin{align*}
-    \Code{Dom}(w_1) \cap \Code{Dom}(w_2) = \emptyset
+    \Dom{w_1} \cap \Dom{w_2} = \emptyset
 \end{align*}\noindent
 and also $w_1 * w_2$ satisfies the axioms shown in the previous slide.
 
@@ -156,7 +156,7 @@ and also $w_1 * w_2$ satisfies the axioms shown in the previous slide.
     \item The empty world $w_e$ is the empty substitution $\emptyset$.
     \item The $w_1 * w_2$ is defined as
     \begin{align*}
-        w_1 * w_2 =& w_1 \cup w_2 \quad \text{ when } \Code{Dom}(w_1) \cap \Code{Dom}(w_2) = \emptyset
+        w_1 * w_2 =& w_1 \cup w_2 \quad \text{ when } \Dom{w_1} \cap \Dom{w_2} = \emptyset
         \\& \text{undefined otherwise}
     \end{align*}\noindent
     \item The pre-order $w_1 \sqsubseteq w_2$ is defined as $w_1 \subseteq w_2$.
@@ -169,13 +169,13 @@ and also $w_1 * w_2$ satisfies the axioms shown in the previous slide.
 \textbf{Entanglement Relation:} 
 \begin{itemize}
     \item We use a set of worlds $W$ to represent the entanglement relation $\sim$.
-    \item $\forall w_1\; w_2. w_1 \sim w_2 \implies \Code{Dom}(w_1) = \Code{Dom}(w_2)$.
+    \item $\forall w_1\; w_2. w_1 \sim w_2 \implies \Dom{w_1} = \Dom{w_2}$.
     \item $\forall w_1\; w_2. w_1 \in W \land w_2 \in W \implies w_1 \sim w_2$.
     \item $\forall w_1\; w_2. w_1 \sim w_2 \implies \exists w_1'\;w_2'. w_1 \subseteq w_1' \land w_2 \subseteq w_2' \land w_1' \sim w_2'$.
 \end{itemize}
 All $\sim$ relations can be generated from the rules above, easily prove that the generated $\sim$ relation can satisfy the three axioms.
 
-\textbf{Compact Representation:} We directly use a set of worlds $W$ (they share the same domain) to represent a model, that is the basic model with domain $\Code{Dom}{W}$ plus the entanglement relation $\sim$ generated from the rules above.
+\textbf{Compact Representation:} We directly use a set of worlds $W$ (they share the same domain) to represent a model, that is the basic model with domain $\Dom{W}$ plus the entanglement relation $\sim$ generated from the rules above.
 \end{frame}
 
 \begin{frame}[fragile]
@@ -446,8 +446,8 @@ For a models represented as a set of worlds,
     \end{align*}
     \item $W , W'$ produces a set of models:
     \begin{align*}
-        &W \in (W_1 , W_2) \iff \Code{Dom}(W) = \Code{Dom}(W_1) \cup \Code{Dom}(W_2) \land
-        \\&\Code{Proj}(\Code{Dom}(W_1), W) = W_1 \land \Code{Proj}(\Code{Dom}(W_2), W) = W_2 
+        &W \in (W_1 , W_2) \iff \Dom{W} = \Dom{W_1} \cup \Dom{W_2} \land
+        \\&\Code{Proj}(\Dom{W_1}, W) = W_1 \land \Code{Proj}(\Dom{W_2}, W) = W_2 
     \end{align*}
 \end{itemize}
 
