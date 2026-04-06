@@ -1,3 +1,4 @@
+.claude/*
 *.pdf
 !doc/*.pdf
 *.fdb_latexmk
