@@ -75,7 +75,7 @@ Note that for any substitution $\sigma$, $\mapCompat{\sigma}{\sigma}$ always hol
 
 \subsection{Choice algebra}
 
-\begin{definition}[Choice algebra]
+\begin{definition}[Choice algebra]\label{def:choice-algebra}
 A \emph{(flat) choice algebra} is a \emph{partial commutative semiring}
 $(\Res,{+},{\times},\mathbf{0},\mathbf{1})$: partial binary operations
 ${+}$ and~${\times}$ and constants $\mathbf{0},\mathbf{1}$ such that,
@@ -87,7 +87,7 @@ $m \times \mathbf{0} = \mathbf{0} \times m = \mathbf{0}$.
 We realize it as follows; elements of~$\Res$ are called \emph{resources}.
 \begin{itemize}
 \item Each resource $m \in \Res$ is a \emph{set of substitutions}
-  (element of $\mathcal{P}(\Code{Var} \rightharpoonup \Code{Value})$).
+  (element of $\mathcal{P}(\Code{Var} \rightharpoonup \Code{Value})$) which has the \emph{same domain}. We reuse $\Dom{\cdot}$ for the domain of a resource, the domain of empty set is empty.
 \item $\mathbf{0} = \emptyset$ and $\mathbf{1} = \{\emptyset\}$.
 \item $m_1 + m_2$ is set union, and is well-formed only when
   $\Dom{m_1} = \Dom{m_2}$, where
@@ -98,36 +98,73 @@ We realize it as follows; elements of~$\Res$ are called \emph{resources}.
 We also equip $\Res$ with a partial order $\leq$: for $m_1,m_2 \in \Res$,
 define $m_1 \leq m_2$ to hold when there exists a finite set
 $X \subseteq_{\mathrm{fin}} \Code{Var}$ such that
-$\restrictTo{m_1}{X} = m_2$.
+$\restrictTo{m_2}{X} = m_1$.
 \end{definition}
 
-The order $\leq$ is the analogue of ``more information by enlarging the
-substitution set through compatible combination''; it underpins
+\paragraph{Partial order} The order $\leq$ is the analogue of ``more information by releasing the variables set constraint''. Note that for any well-defined multiplication $m_1 \times m_2$, it always holds that $m_1 \leq m_1 \times m_2$ and $m_2 \leq m_1 \times m_2$. It underpins
 Kripke-style monotonicity for the multiplicative fragment.
 
-\subsection{Pure propositions}\label{subsec:pure-prop}
-
-Before adding approximation, we assume a class of \emph{pure}
-propositions whose semantics are \emph{sets of substitutions}.
-
-\begin{definition}[Pure propositions --- syntax fragment]
-Let atomic tests range over standard value predicates.
-A minimal grammar adequate for examples below is
+\begin{example}[Choice algebra]
+Let $m_x \doteq \{\,[x \mapsto 1],\, [x \mapsto 2]\,\}$, so $|m_x| = 2$ and
+$\Dom{m_x} = \{x\}$.
+Let $m_y \doteq \{\,[y \mapsto 3],\, [y \mapsto 4]\,\}$, with $\Dom{m_y} = \{y\}$.
+Then
 \[
-  \phi \;::=\; \mathsf{atom} \mid \Dom{X} \mid \phi \cap \phi
-    \mid \phi \cup \phi \mid \phi \setminus \phi \mid \phi \times \phi
+  m_x \times m_y
+  = \left\{
+    \begin{array}{@{}l@{}}
+      [x \mapsto 1,\, y \mapsto 3],\,
+      [x \mapsto 1,\, y \mapsto 4],\\[\jot]
+      [x \mapsto 2,\, y \mapsto 3],\,
+      [x \mapsto 2,\, y \mapsto 4]
+    \end{array}
+  \right\}.
 \]
-where $\Dom{X}$ asserts that every substitution in the denotation
-has domain exactly~$X$.
-Each $\phi$ denotes a set $\denot{\phi}$ of substitutions.
-\end{definition}
+Now take
+$m_{xy} \doteq \{\, [x \mapsto 1,\, y \mapsto 3],\, [x \mapsto 2,\, y \mapsto 4]\,\}$.
+We have
+$\restrictTo{m_{xy}}{\{x\}} = m_x$ and $\restrictTo{m_{xy}}{\{y\}} = m_y$,
+so by the definition of~$\leq$,
+$m_x \leq m_{xy}$ and $m_y \leq m_{xy}$.
+The product satisfies the same restrictions:
+$\restrictTo{(m_x \times m_y)}{\{x\}} = m_x$ and
+$\restrictTo{(m_x \times m_y)}{\{y\}} = m_y$.
+Nevertheless $|m_x \times m_y| = 4 > 2 = |m_{xy}|$; equivalently,
+\[
+  m_x \times m_y
+  = m_{xy} + \{\, [x \mapsto 1,\, y \mapsto 4],\, [x \mapsto 2,\, y \mapsto 3] \,\},
+\]
+where $+$ is resource addition (set union) from \autoref{def:choice-algebra};
+the sum is well-formed because $\Dom{m_{xy}} = \{x,y\}$ matches the domain
+union of the second summand.
+\end{example}
 
-\begin{definition}[Embedding into resources]
-Given $\denot{\phi}$, we reuse the name $\phi$ for the associated
-resource proposition, and write $m \models \phi$ when
-$\denot{\phi} \leq m$ in the sense of the order above (with the
-obvious coercion of a set of substitutions into a resource).
-\end{definition}
+\paragraph{Partial order and addition} The partial order ($\leq$) is almost completely independent of
+addition ($+$) on resources: in particular, when $m_1 + m_2$ is defined we do \emph{not}
+generally expect the usual monotonicity inequality
+$m_1 \leq m_1 + m_2$.
+This is unlike incorrectness logic~\cite{OHP19} and outcome
+logic~\cite{ZDS23,Zil25TOPLAS}, where branching is tightly coupled to
+the consequence relation.
+Here, $+$ simply adjoins more substitutions---i.e.\ it records strictly
+more alternatives---and whether that strengthens or weakens a
+judgment depends on the approximation mode.
+Under an overapproximate interpretation, extra alternatives relax universal
+guarantees (more ways a safety property can fail); under an
+underapproximate interpretation, they add witnesses for existential or
+reachability claims.
+Because the two modes are dual and our modalities can mark formulas
+with either interpretation, a logic that uniformly enforces Kripke monotonicity
+should not identify $\leq$ with enrichment by~$+$.
+By contrast, expanding or shrinking the set of tracked variables is
+orthogonal to over- versus under-approximation: for example, the same
+resource
+$\{\,[x \mapsto 0],\, [x \mapsto 1],\, [x \mapsto 2]\,\}$
+is compatible with an overapproximate interpretation that $x$ may range
+over~$[0,5]$ and, separately, with an underapproximate interpretation that
+witnesses for~$x$ lie in~$[1,2]$.
+Extending every substitution with arbitrary bindings for a fresh
+variable~$y$ disturbs neither kind of judgment.
 
 \subsection{Basic choice logic}
 
@@ -223,6 +260,30 @@ computed fiberwise while preserving read-only parts of the input.
 We keep working with the flat carrier in this paper fragment, and
 defer the monadic layering to the technical development of dependent
 separating contexts in types.
+
+\subsection{Pure propositions}\label{subsec:pure-prop}
+
+Before adding approximation, we assume a class of \emph{pure}
+propositions whose semantics are \emph{sets of substitutions}.
+
+\begin{definition}[Pure propositions --- syntax fragment]
+Let atomic tests range over standard value predicates.
+A minimal grammar adequate for examples below is
+\[
+  \phi \;::=\; \mathsf{atom} \mid \Dom{X} \mid \phi \cap \phi
+    \mid \phi \cup \phi \mid \phi \setminus \phi \mid \phi \times \phi
+\]
+where $\Dom{X}$ asserts that every substitution in the denotation
+has domain exactly~$X$.
+Each $\phi$ denotes a set $\denot{\phi}$ of substitutions.
+\end{definition}
+
+\begin{definition}[Embedding into resources]
+Given $\denot{\phi}$, we reuse the name $\phi$ for the associated
+resource proposition, and write $m \models \phi$ when
+$\denot{\phi} \leq m$ in the sense of the order above (with the
+obvious coercion of a set of substitutions into a resource).
+\end{definition}
 
 \subsection{Modal choice types: syntax}\label{sec:choice-types-syntax}
 
