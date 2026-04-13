@@ -54,7 +54,7 @@
 %   \mathbin{{+}\mspace{-8mu}{+}}%
 % }
 \newcommand\listconcat{{\concat}}
-\newcommand{\impl}{{\implies}}
+\newcommand{\impl}{{\,\Rightarrow\,}}
 \newcommand{\notiff}{%
   \mathrel{{\ooalign{\hidewidth$\not\phantom{"}$\hidewidth\cr$\iff$}}}}
 \newcommand{\tpi}{\S{int}}
@@ -142,6 +142,7 @@
 \newcommand{\effarr}{{\textcolor{DeepGreen}{\,\blacktriangleright}}}
 \newcommand{\increffarr}{{\textcolor{DeepGreen}{\,\blacktriangleright\mspace{-5mu}\blacktriangleright}}}
 \newcommand{\effstar}{{\textcolor{DeepGreen}{\bigstar}}}
+% Comma and asterisk side-by-side; negative \mkern tightens the gap (adjust -6mu as needed).
 % \vartriangleright
 % type
 %% type parenthesis
@@ -742,6 +743,33 @@
 \newcommand{\cblue}[1]{\textcolor{CobaltBlue}{#1}}
 \newcommand{\sev}[2]{ \evparenth{ \Code{#1}\;{#2} \eveq \vnu \,|\, {#2} }}
 
-% Separation logic
-\newcommand{\sep}{\;*\;}
-\newcommand{\wand}{\mathrel{-\mkern-6mu*}}
+% Choice logic
+\newcommand{\sep}{\,\*\,}
+% Longer bar than hyphen-minus; tweak \mkern if the star overlaps.
+\newcommand{\wand}{\,\mathrel{\relbar\mkern-8mu*}\,}
+\newcommand{\upperB}{\textcolor{magenta}{\boxed{\mathsf{o}}}}
+\newcommand{\lowerB}{\textcolor{CobaltBlue}{\boxed{\mathsf{u}}}}
+% \newcommand{\upperB}{\boxed{\mathsf{o}}}
+% \newcommand{\lowerB}{\boxed{\mathsf{u}}}
+\newcommand{\qtrue}{\top}
+\newcommand{\qfalse}{\bot}
+\newcommand{\subs}{\sigma}
+\newcommand{\Res}{\mathcal{R}}
+\newcommand{\Mring}{\mathcal{M}}
+
+% Judgment markers (e.g.\ valid vs.\ invalid typing or choice obligations)
+\newcommand{\judgok}{\textcolor{DeepGreen}{\boldsymbol{\checkmark}}}
+\newcommand{\judgfail}{\textcolor{red}{\text{\Large\ding{55}}}}
+
+\newcommand{\chland}{\textcolor{DeepGreen}{\boldsymbol{\,\land\,}}}
+\newcommand{\chlor}{\textcolor{DeepGreen}{\boldsymbol{\,\lor\,}}}
+\newcommand{\chimpl}{\textcolor{DeepGreen}{\boldsymbol{\impl}}}
+\newcommand{\choplus}{\textcolor{DeepGreen}{\boldsymbol{\,\oplus\,}}}
+\newcommand{\chwand}{\textcolor{DeepGreen}{\boldsymbol{\,\wand\,}}}
+\newcommand{\chtrue}{\textcolor{DeepGreen}{\boldsymbol{\top}}}
+\newcommand{\chfalse}{\textcolor{DeepGreen}{\boldsymbol{\bot}}}
+\newcommand{\chstar}{\textcolor{DeepGreen}{\boldsymbol{\,*\,}}}
+\newcommand{\chpers}{\textcolor{DeepGreen}{\boldsymbol{\Box}}}
+\newcommand{\semistar}{\textcolor{DeepGreen}{\boldsymbol{\mathbin{,\mkern -8mu\ast}}}}
+\newcommand{\chiff}{\textcolor{DeepGreen}{\boldsymbol{\iff}}}
+\newcommand{\chterm}{\textcolor{DeepGreen}{\boldsymbol{\diamond}}}

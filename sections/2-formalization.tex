@@ -1,24 +1,13 @@
 \section{Formalization}\label{sec:formal}
 
-\providecommand{\upperB}{\boxed{\mathsf{o}}}
-\providecommand{\lowerB}{\boxed{\mathsf{u}}}
-\providecommand{\qtrue}{\top}
-\providecommand{\qfalse}{\bot}
-\newcommand{\subs}{\sigma}
-\newcommand{\Res}{\mathcal{R}}
+This section presents the our choice logic and choice types. Similar with separation logic, our choice logic is also based on underline resource algebra, although such an algebra is additionally equipped with the branching operators. In the rest of this section, we will first introduce the preliminary definitions and then present the choice algebra, choice logic, and our choice types.
 
-This section presents the semantic foundations of our system in
-layers: substitutions and finite dependency structure; the choice
-resource algebra; pure propositions embedded in that algebra; choice
-logic with approximation modalities; and finally modal refinement
-types whose meaning is a choice-logic formula.
-Except where noted, definitions follow the most recent formulation in
-our working notes (slides of March~17).
+\subsection{Preliminaries}
 
-\subsection{Substitutions and pointwise combination}
+In functional language, the context of a program typically be treated as a store or substitution. We provides the corresponding definition and related operations as the following.
 
-\begin{definition}[Compatible union of partial maps]\label{def:subst-compat}
-  Substitutions are partial maps $\Code{Var} \rightharpoonup \Code{Value}$.
+\begin{definition}[Substitution]\label{def:subst-compat}
+  Substitutions are partial maps from variables to values, i.e., $\Code{Var} \rightharpoonup \Code{Value}$. We write $\Dom{\subs}$ for its domain, i.e., the set of variables where the substitution is defined.
   Write $\mapCompat{\sigma_1}{\sigma_2}$ when $\sigma_1$ and $\sigma_2$ are
   \emph{compatible}, i.e.\ they agree on the intersection of their domains.
   \[
@@ -26,86 +15,95 @@ our working notes (slides of March~17).
     \doteq
     \forall x \in \Dom{\sigma_1} \cap \Dom{\sigma_2}.\; \sigma_1(x) = \sigma_2(x).
   \]
-  Under $\mapCompat{\sigma_1}{\sigma_2}$, the \emph{union} of their graphs is
-  again a partial map, written $\sigma_1 \cup \sigma_2$ as usual.
+  Under $\mapCompat{\sigma_1}{\sigma_2}$, the \emph{union} of substitutions is again a substitution, written $\sigma_1 \cup \sigma_2$ as usual. Fix finite $X \subseteq_{\mathrm{fin}} \Code{Var}$ and a substitution $\sigma$, we write $\restrictTo{\sigma}{X}$ for the restriction of the $\sigma$ to $\Dom{\sigma} \cap X$, i.e.,
+  \begin{align*}
+    \restrictTo{\sigma}{X} \doteq \{ [x\mapsto \sigma(x)] \mid x \in \Dom{\sigma} \cap X \}.
+  \end{align*}
  \end{definition}
 
-We fix a set $\Code{Var}$ of variables and a domain $\Code{Value}$ of
-semantic values.
-A \emph{substitution} is a partial map
-$\subs : \Code{Var} \rightharpoonup \Code{Value}$.
-We write $\Dom{\subs}$ for its domain.
+ As mentioned in \autoref{sec:overview}, the choice resource is an capablity to freely decide assignments of variables. Therefore, we define the choice resource the following.
 
-\begin{definition}[Resource compatibility and pointwise union]\label{def:resource-times}
-Let $m_1$ and $m_2$ be sets of substitutions.
-We reuse $\mapCompat{\cdot}{\cdot}$: for sets, $\mapCompat{m_1}{m_2}$ means that
-every cross-pair of substitutions is compatible (in the sense of
-\autoref{def:subst-compat}):
-\[
-  \mapCompat{m_1}{m_2}
-  \;\stackrel{\mathrm{def}}{\Longleftrightarrow}\;
-  \forall \subs_1 \in m_1.\;\forall \subs_2 \in m_2.\; \mapCompat{\subs_1}{\subs_2}.
-\]
-The \emph{pointwise union} $m_1 \times m_2$ is the partial binary operation
-\[
-  m_1 \times m_2 \;\doteq\;
+\begin{definition}[Resource]\label{def:resource}
+A resource is a set of substitutions that \emph{share the same domain}. The resource space is defined as the following.
+\begin{align*}
+  \Res \doteq \{ m ~|~ m \in \mathcal{P}(\Code{Var} \rightharpoonup \Code{Value}) \text{ and } \forall \sigma\;\sigma' \in m. \Dom{\sigma} = \Dom{\sigma'} \}.
+\end{align*}
+We also extends the definition of domain, compatible, and restriction from substitutions to resources. That is,
+\begin{align*}
+  &\Dom{m} \doteq 
   \begin{cases}
-    \{\, \subs_1 \cup \subs_2 \mid \subs_1 \in m_1,\; \subs_2 \in m_2 \,\}
-      & \text{if } \mapCompat{m_1}{m_2}, \\
+    \Dom{\subs}
+      & \text{when exists } \subs \in m  \\
+    \emptyset
+      & m = \emptyset
+  \end{cases}
+  \\&\mapCompat{m_1}{m_2}
+  \doteq
+  \forall \subs_1 \in m_1.\;\forall \subs_2 \in m_2.\; \mapCompat{\subs_1}{\subs_2}
+  \\&\restrictTo{m}{X}
+  \doteq
+  \{\, \restrictTo{\subs}{X} \mid \subs \in m \,\}
+\end{align*}
+\end{definition}
+
+Note that for any resource $m$, $\mapCompat{m}{m}$ always holds since they always agree on their domain. Similarly, singleton set $\{m\}$ is compatible with itself.
+
+\begin{definition}[Resource Operation]\label{def:resource-times} We define two operations ($\Res \times \Res \rightharpoonup \Res$) for resources. The \emph{resource product} $m_1 \times m_2$ is the partial binary operation which produce peicewise union of two resources, i.e.,
+  \[
+    m_1 \times m_2 \;\doteq\;
+    \begin{cases}
+      \{\, \subs_1 \cup \subs_2 \mid \subs_1 \in m_1,\; \subs_2 \in m_2 \,\}
+        & \text{if } \mapCompat{m_1}{m_2}, \\
+      \text{undefined}
+        & \text{otherwise.}
+    \end{cases}
+  \]
+The \emph{resource sum} $m_1 + m_2$ is the union of two resources, i.e.,
+\[
+  m_1 + m_2 \;\doteq\;
+  \begin{cases}
+    m_1 \cup m_2
+      & \text{if } \forall m_1 \in m_1.\; \forall m_2 \in m_2.\; \Dom{m_1} = \Dom{m_2}, \\
     \text{undefined}
       & \text{otherwise.}
   \end{cases}
 \]
+  \end{definition}
+
+The partial order $\leq$ over resources is the analogue of ``more information by releasing the variables set constraint''.
+
+\begin{definition}[Partial order]\label{def:partial-order} The partial order $\leq$ is defined as 
+    \begin{align*}
+      m_1 \leq m_2 \doteq \restrictTo{m_2}{\Dom{m_1}} = m_1.
+    \end{align*}
+Easily to know, $\leq$ is reflexive, antisymmetric, and transitive.
 \end{definition}
-
-Note that for any substitution $\sigma$, $\mapCompat{\sigma}{\sigma}$ always holds since they always agree on their domain. Similarly, singleton set $\{\sigma\}$ is compatible with itself. Thus, if $m$ is a singleton set, $m \times m = m$.
-
-\begin{definition}[Restriction to a variable set]\label{def:restriction}
-  Fix finite $X \subseteq_{\mathrm{fin}} \Code{Var}$.
-  For a substitution $\sigma$, write $\restrictTo{\sigma}{X}$ for the usual
-  restriction of the partial map~$\sigma$ to~$X$: domain
-  $\Dom{\sigma} \cap X$, and agreement with~$\sigma$ on that set (so
-  $X \subseteq \Dom{\sigma}$ is not required).
-  For a set $m$ of substitutions, set
-  \[
-    \restrictTo{m}{X} \;\doteq\; \{\, \restrictTo{\sigma}{X} \mid \sigma \in m \,\}.
-  \]
-\end{definition}
-
 
 \subsection{Choice algebra}
 
-\begin{definition}[Choice algebra]\label{def:choice-algebra}
-A \emph{(flat) choice algebra} is a \emph{partial commutative semiring}
-$(\Res,{+},{\times},\mathbf{0},\mathbf{1})$: partial binary operations
-${+}$ and~${\times}$ and constants $\mathbf{0},\mathbf{1}$ such that,
-whenever the expressions involved are well-formed, the usual semiring
-laws hold---associativity and commutativity of ${+}$ and~${\times}$,
-identities $\mathbf{0}$ and~$\mathbf{1}$, distributivity of~${\times}$
-over~${+}$, and annihilation
-$m \times \mathbf{0} = \mathbf{0} \times m = \mathbf{0}$.
-We realize it as follows; elements of~$\Res$ are called \emph{resources}.
-\begin{itemize}
-\item Each resource $m \in \Res$ is a \emph{set of substitutions}
-  (element of $\mathcal{P}(\Code{Var} \rightharpoonup \Code{Value})$) which has the \emph{same domain}. We reuse $\Dom{\cdot}$ for the domain of a resource, the domain of empty set is empty.
-\item $\mathbf{0} = \emptyset$ and $\mathbf{1} = \{\emptyset\}$.
-\item $m_1 + m_2$ is set union, and is well-formed only when
-  $\Dom{m_1} = \Dom{m_2}$, where
-  $\Dom{m} \doteq \bigcup_{\subs \in m} \Dom{\subs}$.
-\item ${\times}$ is the pointwise union from \autoref{def:resource-times},
-  well-formed exactly on $\mapCompat{\cdot}{\cdot}$ pairs.
-\end{itemize}
-We also equip $\Res$ with a partial order $\leq$: for $m_1,m_2 \in \Res$,
-define $m_1 \leq m_2$ to hold when there exists a finite set
-$X \subseteq_{\mathrm{fin}} \Code{Var}$ such that
-$\restrictTo{m_2}{X} = m_1$.
-\end{definition}
+The choice resource forms an algebra, which is not only a partial commutative monoid as in separation logic, but also a partial commutative semiring (PCS).
 
-\paragraph{Partial order} The order $\leq$ is the analogue of ``more information by releasing the variables set constraint''. Note that for any well-defined multiplication $m_1 \times m_2$, it always holds that $m_1 \leq m_1 \times m_2$ and $m_2 \leq m_1 \times m_2$. It underpins
-Kripke-style monotonicity for the multiplicative fragment.
+\begin{definition}[Choice algebra]\label{def:choice-semiring}
+  A \emph{partial commutative semiring}
+  $(\mathcal{M},{+},{\times},\mathbf{0},\mathbf{1})$ consists of a carrier set $\mathcal{M}$ and partial binary operations ${+}$ and ${\times}$ and unit elements $\mathbf{0},\mathbf{1}$ that satisfies the following properties:
+  \begin{itemize}
+  \item Indentity: $\forall m \in \mathcal{M}. m + \mathbf{0} = m$ and $m \times \mathbf{1} = m$.
+  \item Commutative (when operations are defined): $\forall m_1\;m_2 \in \mathcal{M}. m_1 + m_2 = m_2 + m_1$ and $m_1 \times m_2 = m_2 \times m_1$.
+  \item Associative (when operations are defined): $\forall m_1\;m_2\;m_3 \in \mathcal{M}. (m_1 + m_2) + m_3 = m_1 + (m_2 + m_3)$ and $(m_1 \times m_2) \times m_3 = m_1 \times (m_2 \times m_3)$.
+  \end{itemize}
+The choice algebra is a partial commutative semiring equipped with a partial order $\leq$ that satisfies the bifunctoriality property:
+  \begin{align*}
+    \forall m_1\;m_2\;m_1'\;m_2' \in \mathcal{M}. m_1 \leq m_1' \land m_2 \leq m_2' &\implies m_1 \times m_2 \leq m_1' \times m_2' 
+    \\& (\text{when } m_1 \times m_2 \text{ and } m_1' \times m_2' \text{ are defined.})
+    \\\forall m_1\;m_2\;m_1'\;m_2' \in \mathcal{M}. m_1 \leq m_1' \land m_2 \leq m_2' &\implies m_1 + m_2 \leq m_1' + m_2' 
+    \\& (\text{when } m_1 + m_2 \text{ and } m_1' + m_2' \text{ are defined.})
+  \end{align*}
+  \end{definition}
+
+Easily to know, $(\Res,{+},{\times},\emptyset,\{ \emptyset \})$ and $\leq$ is a choice algebra.
 
 \begin{example}[Choice algebra]
-Let $m_x \doteq \{\,[x \mapsto 1],\, [x \mapsto 2]\,\}$, so $|m_x| = 2$ and
+Let $m_x \doteq \{\,[x \mapsto 1],\, [x \mapsto 2]\,\}$, so
 $\Dom{m_x} = \{x\}$.
 Let $m_y \doteq \{\,[y \mapsto 3],\, [y \mapsto 4]\,\}$, with $\Dom{m_y} = \{y\}$.
 Then
@@ -134,13 +132,13 @@ Nevertheless $|m_x \times m_y| = 4 > 2 = |m_{xy}|$; equivalently,
   m_x \times m_y
   = m_{xy} + \{\, [x \mapsto 1,\, y \mapsto 4],\, [x \mapsto 2,\, y \mapsto 3] \,\},
 \]
-where $+$ is resource addition (set union) from \autoref{def:choice-algebra};
-the sum is well-formed because $\Dom{m_{xy}} = \{x,y\}$ matches the domain
-union of the second summand.
 \end{example}
 
-\paragraph{Partial order and addition} The partial order ($\leq$) is almost completely independent of
-addition ($+$) on resources: in particular, when $m_1 + m_2$ is defined we do \emph{not}
+\paragraph{Partial order, addition, and multiplication} We always have
+\begin{align*}
+  \forall m_1\;m_2 \in \Res. m_1 \leq m_1 \times m_2 \quad (\text{when } m_1 \times m_2 \text{ is defined.})
+\end{align*}
+that is because we always have $\restrictTo{m_1 \times m_2}{\Dom{m_1}} = m_1$. However, the similar property does not hold for addition: when $m_1 + m_2$ is defined we do \emph{not}
 generally expect the usual monotonicity inequality
 $m_1 \leq m_1 + m_2$.
 This is unlike incorrectness logic~\cite{OHP19} and outcome
@@ -166,148 +164,89 @@ witnesses for~$x$ lie in~$[1,2]$.
 Extending every substitution with arbitrary bindings for a fresh
 variable~$y$ disturbs neither kind of judgment.
 
-\subsection{Basic choice logic}
+\subsection{Choice logic}
 
-\emph{Basic} choice logic adds bunched connectives over resources.
+\emph{Basic} choice logic is parameterized by set of atomic propositions $\mathcal{A}$ and has no approximation or persistency modality. Then, every judgment is \emph{precisely} describes a resource.
 We write $m \models p$ for satisfaction of a resource proposition $p$
 at world $m \in \Res$.
 
-\begin{definition}[Basic choice logic]
-Define satisfaction for the non-modal connectives by:
+\begin{definition}[Basic choice logic] Let $(\mathcal{M},{+},{\times},\mathbf{0},\mathbf{1}, \leq)$ to be a choice algebra. Let $\mathcal{A}$ to be atomic propositions. Let $\denot{-} : \mathcal{A} \sarr \mathcal{M}$ be an interpretation function of pure formulas $\phi$. Then we have:
 \begin{itemize}
-\item $m \models p * q$ iff $\exists m_1,m_2.\; m_1 \times m_2 \leq m$ and
+\item $m \models \chtrue$ always;
+\item $m \models \chfalse$ iff $m = \mathbf{0}$;
+\item $m \models a$ iff $a \in \mathcal{A}$ and $\denot{a} \leq m$;
+\item $m \models p \chland q$ iff $m \models p$ and $m \models q$;
+\item $m \models p \chlor q$ iff $m \models p$ or $m \models q$;
+\item $m \models p \chimpl q$ iff for all $m \leq m'. m' \models p$ implies $m' \models q$;
+% \item $m \models \forall x.\,p$ iff for all values $v$, $m \models p[x\mapsto v]$;
+% \item $m \models \exists x.\,p$ iff for some $v$, $m \models p[x\mapsto v]$.
+\item $m \models p \chstar q$ iff $\exists m_1\;m_2.\; m_1 \times m_2 \leq m$ and
   $m_1 \models p$ and $m_2 \models q$.
-\item $m \models p \wand q$ iff $\forall m'.\; m' \models p$ implies
+\item $m \models p \chwand q$ iff $\forall m'.\; \mapCompat{m'}{m}$ and $m' \models p$ implies
   $m' \times m \models q$.
-\item $m \models p \oplus q$ iff $\exists m_1,m_2.\; m_1 + m_2 \leq m$ and
+\item $m \models p \choplus q$ iff $\exists m_1\;m_2.\; m_1 + m_2 \leq m$ and
   $m_1 \models p$ and $m_2 \models q$.
-\item Boolean and first-order structure:
-  $m \models \qtrue$ always;
-  $m \models \qfalse$ iff $m = \mathbf{0}$;
-  $m \models p \land q$ iff $m \models p$ and $m \models q$;
-  $m \models p \lor q$ iff $m \models p$ or $m \models q$;
-  $m \models p \Rightarrow q$ iff $m \models p$ implies $m \models q$;
-  $m \models \forall x.\,p$ iff for all values $v$, $m \models p[x\mapsto v]$;
-  $m \models \exists x.\,p$ iff for some $v$, $m \models p[x\mapsto v]$.
 \end{itemize}
-Pure propositions embed via the coercion above.
+We still write $p \models q$ iff for all $m \in \Res$, $m \models p$ implies $m \models q$.
 \end{definition}
 
-The connective $\oplus$ internalizes \emph{nondeterministic branching}
-as resource sum; $*$ internalizes \emph{independent} combination of
-partial information.
-The magic wand isolates the hypotheses needed for a multiplicative
-conclusion, and will appear in the semantics of higher-order
-application patterns (argument usage that ``consumes'' part of the
-choice budget).
+Intuitively, $m$ models $\upperB p$ (or $\lowerB p$) iff there exists a supperset (or subset) $m'$ of $m$ that models $p$. On the other hand, $m$ models $\chpers p$ iff $m$ is a empty resource or a singleton resource that models $p$.
 
-\subsection{Approximation modalities}
 
-\begin{definition}[Choice logic with approximation]
-Extend the logic with unary modalities $\upperB$ (overapproximation)
-and $\lowerB$ (underapproximation) by
-\begin{itemize}
-\item $m \models \upperB \phi$ iff $\exists m_1,m'.\; m + m_1 = m'$ and
-  $m' \models \phi$;
-\item $m \models \lowerB \phi$ iff $\exists m_1,m'.\; m' + m_1 = m$ and
-  $m' \models \phi$,
-\end{itemize}
-where $+$ is the partial sum on resources (again, only defined on
-equal domains).
+\begin{definition}[Choice logic] Choice logic additional equiped with three modalities than basic choice logic, i.e., the overapproximation modality $\upperB$, the underapproximation modality $\lowerB$, and the persistency modality $\chpers$.
+  \begin{itemize}
+    \item $m \models \upperB p$ iff $\exists m_1\;m'.\; m + m_1 = m'$ and
+      $m' \models p$;
+    \item $m \models \lowerB p$ iff $\exists m_1\;m'.\; m' + m_1 = m$ and
+      $m' \models p$,
+    \item $m \models \chpers p$ iff $|m| \leq 1$ and
+      $m \models p$,
+    \end{itemize}
 \end{definition}
 
-Thus $\upperB$ relaxes a constraint by embedding $m$ into a larger
-alternative sum, while $\lowerB$ strengthens it by exhibiting $m$ as a
-sum that already includes a witness sub-resource satisfying~$\phi$.
-The modalities interact cleanly with $\land$ and $\oplus$ on pure
-approximation-normal forms: for instance, nested uses of $\upperB$ over
-conjunctions collapse to $\upperB$ applied to the intersection of the
-underlying pure propositions, and dually for $\lowerB$ and unions; we
-use those laws tacitly when reasoning about refinement qualifiers.
+When the expressiveness of atomic propositions is rich enough, the nested uses of $\upperB$ and $\lowerB$ over logical connectives collapse to $\upperB$ and $\lowerB$ applied to the underlying pure propositions directly. For example, $\upperB (\upperB \phi_1 \chland \upperB \phi_2)$ is equivalent to $\upperB \phi_1 \chland \upperB \phi_2$, and $\lowerB (\upperB \phi_1 \chland \upperB \phi_2)$ is equivalent to $\lowerB (\phi_1 \cap \phi_2)$.
 
-\subsection{Approximation normal form}
+\begin{theorem}[Collapse of nested modalities] Assume $\mathcal{A}$ is rich enough, i.e.,
+\begin{align*}
+  % &\forall X. \exists \phi \in \mathcal{A}. \denot{\phi} = \{ \subs \mid \Dom{\subs} = X \}
+  % \\
+  &\forall \phi_1\;\phi_2 \in \mathcal{A}. \exists \phi_3 \in \mathcal{A}. \denot{\phi_3} = \denot{\phi_1} \cap \denot{\phi_2}
+  \\& \forall \phi_1\;\phi_2 \in \mathcal{A}. \exists \phi_3 \in \mathcal{A}. \denot{\phi_3} = \denot{\phi_1} \cup \denot{\phi_2}
+  \\& \forall \phi_1\;\phi_2 \in \mathcal{A}. \exists \phi_3 \in \mathcal{A}. \denot{\phi_3} = \denot{\phi_1} \times \denot{\phi_2}
+\end{align*}
+Then, all formula in choice logic can be expressed in approximation normal form, i.e., $\upperB$ and $\lowerB$ are only applied to pure propositions.
+\end{theorem}
 
-For logical considerations (and for effective normalization in
-implementations), it is convenient to restrict to layered formulas in
-which approximation markers apply only to pure propositions.
+\subsection{Core Language and Choice Types}
 
-\begin{definition}[Approximation normal form (syntax sketch)]
-\[
-  p \;::=\; \upperB \phi \mid \lowerB \phi \mid
-      p \land p \mid p \lor p \mid p \Rightarrow p \mid
-      \qtrue \mid \qfalse \mid
-      p * p \mid p \oplus p \mid p \wand p \mid
-      \forall x.\, p \mid \exists x.\, p
-\]
-with $\phi$ ranging over pure propositions
-(\autoref{subsec:pure-prop}).
-\end{definition}
+\begin{figure}[h]
+{\small
+  \begin{alignat*}{2}
+    \text{\textbf{Variables }}& \quad &\quad& x, y, z, \vnu, ...
+    \\\text{\textbf{Data constructors }}& \quad &d ::= \quad & () ~|~ \Code{true} ~|~ \Code{false} ~|~ \Code{O} ~|~ \Code{S} ~|~ \Code{Cons} ~|~ \Code{Nil} ~|~ \Code{Leaf} ~|~ \Code{Node}
+    \\\text{\textbf{Base Types}}& \quad & b  ::= \quad &  \Code{unit} ~|~ \Code{bool} ~|~ \Code{nat} ~|~ \Code{int} ~|~ ...
+    \\\text{\textbf{Basic Types}}& \quad & s  ::= \quad &  b ~|~ s\sarr s
+    \\\text{\textbf{Operations}}& \quad & \primop ::= \quad & {+} ~|~ {-} ~|~ {==} ~|~ {<} ~|~ {\leq} ~|~ ...
+    \\ \text{\textbf{Constants }}& \quad &c ::= \quad & () ~|~ \mathbb{B} ~|~ \mathbb{Z} ~|~ d\ \overline{c}\ ...
+    \\ \text{\textbf{Values }}& \quad  & v ::= \quad & c ~|~ x ~|~ \zlam{x}{s}{e} ~|~ \zfix{f}{s}{x}{s}{e}
+    \\ \text{\textbf{Expressions}}& \quad & e ::=\quad & v ~|~ \err ~|~ \zlet{x}{e}{e} ~|~ \zlet{x{:}s}{e}{e} ~|~ \zlet{x{:}s}{\primop\ \overline{v}}{e} ~|~ 
+    \\ & & \quad & |~  \zlet{x{:}s}{v\;v}{e} ~|~ \match{v} \overline{d\ \overline{y} \to e} 
+  \end{alignat*}}
+\caption{Core Language Syntax. }
+\label{fig:core-lang-syntax}
+\end{figure}
 
-\noindent
-(We omit a full normalization theorem here; the slides record the
-equivalences that justify pushing $\upperB/\lowerB$ through
-propositional connectives.)
+\begin{figure}[h]
+  {\small
+    \begin{alignat*}{2}
+      \text{\textbf{Qualifiers}}& \quad & \phi ::= \quad & c ~|~ x ~|~ \primop\;\overline{v} ~|~ \bot ~|~ \top  ~|~ \neg \phi ~|~ \phi \land \phi ~|~ \phi \lor \phi ~|~ \phi \times \phi ~|~ \phi \impl \phi ~|~ \forall x{:}b.\, \phi ~|~ \exists x{:}b.\, \phi
+      \\ \text{\textbf{Choice Types}}& \quad & \tau ::= \quad & \ort{b}{\phi} ~|~ \urt{b}{\phi} ~|~ \tau \interty \tau ~|~ \tau \unionty \tau ~|~ \tau \choplus \tau ~|~ x{:}\tau \sarr \tau ~|~ x{:}\tau \chwand \tau ~|~ x{:}b \garr \tau
+      \\ \text{\textbf{Type Contexts}}& \quad & \Gamma ::= \quad & \emptyset ~|~ x{:}\tau ~|~ \Gamma \chstar \Gamma ~|~ \Gamma, \Gamma
+    \end{alignat*}}
+  \caption{Choice Types Syntax. }
+  \label{fig:choice-types-syntax}
+  \end{figure}
 
-\paragraph{Dependent products (informal).}
-When refinements mention earlier variables in a separating context
-(e.g.\ ``choose $y$ in a range that depends on the witness for $x$''),
-plain $\times$ on flat resources only describes rectangular
-dependence.  The general fix, as in our March~17 notes, introduces
-\emph{monadic} resources $m : (\Code{Var} \rightharpoonup \Code{Value})
-\to \mathcal{P}(\Code{Var} \rightharpoonup \Code{Value})$ whose output
-substitutions may depend on an \emph{input} substitution, with $\times$
-computed fiberwise while preserving read-only parts of the input.
-We keep working with the flat carrier in this paper fragment, and
-defer the monadic layering to the technical development of dependent
-separating contexts in types.
-
-\subsection{Pure propositions}\label{subsec:pure-prop}
-
-Before adding approximation, we assume a class of \emph{pure}
-propositions whose semantics are \emph{sets of substitutions}.
-
-\begin{definition}[Pure propositions --- syntax fragment]
-Let atomic tests range over standard value predicates.
-A minimal grammar adequate for examples below is
-\[
-  \phi \;::=\; \mathsf{atom} \mid \Dom{X} \mid \phi \cap \phi
-    \mid \phi \cup \phi \mid \phi \setminus \phi \mid \phi \times \phi
-\]
-where $\Dom{X}$ asserts that every substitution in the denotation
-has domain exactly~$X$.
-Each $\phi$ denotes a set $\denot{\phi}$ of substitutions.
-\end{definition}
-
-\begin{definition}[Embedding into resources]
-Given $\denot{\phi}$, we reuse the name $\phi$ for the associated
-resource proposition, and write $m \models \phi$ when
-$\denot{\phi} \leq m$ in the sense of the order above (with the
-obvious coercion of a set of substitutions into a resource).
-\end{definition}
-
-\subsection{Modal choice types: syntax}\label{sec:choice-types-syntax}
-
-We now introduce the type syntax interpreted by translation into
-choice logic.
-Let $b$ range over base types (e.g.\ $\Code{unit}$, $\Code{bool}$,
-$\Code{int}$).
-
-\begin{definition}[Modal refinement types]
-\[
-\begin{array}{ll}
-  \phi \;::= & \text{literal} \mid \qtrue \mid \qfalse \mid \neg \phi
-      \mid \phi \land \phi \mid \phi \lor \phi
-      \mid \phi \Rightarrow \phi
-      \mid \phi \times \phi \mid \forall x.\,\phi \mid \exists x.\,\phi
-  \\
-  \tau \;::= &
-      \ort{b}{\phi} \mid \urt{b}{\phi} \mid \tau \oplus \tau
-      \mid x{:}\tau \sarr \tau \mid x{:}\tau \wand \tau \mid x{:}b \garr \tau
-  \\
-  \Gamma \;::= &
-      \emptyset \mid x{:}\tau \mid \Gamma \sep \Gamma \mid \Gamma,\Gamma
-\end{array}
-\]
 Here $\ort{b}{\phi}$ is an overapproximate refinement and
 $\urt{b}{\phi}$ underapproximate; $\oplus$ on types mirrors resource
 sum at the kind level; $\sarr$ and $\wand$ distinguish
@@ -317,90 +256,201 @@ is a dependent telescope familiar from refinement-type presentations.
 The context former $\Gamma_1 \sep \Gamma_2$ uses the separating
 combinator (syntax for $*$ at the context level), while ``,'' is the
 ordinary additive conjunction of hypotheses.
+
+\subsection{Untyped semantics}
+
+We define an untyped semantics for the core language. In ordinary untyped semantics, a term (possibly not closed) maps an environment (substitution) to a value or to divergence. In our setting, however, we work with a resource (a collection of substitutions), so a term maps a resource to another resource. The output resource may be empty (when all input substitutions diverge during reduction) or larger than the input resource (when some input substitutions reduce to multiple results).
+
+\begin{definition}[Resource state monad]\label{def:resource-state-monad}
+  Fix the state space $\Res$ from \autoref{def:resource}.
+  The (\emph{deterministic}) \emph{state monad} on $\Res$ has carrier
+  \begin{align*}
+    \mathsf{St}(A) &\doteq \Res \sarr (\Res \times A)
+  \end{align*}
+  for meta-level answer types $A$.
+  The unit and Kleisli extension are
+  \begin{align*}
+    \mathsf{ret} &: A \sarr \mathsf{St}(A)
+    &\mathsf{ret} &\doteq \lambda a.\lambda r.\,(r,a),
+    \\
+    \mathsf{bind} &: \mathsf{St}(A) \sarr (A \sarr \mathsf{St}(B)) \sarr \mathsf{St}(B)
+    &\mathsf{bind} &\doteq \lambda m.\lambda k.\lambda r.\; k\,(\snd(m\,r))\,(\fst(m\,r)).
+  \end{align*}
+  Untyped computations that only thread a resource and carry no separate observable answer
+  live in $\mathsf{St}(\Unit) \cong \Res \sarr \Res$, matching the codomain of $\denot{e}$ after
+  currying over $x$.
 \end{definition}
+
+\begin{definition}[Untyped semantics]
+  The untyped semantics is defined as follows:
+  \begin{align*}
+    \denot{e} &: X \sarr \Res \sarr \Res 
+    \\\denot{e} &\doteq \lambda x.\lambda r. \{ \sigma[x\mapsto v] ~|~ \exists v. \mstep{e}{v} \text{ and } \sigma \in r \text{ and } x \notin \Dom{\sigma} \}
+  \end{align*}
+\end{definition}
+Note that we treat divergence differently: we do not extend the output domain to $\Code{Value}_\bot$. Instead, for all $x$ and $\sigma$ with $x\notin \Dom{\sigma}$, if $\denot{e}\;x\;\{\sigma\} = \emptyset$, then $e$ diverges on $\sigma$.
+
+We can define a unified universe $U$ that represents $\lambda$-abstractions as real functions (e.g., $U \sarr U$), together with an embedding--retraction pair $(\Phi, \Phi')$ mapping $U \sarr U$ into $U$ and back. We still require terms to lie in the domain $X \sarr \Res \sarr \Res$, which ties the semantics more directly to resources. We use small-step operational semantics $\mstep{e}{v}$ (big-step would also be fine) for reduction of a term $e$ to a value $v$. To match the behavior of a real function $U \sarr U$, we define a function application operator on $X \sarr \Res \sarr \Res$:
+\begin{align*}
+  \Code{App}\;f\;f_x &\doteq \lambda \vnu.\lambda r. \{ \restrictTo{\sigma}{\Dom{r}}\cup[\vnu \mapsto v] ~|~ \mstep{\sigma(y)\;\sigma(x)}{v} \text{ and } \sigma \in \denot{(f\;y\;(f_x\;x\;r))} \} 
+  \\&\quad \text{ where $x$ and $y$ are fresh variables}
+\end{align*}\noindent
+
+\begin{theorem}[$\Code{App}$ soundness]
+  \begin{align*}
+    \forall e\;e_x. \Code{App}\;\denot{e}\;\denot{e_x} = \denot{e\;e_x}
+  \end{align*}\noindent
+\end{theorem}
+
+\paragraph{Function application} When performing unified verification, we need special treatment for function application. For the function $\lambda x.x$, we want to show that ``there exists an input value for $x$ such that the return value may be $1$'', as expressed by the following type:
+\begin{align*}
+  \vdash \lambda x.x : \urt{\Int}{\top} \sarr \ort{\Int}{\vnu = 1}
+\end{align*}\noindent
+However, the underapproximation type $\urt{\Int}{\top}$ considers a set of input values $\{[x = 0], [x = 1], [x = 2], ...\}$, so the return value of function application is again $\{[x = 0], [x = 1], [x = 2], ...\}$, which cannot have type $\ort{\Int}{\vnu = 1}$. 
+
+The issue is that the current interpretation lacks ``existential'' semantics: the underapproximation on the input type does not fully provide it. In other words, the denotation of a function must incorporate an $\exists$ quantifier (as in coverage types). Moreover, the ``existential'' is not a single substitution, because the return type may also demand a coverage guarantee. The solution is to consider a ``non-empty subset'' of the input resource, informally expressed as follows:
+\begin{align*}
+  e \in \denot{\tau_x \sarr \tau} \iff \forall e_x. e_x \in \denot{\tau_x}. \exists e_x'. e_x' \sqsubseteq e_x \land (e\;e_x') \in \denot{\tau}
+\end{align*}\noindent
+Here $e_x \sqsubseteq e_x'$ means that the behavior of $e_x$ is a non-empty subset of that of $e_x'$. 
+For example, $1 \sqsubseteq \Code{int\_gen()}$ holds, but $\err \sqsubseteq \Code{int\_gen()}$ does not. We consider the following $4$ cases to check that this definition behaves as intended:
+\begin{itemize}
+  \item $\ort{\Int}{\vnu > 0} \sarr \ort{\Int}{\vnu > 0}$: the $\forall e_x$ includes singleton inputs, e.g., $e_x \doteq 1$ and $e_x \doteq 2$; thus $e_x'$ must equal $e_x$ in these cases, and nothing changes.
+  \item $\ort{\Int}{\vnu > 0} \sarr \urt{\Int}{\vnu > 0}$: same as above.
+  \item $\urt{\Int}{\vnu > 0} \sarr \ort{\Int}{\vnu > 0}$: assume there is a positive input value $v_x$ such that the application yields a positive value or diverges; then we can take $e_x' = v_x$, and $v_x \sqsubseteq e_x$ for any $e_x$ of type $\urt{\Int}{\vnu > 0}$.
+  \item $\urt{\Int}{\vnu > 0} \sarr \urt{\Int}{\vnu > 0}$: we can always choose $e_x' = e_x$.
+\end{itemize}
+
+\begin{definition}[$\sqsubseteq$ relation]
+  \begin{align*}
+    f \sqsubseteq f' \iff \forall x.\forall r. f\;x\;r \subseteq f'\;x\;r \land (f\;x\;r = \emptyset) \iff (f'\;x\;r = \emptyset) 
+  \end{align*}\noindent
+where $f'$ does not produce strictly more empty resources than $f$.
+\end{definition}
+
+\subsection{Typed semantics}
+
+The denotational semantics of a type is given by a function in $\Res \sarr (X \sarr \Res \sarr \Res) \sarr \Code{Prop_{Choice}}$; it takes a context (resource) and a term (via its denotation) and returns a proposition in choice logic stating whether the term inhabits the type under that context.
+\begin{align*}
+  \denot{\ort{b}{\phi}} &: \lambda r.\lambda f. \Code{Atom}(f\;\vnu\;r) \chimpl \upperB\phi
+  \\&\text{can only be expressed as } \lambda r.\lambda f. f\;\vnu\;r \models \upperB\phi
+  \\\denot{\urt{b}{\phi}} &: \lambda r.\lambda f. \Code{Atom}(f\;\vnu\;r) \chimpl \lowerB\phi
+\end{align*}\noindent
+The $\Code{Atom}: \Res \sarr \Code{Prop_{Choice}}$ lifts a resource into a pure proposition:
+\begin{align*}
+  \denot{\Code{Atom}(r)} &\doteq \{ r \}
+\end{align*}\noindent
+Note that we do not require $\restrictTo{(f\;\vnu\;r)}{\Dom{r}} = r$, i.e., that the context after reduction agrees with the context before reduction when restricted to $\Dom{r}$ (we discuss this later).
+\begin{align*}
+  \denot{\chpers \tau} &: \lambda r.\lambda f. \chpers (\denot{\tau}\;r\;f)
+  \\\denot{x{:}\tau_x \sarr \tau} &: \lambda r.\lambda f. \forall f_x. \exists f_x'. f_x' \sqsubseteq f_x \chimpl (\denot{\tau_x}\;r\;f_x') \chimpl (\denot{\tau}\;r\;(\Code{App}\;f\;f_x'))
+  % \\\denot{x{:}\tau_x \sarr \tau} &: \lambda r.\lambda f. \forall f_x. (\denot{\tau_x}\;r\;f_x) \chimpl (\denot{\tau}\;r\;(\Code{App}\;f\;f_x)) \chland (\denot{\tau_x}\;\lambda \vnu.\lambda r.f\;\_\;(f_x\;\vnu\;r))  
+  \\\denot{x{:}\tau_x \chwand \tau} &: \lambda r.\lambda f. \forall f_x.\exists f_x'. f_x' \sqsubseteq f_x \chimpl (\denot{\tau_x}\;r\;f_x') \chwand (\denot{\tau}\;r\;(\Code{App}\;f\;f_x'))
+\end{align*}\noindent
+The denotation of a typing context is a function in $\Res \sarr \Res \sarr \Code{Prop_{Choice}}$: under a context, it yields a predicate over contexts in choice logic.
+\begin{align*}
+  \denot{\emptyset} &: \lambda r.\lambda r'. \Code{Atom}(r) \chiff \Code{Atom}(r')
+  \\\denot{x{:}\tau} &: \lambda r.\lambda r'. \denot{\tau}\;r\;(\lambda y.\lambda \_.\Code{rename}(x, y, r'))
+  \\\denot{\Gamma_1, \Gamma_2} &: \lambda r.\lambda r'. \denot{\Gamma_1}\;r\;r_1 \chland \denot{\Gamma_2}\;r_1\;r' 
+  \quad \text{where } r_1 \doteq \restrictTo{r'}{\Dom{r} \cup \Dom{\Gamma_1}}
+  \\\denot{\Gamma_1 \semistar \Gamma_2} &: \lambda r.\lambda r'. \denot{\Gamma_1}\;r\;r_1 \chstar \denot{\Gamma_2}\;r_1\;r'
+  \quad \text{where } r_1 \doteq \restrictTo{r'}{\Dom{r} \cup \Dom{\Gamma_1}}
+\end{align*}\noindent
+In denotation of singlton context $x{:}\tau$, the output resource $r'$ has a binding variable $x$, however the denotation of $\tau$ assume the new binding variable is $\vnu$, we need to rename the binding variable $x$ to $\vnu$ in $r'$ to match the assumption.
+
+\paragraph{Angelic termination} One missing piece is whether the parameter's type still holds after application. For example,
+\begin{align*}
+  x{:}\urt{\Int}{\top}\vdash \zlet{y}{(\lambda x.\zif{x > 0}{1}{\err})\;x}{e}
+\end{align*}\noindent
+If $x$ is mentioned in $e$, we cannot guarantee that $x$ still covers all integers (it must be positive). Whether this is acceptable depends on whether the function body terminates on inputs allowed by the parameter type. More precisely, we only need angelic termination, i.e., that some reduction terminates. For example, $(\lambda x.\zif{x > 0}{1}{\err \oplus 2})$ exhibits angelic termination, but not demonic termination. We introduce a modality $\chterm$ to express angelic termination.
+\begin{align*}
+  \denot{\chterm \tau} &: \lambda r.\lambda f. \denot{\tau}\;r\;f \chland \forall \vnu.\Code{Atom}(f\;r\;\vnu) \chimpl \Code{Atom}(r)
+\end{align*}\noindent
+which means the input resource $r$ still holds after application.
+
+\begin{example}[Angelic termination] Consider the three cases:
+\begin{itemize}
+  \item $\vdash \lambda x.\zif{x > 0}{x}{\err} : \urt{\Int}{\top}\sarr \urt{\Int}{\vnu > 0}$. The output of this function is dependent on the input value, and the input coverage is not preserved.
+  \item $\vdash \lambda x.x : \urt{\Int}{\top}\sarr \chterm \urt{\Int}{\vnu > 0}$. The output of this function is independent from the input value, and the input coverage is preserved.
+  \item $\vdash \lambda x.\zif{x > 0}{\Code{int\_gen()}}{\err} : \urt{\Int}{\top}\chwand \urt{\Int}{\vnu > 0}$. The output of this function is independent on the input value, and the input coverage is not preserved.
+  \item $\vdash \lambda x.\Code{int\_gen()} : \urt{\Int}{\top}\chwand \chterm \urt{\Int}{\vnu > 0}$. The output of this function is independent from the input value, and the input coverage is preserved. In this case, it has the same meaning as $\ort{\Int}{\top}\chwand \chterm \urt{\Int}{\vnu > 0}$.
+\end{itemize}
+\end{example}
+
+\textbf{Question:} This definition seems conflicting with existstential semantics of function parameter types.
+
+
+\begin{theorem}[Fundamental theorem]
+\begin{align*}
+  \Gamma \vdash e : \tau \text{ implies } \forall r\;f. (\denot{\Gamma}\;\emptyset\;r) \chimpl \denot{\tau}\;r\;\denot{e}
+\end{align*}\noindent
+\end{theorem}
+
+\textbf{TODO:} Logical relation?
 
 \subsection{Denotational semantics}
 
-We assume a fixed operational semantics for programs, writing
-$\mstep{e}{v}$ when closed $e$ reduces to value $v$.
-Let $\vnu$ be a distinguished name for the value placeholder in
-qualifiers.
-
-\begin{definition}[Qualifier and term interpretations]
-For qualifier $\phi$, define
-$\denot{\phi}$ as the set of substitutions $\subs$ such that
-$\subs \models \phi$ under the standard interpretation of first-order
-tests.
-For closed $e$, define the singleton-union resource for value equality
-\[
-  \denot{\vnu = e} \;\doteq\; \{\, [\vnu \mapsto v] \mid \mstep{e}{v} \,\}.
-\]
+\begin{definition}[Qualifier and term denotation] As before, denotation function maps pure propositions (qualifiers) and terms to resources:
+\begin{align*}
+  \denot{\phi} &\doteq \{ \sigma ~|~ \sigma(\phi) \}
+  \\
+  \denot{e} &\doteq \{ v ~|~ \mstep{e}{v} \} \\
+  m[x = e] &\doteq \{ \sigma[x \mapsto v] ~|~ \mstep{\sigma(e)}{v} \text{ and } \sigma \in m \}
+\end{align*}
 \end{definition}
 
-\begin{definition}[Type and context interpretations]
-For type $\tau$, the object $\denot{e : \tau}$ is a resource
-proposition (possibly with embedded first-order quantifiers over
-argument expressions).
-The key clauses are:
-\begin{itemize}
-\item $\denot{e : \ort{b}{\phi}} \;\doteq\;
-      \denot{\vnu = e} \Rightarrow \upperB \denot{\phi}$.
-\item $\denot{e : \urt{b}{\phi}} \;\doteq\;
-      \denot{\vnu = e} \Rightarrow \lowerB \denot{\phi}$.
-\item $\denot{e : \tau_1 \oplus \tau_2} \;\doteq\;
-      \denot{e : \tau_1} \oplus \denot{e : \tau_2}$.
-\item For functions, with $e_x$ ranging over closed instantiations of
-  the parameter,
-  \[
-    \denot{e : x{:}\tau_x \sarr \tau}
-      \;\doteq\;
-      \forall e_x.\;
-      \denot{e_x : \tau_x} \Rightarrow
-      \bigl(\denot{e_x : \tau_x} \land
-            \denot{e\,e_x : \textstyle\bigoplus_{\mstep{e_x}{v_x}} \tau[x \mapsto v_x]}\bigr),
-  \]
-  where the sum ranges over values reachable from $e_x$, and $\tau[x
-    \mapsto v_x]$ applies the semantic substitution to the return
-    refinement.
-  Dually,
-  \[
-    \denot{e : x{:}\tau_x \wand \tau}
-      \;\doteq\;
-      \forall e_x.\;
-      \denot{e_x : \tau_x} \wand
-      \denot{e\,e_x : \textstyle\bigoplus_{\mstep{e_x}{v_x}} \tau[x \mapsto v_x]}.
-  \]
-\end{itemize}
-Contexts are interpreted as functions producing propositional
-obligations over an incoming substitution: $\denot{\emptyset}$ is the
-constant $\qtrue$; $\denot{x{:}\tau}$ threads the substitution into
-$\denot{x : \tau}$; additive and separating context combination mirrors
-$\land$ and $*$ at the meta-level (cf.\ the March~17 slides for the
-exact $\lambda$-lifting).
+\begin{definition}[Choice Logic denotation] In order to simplify the notation, we also define the denotation of the terms in choice logic, which has the same meaning as the force semantics in choice logic.
+  \begin{align*}
+    \denot{p} &\doteq \{ m ~|~ m \models p \}
+  \end{align*}
+  \end{definition}
+
+\begin{definition}[Type denotation]
+    The denotation function $\denot{\tau}_m$ maps choice type $\tau$ to set of expressions under the resource $m$.
+    \begin{itemize}
+    \item $\denot{\ort{b}{\phi}}_\Gamma \;\doteq\;
+          \{ e ~|~ \text{for all } m \in \denot{\Gamma} \text{ we have } m[\vnu = e] \models \upperB\phi \}$.
+    \item $\denot{\urt{b}{\phi}}_\Gamma \;\doteq\;
+          \{ e ~|~ \text{for all } m \in \denot{\Gamma} \text{ we have } m[\vnu = e] \models \lowerB\phi \}$.
+    \item $\denot{\chpers \tau}_\Gamma \;\doteq\;
+          \{ e ~|~ v \in \denot{\tau}_\Gamma \text{ and } \forall v'. \mstep{e}{v'} \iff v = v' \}$.
+    \item $\denot{\tau_1 \interty \tau_2}_\Gamma \;\doteq\;
+          \denot{\tau_1}_\Gamma \cap \denot{\tau_2}_\Gamma$.
+    \item $\denot{\tau_1 \unionty \tau_2}_\Gamma \;\doteq\;
+          \denot{\tau_1}_\Gamma \cup \denot{\tau_2}_\Gamma$.
+    \item 
+    \begin{align*}
+      \denot{\tau_1 \choplus \tau_2}_\Gamma \;\doteq\;&
+          \{ e ~|~ \exists e_1\;e_2. \forall m \in \denot{\Gamma}. m[x=e_1] + m[x=e_2] = m[x=e] 
+          \\ &\quad \text{ and } \denot{e_1} \in \denot{\tau_1}_\Gamma \text{ and } \denot{e_2} \in \denot{\tau_2}_\Gamma \}
+    \end{align*}
+    \item For functions, with $e_x$ ranging over closed instantiations of
+      the parameter,
+      \begin{align*}
+        &\denot{x{:}\tau_x \sarr \tau}_\Gamma
+          \;\doteq\;
+          \{ e ~|~ (e\;x) \in \denot{\tau}_{\Gamma, x {:} \tau_x} \text{ and } (e\;x;x) \in \denot{\tau_x}_{\Gamma, x {:} \tau_x} \}
+        \\&\denot{x{:}\tau_x \chwand \tau}_\Gamma
+        \;\doteq\;
+        \{ e ~|~ (e\;x) \in \denot{\tau}_{\Gamma \chstar x{:}\tau_x} \}
+      \end{align*}
+    \end{itemize}
+  \end{definition}
+
+  \begin{definition}[Type context denotation]
+    The denotation function $\denot{\Gamma}_\sigma$ maps type context $\Gamma$ to set of resources under a substitution $\sigma$.
+    \begin{itemize}
+    \item $\denot{\emptyset}_\sigma \;\doteq\; \{ \{\emptyset\} \}$.
+    \item $\denot{x{:}\tau}_\sigma \;\doteq\; \{ [x \mapsto v] ~|~ v \in \denot{\sigma(\tau)} \}$.
+    \item $\denot{\Gamma_1, \Gamma_2}_\sigma \;\doteq\; \{ m ~|~ \restrictTo{m}{\Dom{\Gamma_1}} \in \denot{\Gamma_1}_\sigma \text{ and } \sigma_1 \in \restrictTo{m}{\Dom{\Gamma_1}} \text{ and } \restrictTo{m}{\Dom{\Gamma_2}} \in \denot{\Gamma_2}_{\sigma \cup \sigma_1} \} $.
+    \item $\denot{\Gamma_1 \chstar \Gamma_2}_\sigma \;\doteq\;  \{ m_1 \times m_2 ~|~ m_1 \in \denot{\Gamma_1}_\sigma \text{ and } \sigma_1 \in m_1 \text{ and }  \text{ and } m_2 \in \denot{\Gamma_2}_{\sigma \times \sigma_1} \} $.
+    \end{itemize}
+    We write $\denot{\Gamma}_\emptyset$ as $\denot{\Gamma}$.
+  \end{definition}
+
+\begin{definition}[Type soundness]
+\begin{align*}
+  \Gamma \vdash e : \tau \implies e \in \denot{\tau}_\Gamma
+\end{align*}
 \end{definition}
 
-\begin{definition}[Typing judgment (semantic)]
-For closed $e$, say \emph{$e$ has type $\tau$ under context $\Gamma$}
-whenever
-\[
-  \denot{\Gamma}(\emptyset) \;\models\; \denot{e : \tau}.
-\]
-\end{definition}
-
-The function clauses make the distinction between ``argument coverage
-that can be reused when checking the application'' ($\sarr$) and
-``coverage treated as a hypothesis that must be framed away before the
-postcondition is checked'' ($\wand$) internal to choice logic itself.
-This is the point where algebraic resource structure meets
-higher-order programs: neither incorrectness triples nor outcome
-predicates over stores alone expose the $\wand$/$\sarr$ distinction at
-the granularity of function introductions.
-
-\subsection{Typing rules}
-
-Syntactic inference rules that are sound with respect to the semantic
-definition above are under development; they will re-use the bunched
-structure of contexts ($\sep$ vs ``,'') and standard abstraction and
-application patterns from refinement type systems, but with subtyping
-and frame rules engineered for mixed approximation.
-We omit the rule figure in this draft.

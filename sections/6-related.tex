@@ -1,0 +1,55 @@
+\section{Related Work}
+Underapproximate program reasoning---exemplified by incorrectness
+logic~\cite{OHP19} and later unified with correctness in outcome
+logic~\cite{ZDS23,Zil25TOPLAS}---studies judgments whose conclusions
+guarantee \emph{existence} of executions rather than universal safety.
+These frameworks are native to imperative programs: triples relate
+commands to \emph{state-valued} outcomes.
+Incorrectness logic works largely with store predicates;
+outcome logic lifts assertions to \emph{weighted collections} of
+outcomes (e.g.\ via semiring weights), but still composes over a
+command-first operational semantics with heaps and variables in scope.
+Composition therefore continues to co-evolve all parts of the visible
+store unless additional structure says otherwise.
+
+\paragraph{Detailed postconditions are no accident.}
+A recurring theme in the incorrectness-logic literature is that
+\emph{informative} triples are almost as granular as separation-logic
+specifications: the postcondition cannot be a loose predicate on
+``the output'' alone.
+Because conclusions are read under an underapproximate (reverse)
+consequence discipline---states mentioned in the post must be
+genuinely reachable---local reasoning typically forces $Q$ to spell out
+fine-grained facts about aliases, heaps, and variables that co-vary
+along a command.
+Technically, one can always write a postcondition that mentions only $y$
+and ignores $x$; but in the underapproximate setting, such a $Q$ is
+either vacuously weak or implicitly relies on a specific $x$ that
+witnesses reachability---the correlation is pushed into the semantics
+rather than eliminated.
+It is not a bug of the formalism but a structural cost of treating
+everything as mutable state.
+
+Outcome logic~\cite{ZDS23,Zil25TOPLAS} lifts assertions from individual
+states to \emph{weighted collections} of outcomes (via semiring
+weights), thereby unifying angelic and demonic branching and reusing
+proof principles across effects.
+Crucially, it introduces an \emph{outcome conjunction} $\varphi \oplus
+\psi$ together with a trivially-true assertion $\top$, so one can write
+$\langle \varphi \rangle\, C\, \langle \chi \oplus \top \rangle$ to
+express that a particular outcome $\chi$ is reachable while discarding
+all information about the remaining branches.
+This $\oplus\,\top$ idiom is outcome logic's analogue of incorrectness
+logic's ability to drop disjuncts from the post, and it is genuinely
+useful for bug-finding: one need not fully characterise every program
+path in order to certify that an erroneous state is reachable.
+
+However, $\oplus\,\top$ operates on the \emph{branching} dimension of
+the semantics---it selects which computational paths to keep track
+of---while the problem we face is on a different, orthogonal dimension:
+the \emph{argument-return dependency} of a function application.
+After $y = f\;x$, the states inside $\chi$ still carry both $x$ and
+$y$ in the store, and the question of how $x$'s coverage relates to
+$y$'s is left entirely to the content of $\chi$.
+Outcome logic therefore does not, by itself, supply a
+\emph{function-type-first} account of application.

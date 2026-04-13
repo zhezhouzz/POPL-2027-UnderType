@@ -1,118 +1,324 @@
 \section{Overview}\label{sec:overview}
 
-Underapproximate program reasoning---exemplified by incorrectness
-logic~\cite{OHP19} and later unified with correctness in outcome
-logic~\cite{ZDS23,Zil25TOPLAS}---studies judgments whose conclusions
-guarantee \emph{existence} of executions rather than universal safety.
-These frameworks are native to imperative programs: triples relate
-commands to \emph{state-valued} outcomes.
-Incorrectness logic works largely with store predicates;
-outcome logic lifts assertions to \emph{weighted collections} of
-outcomes (e.g.\ via semiring weights), but still composes over a
-command-first operational semantics with heaps and variables in scope.
-Composition therefore continues to co-evolve all parts of the visible
-store unless additional structure says otherwise.
+In type-based program reasoning, prior work models program behavior using
+\emph{over}- and \emph{under}approximate semantics.
+Similar to the Hoare logic or Incorrectness logic (IL), these type systems refine the ordinary types with logic qualifiers to overapproximate or underapproximate the program behavior.
+Concretely, writing $\mstep{e}{v}$ when a term $e$ (non-deterministically) terminates at value $v$
+in a call-by-value small-step semantics, over- and underapproximate base (primitive) types are often explained as follows:
+\begin{align*}
+    \vdash e : \ort{b}{\phi} &\iff \forall v.\; \mstep{e}{v} \implies \phi[\vnu \mapsto v]
+    \\\vdash e : \urt{b}{\phi} &\iff \forall v.\; \phi[\vnu \mapsto v] \implies \mstep{e}{v}
+\end{align*}
+The reversal of the implication is the crux of the distinction.
+If we write the behaviors of $e$ as $\{v \mid \mstep{e}{v}\}$, then in
+$\ort{b}{\phi}$ the logical qualifier $\phi$ describes a superset (upper bound) of
+that set, whereas in $\urt{b}{\phi}$ it describes a subset (lower bound).
 
-\paragraph{Detailed postconditions are no accident.}
-A recurring theme in the incorrectness-logic literature is that
-\emph{informative} triples are almost as granular as separation-logic
-specifications: the postcondition cannot be a loose predicate on
-``the output'' alone.
-Because conclusions are read under an underapproximate (reverse)
-consequence discipline---states mentioned in the post must be
-genuinely reachable---local reasoning typically forces $Q$ to spell out
-fine-grained facts about aliases, heaps, and variables that co-vary
-along a command.
-It is not a bug of the formalism but a structural cost of treating
-everything as mutable state.
-Outcome logic mitigates other pain points---such as unifying angelic
-and demonic branching and reusing proof principles across
-effects~\cite{ZDS23,Zil25TOPLAS}---but it does not, by itself, supply a
-\emph{function-type-first} account of application.
+With these over- and under-approximation modalities, existing work reasons about programs in functional languages.
+The traditional refinement types give an overapproximate interpretation to both parameter and return positions. For example, the type $\ort{\Int}{\vnu > 0} \sarr \ort{\Int}{\vnu > 0}$ indicates a function may only return a positive integer (or diverge) when the input argument is also positive. This is analogous to Hoare triples $\{P\}\;e \;\{Q\}$ whose pre- and postconditions are both overapproximate and thereby establish safety:
+``on every possible execution, the program does not go wrong.''
+Recent \emph{coverage types}~\cite{CoverageType} instead interpret the
+\emph{return} type of a function underapproximately, which supports reasoning about
+\emph{coverage completeness} of input generators. For example, the type $x{:}\ort{\Int}{\vnu \geq 0} \sarr \urt{\List[\Int]}{\I{len}(\vnu) = x}$ indicates a sized list generator that must produce all lists of length $x$. 
+The combination of overapproximate parameter and underapproximate return provides a way to do must-style reasoning and yields a lower-bound guarantee on the outputs of a nondeterministic program.
 
-\paragraph{Why this sits awkwardly with functional programs.}
-Consider a functional program fragment
-$\mathtt{let}\; y = f\;x\;\mathtt{in}\; \cdots$.
-In a state-based logic, there is nothing special about the name $y$:
-after reduction, the store still records $x$, and any nontrivial
-incorrectness (or outcome) judgment about the composite code will
-almost inevitably relate \emph{both} the new value ascribed to $y$
-\emph{and} whatever is still true of $x$, often with nontrivial
-correlation between the two---because, syntactically, all variables live
-in the same global world.
-That is entirely natural for imperative code.
+\subsection{Under- and Over-approximation Typing for Functional Programs}
+
+A natural next step is to explore the remaining combinations of modalities
+in function types.
+Coverage types forbid an underapproximate interpretation of the parameter
+position.
+Yet one can imagine pairing an underapproximate parameter with an
+underapproximate return, much like an incorrectness triple $[P]\;e\;[Q]$, to certify
+\emph{incorrectness}-style properties of functions.
+For example, a function $f$ of type
+$\urt{\Int}{\top} \sarr \urt{\Int}{\vnu = 0}$ would mean that there exists
+some integer input on which $f$ \emph{must} (terminatingly) return $0$,
+witnessing a potential division-by-zero exception such as $3 / (f\;x)$ (if we assume $x$ can cover all integers).
+Dually, under parameter plus over return is weaker. For example, the type
+$\urt{\Int}{\top} \sarr \ort{\Int}{\vnu = 0}$
+does not guarantee termination, so one cannot in general prove that a potential error \emph{must} occur.
+However, it is close to bug detection in program analysis, where false positives are traded for breadth of alarms. Many classical static analyses exploit this under parameter plus over return combination effectively.
+
+\begin{table}[ht!]
+  \centering
+  \caption{The four over- and under-approximation combinations for function types.}
+  \label{tab:four-modal-combinations}
+  \footnotesize
+  \setlength{\tabcolsep}{7pt}
+  \begin{tabular}{@{}>{\centering\arraybackslash}p{0.24\linewidth}>{\centering\arraybackslash}p{0.35\linewidth}>{\centering\arraybackslash}p{0.36\linewidth}@{}}
+    \toprule
+    \textbf{Type} & \textbf{Meaning} & \textbf{Typical use} \\
+    \midrule
+    $\vdash f : \ort{b}{\phi} \sarr \ort{b'}{\phi'}$ &
+    For all inputs $x$ in $\phi$, the output $f\;x$ is in $\phi'$. &
+      Safety verification, similar to Hoare triples $\{P\}\,e\,\{Q\}$. \\
+    $\vdash f : \ort{b}{\phi} \sarr \urt{b'}{\phi'}$ &
+    For all inputs $x$ in $\phi$, all values that satisfy $\phi'$ must be returned by $f\;x$. &
+      Testing and random generation; coverage completeness (e.g., coverage types). \\
+    $\vdash f : \urt{b}{\phi} \sarr \ort{b'}{\phi'}$ &
+      Existential witness for some input $x$ such that $f\;x$ is in $\phi'$ or diverges. &
+      Program analysis and bug finding; breadth of alarms at the cost of false positives. \\
+    $\vdash f : \urt{b}{\phi} \sarr \urt{b'}{\phi'}$ &
+      For all values $y$ that satisfy $\phi'$, there exists an $x$ in $\phi$ such that $f\;x$ must return $y$. &
+      Reachability reasoning, similar to incorrectness triples $[P]\,e\,[Q]$. \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+All four combinations thus have natural use cases, summarized in
+\autoref{tab:four-modal-combinations}:
+over--over for safety verification, over--under for testing (generator
+completeness), under--over for program analysis and bug detection, and
+under--under for reachability and incorrectness reasoning.
+They can also be mixed in a pipeline; for example, after a failed safety verification,
+use a static analyzer to narrow candidate bugs, then apply incorrectness
+reasoning to show a real witness.
+It is tempting to seek one type system that uniformly allows \emph{either}
+modality at each position, so that programmers can switch combinations and
+obtain more flexible reasoning.
+
+This ambition runs into theoretical difficulties.
+Simply dropping coverage types' restriction that parameters cannot be
+underapproximate leads to multiple problems.
+Some terms behave almost like \emph{linear} resources.
+Consider an identity function $\Code{f_{id}} \doteq \lambda x.\,x$.
+It admits an incorrectness-flavoured specification
+$\urt{\Int}{\top} \sarr \urt{\Int}{\top}$: for every possible result $y$ of
+an application, there is an input $x$ with $y = f\;x$ (take $x = y$).
+Yet consider the program
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \small, escapeinside=??]{OCaml}
+    let y = ?$\Code{f_{id}}$? (int_gen ()) in
+    let z = ?$\Code{f_{id}}$? (int_gen ()) in
+    y - z
+\end{minted}
+Individually, $y$ and $z$ might have type
+$\urt{\Int}{\top}$ which means that they can cover all integers. As a consequence, $y - z$ should also cover all integers (e.g., let $z = 0$ and impose no constraint on $y$). However,
+$y - z$ can only be $0$.
+Although $y$ and $z$ separately have coverage guarantees similar to a random generator like \Code{int\_gen}, they are always equal.
+One can view this either as saying that the reachability promised by the
+type of $f$ is \emph{consumed} after one use, or as saying that the two
+outputs are \emph{correlated} rather than independent (we borrow
+probabilistic language, but there is no probability here).
+
+The issues of correlation among return values are not the whole story.
+In reachability reasoning with errors, a call can also constrain the
+\emph{argument} that remains in scope. Consider the following example:
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \small, escapeinside=??]{OCaml}
+  let f_nonneg x = if x >= 0 then x ?$\oplus$? (-x) else err in
+  let x = int_gen () in
+  let y = ?$\Code{f_{nonneg}}$? x in
+  x
+\end{minted}
+The function $\Code{f_{nonneg}}$ has type
+$\urt{\Int}{\top} \sarr \urt{\Int}{\top}$, where all possible integers $y$ can be reached from its absolute value $|y|$. Note that negative inputs are not reachable according to the else branch of the body of $\Code{f_{nonneg}}$.
+Now consider the final $x$ after the call. It can no longer satisfy $\urt{\Int}{\top}$, because its value is constrained by non-negative integers after the function application of $\Code{f_{nonneg}}$. In this example, the coverage guarantee of $x$ is \emph{partially consumed}, even though it is not an output of function $\Code{f_{nonneg}}$.
+
+A third issue is higher-order behavior:
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \small, escapeinside=??]{OCaml}
+  let f (g: unit -> bool) : bool =
+    let y = g () in
+    let z = g () in
+    y == z in
+  let g' = (fun () -> true) ?$\oplus$? (fun () -> false) in
+  f g'
+\end{minted}
+The function parameter $g$ has type $\Unit \sarr \urt{\Bool}{\top}$. Note that the parameter type happens to be $\Unit$, which is the same under both over- and under-approximation, so ``by rights'' $y$ and $z$ ought to be independent draws.
+One might expect $y$ and
+$z$ each to enjoy $\urt{\Bool}{\top}$, where both $\true$ and $\false$ are reachable.
+Yet the actual argument $g'$ is implemented as a nondeterministic choice ($\oplus$) between
+two functions that return only \texttt{true} or only \texttt{false}.
+This term $g'$ can still be given type $\Unit \sarr \urt{\Bool}{\top}$; both $\true$ and $\false$ are reachable.
+However, $y$ and $z$ in the higher-order function application can only be both \texttt{true} or both \texttt{false} in a call-by-value semantics.
+On the other hand, if $g$ were used only once inside $f$, there would be no such issue. For example, if $f$
+returned just $y$, one could still ascribe $\urt{\Bool}{\top}$ to
+$f\;g'$.
+
+In short, underapproximate parameters capture an attractive \emph{external user-specified verification goal}, i.e., ``there exists an input''. However, they do not by themselves spell
+out how such a type interacts with the rest of the context under repeated
+application: whether a function remains usable after one call, whether the
+parameter witness persists, and whether multiple results are independent.
+
+\subsection{Logic for Over- and Under-approximation Function Typing}
+
+These examples show that freely mixing under- and overapproximation in
+function types is problematic and can yield unsound reasoning.
+One might patch the type system with linear constraints or substructural typing rules, but
+that may lose expressiveness on reachability reasoning.
+What we really need is a more accurate \emph{logical} interpretation of function
+application than off-the-shelf correctness or incorrectness logics provide. We will demonstrate why existing work (e.g., incorrectness logic and outcome logic) does not face such issues and cannot handle these cases.
+
+Consider a functional program
+$\mathtt{let}\; y = f\;x\;\mathtt{in}\; \cdots$ which starts with a function application.
+In a state-based logic, both $x$ and $y$ are variables in the global store, thus it is natural to require both pre- and postconditions to constrain both $x$ and $y$.
 It becomes less natural when the surface language is functional and the
 abstraction we actually manipulate is a \emph{function type} $\tau_x
 \sarr \tau_y$: programmers think they are specifying ``what $f$
-returns,'' not ``how the entire lexical environment co-refines after
+returns,'' not ``how the entire context changes after
 application.''
-The mismatch is notational only if we compile closures to stores; at
-the level of types, however, we would prefer to say whether $x$'s
-coverage survives the call, whether it is correlated with the return,
-or whether it is forgotten---without equating these with yet another
-store assertion.
+The function in a (pure) functional language is treated as a simple abstraction that is independent from the context. Recording the context change after function application conflicts with the functional programming paradigm.
 
-\paragraph{Three behaviors that pure ``output-only'' specs cannot separate.}
-Suppose we only describe the return $y=(f\;x)$ and deliberately ignore
-what happens to $x$.
-Then, in underapproximate reasoning, we cannot discriminate three
-situations that routinely arise for higher-order, coverage-driven
-specifications~\cite{CoverageType}:
+\paragraph{Concrete illustrations.}
+Take $\Code{f_{id}} \doteq \lambda x.\,x$ as a running example.
+The most informative incorrectness triple for a single call is
+\[
+  [x > 0]\quad y \mathrel{:=} \Code{f_{id}}\;x \quad [y = x \land x > 0],
+\]
+where the postcondition $y = x \land x > 0$ explicitly records the input-output relationship.
+Writing a looser postcondition, for example $[y > 0]$, keeps the same lower bound guarantee on $y$ but loses the relationship between $x$ and $y$, which makes the triple unsound. For example, the state $[x\mapsto 1, y\mapsto 2]$ is allowed by the simplified postcondition but is not reachable by $\Code{f_{id}}$. This issue is already discussed in \cite{OHP19}: every underapproximate postcondition needs to be precise so that it allows only reachable post-states. This requirement is too strong for functions in our setting.
+
+Outcome logic's $\oplus\,\top$ idiom might seem to offer an escape. Although the predicates in OL are interpreted as overapproximation, the $\oplus$ operator here works like control-flow merge to help simulate the incorrectness style postcondition. Consider the following example:
+\[
+  \langle \top\rangle\; y \mathrel{:=} \Code{int\_gen\;()}
+  \;\langle \lceil y > 0 \rceil \oplus \top \rangle
+\]
+The triple shows that application $\Code{int\_gen\;()}$ can ``cover'' positive integers, which is valid since the $\oplus$ operator allows the triple to divide the behaviors of $\Code{int\_gen\;()}$ semantically into two parts $\{v ~|~ v > 0\}$ and $\{v ~|~ v \leq 0\}$. The first part can satisfy the first predicate $\lceil y > 0 \rceil$ and the second part can satisfy the second predicate $\top$ in overapproximation semantics.
+Then, one can write
+\[
+  \langle x > 0\rangle\; y \mathrel{:=} \Code{f_{id}}\;x
+  \;\langle \lceil y > 0 \rceil \oplus \top \rangle
+\]
+in an attempt to obtain a less precise underapproximation postcondition, which is still unsound.
+The problem is that $\Code{f_{id}}$ is deterministic: there is a single computational path, so there are no branches to discard with $\oplus\,\top$.
+More fundamentally, the $\oplus$ operator separates \emph{computational paths}; it does not erase variable bindings \emph{within} a state.
+An outcome triple must still assert $\lceil y > 0 \land y = x \rceil$.
+The branching dimension ($\oplus$) and the argument-return dependency dimension ($y = x$) are orthogonal, and $\oplus\,\top$ addresses only the former.
+
+% The argument-side is symmetric.
+% $\Code{f_{pos}} \doteq \lambda x.\,
+% \zif{x > 0}{\Code{int\_gen()}}{\Code{err}}$
+% admits an informative IL triple
+% \[
+%   [x > 0]\quad y \mathrel{:=} \Code{f_{pos}}\;x
+%   \quad [y \in \mathbb{Z} \wedge x > 0],
+% \]
+% where $x > 0$ must be \emph{re-stated} in $Q$ lest the constraint on the
+% argument be lost for any continuation that reads $x$.
+% In a type-based account, one would instead expect the function arrow
+% itself, something like $\urt{\Int}{x > 0} \sarr \urt{\Int}{\top}$, to
+% carry this information structurally, without forcing the caller to repeat it
+% in every surrounding assertion.
+
+The examples above show that lifting imperative program logics (incorrectness logic, outcome logic,
+\ldots) verbatim pushes to the opposite extreme: the underapproximate return
+type must be precise, which means it must be correlated with the parameter.
+That erodes much of what makes refinement types pleasant.
+For instance, when approximation modalities compose freely, an
+overapproximate return need not mention the parameter, whereas an
+underapproximate one seemingly must. This is an asymmetry.
+Moreover, not all parameters need to be correlated with the return. Coverage types already show that an overapproximate parameter can be independent from the return.
+Worse, forcing everything through a monolithic postcondition breaks
+\emph{currying}: the final return type is special, so
+$x{:}\tau_x \sarr y{:}\tau_y \sarr \tau$ cannot be rearranged into
+$x{:}\tau_x \sarr (y{:}\tau_y \sarr \tau)$ without changing the meaning of
+the return position.
+
+We therefore aim for a new logic that does \emph{not} require fully
+explicit expressions of the precise relation between function parameter and return, but still distinguishes the cases that
+matter: whether a function may be invoked more than once, whether parameter
+information persists across calls, and whether multiple outputs are
+independent.
+These are the questions that resource- or permission-based logics (e.g.\
+separation logic) were built to address: output independence as a form of
+disjointness, parameter evolution as permission separation (read versus
+write), and re-entrancy as a persistency question.
+
+Importantly, we are \emph{not} importing the usual operational reading of
+``resources'' as memory or explicit effects, nor do we claim a probabilistic
+notion of correlation.
+Our resources arise from the \emph{proof-relevant} distinction between
+angelic and demonic choice in program reasoning. That structure is imposed by the
+logic, not by the underlying operational semantics.
+Even for a deterministic, heap-free program such as
+$\Code{f_{id}}$, this form of resource reasoning is both available
+and necessary.
+
+\subsection{Choice Logic and Choice Types}
+
+We develop a resource-based logic and a corresponding type system in which over- and underapproximation are explicit modalities. As motivated above, the framework need not force fully explicit descriptions of the exact dependence of returns on parameters, yet it still distinguishes the cases that matter. In the same spirit as Hoare logic, which reasons about a program under multiple possible execution contexts (for instance, requiring that every state satisfying the precondition reach a state satisfying the postcondition), our logic carries judgments relative to such contexts. The distinguishing feature is that these contexts, which we call \emph{choices}, are treated as \emph{resources}, so that we can express disjointness of choices together with read versus write permission and persistency.
+
+\paragraph{Choice as resource} The core idea is to read an underapproximation type as a resource that is not duplicable. For example,
+\begin{align*}
+  &x{:}\urt{\Int}{\vnu > 0} \vdash x : \urt{\Int}{\vnu = 1} \quad \judgok
+  \\&x{:}\urt{\Int}{\vnu > 0} \vdash x : \urt{\Int}{\vnu = 2} \quad \judgok
+  \\&x{:}\urt{\Int}{\vnu > 0} \vdash (x, x) : \urt{\Int \times \Int}{\vnu.1 = 1 \land \vnu.2 = 2} \quad \judgfail
+\end{align*}
+Here $x$ is annotated in the typing context with an underapproximation type $\urt{\Int}{\vnu > 0}$, indicating that $x$ owns choices that may ``write'' or ``decide'' an arbitrary positive integer as needed. The first two lines therefore show that $x$ can be proved equal to $1$ and to $2$, respectively. The last line shows that the pair $(x, x)$ cannot be proved equal to $(1, 2)$: the choices bound to $x$ can be exercised only once. Overapproximation, by contrast, behaves like a resource with ``read'' permission:
+\begin{align*}
+  &x{:}\ort{\Int}{\vnu > 0} \vdash x : \ort{\Int}{\vnu > -1} \quad \judgok
+  \\&x{:}\ort{\Int}{\vnu > 0} \vdash x : \ort{\Int}{\vnu > -2} \quad \judgok
+  \\&x{:}\ort{\Int}{\vnu > 0} \vdash (x, x) : \ort{\Int \times \Int}{\vnu.1 > -1 \land \vnu.2 > -2} \quad \judgok
+\end{align*}
+Again $x$ carries an overapproximation type $\ort{\Int}{\vnu > 0}$: the value of $x$ is \emph{decided by others} and treated as ``read-only''. If $x$ is read as some positive integer, it may be shown strictly greater than $-1$ and than $-2$, respectively. Read permission may be duplicated, so both components of $(x, x)$ may simultaneously carry these constraints, unlike under the underapproximation reading.
+
+\paragraph{Disjointness} Separation logic uses $\sep$ to express disjointness of heap resources; analogously, we express disjointness of choices. For example:
+\begin{align*}
+  &x{:}\urt{\Int}{\vnu > 0}, y{:}\urt{\Int}{\vnu > 0} \vdash (x, y) : \urt{\Int \times \Int}{\vnu.1 = 1 \land \vnu.2 = 2} \quad \judgfail
+  \\&x{:}\urt{\Int}{\vnu > 0} * y{:}\urt{\Int}{\vnu > 0} \vdash (x, y) : \urt{\Int \times \Int}{\vnu.1 = 1 \land \vnu.2 = 2} \quad \judgok
+\end{align*}
+Whereas the preceding example fixes $x$ and uses it twice, in a pair $(x, y)$ the variable $y$ may be either independent of $x$ or correlated with it. The separating connective $\sep$ and the non-separating context comma $,$ mark that distinction. The first line does not type-check when $x$ and $y$ may be correlated (e.g.\ $\zlet{y}{x}{...}$); the second line succeeds when $x$ and $y$ are independent.
+
+\paragraph{Function application} Reading over- and underapproximation as read and write permission on choice resources, and with disjointness in hand, we can disentangle the situations that arise from function application without precisely tracking the functional relation between argument and result.
+Consider, for instance,
+\begin{align*}
+  &x{:}\urt{\Int}{\top} \vdash \zlet{y}{f\;x}{e} : \tau
+\end{align*}
+and focus on the \emph{context} in which the continuation $e$ is typed after the call. For simplicity, suppose $f\;x$ can cover all integers; the following three cases must then be separated:
 \begin{enumerate}
-\item $x$ \emph{loses} its coverage in the continuation (the argument's
-  witness set is consumed or framed away during the proof of the
-  application, as with magic-wand style parameter usage);
-\item $x$ \emph{retains} coverage, but the witness for $x$ and the
-  witness for $y$ are \emph{entangled} (they must be drawn from a
-  correlated product of choices, not an unconstrained rectangle);
-\item $x$ \emph{retains} coverage and is \emph{independent} of $y$
-  (return coverage can be checked pointwise for every possible argument
-  value, as with an overapproximate parameter modality).
+\item $x$ \emph{loses} write permission after application. For example, let $f$ be $\Code{f_{nonneg}}$, which returns normally only when $x$ is non-negative.
+\item $x$ \emph{retains} write permission, but the resource governing $x$ is \emph{correlated} with the result $y$. For example, let $f$ be $\Code{f_{id}}$, which always returns its argument.
+\item $x$ \emph{retains} write permission and is \emph{independent} of $y$. For example, let $f$ be $\lambda x.\Code{int\_gen()}$, which returns a nondeterministically chosen integer.
 \end{enumerate}
-These cases are worked out in our slides (March~17); the first aligns
-with incorrectness-flavored (``parameter-consuming'') application, the
-last with ordinary coverage of results, and the middle is the dependent
-under-type regime.
-Recent concurrent and probabilistic extensions of outcome logic
-(e.g.\ pcOL~\cite{ZST26POPL}) compositionally track probabilistic
-\emph{independence} versus \emph{correlation} between parts of state;
-that addresses a related ``rectangle vs.\ joint'' phenomenon in a
-different setting (scheduler, shared sampling, separation).
-Here we ask the analogous distinction for \emph{higher-order, typed}
-application: whether argument coverage is consumed, entangled with the
-result, or checked independently while varying only the return.
-Hoare-style triples with a monolithic post on~$y$---or typing rules
-that do not surface $\sarr$ versus $\wand$---still blur these three
-meanings; our goal is a denotational account where they are primitive.
+These regimes correspond to the following typing contexts:
+\begin{align*}
+  &x{:}\ort{\Int}{\top}, y{:}\urt{\Int}{\top} \vdash e : \tau \quad \text{(case 1)}
+  \\&x{:}\urt{\Int}{\top}, y{:}\urt{\Int}{\top} \vdash e : \tau \quad \text{(case 2)}
+  \\&x{:}\urt{\Int}{\top} * y{:}\urt{\Int}{\top} \vdash e : \tau \quad \text{(case 3)}
+\end{align*}
+Function types for $f$ that induce these three contexts can be expressed using the ordinary arrow $\sarr$ and the magic wand $\wand$; the next section develops the details.
 
-\paragraph{Resources as possible executions, not states.}
-We therefore move from predicates on a global store to \emph{resources}:
-finite collections of \emph{partial substitutions}, each representing a
-consistent way the program might resolve nondeterministic or unknown
-choices.
-Combining resources uses a separating product (compatible glueing of
-partial information) \emph{and} a choice sum (branching), so branching,
-independent correlation, and framing need not be encoded as mutations
-of an implicit heap.
-The carrier is purpose-built for ``which execution possibilities are
-we keeping track of?'' rather than ``what is the unique concrete
-state?''---so the semantics does not presuppose a stateful language.
+\paragraph{Persistence and higher-order functions} In general, choice resources are not duplicable, whereas some resources may be freely duplicated. We have already observed that resources carrying read permission, in particular overapproximation types, are duplicable. Functions are more delicate, as shown in the third issue about higher-order function application above. Consider the following two functions:
+\begin{align*}
+  &g_1 \doteq (\lambda ().\true) \oplus (\lambda ().\false)
+  \\&g_2 \doteq \lambda ().(\true \oplus \false)
+\end{align*}
+After a single application, both results of $g_1$ and $g_2$ cover all Boolean values; repeated application, however, preserves this property only for $g_2$. Following other resource-based logics, we introduce the persistence modality $\Box$ to distinguish them:
+\begin{align*}
+  &\vdash g_1 : \Unit \sarr \urt{\Bool}{\top}
+  \\&\vdash g_2 : \Box (\Unit \sarr \urt{\Bool}{\top})
+\end{align*}
+Of course $g_2$ also admits type $\Unit \sarr \urt{\Bool}{\top}$, and $\Box \tau \models \tau$ as in familiar modal logics. 
 
-\paragraph{Choice logic and choice types.}
-On this algebra we define \emph{choice logic}, a modal bunched logic
-with approximation operators that play the roles of upper and lower
-bounds with respect to choice.
-It provides the missing logical distinctions (products,
-wands, sums, and modalities) that let us express the three application
-regimes compositionally.
-\emph{Choice types} are the layer above: refinement constructors export
-the modalities to data, while function constructors $\sarr$ and $\wand$
-reify exactly the parameter/return dependency patterns listed above,
-all interpreted by uniform clauses into choice logic.
+% \paragraph{Choice logic and choice types} After introducing the notion of persistence, we can now define the choice logic and choice types. The choice logic is a modal bunched logic with approximation operators that play the roles of upper and lower bounds with respect to choice. It provides the missing logical distinctions (products, wands, sums, and modalities) that let us express the three application regimes compositionally. The choice types are the layer above: refinement constructors export the modalities to data, while function constructors $\sarr$ and $\wand$ reify exactly the parameter/return dependency patterns listed above, all interpreted by uniform clauses into choice logic.
 
-\paragraph{Roadmap.}
-\autoref{sec:formal} presents substitutions, the choice algebra, pure
-propositions embedded in it, basic and approximate choice logic, and
-the syntax and denotation of modal refinement types.
-Syntactic typing rules are deferred; the denotational definition fixes
-the specification they should implement.
+% \paragraph{Resources as possible executions, not states.}
+% We therefore move from predicates on a global store to \emph{resources}:
+% finite collections of \emph{partial substitutions}, each representing a
+% consistent way the program might resolve nondeterministic or unknown
+% choices.
+% Combining resources uses a separating product (compatible glueing of
+% partial information) \emph{and} a choice sum (branching), so branching,
+% independent correlation, and framing need not be encoded as mutations
+% of an implicit heap.
+% The carrier is purpose-built for ``which execution possibilities are
+% we keeping track of?'' rather than ``what is the unique concrete
+% state?'' Hence the semantics does not presuppose a stateful language.
+
+% \paragraph{Choice logic and choice types.}
+% On this algebra we define \emph{choice logic}, a modal bunched logic
+% with approximation operators that play the roles of upper and lower
+% bounds with respect to choice.
+% It provides the missing logical distinctions (products,
+% wands, sums, and modalities) that let us express the three application
+% regimes compositionally.
+% \emph{Choice types} are the layer above: refinement constructors export
+% the modalities to data, while function constructors $\sarr$ and $\wand$
+% reify exactly the parameter/return dependency patterns listed above,
+% all interpreted by uniform clauses into choice logic.
+
+% \paragraph{Roadmap.}
+% \autoref{sec:formal} presents substitutions, the choice algebra, pure
+% propositions embedded in it, basic and approximate choice logic, and
+% the syntax and denotation of modal refinement types.
+% Syntactic typing rules are deferred; the denotational definition fixes
+% the specification they should implement.
