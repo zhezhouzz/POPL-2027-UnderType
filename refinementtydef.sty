@@ -256,6 +256,8 @@
 \providecommand{\Dom}[1]{\mathrm{dom}(#1)}
 % Restriction of a partial map to a set (standard | notation).
 \providecommand{\restrictTo}[2]{\left.{#1}\right|_{#2}}
+% Restriction-agreeing substitutions: read $m \ltimes \sigma$ as ``$m$ semijoin $\sigma$'' (relational-algebra style).
+\newcommand{\resAgree}[2]{#1 \mathbin{\ltimes} #2}
 % Compatible partial maps, or (by overloading) substitution \emph{sets} whose
 % cross-pairs are all map-compatible. Same symbol $\uparrow$ in both readings.
 \providecommand{\mapCompat}[2]{#1 \mathrel{\uparrow} #2}
@@ -747,15 +749,23 @@
 \newcommand{\sep}{\,\*\,}
 % Longer bar than hyphen-minus; tweak \mkern if the star overlaps.
 \newcommand{\wand}{\,\mathrel{\relbar\mkern-8mu*}\,}
-\newcommand{\upperB}{\textcolor{magenta}{\boxed{\mathsf{o}}}}
-\newcommand{\lowerB}{\textcolor{CobaltBlue}{\boxed{\mathsf{u}}}}
-% \newcommand{\upperB}{\boxed{\mathsf{o}}}
-% \newcommand{\lowerB}{\boxed{\mathsf{u}}}
+\newcommand{\subExt}{\textcolor{magenta}{\boxed{\mathsf{o}}}}
+\newcommand{\supExt}{\textcolor{CobaltBlue}{\boxed{\mathsf{u}}}}
+\newcommand{\subExtleq}{\textcolor{magenta}{\,\leq_\mathsf{o}\,}}
+\newcommand{\supExtleq}{\textcolor{CobaltBlue}{\,\leq_\mathsf{u}\,}}
+\newcommand{\subExteq}{\textcolor{magenta}{\,\sim_\mathsf{o}\,}}
+\newcommand{\supExteq}{\textcolor{CobaltBlue}{\,\sim_\mathsf{u}\,}}
+\newcommand{\subExtQ}{\textcolor{magenta}{\,\boxed{/\mathsf{o}}\,}}
+\newcommand{\supExtQ}{\textcolor{CobaltBlue}{\,\boxed{/\mathsf{u}}\,}}
 \newcommand{\qtrue}{\top}
 \newcommand{\qfalse}{\bot}
 \newcommand{\subs}{\sigma}
 \newcommand{\Res}{\mathcal{R}}
 \newcommand{\Mring}{\mathcal{M}}
+\newcommand{\existsB}{\textcolor{CobaltBlue}{\boxed{\exists}}}
+\newcommand{\readT}{\textcolor{magenta}{\rhd.}}
+\newcommand{\readM}[2]{{#1}{:}{#2}\readT}
+
 
 % Judgment markers (e.g.\ valid vs.\ invalid typing or choice obligations)
 \newcommand{\judgok}{\textcolor{DeepGreen}{\boldsymbol{\checkmark}}}
@@ -773,3 +783,6 @@
 \newcommand{\semistar}{\textcolor{DeepGreen}{\boldsymbol{\mathbin{,\mkern -8mu\ast}}}}
 \newcommand{\chiff}{\textcolor{DeepGreen}{\boldsymbol{\iff}}}
 \newcommand{\chterm}{\textcolor{DeepGreen}{\boldsymbol{\diamond}}}
+
+\newcommand{\consume}{\textcolor{DeepGreen}{\boldsymbol{\lightning}}}
+\newcommand{\chcomma}{\textcolor{DeepGreen}{\boldsymbol{,}}}

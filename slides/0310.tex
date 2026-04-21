@@ -1,6 +1,6 @@
 \newcommand{\substxy}[3]{\textcolor{#1}{[x\mapsto {#2}; y\mapsto {#3}]}}
-\newcommand{\upperB}{\boxed{o}}
-\newcommand{\lowerB}{\boxed{u}}
+\newcommand{\subExt}{\boxed{o}}
+\newcommand{\supExt}{\boxed{u}}
 
 \begin{frame}[fragile]
     \frametitle{Preliminaries}
@@ -190,10 +190,10 @@ where
 \begin{frame}[fragile]
     \frametitle{Choice Logic with Approximation}
 
-\begin{definition}[Choice Logic with Approximation] We consider two new modalities, $\upperB$ and $\lowerB$.
+\begin{definition}[Choice Logic with Approximation] We consider two new modalities, $\subExt$ and $\supExt$.
     \begin{itemize}
-        \item $m \models\upperB\phi$ iff $\exists m_1, m'.\ m + m_1 = m' \text{ and } m' \models\phi$.
-        \item $m \models\lowerB\phi$ iff $\exists m_1, m'.\ m' + m_1 = m  \text{ and } m' \models\phi$.
+        \item $m \models\subExt\phi$ iff $\exists m_1, m'.\ m + m_1 = m' \text{ and } m' \models\phi$.
+        \item $m \models\supExt\phi$ iff $\exists m_1, m'.\ m' + m_1 = m  \text{ and } m' \models\phi$.
     \end{itemize}
 \end{definition}
 
@@ -201,9 +201,9 @@ where
 
 \begin{example}
     \begin{itemize}
-        \item $\{[x\mapsto 0]\} \models\upperB(x < 2)$.
-        \item $\{[x\mapsto 0], [x\mapsto 1], [x\mapsto 2]\} \models\lowerB(x < 2)$.
-        \item $\{[x\mapsto 0], [x\mapsto 1], [x\mapsto 2]\} \models\upperB(x < 4) \land \lowerB(x < 2)$.
+        \item $\{[x\mapsto 0]\} \models\subExt(x < 2)$.
+        \item $\{[x\mapsto 0], [x\mapsto 1], [x\mapsto 2]\} \models\supExt(x < 2)$.
+        \item $\{[x\mapsto 0], [x\mapsto 1], [x\mapsto 2]\} \models\subExt(x < 4) \land \supExt(x < 2)$.
     \end{itemize}
 \end{example}
 
@@ -214,8 +214,8 @@ where
 
 \begin{definition}[Denotation] We define $\denot{\phi}$ as the set of resources that model $\phi$ (we assume all resource has the same domain with the properties).
 \begin{itemize}
-    \item $\denot{\upperB\phi} = \bigcup_{m \in \denot{\phi}} \{ m' ~|~ m' \subseteq m \}$
-    \item $\denot{\lowerB\phi} = \bigcup_{m \in \denot{\phi}} \{ m' ~|~ m \subseteq m' \}$
+    \item $\denot{\subExt\phi} = \bigcup_{m \in \denot{\phi}} \{ m' ~|~ m' \subseteq m \}$
+    \item $\denot{\supExt\phi} = \bigcup_{m \in \denot{\phi}} \{ m' ~|~ m \subseteq m' \}$
     \item $\denot{\phi_1 \land \phi_2} = \denot{\phi_1} \cap \denot{\phi_2}$, $\denot{\phi_1 \lor \phi_2} = \denot{\phi_1} \cup \denot{\phi_2}$
     \item $\denot{\phi_1 \implies \phi_2} = \denot{\phi_1} \subseteq \denot{\phi_2}$
     \item $\denot{\true} = M$;  $\denot{\false} = \{\mathbf{0}\}$
@@ -226,7 +226,7 @@ where
 \end{definition}
 
 \begin{lemma}[Idempotency]
-    $\upperB\phi \vdash \upperB\upperB\phi$ and $\lowerB\phi \vdash \lowerB\lowerB\phi$.
+    $\subExt\phi \vdash \subExt\subExt\phi$ and $\supExt\phi \vdash \supExt\supExt\phi$.
 \end{lemma}
 
 \end{frame}
@@ -234,7 +234,7 @@ where
 \begin{frame}[fragile]
     \frametitle{Properties of Approximation}
 
-\begin{definition}[Approximation Normal Form (AppNF)] The $\upperB$ and $\lowerB$ modalities appear only before atomic propositions.
+\begin{definition}[Approximation Normal Form (AppNF)] The $\subExt$ and $\supExt$ modalities appear only before atomic propositions.
 \end{definition}
 
 \textbf{Question:} Can all formulas be converted to AppNF?
@@ -246,11 +246,11 @@ Let $p$ and $q$ be modality-free propositions (constructed from $P$, $\land$, $\
 
 \begin{lemma}[Overapproximation] Consider the modality-free propositions $p$ and $q$.
 \begin{itemize}
-    \item $\upperB p \land \upperB q \dashv\vdash \upperB(p \cap q)$, thus $\upperB(\upperB p \land \upperB q) \dashv\vdash \upperB(p \cap q)$. 
-    \item $\upperB(\upperB p \lor \upperB q) \dashv\vdash \upperB p \lor \upperB q$.
-    \item $\upperB p \implies \upperB q \dashv\vdash \upperB(p \implies q)$, similar to $\land$.
-    \item $\upperB \true \dashv\vdash \true$; $\upperB \false \dashv\vdash \false$.
-    % \item $\lowerB p \land \lowerB q \dashv\vdash \lowerB(p \land q)$ 
+    \item $\subExt p \land \subExt q \dashv\vdash \subExt(p \cap q)$, thus $\subExt(\subExt p \land \subExt q) \dashv\vdash \subExt(p \cap q)$. 
+    \item $\subExt(\subExt p \lor \subExt q) \dashv\vdash \subExt p \lor \subExt q$.
+    \item $\subExt p \implies \subExt q \dashv\vdash \subExt(p \implies q)$, similar to $\land$.
+    \item $\subExt \true \dashv\vdash \true$; $\subExt \false \dashv\vdash \false$.
+    % \item $\supExt p \land \supExt q \dashv\vdash \supExt(p \land q)$ 
 \end{itemize}
 \end{lemma}
 
@@ -263,12 +263,12 @@ Let $p$ and $q$ be modality-free propositions (constructed from $P$, $\land$, $\
 \end{definition}
 
 \begin{lemma}[Cancel Out]
-    $\upperB\lowerB p \dashv\vdash \upperB\Code{All}(\Code{FV}(p))$ and $ \lowerB\upperB p \dashv\vdash \true$.
+    $\subExt\supExt p \dashv\vdash \subExt\Code{All}(\Code{FV}(p))$ and $ \supExt\subExt p \dashv\vdash \true$.
 \end{lemma}
 \begin{proof}
 \begin{itemize}
-    \item For $m \models \upperB\lowerB p$, $\Code{FV}(p) \subseteq \Dom{m}$. Thus $m \subseteq \denot{\Code{All}(\Code{FV}(p))}$.
-    \item For $m \models \upperB \Code{All}(\Code{FV}(p))$, there exists $m' \doteq \denot{\Code{All}(\Code{FV}(p))}$ such that $m \subseteq m'$ and $\denot{p} \subseteq m'$.
+    \item For $m \models \subExt\supExt p$, $\Code{FV}(p) \subseteq \Dom{m}$. Thus $m \subseteq \denot{\Code{All}(\Code{FV}(p))}$.
+    \item For $m \models \subExt \Code{All}(\Code{FV}(p))$, there exists $m' \doteq \denot{\Code{All}(\Code{FV}(p))}$ such that $m \subseteq m'$ and $\denot{p} \subseteq m'$.
     \item Note that for all $m$, $\textbf{0} \subseteq m$ and $\textbf{0} \subseteq \denot{p}$.
 \end{itemize}
 \end{proof}
@@ -284,7 +284,7 @@ Let $p$ and $q$ be modality-free propositions (constructed from $P$, $\land$, $\
     \includegraphics[width=0.8\textwidth]{figures/Ex4.drawio.png}
 \end{figure}
 
-\begin{lemma}[Merge Rule] $\upperB(\upperB p * \upperB q) \dashv\vdash \upperB(p * q) \dashv\vdash \upperB(p\land q)$.
+\begin{lemma}[Merge Rule] $\subExt(\subExt p * \subExt q) \dashv\vdash \subExt(p * q) \dashv\vdash \subExt(p\land q)$.
 \end{lemma}
 
 \end{frame}
@@ -292,16 +292,16 @@ Let $p$ and $q$ be modality-free propositions (constructed from $P$, $\land$, $\
 \begin{frame}[fragile]
     \frametitle{Properties of Approximation}
 
-\begin{lemma}[Over Cancels $\oplus$] $\upperB p \oplus \upperB q \dashv\vdash \upperB (p \lor q)$.
+\begin{lemma}[Over Cancels $\oplus$] $\subExt p \oplus \subExt q \dashv\vdash \subExt (p \lor q)$.
 \end{lemma}
 \begin{proof}
     \begin{itemize}
-        \item \textbf{Forward:} $m \models \upperB p \oplus \upperB q$ means there exist $m_1, m_2$ such that $m = m_1 + m_2$, $m_1 \models \upperB p$, and $m_2 \models \upperB q$. Thus $m_1 \in \denot{p}$ and $m_2 \in \denot{q}$, so $m = m_1 + m_2 \in \denot{p} \cup \denot{q} = \denot{p \lor q}$.
-        \item \textbf{Backward:} $m \models \upperB p \oplus \upperB q$ means $m \subseteq \denot{p} \cup \denot{q}$. Thus $m = (m \cap \denot{p}) + (m \setminus \denot{p})$.
+        \item \textbf{Forward:} $m \models \subExt p \oplus \subExt q$ means there exist $m_1, m_2$ such that $m = m_1 + m_2$, $m_1 \models \subExt p$, and $m_2 \models \subExt q$. Thus $m_1 \in \denot{p}$ and $m_2 \in \denot{q}$, so $m = m_1 + m_2 \in \denot{p} \cup \denot{q} = \denot{p \lor q}$.
+        \item \textbf{Backward:} $m \models \subExt p \oplus \subExt q$ means $m \subseteq \denot{p} \cup \denot{q}$. Thus $m = (m \cap \denot{p}) + (m \setminus \denot{p})$.
     \end{itemize}
 \end{proof}
 
-\begin{lemma}[Over Cancels $\oplus$] $\upperB(\upperB p \oplus \upperB q) \dashv\vdash \upperB (p \lor q)$.
+\begin{lemma}[Over Cancels $\oplus$] $\subExt(\subExt p \oplus \subExt q) \dashv\vdash \subExt (p \lor q)$.
 \end{lemma}
 
 \end{frame}
@@ -311,10 +311,10 @@ Let $p$ and $q$ be modality-free propositions (constructed from $P$, $\land$, $\
 
 \begin{lemma}[Underapproximation] Consider the modality-free propositions $p$ and $q$.
 \begin{itemize}
-    \item $\lowerB p \land \lowerB q \dashv\vdash \lowerB(p \lor q)$.
-    \item $\lowerB(\lowerB p \lor \lowerB q) \dashv\vdash \lowerB p \lor \lowerB q$.
-    \item $\lowerB p \implies \lowerB q \dashv\vdash \lowerB(q \implies p)$, similar to $\land$.
-    \item $\lowerB \true \dashv\vdash \true$; $\lowerB \false \dashv\vdash \true$.
+    \item $\supExt p \land \supExt q \dashv\vdash \supExt(p \lor q)$.
+    \item $\supExt(\supExt p \lor \supExt q) \dashv\vdash \supExt p \lor \supExt q$.
+    \item $\supExt p \implies \supExt q \dashv\vdash \supExt(q \implies p)$, similar to $\land$.
+    \item $\supExt \true \dashv\vdash \true$; $\supExt \false \dashv\vdash \true$.
 \end{itemize}
 \end{lemma}
 
@@ -323,20 +323,10 @@ Let $p$ and $q$ be modality-free propositions (constructed from $P$, $\land$, $\
 \begin{frame}[fragile]
     \frametitle{Properties of Approximation}
 
-\begin{lemma}[Under Cancels $*$] $\lowerB(\lowerB p * \lowerB q) \dashv\vdash \lowerB (p * q)$; note that $\lowerB (p * q)$ is not equal to $\lowerB (p \land q)$.
+\begin{lemma}[Under Cancels $*$] $\supExt(\supExt p * \supExt q) \dashv\vdash \supExt (p * q)$; note that $\supExt (p * q)$ is not equal to $\supExt (p \land q)$.
 \end{lemma}
 
-\begin{lemma}[Merge Rule] $\lowerB p \oplus \lowerB q \dashv\vdash \lowerB (p \lor q)$.
-\end{lemma}
-
-\end{frame}
-
-\begin{frame}[fragile]
-    \frametitle{Properties of Approximation}
-
-Consider the mixed case:
-
-\begin{lemma}[Mixed Conjunction] $\upperB(\lowerB p \land \upperB q) \dashv\vdash \upperB q \land (p \impl q)$ and $\lowerB(\lowerB p \land \upperB q) \dashv\vdash (p \impl q) \impl \lowerB p$.
+\begin{lemma}[Merge Rule] $\supExt p \oplus \supExt q \dashv\vdash \supExt (p \lor q)$.
 \end{lemma}
 
 \end{frame}
@@ -346,12 +336,22 @@ Consider the mixed case:
 
 Consider the mixed case:
 
-\begin{lemma}[Mixed Disjunction] $\upperB(\lowerB p \lor \upperB q) \dashv\vdash \true$ and $\lowerB(\lowerB p \lor \upperB q) \dashv\vdash \true$.
+\begin{lemma}[Mixed Conjunction] $\subExt(\supExt p \land \subExt q) \dashv\vdash \subExt q \land (p \impl q)$ and $\supExt(\supExt p \land \subExt q) \dashv\vdash (p \impl q) \impl \supExt p$.
+\end{lemma}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Properties of Approximation}
+
+Consider the mixed case:
+
+\begin{lemma}[Mixed Disjunction] $\subExt(\supExt p \lor \subExt q) \dashv\vdash \true$ and $\supExt(\supExt p \lor \subExt q) \dashv\vdash \true$.
 \end{lemma}
 \begin{proof}
     \begin{itemize}
-        \item For all possible $m$, we have $m \subseteq \denot{p} \cup m$, and $\denot{p} \cup m \models \lowerB p$, thus $m \models \upperB(\lowerB p \lor \upperB q)$.
-        \item For all possible $m$, we have $\denot{q} \cap m \subseteq m$, and $\denot{q} \cap m \models \upperB q$, thus $m \models \lowerB(\lowerB p \lor \upperB q)$.
+        \item For all possible $m$, we have $m \subseteq \denot{p} \cup m$, and $\denot{p} \cup m \models \supExt p$, thus $m \models \subExt(\supExt p \lor \subExt q)$.
+        \item For all possible $m$, we have $\denot{q} \cap m \subseteq m$, and $\denot{q} \cap m \models \subExt q$, thus $m \models \supExt(\supExt p \lor \subExt q)$.
     \end{itemize}
 \end{proof}
 
@@ -360,13 +360,13 @@ Consider the mixed case:
 \begin{frame}[fragile]
     \frametitle{Properties of Approximation}
 
-\begin{lemma}[Mixed $*$] $\upperB(\lowerB p * \upperB q) \dashv\vdash \upperB (\Code{All}(\Dom{p}) * q)$ and $\lowerB(\lowerB p * \upperB q) \dashv\vdash \true$.
+\begin{lemma}[Mixed $*$] $\subExt(\supExt p * \subExt q) \dashv\vdash \subExt (\Code{All}(\Dom{p}) * q)$ and $\supExt(\supExt p * \subExt q) \dashv\vdash \true$.
 \end{lemma}
 \begin{proof} 
     \begin{itemize}
-        \item \textbf{1. Forward:} $m\models \upperB(\lowerB p * \upperB q)$ means there exist $m_1, m_2$ such that $m \subseteq m_1 \times m_2$ and $m_1 \models \lowerB p$ and $m_2 \models \upperB q$. Thus $m_2 \subseteq \denot{q}$. It is easy to see that $m \subseteq \denot{\Code{All}(\Dom{p})} \times \denot{q}$. 
-        \item \textbf{1. Backward:} $m \models \upperB (\Code{All}(\Dom{p}) * q)$ means there exist $m_1, m_2$ with $m_1 \in \denot{\Code{All}(\Dom{p})}$ and $m_2 \in \denot{q}$ such that $m \subseteq m_1 \times m_2$. It is easy to see that $m_1 \models \lowerB p$ and $m_2 \models \upperB q$.
-        \item \textbf{2.} Note that $\textbf{0} = \denot{p} \times \textbf{0}$ and $\textbf{0} \models \upperB q$, thus $\textbf{0} \models \lowerB p * \upperB q$. 
+        \item \textbf{1. Forward:} $m\models \subExt(\supExt p * \subExt q)$ means there exist $m_1, m_2$ such that $m \subseteq m_1 \times m_2$ and $m_1 \models \supExt p$ and $m_2 \models \subExt q$. Thus $m_2 \subseteq \denot{q}$. It is easy to see that $m \subseteq \denot{\Code{All}(\Dom{p})} \times \denot{q}$. 
+        \item \textbf{1. Backward:} $m \models \subExt (\Code{All}(\Dom{p}) * q)$ means there exist $m_1, m_2$ with $m_1 \in \denot{\Code{All}(\Dom{p})}$ and $m_2 \in \denot{q}$ such that $m \subseteq m_1 \times m_2$. It is easy to see that $m_1 \models \supExt p$ and $m_2 \models \subExt q$.
+        \item \textbf{2.} Note that $\textbf{0} = \denot{p} \times \textbf{0}$ and $\textbf{0} \models \subExt q$, thus $\textbf{0} \models \supExt p * \subExt q$. 
     \end{itemize}
 \end{proof}
 \end{frame}
@@ -374,15 +374,15 @@ Consider the mixed case:
 \begin{frame}[fragile]
     \frametitle{Properties of Approximation}
 
-\begin{lemma}[Mixed $\oplus$] $\upperB(\lowerB p \oplus \upperB q) \dashv\vdash \upperB \Code{All}(\Dom{p})$ and $\lowerB(\lowerB p \oplus \upperB q) \dashv\vdash \lowerB p$.
+\begin{lemma}[Mixed $\oplus$] $\subExt(\supExt p \oplus \subExt q) \dashv\vdash \subExt \Code{All}(\Dom{p})$ and $\supExt(\supExt p \oplus \subExt q) \dashv\vdash \supExt p$.
 \end{lemma}
 \begin{proof} 
     \begin{itemize}
         \item \textbf{1.} For all $m$ whose domain is $\Dom{p}$, we have $m \subseteq (m \cup \denot{p}) + \textbf{0}$.
-        \item \textbf{2. Forward:} $m\models\lowerB(\lowerB p \oplus \upperB q)$ means there exist $m_1, m_2$ such that $m_1 + m_2 \subseteq m$, $\denot{p} \subseteq m_1$, and $m_2 \subseteq \denot{q}$. We have $m_1 \subseteq m$.
-        \item \textbf{1. Backward:} When $m\models \lowerB p$, we can choose $m + \textbf{0} \subseteq m$.
+        \item \textbf{2. Forward:} $m\models\supExt(\supExt p \oplus \subExt q)$ means there exist $m_1, m_2$ such that $m_1 + m_2 \subseteq m$, $\denot{p} \subseteq m_1$, and $m_2 \subseteq \denot{q}$. We have $m_1 \subseteq m$.
+        \item \textbf{1. Backward:} When $m\models \supExt p$, we can choose $m + \textbf{0} \subseteq m$.
     \end{itemize}
-    Note that $\lowerB p \oplus \upperB q \dashv\vdash \lowerB p \oplus \false \dashv\vdash \lowerB p$.
+    Note that $\supExt p \oplus \subExt q \dashv\vdash \supExt p \oplus \false \dashv\vdash \supExt p$.
 \end{proof}
 
 \end{frame}
@@ -398,7 +398,7 @@ Consider the mixed case:
     \textbf{Variable Sets} \quad X, Y, Z \\
     \textbf{Constants} \quad c ::= & () ~|~ \mathbb{B} ~|~ \mathbb{Z} ~|~ ...  \\
     \textbf{Atomic Propositions} \quad P ::= & \Code{All}(X) ~|~ ...  \\
-    \textbf{Propositions} \quad \phi ::= & \upperB P ~|~ \lowerB P ~|~ P ~|~ \phi \land \phi ~|~ \phi \lor \phi ~|~ \phi \implies \phi\\
+    \textbf{Propositions} \quad \phi ::= & \subExt P ~|~ \supExt P ~|~ P ~|~ \phi \land \phi ~|~ \phi \lor \phi ~|~ \phi \implies \phi\\
     & ~|~ \forall x. \phi ~|~ \exists x. \phi ~|~ \true ~|~ \false \\
     & ~|~ \phi * \phi ~|~ \phi \oplus \phi ~|~ \phi \wand \phi
 \end{align*}

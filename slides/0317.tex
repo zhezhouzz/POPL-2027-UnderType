@@ -1,6 +1,6 @@
 \newcommand{\substxy}[3]{\textcolor{#1}{[x\mapsto {#2}; y\mapsto {#3}]}}
-\newcommand{\upperB}{\boxed{o}}
-\newcommand{\lowerB}{\boxed{u}}
+\newcommand{\subExt}{\boxed{o}}
+\newcommand{\supExt}{\boxed{u}}
 \newcommand{\landp}{\land_p}
 \newcommand{\lorp}{\lor_p}
 \newcommand{\implp}{{\implies_{\!\!\!\!p}}}
@@ -121,10 +121,10 @@ where
 \begin{frame}[fragile]
     \frametitle{Choice Logic with Approximation}
 
-\begin{definition}[Choice Logic with Approximation] We consider two new modalities, $\upperB$ and $\lowerB$.
+\begin{definition}[Choice Logic with Approximation] We consider two new modalities, $\subExt$ and $\supExt$.
     \begin{itemize}
-        \item $m \models\upperB\phi$ iff $\exists m_1, m'.\ m + m_1 = m' \text{ and } m' \models\phi$.
-        \item $m \models\lowerB\phi$ iff $\exists m_1, m'.\ m' + m_1 = m  \text{ and } m' \models\phi$.
+        \item $m \models\subExt\phi$ iff $\exists m_1, m'.\ m + m_1 = m' \text{ and } m' \models\phi$.
+        \item $m \models\supExt\phi$ iff $\exists m_1, m'.\ m' + m_1 = m  \text{ and } m' \models\phi$.
     \end{itemize}
 \end{definition}
 
@@ -132,9 +132,9 @@ where
 
 \begin{example}
     \begin{itemize}
-        \item $\{[x\mapsto 0]\} \models\upperB(x < 2)$.
-        \item $\{[x\mapsto 0], [x\mapsto 1], [x\mapsto 2]\} \models\lowerB(x < 2)$.
-        \item $\{[x\mapsto 0], [x\mapsto 1], [x\mapsto 2]\} \models\upperB(x < 4) \land \lowerB(x < 2)$.
+        \item $\{[x\mapsto 0]\} \models\subExt(x < 2)$.
+        \item $\{[x\mapsto 0], [x\mapsto 1], [x\mapsto 2]\} \models\supExt(x < 2)$.
+        \item $\{[x\mapsto 0], [x\mapsto 1], [x\mapsto 2]\} \models\subExt(x < 4) \land \supExt(x < 2)$.
     \end{itemize}
 \end{example}
 
@@ -150,7 +150,7 @@ where
     \textbf{Constants} \quad c ::= & () ~|~ \mathbb{B} ~|~ \mathbb{Z} ~|~ ...  \\
     \textbf{Pure Propositions} \quad \phi ::= & \Code{Atom} ~|~ \Dom{X}\\
     & ~|~ \phi \cap \phi ~|~ \phi \cup \phi ~|~ \phi \setminus \phi ~|~ \phi \times \phi \\
-    \textbf{Resource Propositions} \quad p,q ::= & \upperB \phi ~|~ \lowerB \phi ~|~ p \land q ~|~ p \lor q ~|~ p \implies q \\
+    \textbf{Resource Propositions} \quad p,q ::= & \subExt \phi ~|~ \supExt \phi ~|~ p \land q ~|~ p \lor q ~|~ p \implies q \\
     &~|~ \forall x. p ~|~ \exists x. p ~|~ \true ~|~ \false \\
     &~|~ p * q ~|~ p \oplus q ~|~ p \wand q
 \end{align*}
@@ -167,10 +167,10 @@ where
 Some clarifications:
 \begin{lemma}[Intersection and Union] Consider pure propositions $\phi_1$ and $\phi_2$.
 \begin{itemize}
-    \item $\upperB \phi_1 \land \upperB \phi_2 \dashv\vdash \upperB(\phi_1 \cap \phi_2)$.
-    \item $\upperB \phi_1 \oplus \upperB \phi_2 \dashv\vdash \upperB(\phi_1 \cup \phi_2)$.
-    \item $\lowerB \phi_1 \land \lowerB \phi_2 \dashv\vdash \lowerB(\phi_1 \cap \phi_2)$.
-    \item $\lowerB \phi_1 \oplus \lowerB \phi_2 \dashv\vdash \lowerB(\phi_1 \cup \phi_2)$.
+    \item $\subExt \phi_1 \land \subExt \phi_2 \dashv\vdash \subExt(\phi_1 \cap \phi_2)$.
+    \item $\subExt \phi_1 \oplus \subExt \phi_2 \dashv\vdash \subExt(\phi_1 \cup \phi_2)$.
+    \item $\supExt \phi_1 \land \supExt \phi_2 \dashv\vdash \supExt(\phi_1 \cap \phi_2)$.
+    \item $\supExt \phi_1 \oplus \supExt \phi_2 \dashv\vdash \supExt(\phi_1 \cup \phi_2)$.
 \end{itemize}
 \end{lemma}
 
@@ -182,7 +182,7 @@ Some clarifications:
 \textbf{Problem:} The refinement type includes dependent types and dependent pairs. However, we assume $*$ is disjointed.
 
 \begin{align*}
-    \lowerB (0 \leq x \leq 3) * \lowerB (0 \leq y \leq x) 
+    \supExt (0 \leq x \leq 3) * \supExt (0 \leq y \leq x) 
 \end{align*}\noindent
 
 \textbf{Question:} What is meaning of the above formula?
@@ -306,8 +306,8 @@ We interpret type annotations as formulae in choice logic.
 
 \begin{definition}[Type Annotation Interpretation] We interpret $x:\tau$ as:
 \begin{itemize}
-    \item $\denot{e : \ort{b}{\phi}} \doteq \denot{\vnu = e}\impl \upperB \denot{\phi} $.
-    \item $\denot{e : \urt{b}{\phi}} \doteq \denot{\vnu = e}\impl \lowerB \denot{\phi} $.
+    \item $\denot{e : \ort{b}{\phi}} \doteq \denot{\vnu = e}\impl \subExt \denot{\phi} $.
+    \item $\denot{e : \urt{b}{\phi}} \doteq \denot{\vnu = e}\impl \supExt \denot{\phi} $.
     \item $\denot{e : x{:}\tau_x \sarr \tau} \doteq \forall e_x. \denot{e_x : \tau_x} \implies \denot{e_x : \tau_x} \land \denot{(e\;e_x) : \bigoplus_{\mstep{e_x}{v_x} } \tau[x\mapsto v_x]} $.
     \item $\denot{e : x{:}\tau_x \wand \tau} \doteq \forall e_x. \denot{e_x : \tau_x} \wand \denot{(e\;e_x) : \bigoplus_{\mstep{e_x}{v_x} } \tau[x\mapsto v_x]} $.
     \item $\denot{e : \tau_1 \oplus \tau_2} \doteq \denot{e : \tau_1} \oplus \denot{e : \tau_2} $.
@@ -327,7 +327,7 @@ We interpret type annotations as formulae in choice logic.
     \begin{align*}
         \{ \{f \mapsto \lambda ().1, f\mapsto\lambda ().2\} \;; \{f \mapsto \lambda ().1, f\mapsto\lambda ().2 , f\mapsto\lambda ().3\} \;; ... \}
     \end{align*}
-The $\denot{f : \upperB (x{:}\tau_x \sarr \tau)}$ makes $f$ unconstrained, and $\denot{f : \lowerB (x{:}\tau_x \sarr \tau)}$ is unchanged.
+The $\denot{f : \subExt (x{:}\tau_x \sarr \tau)}$ makes $f$ unconstrained, and $\denot{f : \supExt (x{:}\tau_x \sarr \tau)}$ is unchanged.
  \end{example}
 
 \end{frame}
@@ -344,8 +344,8 @@ The $\denot{f : \upperB (x{:}\tau_x \sarr \tau)}$ makes $f$ unconstrained, and $
 The formula above is equivalent to
 \begin{align*}
     &\forall e_x. \denot{e_x : \urt{\Int}{1 \leq \vnu \leq 2}} \implies \denot{e_x : \urt{\Int}{\vnu = 1}}
-    \\\iff&\forall e_x. (\denot{\vnu = e_x} \impl \lowerB (1 \leq \vnu \leq 2)) \impl (\denot{\vnu = e_x} \impl \lowerB (\vnu = 1))
-    \\\iff&\forall e_x. \denot{\vnu = e_x} \impl \lowerB (1 \leq \vnu \leq 2)\impl \lowerB (\vnu = 1)
+    \\\iff&\forall e_x. (\denot{\vnu = e_x} \impl \supExt (1 \leq \vnu \leq 2)) \impl (\denot{\vnu = e_x} \impl \supExt (\vnu = 1))
+    \\\iff&\forall e_x. \denot{\vnu = e_x} \impl \supExt (1 \leq \vnu \leq 2)\impl \supExt (\vnu = 1)
 \end{align*}
  \end{example}
 
@@ -408,13 +408,13 @@ We assume that the result of $f\;x$ can cover all integers; however, there are s
     \begin{align*}
         &f : x{:}\urt{\Int}{\top} \wand \urt{\Int}{\top}
     \\ \iff &\forall e_x. \denot{e_x : \urt{\Int}{\top}} \wand \denot{(f\;e_x) : \urt{\Int}{\top}}
-    \\ \iff &\forall e_x. (\denot{\vnu = e_x} \impl \lowerB \Dom{\{x\}}) \wand \denot{(f\;e_x) : \urt{\Int}{\top}}
-    \\ \iff &\lowerB \Dom{\{x\}} \wand \denot{(f\;x) : \urt{\Int}{\top}}
-    \\ \iff &\lowerB \Dom{\{x\}} \wand \denot{\zif{x == 0}{\Code{int\_gen()}}{\Code{err}} : \urt{\Int}{\top}}
-    \\ \iff &\lowerB \Dom{\{x\}} \wand 
-    \\ & \quad (\upperB (x = 0) \land \Dom{\{\vnu\}} \oplus  \upperB (x \neq 0) \land \bot) \impl \lowerB \Dom{\{\vnu\}}
-    \\ \iff &(x = 0 * \Dom{\{\vnu\}}) \models \lowerB \Dom{\{\vnu\}} \text{ and } 
-    \\ &(\lowerB (x \neq 0) * \bot) \models \lowerB \bot  
+    \\ \iff &\forall e_x. (\denot{\vnu = e_x} \impl \supExt \Dom{\{x\}}) \wand \denot{(f\;e_x) : \urt{\Int}{\top}}
+    \\ \iff &\supExt \Dom{\{x\}} \wand \denot{(f\;x) : \urt{\Int}{\top}}
+    \\ \iff &\supExt \Dom{\{x\}} \wand \denot{\zif{x == 0}{\Code{int\_gen()}}{\Code{err}} : \urt{\Int}{\top}}
+    \\ \iff &\supExt \Dom{\{x\}} \wand 
+    \\ & \quad (\subExt (x = 0) \land \Dom{\{\vnu\}} \oplus  \subExt (x \neq 0) \land \bot) \impl \supExt \Dom{\{\vnu\}}
+    \\ \iff &(x = 0 * \Dom{\{\vnu\}}) \models \supExt \Dom{\{\vnu\}} \text{ and } 
+    \\ &(\supExt (x \neq 0) * \bot) \models \supExt \bot  
     \end{align*} 
 \end{example}
 
@@ -453,9 +453,9 @@ We assume that the result of $f\;x$ can cover all integers; however, there are s
     \begin{align*}
         &f : x{:}\urt{\Int}{\top} \sarr \urt{\Int}{\top}
     \\ \iff &\forall e_x. \denot{e_x : \urt{\Int}{\top}} \impl \denot{e_x : \urt{\Int}{\top}} \land \denot{(f\;e_x) : \urt{\Int}{\top}}
-    \\ \iff &\forall e_x. (\denot{\vnu = e_x} \impl \lowerB \Dom{\{x\}}) \impl \denot{e_x : \urt{\Int}{\top}} \land \denot{(f\;e_x) : \urt{\Int}{\top}}
-    \\ \iff &\lowerB \Dom{\{x\}} \impl \lowerB \Dom{\{x\}} \land \denot{(f\;x) : \urt{\Int}{\top}}
-    \\ \iff &\lowerB \Dom{\{x\}} \impl \lowerB \Dom{\{x\}} \land \lowerB \Dom{\{x\}}
+    \\ \iff &\forall e_x. (\denot{\vnu = e_x} \impl \supExt \Dom{\{x\}}) \impl \denot{e_x : \urt{\Int}{\top}} \land \denot{(f\;e_x) : \urt{\Int}{\top}}
+    \\ \iff &\supExt \Dom{\{x\}} \impl \supExt \Dom{\{x\}} \land \denot{(f\;x) : \urt{\Int}{\top}}
+    \\ \iff &\supExt \Dom{\{x\}} \impl \supExt \Dom{\{x\}} \land \supExt \Dom{\{x\}}
     \end{align*} 
 \end{example}
 
@@ -467,10 +467,10 @@ We assume that the result of $f\;x$ can cover all integers; however, there are s
 \begin{example}[Situation 2] Concrete example $f \doteq \lambda x. \zif{x == 0}{\Code{int\_gen()}}{\Code{err}}$:
     \begin{align*}
         &f : x{:}\urt{\Int}{\top} \sarr \urt{\Int}{\top}
-    \\ \iff &\lowerB \Dom{\{x\}} \impl 
-    \\ & \quad (\upperB (x = 0) \land \Dom{\{\vnu\}} \oplus  \upperB (x \neq 0) \land \bot) \impl \lowerB \Dom{\{x\}} \land \lowerB \Dom{\{\vnu\}}
-    \\ \iff &(x = 0 \land \Dom{\{\vnu\}}) \models x=0 \land \lowerB \Dom{\{\vnu\}} \text{ and } 
-    \\ &(\lowerB (x \neq 0) \land \bot) \models ??
+    \\ \iff &\supExt \Dom{\{x\}} \impl 
+    \\ & \quad (\subExt (x = 0) \land \Dom{\{\vnu\}} \oplus  \subExt (x \neq 0) \land \bot) \impl \supExt \Dom{\{x\}} \land \supExt \Dom{\{\vnu\}}
+    \\ \iff &(x = 0 \land \Dom{\{\vnu\}}) \models x=0 \land \supExt \Dom{\{\vnu\}} \text{ and } 
+    \\ &(\supExt (x \neq 0) \land \bot) \models ??
     \end{align*} 
 \end{example}
 

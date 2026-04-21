@@ -24,19 +24,13 @@ In functional language, the context of a program typically be treated as a store
  As mentioned in \autoref{sec:overview}, the choice resource is an capablity to freely decide assignments of variables. Therefore, we define the choice resource the following.
 
 \begin{definition}[Resource]\label{def:resource}
-A resource is a set of substitutions that \emph{share the same domain}. The resource space is defined as the following.
+A resource is a \emph{non-empty} set of substitutions that \emph{share the same domain}. The resource space is defined as the following.
 \begin{align*}
-  \Res \doteq \{ m ~|~ m \in \mathcal{P}(\Code{Var} \rightharpoonup \Code{Value}) \text{ and } \forall \sigma\;\sigma' \in m. \Dom{\sigma} = \Dom{\sigma'} \}.
+  \Res \doteq \{ m ~|~ m \neq \emptyset \text{ and } m \in \mathcal{P}(\Code{Var} \rightharpoonup \Code{Value}) \text{ and } \forall \sigma\;\sigma' \in m. \Dom{\sigma} = \Dom{\sigma'} \}.
 \end{align*}
 We also extends the definition of domain, compatible, and restriction from substitutions to resources. That is,
 \begin{align*}
-  &\Dom{m} \doteq 
-  \begin{cases}
-    \Dom{\subs}
-      & \text{when exists } \subs \in m  \\
-    \emptyset
-      & m = \emptyset
-  \end{cases}
+  &\Dom{m} \doteq  \Dom{\subs} \quad \text{for arbitrary } \subs \in m 
   \\&\mapCompat{m_1}{m_2}
   \doteq
   \forall \subs_1 \in m_1.\;\forall \subs_2 \in m_2.\; \mapCompat{\subs_1}{\subs_2}
@@ -79,15 +73,22 @@ The partial order $\leq$ over resources is the analogue of ``more information by
 Easily to know, $\leq$ is reflexive, antisymmetric, and transitive.
 \end{definition}
 
+\begin{definition}[Restriction-agreeing substitutions]\label{def:res-agree-in-resource}
+  Given a substitution $\sigma$ and a resource $m$, we write $\resAgree{m}{\sigma}$ (suggestively, $m$ semijoin $\sigma$) for the set of substitutions in $m$ whose restriction to $\Dom{\sigma}$ equals~$\sigma$:
+  \begin{align*}
+    \resAgree{m}{\sigma} \doteq \{\, \sigma' \mid \sigma' \in m \text{ and } \restrictTo{\sigma'}{\Dom{\sigma}} = \sigma \,\}.
+  \end{align*}
+\end{definition}
+
 \subsection{Choice algebra}
 
 The choice resource forms an algebra, which is not only a partial commutative monoid as in separation logic, but also a partial commutative semiring (PCS).
 
 \begin{definition}[Choice algebra]\label{def:choice-semiring}
-  A \emph{partial commutative semiring}
-  $(\mathcal{M},{+},{\times},\mathbf{0},\mathbf{1})$ consists of a carrier set $\mathcal{M}$ and partial binary operations ${+}$ and ${\times}$ and unit elements $\mathbf{0},\mathbf{1}$ that satisfies the following properties:
+  A \emph{partial commutative semiring without zero}
+  $(\mathcal{M},{+},{\times},\mathbf{1})$ consists of a carrier set $\mathcal{M}$ and partial binary operations ${+}$ and ${\times}$ and unit elements $\mathbf{1}$ that satisfies the following properties:
   \begin{itemize}
-  \item Indentity: $\forall m \in \mathcal{M}. m + \mathbf{0} = m$ and $m \times \mathbf{1} = m$.
+  \item Indentity: $\forall m \in \mathcal{M}. m \times \mathbf{1} = m$.
   \item Commutative (when operations are defined): $\forall m_1\;m_2 \in \mathcal{M}. m_1 + m_2 = m_2 + m_1$ and $m_1 \times m_2 = m_2 \times m_1$.
   \item Associative (when operations are defined): $\forall m_1\;m_2\;m_3 \in \mathcal{M}. (m_1 + m_2) + m_3 = m_1 + (m_2 + m_3)$ and $(m_1 \times m_2) \times m_3 = m_1 \times (m_2 \times m_3)$.
   \end{itemize}
@@ -100,7 +101,7 @@ The choice algebra is a partial commutative semiring equipped with a partial ord
   \end{align*}
   \end{definition}
 
-Easily to know, $(\Res,{+},{\times},\emptyset,\{ \emptyset \})$ and $\leq$ is a choice algebra.
+Easily to know, $(\Res,{+},{\times},\{ \emptyset \})$ and $\leq$ is a choice algebra.
 
 \begin{example}[Choice algebra]
 Let $m_x \doteq \{\,[x \mapsto 1],\, [x \mapsto 2]\,\}$, so
@@ -170,10 +171,10 @@ variable~$y$ disturbs neither kind of judgment.
 We write $m \models p$ for satisfaction of a resource proposition $p$
 at world $m \in \Res$.
 
-\begin{definition}[Basic choice logic] Let $(\mathcal{M},{+},{\times},\mathbf{0},\mathbf{1}, \leq)$ to be a choice algebra. Let $\mathcal{A}$ to be atomic propositions. Let $\denot{-} : \mathcal{A} \sarr \mathcal{M}$ be an interpretation function of pure formulas $\phi$. Then we have:
+\begin{definition}[Basic choice logic] Let $(\mathcal{M},{+},{\times},\mathbf{1}, \leq)$ to be a choice algebra. Let $\mathcal{A}$ to be atomic propositions. Let $\denot{-} : \mathcal{A} \sarr \mathcal{M}$ be an interpretation function of pure formulas $\phi$. Then we have:
 \begin{itemize}
 \item $m \models \chtrue$ always;
-\item $m \models \chfalse$ iff $m = \mathbf{0}$;
+\item $m \models \chfalse$ never;
 \item $m \models a$ iff $a \in \mathcal{A}$ and $\denot{a} \leq m$;
 \item $m \models p \chland q$ iff $m \models p$ and $m \models q$;
 \item $m \models p \chlor q$ iff $m \models p$ or $m \models q$;
@@ -190,21 +191,51 @@ at world $m \in \Res$.
 We still write $p \models q$ iff for all $m \in \Res$, $m \models p$ implies $m \models q$.
 \end{definition}
 
-Intuitively, $m$ models $\upperB p$ (or $\lowerB p$) iff there exists a supperset (or subset) $m'$ of $m$ that models $p$. On the other hand, $m$ models $\chpers p$ iff $m$ is a empty resource or a singleton resource that models $p$.
+Intuitively, $m$ models $\subExt p$ (or $\supExt p$) iff there exists a supperset (or subset) $m'$ of $m$ that models $p$. On the other hand, $m$ models $\chpers p$ iff $m$ is a empty resource or a singleton resource that models $p$.
 
 
-\begin{definition}[Choice logic] Choice logic additional equiped with three modalities than basic choice logic, i.e., the overapproximation modality $\upperB$, the underapproximation modality $\lowerB$, and the persistency modality $\chpers$.
+\begin{definition}[Choice logic]\label{def:choice-logic-modalities} Choice logic additional equiped with three modalities than basic choice logic, i.e., the overapproximation modality $\subExt$, the underapproximation modality $\supExt$, and the persistency modality $\chpers$.
   \begin{itemize}
-    \item $m \models \upperB p$ iff $\exists m_1\;m'.\; m + m_1 = m'$ and
+    \item $m \models \subExt p$ iff $\exists m'.\; m \subseteq m'$ and
       $m' \models p$;
-    \item $m \models \lowerB p$ iff $\exists m_1\;m'.\; m' + m_1 = m$ and
+    \item $m \models \supExt p$ iff $\exists m'.\; m' \subseteq m$ and
       $m' \models p$,
+    \item $m \models \readM{X}{p_1} p_2$ iff $\forall \sigma. \{\sigma\} \in \denot{\subExt p_1} \land \Dom{\sigma} = X \impl \resAgree{m}{\sigma} \models \sigma(p_2) $.
     \item $m \models \chpers p$ iff $|m| \leq 1$ and
       $m \models p$,
     \end{itemize}
 \end{definition}
 
-When the expressiveness of atomic propositions is rich enough, the nested uses of $\upperB$ and $\lowerB$ over logical connectives collapse to $\upperB$ and $\lowerB$ applied to the underlying pure propositions directly. For example, $\upperB (\upperB \phi_1 \chland \upperB \phi_2)$ is equivalent to $\upperB \phi_1 \chland \upperB \phi_2$, and $\lowerB (\upperB \phi_1 \chland \upperB \phi_2)$ is equivalent to $\lowerB (\phi_1 \cap \phi_2)$.
+
+\begin{example}[Dependent Underapproximation] There are three different underapproximations:
+  \begin{enumerate}
+    \item (dependent) $\supExt (0 < x) \chland \supExt (y < 3)$
+    \item (independent, square) $\supExt (0 < x) \chstar \supExt (y < 3)$
+    \item (dependent, triangle) $\supExt (0 < x) \chland \supExt (x \leq y < 3)\judgfail$. The actually preresentation is:
+    \begin{align*}
+      \supExt (0 < x) \chland \readM{\{x\}}{(0 < x)} \supExt (x \leq y < 3)
+    \end{align*}
+  \end{enumerate}
+We have:
+\begin{align*}
+  \{[x=1; y=1], [x=1; y=2]\} &\models \readM{\{x\}}{(0 < x)} \supExt (x \leq y < 3) 
+  \\\{[x=2; y=2]\} &\models \readM{\{x\}}{(0 < x)} \supExt (x \leq y < 3)
+  \\\{[x=1; y=1], [x=2; y=2]\} &\models \readM{\{x\}}{(0 < x)} \supExt (x \leq y < 3) \judgfail 
+  \\&\text{If contains $[x=1]$, must includes all possible $y$.}
+  \\\{[x=1; y=1], [x=1; y=2], [x=2; y=2]\} &\models \readM{\{x\}}{(0 < x)} \supExt (x \leq y < 3) \judgok 
+  \\&\text{Allow to contains multiple $x$.}
+\end{align*}
+The $\readM{\{x\}}{(0 < x)}$ works as a ``read'' permission for $x$, which reads some assignment of $x$ that satisfies $0 < x$. Note that it is different from
+\begin{align*}
+  &m \models \subExt (0 < x) \chland \supExt (x \leq y < 3) 
+  \\\iff& m \models \subExt (0 < x) \text{ and } m \models \supExt (x \leq y < 3)
+  \\\implies& \forall \sigma \in m. 0 < \sigma(x) \text{ and } m \models \supExt (x \leq y < 3)
+  \\\implies& \forall \sigma \in m. 0 < \sigma(x) \text{ and } [x=-1;y=2] \in m \quad \judgfail
+\end{align*}\noindent
+The problem is that the $\chland$ cannot make the constraint $0 < x$ be added into the pure proposition $x \leq y < 3$ (i.e., to be $\supExt (0 < x \land x \leq y < 3)$).
+\end{example}
+
+When the expressiveness of atomic propositions is rich enough, the nested uses of $\subExt$ and $\supExt$ over logical connectives collapse to $\subExt$ and $\supExt$ applied to the underlying pure propositions directly. For example, $\subExt (\subExt \phi_1 \chland \subExt \phi_2)$ is equivalent to $\subExt \phi_1 \chland \subExt \phi_2$, and $\supExt (\subExt \phi_1 \chland \subExt \phi_2)$ is equivalent to $\supExt (\phi_1 \cap \phi_2)$.
 
 \begin{theorem}[Collapse of nested modalities] Assume $\mathcal{A}$ is rich enough, i.e.,
 \begin{align*}
@@ -214,7 +245,7 @@ When the expressiveness of atomic propositions is rich enough, the nested uses o
   \\& \forall \phi_1\;\phi_2 \in \mathcal{A}. \exists \phi_3 \in \mathcal{A}. \denot{\phi_3} = \denot{\phi_1} \cup \denot{\phi_2}
   \\& \forall \phi_1\;\phi_2 \in \mathcal{A}. \exists \phi_3 \in \mathcal{A}. \denot{\phi_3} = \denot{\phi_1} \times \denot{\phi_2}
 \end{align*}
-Then, all formula in choice logic can be expressed in approximation normal form, i.e., $\upperB$ and $\lowerB$ are only applied to pure propositions.
+Then, all formula in choice logic can be expressed in approximation normal form, i.e., $\subExt$ and $\supExt$ are only applied to pure propositions.
 \end{theorem}
 
 \subsection{Core Language and Choice Types}
@@ -257,200 +288,159 @@ The context former $\Gamma_1 \sep \Gamma_2$ uses the separating
 combinator (syntax for $*$ at the context level), while ``,'' is the
 ordinary additive conjunction of hypotheses.
 
-\subsection{Untyped semantics}
-
-We define an untyped semantics for the core language. In ordinary untyped semantics, a term (possibly not closed) maps an environment (substitution) to a value or to divergence. In our setting, however, we work with a resource (a collection of substitutions), so a term maps a resource to another resource. The output resource may be empty (when all input substitutions diverge during reduction) or larger than the input resource (when some input substitutions reduce to multiple results).
-
-\begin{definition}[Resource state monad]\label{def:resource-state-monad}
-  Fix the state space $\Res$ from \autoref{def:resource}.
-  The (\emph{deterministic}) \emph{state monad} on $\Res$ has carrier
-  \begin{align*}
-    \mathsf{St}(A) &\doteq \Res \sarr (\Res \times A)
-  \end{align*}
-  for meta-level answer types $A$.
-  The unit and Kleisli extension are
-  \begin{align*}
-    \mathsf{ret} &: A \sarr \mathsf{St}(A)
-    &\mathsf{ret} &\doteq \lambda a.\lambda r.\,(r,a),
-    \\
-    \mathsf{bind} &: \mathsf{St}(A) \sarr (A \sarr \mathsf{St}(B)) \sarr \mathsf{St}(B)
-    &\mathsf{bind} &\doteq \lambda m.\lambda k.\lambda r.\; k\,(\snd(m\,r))\,(\fst(m\,r)).
-  \end{align*}
-  Untyped computations that only thread a resource and carry no separate observable answer
-  live in $\mathsf{St}(\Unit) \cong \Res \sarr \Res$, matching the codomain of $\denot{e}$ after
-  currying over $x$.
-\end{definition}
-
-\begin{definition}[Untyped semantics]
-  The untyped semantics is defined as follows:
-  \begin{align*}
-    \denot{e} &: X \sarr \Res \sarr \Res 
-    \\\denot{e} &\doteq \lambda x.\lambda r. \{ \sigma[x\mapsto v] ~|~ \exists v. \mstep{e}{v} \text{ and } \sigma \in r \text{ and } x \notin \Dom{\sigma} \}
-  \end{align*}
-\end{definition}
-Note that we treat divergence differently: we do not extend the output domain to $\Code{Value}_\bot$. Instead, for all $x$ and $\sigma$ with $x\notin \Dom{\sigma}$, if $\denot{e}\;x\;\{\sigma\} = \emptyset$, then $e$ diverges on $\sigma$.
-
-We can define a unified universe $U$ that represents $\lambda$-abstractions as real functions (e.g., $U \sarr U$), together with an embedding--retraction pair $(\Phi, \Phi')$ mapping $U \sarr U$ into $U$ and back. We still require terms to lie in the domain $X \sarr \Res \sarr \Res$, which ties the semantics more directly to resources. We use small-step operational semantics $\mstep{e}{v}$ (big-step would also be fine) for reduction of a term $e$ to a value $v$. To match the behavior of a real function $U \sarr U$, we define a function application operator on $X \sarr \Res \sarr \Res$:
-\begin{align*}
-  \Code{App}\;f\;f_x &\doteq \lambda \vnu.\lambda r. \{ \restrictTo{\sigma}{\Dom{r}}\cup[\vnu \mapsto v] ~|~ \mstep{\sigma(y)\;\sigma(x)}{v} \text{ and } \sigma \in \denot{(f\;y\;(f_x\;x\;r))} \} 
-  \\&\quad \text{ where $x$ and $y$ are fresh variables}
-\end{align*}\noindent
-
-\begin{theorem}[$\Code{App}$ soundness]
-  \begin{align*}
-    \forall e\;e_x. \Code{App}\;\denot{e}\;\denot{e_x} = \denot{e\;e_x}
-  \end{align*}\noindent
-\end{theorem}
-
-\paragraph{Function application} When performing unified verification, we need special treatment for function application. For the function $\lambda x.x$, we want to show that ``there exists an input value for $x$ such that the return value may be $1$'', as expressed by the following type:
-\begin{align*}
-  \vdash \lambda x.x : \urt{\Int}{\top} \sarr \ort{\Int}{\vnu = 1}
-\end{align*}\noindent
-However, the underapproximation type $\urt{\Int}{\top}$ considers a set of input values $\{[x = 0], [x = 1], [x = 2], ...\}$, so the return value of function application is again $\{[x = 0], [x = 1], [x = 2], ...\}$, which cannot have type $\ort{\Int}{\vnu = 1}$. 
-
-The issue is that the current interpretation lacks ``existential'' semantics: the underapproximation on the input type does not fully provide it. In other words, the denotation of a function must incorporate an $\exists$ quantifier (as in coverage types). Moreover, the ``existential'' is not a single substitution, because the return type may also demand a coverage guarantee. The solution is to consider a ``non-empty subset'' of the input resource, informally expressed as follows:
-\begin{align*}
-  e \in \denot{\tau_x \sarr \tau} \iff \forall e_x. e_x \in \denot{\tau_x}. \exists e_x'. e_x' \sqsubseteq e_x \land (e\;e_x') \in \denot{\tau}
-\end{align*}\noindent
-Here $e_x \sqsubseteq e_x'$ means that the behavior of $e_x$ is a non-empty subset of that of $e_x'$. 
-For example, $1 \sqsubseteq \Code{int\_gen()}$ holds, but $\err \sqsubseteq \Code{int\_gen()}$ does not. We consider the following $4$ cases to check that this definition behaves as intended:
-\begin{itemize}
-  \item $\ort{\Int}{\vnu > 0} \sarr \ort{\Int}{\vnu > 0}$: the $\forall e_x$ includes singleton inputs, e.g., $e_x \doteq 1$ and $e_x \doteq 2$; thus $e_x'$ must equal $e_x$ in these cases, and nothing changes.
-  \item $\ort{\Int}{\vnu > 0} \sarr \urt{\Int}{\vnu > 0}$: same as above.
-  \item $\urt{\Int}{\vnu > 0} \sarr \ort{\Int}{\vnu > 0}$: assume there is a positive input value $v_x$ such that the application yields a positive value or diverges; then we can take $e_x' = v_x$, and $v_x \sqsubseteq e_x$ for any $e_x$ of type $\urt{\Int}{\vnu > 0}$.
-  \item $\urt{\Int}{\vnu > 0} \sarr \urt{\Int}{\vnu > 0}$: we can always choose $e_x' = e_x$.
-\end{itemize}
-
-\begin{definition}[$\sqsubseteq$ relation]
-  \begin{align*}
-    f \sqsubseteq f' \iff \forall x.\forall r. f\;x\;r \subseteq f'\;x\;r \land (f\;x\;r = \emptyset) \iff (f'\;x\;r = \emptyset) 
-  \end{align*}\noindent
-where $f'$ does not produce strictly more empty resources than $f$.
-\end{definition}
-
-\subsection{Typed semantics}
-
-The denotational semantics of a type is given by a function in $\Res \sarr (X \sarr \Res \sarr \Res) \sarr \Code{Prop_{Choice}}$; it takes a context (resource) and a term (via its denotation) and returns a proposition in choice logic stating whether the term inhabits the type under that context.
-\begin{align*}
-  \denot{\ort{b}{\phi}} &: \lambda r.\lambda f. \Code{Atom}(f\;\vnu\;r) \chimpl \upperB\phi
-  \\&\text{can only be expressed as } \lambda r.\lambda f. f\;\vnu\;r \models \upperB\phi
-  \\\denot{\urt{b}{\phi}} &: \lambda r.\lambda f. \Code{Atom}(f\;\vnu\;r) \chimpl \lowerB\phi
-\end{align*}\noindent
-The $\Code{Atom}: \Res \sarr \Code{Prop_{Choice}}$ lifts a resource into a pure proposition:
-\begin{align*}
-  \denot{\Code{Atom}(r)} &\doteq \{ r \}
-\end{align*}\noindent
-Note that we do not require $\restrictTo{(f\;\vnu\;r)}{\Dom{r}} = r$, i.e., that the context after reduction agrees with the context before reduction when restricted to $\Dom{r}$ (we discuss this later).
-\begin{align*}
-  \denot{\chpers \tau} &: \lambda r.\lambda f. \chpers (\denot{\tau}\;r\;f)
-  \\\denot{x{:}\tau_x \sarr \tau} &: \lambda r.\lambda f. \forall f_x. \exists f_x'. f_x' \sqsubseteq f_x \chimpl (\denot{\tau_x}\;r\;f_x') \chimpl (\denot{\tau}\;r\;(\Code{App}\;f\;f_x'))
-  % \\\denot{x{:}\tau_x \sarr \tau} &: \lambda r.\lambda f. \forall f_x. (\denot{\tau_x}\;r\;f_x) \chimpl (\denot{\tau}\;r\;(\Code{App}\;f\;f_x)) \chland (\denot{\tau_x}\;\lambda \vnu.\lambda r.f\;\_\;(f_x\;\vnu\;r))  
-  \\\denot{x{:}\tau_x \chwand \tau} &: \lambda r.\lambda f. \forall f_x.\exists f_x'. f_x' \sqsubseteq f_x \chimpl (\denot{\tau_x}\;r\;f_x') \chwand (\denot{\tau}\;r\;(\Code{App}\;f\;f_x'))
-\end{align*}\noindent
-The denotation of a typing context is a function in $\Res \sarr \Res \sarr \Code{Prop_{Choice}}$: under a context, it yields a predicate over contexts in choice logic.
-\begin{align*}
-  \denot{\emptyset} &: \lambda r.\lambda r'. \Code{Atom}(r) \chiff \Code{Atom}(r')
-  \\\denot{x{:}\tau} &: \lambda r.\lambda r'. \denot{\tau}\;r\;(\lambda y.\lambda \_.\Code{rename}(x, y, r'))
-  \\\denot{\Gamma_1, \Gamma_2} &: \lambda r.\lambda r'. \denot{\Gamma_1}\;r\;r_1 \chland \denot{\Gamma_2}\;r_1\;r' 
-  \quad \text{where } r_1 \doteq \restrictTo{r'}{\Dom{r} \cup \Dom{\Gamma_1}}
-  \\\denot{\Gamma_1 \semistar \Gamma_2} &: \lambda r.\lambda r'. \denot{\Gamma_1}\;r\;r_1 \chstar \denot{\Gamma_2}\;r_1\;r'
-  \quad \text{where } r_1 \doteq \restrictTo{r'}{\Dom{r} \cup \Dom{\Gamma_1}}
-\end{align*}\noindent
-In denotation of singlton context $x{:}\tau$, the output resource $r'$ has a binding variable $x$, however the denotation of $\tau$ assume the new binding variable is $\vnu$, we need to rename the binding variable $x$ to $\vnu$ in $r'$ to match the assumption.
-
-\paragraph{Angelic termination} One missing piece is whether the parameter's type still holds after application. For example,
-\begin{align*}
-  x{:}\urt{\Int}{\top}\vdash \zlet{y}{(\lambda x.\zif{x > 0}{1}{\err})\;x}{e}
-\end{align*}\noindent
-If $x$ is mentioned in $e$, we cannot guarantee that $x$ still covers all integers (it must be positive). Whether this is acceptable depends on whether the function body terminates on inputs allowed by the parameter type. More precisely, we only need angelic termination, i.e., that some reduction terminates. For example, $(\lambda x.\zif{x > 0}{1}{\err \oplus 2})$ exhibits angelic termination, but not demonic termination. We introduce a modality $\chterm$ to express angelic termination.
-\begin{align*}
-  \denot{\chterm \tau} &: \lambda r.\lambda f. \denot{\tau}\;r\;f \chland \forall \vnu.\Code{Atom}(f\;r\;\vnu) \chimpl \Code{Atom}(r)
-\end{align*}\noindent
-which means the input resource $r$ still holds after application.
-
-\begin{example}[Angelic termination] Consider the three cases:
-\begin{itemize}
-  \item $\vdash \lambda x.\zif{x > 0}{x}{\err} : \urt{\Int}{\top}\sarr \urt{\Int}{\vnu > 0}$. The output of this function is dependent on the input value, and the input coverage is not preserved.
-  \item $\vdash \lambda x.x : \urt{\Int}{\top}\sarr \chterm \urt{\Int}{\vnu > 0}$. The output of this function is independent from the input value, and the input coverage is preserved.
-  \item $\vdash \lambda x.\zif{x > 0}{\Code{int\_gen()}}{\err} : \urt{\Int}{\top}\chwand \urt{\Int}{\vnu > 0}$. The output of this function is independent on the input value, and the input coverage is not preserved.
-  \item $\vdash \lambda x.\Code{int\_gen()} : \urt{\Int}{\top}\chwand \chterm \urt{\Int}{\vnu > 0}$. The output of this function is independent from the input value, and the input coverage is preserved. In this case, it has the same meaning as $\ort{\Int}{\top}\chwand \chterm \urt{\Int}{\vnu > 0}$.
-\end{itemize}
-\end{example}
-
-\textbf{Question:} This definition seems conflicting with existstential semantics of function parameter types.
-
-
-\begin{theorem}[Fundamental theorem]
-\begin{align*}
-  \Gamma \vdash e : \tau \text{ implies } \forall r\;f. (\denot{\Gamma}\;\emptyset\;r) \chimpl \denot{\tau}\;r\;\denot{e}
-\end{align*}\noindent
-\end{theorem}
-
-\textbf{TODO:} Logical relation?
-
+\newpage
 \subsection{Denotational semantics}
 
-\begin{definition}[Qualifier and term denotation] As before, denotation function maps pure propositions (qualifiers) and terms to resources:
+\paragraph{Untyped semantics} A term $e$ can be reduced into multiple values under a substitution.
 \begin{align*}
-  \denot{\phi} &\doteq \{ \sigma ~|~ \sigma(\phi) \}
-  \\
-  \denot{e} &\doteq \{ v ~|~ \mstep{e}{v} \} \\
-  m[x = e] &\doteq \{ \sigma[x \mapsto v] ~|~ \mstep{\sigma(e)}{v} \text{ and } \sigma \in m \}
+  \denot{e} &: \Res \sarr \mathcal{P}(\Code{Value})
+  \\\denot{e}(r) &\doteq \{ v ~|~ \sigma \in r \land \mstep{\sigma(e)}{v} \}
+  \\ [x \mapsto V] &\doteq \{ [x\mapsto v] ~|~ v \in V \}
+  \\ (application) &f_1\;f_2 \doteq \lambda r. \{ v ~|~ v_1 \in (f_1\;r) \text{ and } v_2 \in (f_2\;r) \text{ and } \mstep{v_1\;v_2}{v}  \}
 \end{align*}
-\end{definition}
 
-\begin{definition}[Choice Logic denotation] In order to simplify the notation, we also define the denotation of the terms in choice logic, which has the same meaning as the force semantics in choice logic.
+\paragraph{Verbose semantics} We add a read modality for all possible types:
+\begin{align*}
+  \Gamma \readT \tau &\doteq \text{for all substitution $\sigma$ in over-approximated context $\Gamma$, $\sigma(\tau)$ }
+\end{align*}
+
+\begin{align*}
+  \\\denot{\tau} &: \Res \sarr (\Res \sarr \mathcal{P}(\Code{Value})) \sarr \Code{Prop_{Choice}}
+  \\\denot{\Gamma \readT \tau} &\doteq \lambda r. \lambda f. \readM{\Dom{\Gamma}}{\denot{\Gamma}} (\denot{\sigma(\tau)}\;r\;f)
+  \\\denot{\Gamma \readT \ort{b}{\phi}} &\doteq \lambda r.\lambda f. \forall \vnu. [\vnu \mapsto f\;r] \chimpl \readM{\Dom{\Gamma}}{\denot{\Gamma}} \subExt \phi
+  \\\denot{\Gamma \readT \urt{b}{\phi}} &\doteq \lambda r.\lambda f. \forall \vnu. [\vnu \mapsto f\;r] \chimpl \readM{\Dom{\Gamma}}{\denot{\Gamma}} \supExt \phi
+  \\\denot{x{:}\tau_x \sarr \tau} &\doteq \lambda r.\lambda f.\forall f_x. (\denot{\tau_x}\;r\;f_x) \chimpl \denot{\tau}\;(r \chland [\vnu \mapsto f_x\;r])\;(f\;\lambda r.\{\sigma(x) ~|~ \sigma \in r \})
+  \\\denot{x{:}\tau_x \chwand \tau} &\doteq \lambda r.\lambda f.\forall f_x. (\denot{\tau_x}\;r\;f_x) \chimpl \denot{\tau}\;(r \chstar [\vnu \mapsto f_x\;r])\;(f\;\lambda r.\{\sigma(x) ~|~ \sigma \in r \})
+  \\\denot{\chpers \tau} &\doteq \lambda r. \lambda f. \chpers (\denot{\tau}\;r\;f)
+  \\\denot{\emptyset} &\doteq \Code{Atom}(\textbf{1})
+  \\\denot{x{:}\tau} &\doteq \{ r ~|~ \denot{\tau}\;\textbf{1}\;(\lambda\_.\{ \sigma(x) ~|~ \sigma \in r \} ) \}
+  \\\denot{\Gamma_1, \Gamma_2} &\doteq \denot{\Gamma_1} \chland \denot{\Gamma_2}
+  \\\denot{\Gamma_1 \chstar \Gamma_2} &\doteq \denot{\Gamma_1} \chstar \denot{\Gamma_2}
+\end{align*}\noindent
+
+\begin{theorem}[Fundamental theorem]
   \begin{align*}
-    \denot{p} &\doteq \{ m ~|~ m \models p \}
-  \end{align*}
-  \end{definition}
+    \Gamma \vdash e : \tau \text{ when } \forall r \in \denot{\Gamma}. \denot{\tau}\;r\;\denot{e}
+  \end{align*}\noindent
+\end{theorem}
 
-\begin{definition}[Type denotation]
-    The denotation function $\denot{\tau}_m$ maps choice type $\tau$ to set of expressions under the resource $m$.
-    \begin{itemize}
-    \item $\denot{\ort{b}{\phi}}_\Gamma \;\doteq\;
-          \{ e ~|~ \text{for all } m \in \denot{\Gamma} \text{ we have } m[\vnu = e] \models \upperB\phi \}$.
-    \item $\denot{\urt{b}{\phi}}_\Gamma \;\doteq\;
-          \{ e ~|~ \text{for all } m \in \denot{\Gamma} \text{ we have } m[\vnu = e] \models \lowerB\phi \}$.
-    \item $\denot{\chpers \tau}_\Gamma \;\doteq\;
-          \{ e ~|~ v \in \denot{\tau}_\Gamma \text{ and } \forall v'. \mstep{e}{v'} \iff v = v' \}$.
-    \item $\denot{\tau_1 \interty \tau_2}_\Gamma \;\doteq\;
-          \denot{\tau_1}_\Gamma \cap \denot{\tau_2}_\Gamma$.
-    \item $\denot{\tau_1 \unionty \tau_2}_\Gamma \;\doteq\;
-          \denot{\tau_1}_\Gamma \cup \denot{\tau_2}_\Gamma$.
-    \item 
-    \begin{align*}
-      \denot{\tau_1 \choplus \tau_2}_\Gamma \;\doteq\;&
-          \{ e ~|~ \exists e_1\;e_2. \forall m \in \denot{\Gamma}. m[x=e_1] + m[x=e_2] = m[x=e] 
-          \\ &\quad \text{ and } \denot{e_1} \in \denot{\tau_1}_\Gamma \text{ and } \denot{e_2} \in \denot{\tau_2}_\Gamma \}
-    \end{align*}
-    \item For functions, with $e_x$ ranging over closed instantiations of
-      the parameter,
-      \begin{align*}
-        &\denot{x{:}\tau_x \sarr \tau}_\Gamma
-          \;\doteq\;
-          \{ e ~|~ (e\;x) \in \denot{\tau}_{\Gamma, x {:} \tau_x} \text{ and } (e\;x;x) \in \denot{\tau_x}_{\Gamma, x {:} \tau_x} \}
-        \\&\denot{x{:}\tau_x \chwand \tau}_\Gamma
-        \;\doteq\;
-        \{ e ~|~ (e\;x) \in \denot{\tau}_{\Gamma \chstar x{:}\tau_x} \}
-      \end{align*}
-    \end{itemize}
-  \end{definition}
-
-  \begin{definition}[Type context denotation]
-    The denotation function $\denot{\Gamma}_\sigma$ maps type context $\Gamma$ to set of resources under a substitution $\sigma$.
-    \begin{itemize}
-    \item $\denot{\emptyset}_\sigma \;\doteq\; \{ \{\emptyset\} \}$.
-    \item $\denot{x{:}\tau}_\sigma \;\doteq\; \{ [x \mapsto v] ~|~ v \in \denot{\sigma(\tau)} \}$.
-    \item $\denot{\Gamma_1, \Gamma_2}_\sigma \;\doteq\; \{ m ~|~ \restrictTo{m}{\Dom{\Gamma_1}} \in \denot{\Gamma_1}_\sigma \text{ and } \sigma_1 \in \restrictTo{m}{\Dom{\Gamma_1}} \text{ and } \restrictTo{m}{\Dom{\Gamma_2}} \in \denot{\Gamma_2}_{\sigma \cup \sigma_1} \} $.
-    \item $\denot{\Gamma_1 \chstar \Gamma_2}_\sigma \;\doteq\;  \{ m_1 \times m_2 ~|~ m_1 \in \denot{\Gamma_1}_\sigma \text{ and } \sigma_1 \in m_1 \text{ and }  \text{ and } m_2 \in \denot{\Gamma_2}_{\sigma \times \sigma_1} \} $.
-    \end{itemize}
-    We write $\denot{\Gamma}_\emptyset$ as $\denot{\Gamma}$.
-  \end{definition}
-
-\begin{definition}[Type soundness]
+\begin{example}[Base case] Consider
 \begin{align*}
-  \Gamma \vdash e : \tau \implies e \in \denot{\tau}_\Gamma
+  &\vdash e : \urt{\Int}{0 \leq \vnu \leq 3}
+  \\\iff& \forall r \in \{\textbf{1}\}. \denot{\urt{\Int}{0 \leq \vnu \leq 3}}\; r\;\denot{e}
+  \\\iff& \denot{\urt{\Int}{0 \leq \vnu \leq 3}}\; \textbf{1}\;\denot{e}
+  \\\iff& \forall \vnu. [\vnu \mapsto \denot{e}(\textbf{1})] \chimpl \supExt (0 \leq \vnu \leq 3)
+  \\\iff& \forall \vnu. \Code{Atom}(\{\vnu \mapsto v \mid \mstep{e}{v} \}) \chimpl \supExt (0 \leq \vnu \leq 3)
 \end{align*}
-\end{definition}
+The overapproximation is similar.
+\end{example}
 
+\begin{example}[Singleton Base Context] Consider
+  \begin{align*}
+    &r \in \denot{x{:}\urt{\Int}{0 \leq \vnu \leq 3}}
+    \\\iff& \denot{\tau}\;\textbf{1}\;(\lambda\_.)
+    \\\iff& \forall \vnu. [\vnu \mapsto \{ \sigma(x) ~|~ \sigma \in r \}] \chimpl \supExt (0 \leq \vnu \leq 3)
+    \\\iff& [x \mapsto \{ \sigma(x) ~|~ \sigma \in r \}] \chimpl \supExt (0 \leq x \leq 3)
+    \\\iff& r \chimpl \supExt (0 \leq x \leq 3)
+  \end{align*}
+  The overapproximation is similar.
+\end{example}
+
+\begin{example}[Nonempty context] Consider
+  \begin{align*}
+    &x{:}\urt{\Int}{0 \leq \vnu \leq 3}\vdash (x+1) : \urt{\Int}{1 \leq \vnu \leq 2}
+    \\\iff& \forall r \in \{\denot{x{:}\urt{\Int}{0 \leq \vnu \leq 3}}\}. \denot{\urt{\Int}{1 \leq \vnu \leq 2}}\; r\;\denot{x+1}
+    \\\iff& \forall r. (r \chimpl \supExt (0 \leq x \leq 3)) \chimpl \denot{\urt{\Int}{1 \leq \vnu \leq 2}}\; r\;\denot{x+1}
+    \\\iff& \forall r. (r \chimpl \supExt (1 \leq x \leq 2)) \chimpl \forall \vnu. [\vnu \mapsto \denot{x+1}(r)] \chimpl \supExt (1 \leq \vnu \leq 2)
+  \end{align*}
+\end{example}
+
+\begin{example}[Variable dependency] Consider
+  \begin{align*}
+    &x{:}\urt{\Int}{0 \leq \vnu \leq 3}\vdash \Code{range}(x, 3) : x{:}\ort{\Int}{0 \leq x \leq 3} \readT \urt{\Int}{ x \leq \vnu \leq 3}
+    \\\iff& \forall r. (r \chimpl \supExt (0 \leq x \leq 3)) \chimpl \denot{x{:}\ort{\Int}{0 \leq x \leq 3} \readT \urt{\Int}{ x \leq \vnu \leq 3}}\; r\;\denot{\Code{range}(x, 3)}
+    \\\iff& \forall r. (r \chimpl \supExt (0 \leq x \leq 3)) \chimpl \{x\}:\subExt (0 \leq x \leq 3) \readT \denot{\urt{\Int}{ x \leq \vnu \leq 3}}\; r\;\denot{\Code{range}(x, 3)}
+    \\\iff& \forall r. (r \chimpl \supExt (0 \leq x \leq 3)) \chimpl
+    \\& \{x\}:\subExt (0 \leq x \leq 3) \readT \forall \vnu. [\vnu \mapsto \denot{\Code{range}(x, 3)}(r)] \chimpl \supExt (x \leq \vnu \leq 3)
+    \\\iff& \forall r. (r \chimpl \supExt (0 \leq x \leq 3)) \chimpl
+    \\& \forall x. 0 \leq v_x \leq 3 \impl \forall \vnu. [\vnu \mapsto \denot{\Code{range}(x, 3)}(\resAgree{[x\mapsto v_x]}{r} )] \chimpl \supExt (v_x \leq \vnu \leq 3)
+    \\& \forall x. 0 \leq v_x \leq 3 \impl \forall \vnu. [\vnu \mapsto \denot{\Code{range}(v_x, 3)}] \chimpl \supExt (v_x \leq \vnu \leq 3)
+  \end{align*}
+What happens if we read a free variable?
+\begin{align*}
+  &x{:}\urt{\Int}{0 \leq \vnu \leq 3}\vdash \Code{range}(x, 3) : x{:}\ort{\Int}{0 \leq x \leq 3} \readT \urt{\Int}{ 0 \leq \vnu \leq 3}
+  \\\iff& \forall r. (r \chimpl \supExt (0 \leq x \leq 3)) \chimpl
+  \\& \forall x. 0 \leq v_x \leq 3 \impl \forall \vnu. [\vnu \mapsto \denot{\Code{range}(v_x, 3)}] \chimpl \supExt (0 \leq \vnu \leq 3)
+\end{align*}
+whihc means that the \Code{range} function needs always cover the range $[0,3]$ when $x$ is in the range $[0,3]$. It indeed requires the \Code{range} function to be independent with $x$ (when $x$ is in $[0,3]$).
+\end{example}
+
+\paragraph{Read modality} An type context must be
+\begin{align*}
+  x{:}\urt{\Int}{\top}, y{:}\readM{\{x\}}{?} \urt{\Int}{0 \leq \vnu \leq x} \vdash ...
+\end{align*}
+A type judgement must be
+\begin{align*}
+  ... \vdash e : \readM{\{x\}}{?} \urt{\Int}{0 \leq \vnu \leq x}
+\end{align*}
+\textbf{Question:} How can I smartly know the read qualifier?
+how can we smartly know the read qualifier?
+
+\textbf{Intuition:} Keep the left-hand side resource to be minimal requirement, and use it as the hidden read qualifier.
+
+\paragraph{Erase modality}
+Write $\denot{\phi} \subseteq \Res$ for the set of resources that satisfy~$\phi$.
+Then the $\subseteq$-closures above coincide with the modalities from \autoref{def:choice-logic-modalities}:
+\begin{align*}
+  \subExt(R) &\doteq \{\, r' \mid \exists r \in R.\; r' \subseteq r \,\},
+  \\
+  \supExt(R) &\doteq \{\, r' \mid \exists r \in R.\; r \subseteq r' \,\},
+  \\
+  \denot{\subExt p} &\doteq \subExt(\denot{p}) \\
+  \denot{\supExt p} &\doteq \supExt(\denot{p}).
+\end{align*}
+We would like to erase the redundant proof obligations when we want to prove a underapproximation task.
+Consider the following preorder on resources:
+\begin{align*}
+  % r \subExteq r' &\doteq \forall R. r \in \subExt(R) \iff r' \in \subExt(R)\\
+  r \supExtleq r' &\doteq \forall R.\; r \in \supExt(R) \impl r' \in \supExt(R).
+\end{align*}
+It means that for $r \supExtleq r'$, if $r \models p$ holds, then $r' \models p$ also holds, these $r'$ are the redundant proof obligations.
+Write $\supExtQ(S)$ for the set of \emph{$\supExtleq$-minimal} elements of $S \subseteq \Res$, i.e.\ those $r \in S$ with no strictly $\supExtleq$-smaller witness in~$S$:
+\begin{align*}
+  \supExtQ(S) &\doteq
+  \{\, r \in S \mid \forall r' \in S.\; r' \supExtleq r \impl r = r' \,\}.
+\end{align*}
+Intuitively, $\supExt$ \emph{fattens} a set of resources (upward closure), whereas $\supExtQ$ keeps only $\supExtleq$-minimal witnesses (erase redundancy); heuristically the two sit at opposite ends of the same Galois-style pairing familiar from posets and Alexandrov spaces. For example, we have:
+\begin{align*}
+  &\supExtQ(R_1) \subseteq R_2 \iff R_1 \subseteq \supExt(R_2)
+\end{align*}\noindent
+We define the erase modality by collecting these minimal witnesses in the denotation of~$p$:
+\begin{align*}
+  % \denot{\subExtQ \phi} &= \supExtQ(\denot{\phi}) \\
+  \denot{\supExtQ p} &\doteq \supExtQ(\denot{p}).
+\end{align*}
+When a property (not need to be underapproximated) appears at negative position, the erase modality can be used to erase the redundant proof obligations.
+\begin{align*}
+  &\forall p_1\;p_2.  \supExtQ p_1 \impl p_2 \implies p_1 \impl p_2
+\end{align*}\noindent
+Note that the following fact holds, where $\subExt \supExtQ p $ means ``flip'' the property $p$ (at negative position) from under to over:
+\begin{align*}
+  &\forall \phi\;p.  \subExt \supExtQ \supExt \phi \impl p \implies \subExt \phi \impl p
+  \\&\forall \phi\;p. \subExt \supExtQ \subExt \phi \impl p \implies \subExt \phi \impl p
+\end{align*}
+
+
+\begin{align*}
+  \\\denot{\tau} &: \Res \sarr (\Res \sarr \mathcal{P}(\Code{Value})) \sarr \Code{Prop_{Choice}}
+  % \\\denot{\Gamma \readT \tau} &\doteq \lambda r. \lambda f. \readM{\Dom{\Gamma}}{\denot{\Gamma}} \denot{\sigma(\tau)}\;r\;f
+  \\\denot{\ort{b}{\phi}} &\doteq \lambda r.\lambda f. \forall \vnu.  [\vnu \mapsto f\;r] \chimpl \Code{FV}(\phi) : \subExt r \readT \subExt \phi
+  \\\denot{\urt{b}{\phi}} &\doteq \lambda r.\lambda f. \forall \vnu.  [\vnu \mapsto f\;r] \chimpl \Code{FV}(\phi) : \subExt r \readT \supExt \phi
+  \\\denot{x{:}\tau_x \sarr \tau} &\doteq \lambda r.\lambda f.\forall f_x. (\denot{\tau_x}\;r\;f_x) \chimpl \denot{\tau}\;(r \chland [\vnu \mapsto f_x\;r])\;(f\;x)
+  \\\denot{x{:}\tau_x \chwand \tau} &\doteq \lambda r.\lambda f.\forall f_x. (\denot{\tau_x}\;r\;f_x) \chimpl \denot{\tau}\;(r \chstar [\vnu \mapsto f_x\;r])\;(f\;x)
+  \\\denot{\chpers \tau} &\doteq \lambda r. \lambda f. \chpers (\denot{\tau}\;r\;f)
+  \\\denot{\emptyset} &\doteq \Code{Atom}(\textbf{1})
+  \\\denot{x{:}\tau} &\doteq \supExtQ \{ r ~|~ \denot{\tau}\;\textbf{1}\;(\lambda\_.\{ \sigma(x) ~|~ \sigma \in r \} ) \}
+  \\\denot{\Gamma_1, \Gamma_2} &\doteq \denot{\Gamma_1} \chland \denot{\Gamma_2}
+  \\\denot{\Gamma_1 \chstar \Gamma_2} &\doteq \denot{\Gamma_1} \chstar \denot{\Gamma_2}
+\end{align*}\noindent
