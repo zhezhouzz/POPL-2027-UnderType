@@ -254,15 +254,19 @@
 \newcommand{\denotation}[1]{\ldenotation {#1} \rdenotation}
 % Domain (partial map, substitution, resource, map keys, etc.): prints \mathrm{dom}(\cdot).
 \providecommand{\Dom}[1]{\mathrm{dom}(#1)}
-% Restriction of a partial map to a set (standard | notation).
-\providecommand{\restrictTo}[2]{\left.{#1}\right|_{#2}}
-% Restriction-agreeing substitutions: read $m \ltimes \sigma$ as ``$m$ semijoin $\sigma$'' (relational-algebra style).
-\newcommand{\resAgree}[2]{#1 \mathbin{\ltimes} #2}
+% Projection of a substitution/resource to a variable set.
+\providecommand{\projectTo}[2]{\left.{#1}\right|_{#2}}
+% Fiber of resource #1 at projected assignment #2.
+\providecommand{\fiberOver}[2]{\operatorname{Fib}(#1,#2)}
+% Backward-compatible aliases.
+\providecommand{\restrictTo}[2]{\projectTo{#1}{#2}}
+\providecommand{\resAgree}[2]{\fiberOver{#1}{#2}}
 % Compatible partial maps, or (by overloading) substitution \emph{sets} whose
 % cross-pairs are all map-compatible. Same symbol $\uparrow$ in both readings.
 \providecommand{\mapCompat}[2]{#1 \mathrel{\uparrow} #2}
 \newcommand{\eraserf}[1]{\lfloor {#1} \rfloor}
 \newcommand{\eraseGhost}[1]{\lceil {#1} \rceil}
+\newcommand{\liftrf}[1]{\lceil {#1} \rceil}
 \newcommand{\FV}{\textcolor{CobaltBlue}{\S{FV}}}
 \newcommand{\predicate}{\textcolor{CobaltBlue}{\S{Predicate}}}
 \newcommand{\getlits}{\textcolor{CobaltBlue}{\Code{GetLits}}}
@@ -763,8 +767,9 @@
 \newcommand{\Res}{\mathcal{R}}
 \newcommand{\Mring}{\mathcal{M}}
 \newcommand{\existsB}{\textcolor{CobaltBlue}{\boxed{\exists}}}
-\newcommand{\readT}{\textcolor{magenta}{\rhd.}}
-\newcommand{\readM}[2]{{#1}{:}{#2}\readT}
+\newcommand{\readT}{\textcolor{DeepGreen}{\rhd}}
+\newcommand{\forallM}[1]{{#1}\textcolor{DeepGreen}{\boldsymbol{\rhd}}}
+% \newcommand{\readM}[2]{\forallM{#1}.\,{#2}}
 
 
 % Judgment markers (e.g.\ valid vs.\ invalid typing or choice obligations)
@@ -775,7 +780,7 @@
 \newcommand{\chlor}{\textcolor{DeepGreen}{\boldsymbol{\,\lor\,}}}
 \newcommand{\chimpl}{\textcolor{DeepGreen}{\boldsymbol{\impl}}}
 \newcommand{\choplus}{\textcolor{DeepGreen}{\boldsymbol{\,\oplus\,}}}
-\newcommand{\chwand}{\textcolor{DeepGreen}{\boldsymbol{\,\wand\,}}}
+\newcommand{\chwand}{\textcolor{DeepGreen}{\boldsymbol{\wand}}}
 \newcommand{\chtrue}{\textcolor{DeepGreen}{\boldsymbol{\top}}}
 \newcommand{\chfalse}{\textcolor{DeepGreen}{\boldsymbol{\bot}}}
 \newcommand{\chstar}{\textcolor{DeepGreen}{\boldsymbol{\,*\,}}}
@@ -783,6 +788,29 @@
 \newcommand{\semistar}{\textcolor{DeepGreen}{\boldsymbol{\mathbin{,\mkern -8mu\ast}}}}
 \newcommand{\chiff}{\textcolor{DeepGreen}{\boldsymbol{\iff}}}
 \newcommand{\chterm}{\textcolor{DeepGreen}{\boldsymbol{\diamond}}}
+\newcommand{\chvdash}{\textcolor{DeepGreen}{\boldsymbol{\,\vdash\,}}}
 
-\newcommand{\consume}{\textcolor{DeepGreen}{\boldsymbol{\lightning}}}
-\newcommand{\chcomma}{\textcolor{DeepGreen}{\boldsymbol{,}}}
+\newcommand{\ctsarr}{\textcolor{CBOrange}{\pmb{\,\shortrightarrow\,}}}
+\newcommand{\ctinter}{\textcolor{CBOrange}{\boldsymbol{\,\sqcap\,}}}
+\newcommand{\ctunion}{\textcolor{CBOrange}{\boldsymbol{\,\sqcup\,}}}
+\newcommand{\ctoplus}{\textcolor{CBOrange}{\boldsymbol{\,\oplus\,}}}
+\newcommand{\ctbigoplus}{\textcolor{CBOrange}{\boldsymbol{\,\bigoplus\,}}}
+\newcommand{\ctwand}{\textcolor{CBOrange}{\boldsymbol{\wand}}}
+\newcommand{\ctstar}{\textcolor{CBOrange}{\boldsymbol{\,*\,}}}
+\newcommand{\ctpers}{\textcolor{CBOrange}{\boldsymbol{\Box}}}
+\newcommand{\ctistar}{\textcolor{CBOrange}{\boldsymbol{\mathbin{,\mkern -8mu\ast}}}}
+\newcommand{\ctcomma}{\textcolor{CBOrange}{\,\pmb{,}\,}}
+\newcommand{\ctvdashAux}[1]{\,\textcolor{CBOrange}{\vdash_{#1}}\,}
+\newcommand{\ctDvdashAux}[1]{\,\textcolor{CBOrange}{\dashv \vdash_{#1}}\,}
+\newcommand{\ctmode}{\textcolor{CBOrange}{\mathcal{M}}}
+\newcommand{\ctvdashs}{\ctvdashAux{\boldsymbol{*}}}
+\newcommand{\ctvdashc}{\ctvdashAux{\pmb{,}}}
+\newcommand{\ctvdash}{\ctvdashAux{}}
+\newcommand{\ctvdashAll}{\ctvdashAux{\mathcal{M}}}
+\newcommand{\ctDvdash}{\ctDvdashAux{}}
+\newcommand{\ctDvdashc}{\ctDvdashAux{\pmb{,}}}
+\newcommand{\ctDvdashs}{\ctDvdashAux{\boldsymbol{*}}}
+\newcommand{\ctDvdashAll}{\ctDvdashAux{\mathcal{M}}}
+\newcommand{\ctDiv}[1]{\textcolor{CBOrange}{\,\pmb{\lightning}_{#1}\,}}
+\newcommand{\ctDivM}{\textcolor{CBOrange}{\pmb{\lightning}}}
+\newcommand{\ctAff}{\textcolor{CBOrange}{A}}
