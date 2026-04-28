@@ -167,7 +167,7 @@ variable~$y$ disturbs neither kind of judgment.
 
 \subsection{Choice logic}
 
-\emph{Basic} choice logic is parameterized by a set of atomic propositions $\mathcal{A}$ and has no approximation or persistency modality. Then, every judgment \emph{precisely} describes a resource.
+\emph{Basic} choice logic is parameterized by a set of atomic propositions $\mathcal{A}$ and has no approximation modalities. Then, every judgment \emph{precisely} describes a resource.
 We write $m \models p$ for satisfaction of a resource proposition $p$
 at world $m \in \Res$.
 
@@ -187,6 +187,8 @@ at world $m \in \Res$.
   $m' \times m \models q$.
 \item $m \models p \choplus q$ iff $\exists m_1\;m_2.\; m_1 + m_2 \leq m$ and
   $m_1 \models p$ and $m_2 \models q$.
+\item $m \models \forall x.p$ iff $\forall m'.\Dom{m'} = \Dom{m}\cup\{x\} \text{ and }\restrictTo{m'}{\Dom{m}} = m \text{ implies } m' \models p$.
+\item $m \models \exists x.p$ iff $\exists m'.\Dom{m'} = \Dom{m}\cup\{x\} \text{ and }\restrictTo{m'}{\Dom{m}} = m \text{ and } m' \models p$.
 \end{itemize}
 We still write $p \models q$ iff for all $m \in \Res$, $m \models p$ implies $m \models q$.
 \end{definition}
@@ -194,14 +196,14 @@ We still write $p \models q$ iff for all $m \in \Res$, $m \models p$ implies $m 
 Intuitively, $m$ models $\subExt p$ (or $\supExt p$) iff there exists a superset (or subset) $m'$ of $m$ that models $p$.
 
 
-\begin{definition}[Choice logic]\label{def:choice-logic-modalities} Choice logic is additionally equipped with three modalities beyond basic choice logic, i.e., the overapproximation modality $\subExt$, the underapproximation modality $\supExt$, and the independent modality $\chstar$.
+\begin{definition}[Choice logic]\label{def:choice-logic-modalities} Choice logic is additionally equipped beyond basic choice logic with the overapproximation modality $\subExt$, the underapproximation modality $\supExt$, and the fiberwise universal modality $\forallM{\cdot}$.
   \begin{itemize}
     \item $m \models \subExt p$ iff $\exists m'.\; m \subseteq m'$ and
       $m' \models p$;
     \item $m \models \supExt p$ iff $\exists m'.\; m' \subseteq m$ and
       $m' \models p$,
     \item $m \models \forallM{x}p$ iff $\forall \sigma_x \in \projectTo{m}{\{x\}}. \fiberOver{m}{\sigma_x} \models \sigma_x(p)$;
-    \item $m \models \chstar p$ iff $\forallM{\Dom{m}} p$, equivalently, $\forall \sigma \in m. \{\sigma\} \models p$.
+    % \item $m \models \chpers p$ iff $\forallM{\Dom{m}} p$, equivalently, $\forall \sigma \in m. \{\sigma\} \models p$.
     \end{itemize}
 \end{definition}
 
@@ -211,7 +213,10 @@ For each admissible assignment $\sigma_x$ to variable $x$, we look at the
 corresponding fiber $\fiberOver{m}{\sigma_x}$ and require that $p$ holds after
 substituting $\sigma_x$.
 The notation $\forallM{\overline{x_i}} p$ is shorthand for
-$\forallM{x_1}\,\forallM{x_2}\,\cdots\,\forallM{x_n}\,p$. The $\forallM{x}p$ means that $p$ holds is independent from the decision made by resource $m$ on variable $x$. The independent modality $\chstar p$ means that $p$ holds is independent from the decision made by resource $m$.
+$\forallM{x_1}\,\forallM{x_2}\,\cdots\,\forallM{x_n}\,p$. The $\forallM{x}p$ means that $p$ holds is independent from the decision made by resource $m$ on variable $x$.
+%  The persistent modality $\chpers p$ means that $p$ holds is independent from the decision made by resource $m$.
+
+% \paragraph{Persistency and disjointness in logic} The persistent modality ($\chpers \phi$) is a stronger modality than disjointness ($\phi' \chstar \phi$); the former requires $\phi$ is independent from any choice made by resource $m$, while the latter only requires a locally independent choice (i.e., independent from $\phi'$). Typically only singleton underapproximation and overapproximation can has persistent modality.
 
 
 \begin{example}[Dependent Underapproximation] There are three different underapproximations:
@@ -464,11 +469,13 @@ Then, all formulas in choice logic can be expressed in approximation normal form
 \end{figure}
 
 
+
 \begin{figure}[h]
   {
     \begin{alignat*}{2}
       \text{\textbf{Qualifiers}}& \quad & \phi ::= \quad & c ~|~ x ~|~ \primop\;\overline{v} ~|~ \bot ~|~ \top  ~|~ \neg \phi ~|~ \phi \land \phi ~|~ \phi \lor \phi ~|~ \phi \times \phi ~|~ \phi \impl \phi ~|~ \forall x{:}b. \phi ~|~ \exists x{:}b. \phi
-      \\ \text{\textbf{Choice Types}}& \quad & \tau ::= \quad & \ort{b}{\phi} ~|~ \urt{b}{\phi} ~|~ \tau \ctinter \tau ~|~ \tau \ctunion \tau ~|~ \tau \ctoplus \tau ~|~ x{:}\tau \ctsarr \tau ~|~ \ctstar \tau 
+      \\ \text{\textbf{Choice Types}}& \quad & \tau ::= \quad & \ort{b}{\phi} ~|~ \urt{b}{\phi} ~|~ \tau \ctinter \tau ~|~ \tau \ctunion \tau ~|~ \tau \ctoplus \tau ~|~ x{:}\tau \ctsarr \tau ~|~ x{:}\tau \ctwand \tau
+      %  ~|~  \ctind \tau 
       % ~|~ \ctpers \tau 
       % ~|~ \ctDiv{s}
       \\ \text{\textbf{Type Contexts}}& \quad & \Gamma ::= \quad & \emptyset ~|~ x{:}\tau ~|~ \Gamma \ctstar \Gamma ~|~ \Gamma \ctcomma \Gamma ~|~ \Gamma \ctoplus \Gamma
@@ -477,13 +484,14 @@ Then, all formulas in choice logic can be expressed in approximation normal form
   {\small
   \begin{align*}
     \text{\textbf{Type erasure}} \quad & \eraserf{\ort{b}{\phi}} \doteq b \quad \eraserf{\urt{b}{\phi}} \doteq b \quad \eraserf{\tau_1 \ctinter \tau_2} \doteq \eraserf{\tau_1} \quad \eraserf{\tau_1 \ctunion \tau_2} \doteq \eraserf{\tau_1}
-    \\&\eraserf{\tau_1 \ctoplus \tau_2} \doteq \eraserf{\tau_1} \quad  \eraserf{x{:}\tau_x \ctsarr \tau} \doteq \eraserf{\tau_x} \sarr \eraserf{\tau} \quad  \eraserf{\ctstar \tau} \doteq \eraserf{\tau} 
+    \\&\eraserf{\tau_1 \ctoplus \tau_2} \doteq \eraserf{\tau_1} \quad  \eraserf{x{:}\tau_x \ctsarr \tau} \doteq \eraserf{\tau_x} \sarr \eraserf{\tau} \quad  
+    % \eraserf{\ctind \tau} \doteq \eraserf{\tau} 
     % \quad \eraserf{\ctpers \tau} \doteq \eraserf{\tau}
     % \quad \eraserf{\ctDiv{s}} \doteq s
     \\& \eraserf{\emptyset} \doteq \emptyset \quad \eraserf{x{:}\tau} \doteq x{:}\eraserf{\tau} \quad \eraserf{\Gamma_1 \ctcomma \Gamma_2} \doteq \eraserf{\Gamma_1}, \eraserf{\Gamma_2} \quad \eraserf{\Gamma_1 \ctstar \Gamma_2} \doteq \eraserf{\Gamma_1}, \eraserf{\Gamma_2}  \quad \eraserf{\Gamma_1 \ctoplus \Gamma_2} \doteq \eraserf{\Gamma_1}
     \\\text{\textbf{Type lifting}} \quad & \liftrf{b} \doteq \ort{b}{\phi} \quad \liftrf{s_x \sarr s} \doteq x{:}\liftrf{s_x} \ctsarr \liftrf{s}  
     \\&\liftrf{\emptyset} \doteq \emptyset \quad \liftrf{x{:}s} \doteq x{:}\liftrf{s} \quad \liftrf{\Gamma_1 , \Gamma_2} \doteq \liftrf{\Gamma_1} \ctcomma \liftrf{\Gamma_2}
-    \\\text{\textbf{Type alias}}  \quad & x{:}\tau \ctwand \tau \doteq x{:}(\ctstar \tau) \ctsarr \tau \quad s \doteq \liftrf{s} \quad \tau_{\ctAff} \doteq \tau \ctoplus \liftrf{ \eraserf{\tau} } 
+    \\\text{\textbf{Type alias}}  \quad & s \doteq \liftrf{s} \quad \tau_{\ctAff} \doteq \tau \ctoplus \liftrf{ \eraserf{\tau} } 
     \\& \tau_x \ctsarr \tau \doteq x{:}\tau_x \ctsarr \tau \quad (\text{when $x$ is not referenced in $\tau$})
     % \quad \tau^{\ctDivM} \doteq \tau \ctoplus \ctDiv{\eraserf{\tau}} 
   \end{align*}}
@@ -493,14 +501,26 @@ Then, all formulas in choice logic can be expressed in approximation normal form
 
 Here $\ort{b}{\phi}$ is an overapproximate refinement and
 $\urt{b}{\phi}$ underapproximate; $\ctoplus$ on types mirrors resource
-sum; $\ctsarr$ and $\ctwand$ (which is syntactic sugar for $x{:}(\ctstar \tau_x) \ctsarr \tau$) distinguish implication and separating
-implication at function type level; and $\ctstar$ is a unary
-type constructor that internalizes independence.
+sum; $\ctsarr$ and $\ctwand$ distinguish ordinary implication from separating
+implication at function types.
 The context formers $\Gamma_1 \ctstar \Gamma_2$ and
 $\Gamma_1 \ctcomma \Gamma_2$ correspond to multiplicative and additive
 bunching, respectively. The subtyping and typing judgments are written as
 $\Gamma \ctvdash e : \tau$ and $\Gamma \ctvdash \tau_1 <: \tau_2$ in a single declarative system. We omit the well-formedness rules for the context in all typing rules for brevity.
 
+% \paragraph{Persistency and disjointness in type} Again, the persistent modality ($x{:}\ctpers \tau_x$) is a stronger modality than disjointness ($y{:}\tau_y \ctstar x{:}\tau_x$); the former requires judgement $x : \tau_x$ is independent from context, while the latter only requires a locally independent choice (i.e., independent from $y{:}\tau_y$). Here is a example
+% \begin{align*}
+%   &\Gamma_1 \doteq x{:}\urt{\Int}{\top} \ctcomma (y{:}\urt{\Int}{\top} \ctstar z{:}\urt{\Int}{\top})
+%   \\&\Gamma_2 \doteq x{:}\urt{\Int}{\top} \ctcomma (y{:}\urt{\Int}{\top} \ctstar z{:}\ctpers \urt{\Int}{\top})
+% \end{align*}
+% Consider a program:
+% \begin{minted}[fontsize = \footnotesize, escapeinside=??, xleftmargin=18pt, linenos]{ocaml}
+%   let x = int_gen () in
+%   let y = int_gen () in
+%   let z = x in
+%   e
+% \end{minted}
+% when we type check $e$, we can have type context $\Gamma_1$ instead of $\Gamma_2$, since the $z$ is actually dependent on the context (the decision of $x$).
 
 
 \newpage
@@ -514,7 +534,7 @@ $\Gamma \ctvdash e : \tau$ and $\Gamma \ctvdash \tau_1 <: \tau_2$ in a single de
   \\\denot{\urt{b}{\phi}} &\doteq \lambda e. \forall \vnu. \denot{e}_\vnu \chimpl \forallM{\Code{FV}(\urt{b}{\phi})}\,\supExt \phi
   \\\denot{x{:}\tau_x \ctsarr \tau} &\doteq \lambda e. \forall y. \denot{e}_y \chimpl \forallM{y} (\denot{\tau_x}\;x \chimpl \denot{\tau}\;(y\;x))
   \\\denot{x{:}\tau_x \ctwand \tau} &\doteq \lambda e. \forall y. \denot{e}_y \chimpl \forallM{y} (\denot{\tau_x}\;x \chwand \denot{\tau}\;(y\;x)) \quad \text{(derived, optional)}
-  \\\denot{\ctstar \tau} &\doteq \lambda e. \chstar (\denot{\tau}\;e)
+  % \\\denot{\ctind \tau} &\doteq \lambda e. \forallM{\Code{FV}(\tau) \cup \Code{FV}(e)} (\denot{\tau}\;e)
   % \\\denot{\ctpers \tau} &\doteq \lambda e. \forall x.\denot{e}_x \chimpl \chpers (\denot{\tau}\;x)
   \\\denot{\tau_1 \ctoplus \tau_2} &\doteq \lambda e. \denot{\tau_1}\;e \choplus \denot{\tau_2}\;e
   \\\denot{\tau_1 \ctinter \tau_2} &\doteq \lambda e. \denot{\tau_1}\;e \chland \denot{\tau_2}\;e
@@ -548,7 +568,7 @@ $\Gamma \ctvdash e : \tau$ and $\Gamma \ctvdash \tau_1 <: \tau_2$ in a single de
 {$\wfvdash \Gamma$} 
 \quad
   {\normalsize \begin{flalign*}
-    &\text{\textbf{Subtyping rules}} && \fbox{$\Gamma \ctvdash \tau <: \tau$ \quad $\Gamma \ctDvdash \Gamma$}
+    &\text{\textbf{Subtyping rules}} && \fbox{$\Gamma \ctvdash \tau <: \tau$ \quad $\Gamma \ctDvdash \Gamma$ }
   \end{flalign*}}
 \mprooftr{44mm}
 {$\forall e.\; \denot{\Gamma} \chvdash \denot{\tau_1}\;e \chimpl \denot{\tau_2}\;e$}
@@ -559,6 +579,11 @@ $\Gamma \ctvdash e : \tau$ and $\Gamma \ctvdash \tau_1 <: \tau_2$ in a single de
 {$\denot{\Gamma_1} \chvdash \denot{\Gamma_2}$ \quad $\denot{\Gamma_2} \chvdash \denot{\Gamma_1}$}
 {CtxSub}
 {$\Gamma_1 \ctDvdash \Gamma_2$}
+\\[.8em]
+% \mprooftr{30mm}
+% {$\denot{\Gamma_2} \chvdash \forallM{\Dom{\Gamma_1}} \denot{\Gamma_1}$}
+% {CtxForall}
+% {$\Code{ToForall}(\Gamma_1, \Gamma_2)$}
 % \quad
 % \mprooftr{54mm}
 % {$\forall e.\; \denot{\Gamma} \models \forallM{\Dom{\Gamma}} (\denot{\tau_1}\;e \chimpl \denot{\tau_2}\;e)$}
@@ -599,16 +624,16 @@ $\Gamma \ctvdash e : \tau$ and $\Gamma \ctvdash \tau_1 <: \tau_2$ in a single de
     &\text{\textbf{Derived Structural rules (optional)}} && \fbox{$\Gamma \ctvdash e : \tau$ }
   \end{flalign*}}
   \\ \
-  \quad
-  \mprooftr{30mm}
-  {$\Gamma_1 \ctcomma x{:}(\ctstar \tau_x) \ctvdash e : \tau$}
-  {Trans$_{\ctstar}$}
-  {$\Gamma_1 \ctstar x{:}\tau_x \ctvdash e : \tau$}
-  \quad
-  \mprooftr{30mm}
-  {$\Gamma_1 \ctstar x{:}\tau_x \ctvdash e : \tau$}
-  {Trans$_{\ctcomma}$}
-  {$\Gamma_1 \ctcomma x{:}(\ctstar \tau_x) \ctvdash e : \tau$}
+  % \quad
+  % \mprooftr{60mm}
+  % {$\Gamma \ctcomma x{:}(\ctind \tau_x) \ctvdash e : \tau$ \quad $\Dom{\Gamma}\cap \Dom{\tau_x} = \emptyset$ }
+  % {Trans$_{\ctind}$}
+  % {$\Gamma \ctstar x{:}(\ctind \tau_x) \ctvdash e : \tau$}
+  % \quad
+  % \mprooftr{30mm}
+  % {$\Gamma_1 \ctstar x{:}\tau_x \ctvdash e : \tau$}
+  % {Trans$_{\ctcomma}$}
+  % {$\Gamma_1 \ctcomma x{:}(\ctstar \tau_x) \ctvdash e : \tau$}
   % \quad
   % \mprooftr{30mm}
   % {$\Gamma_1 \ctstar \Gamma_2 \ctvdash e : \tau$}
@@ -686,39 +711,73 @@ $\Gamma \ctvdash e : \tau$ and $\Gamma \ctvdash \tau_1 <: \tau_2$ in a single de
   {T-Const}
   {$\emptyset \ctvdash c : \ort{b}{\vnu = c}$}
   \\[.8em]
-  \mprooftr{30mm}
+  \mprooftr{20mm}
   {$\Gamma_1 \ctvdash e : \tau$ \quad $\Gamma_1 \ctDvdash \Gamma_2$}
   {T-CtxEq}
   {$\Gamma_2 \ctvdash e : \tau$}
+  % \quad
+  % \mprooftr{30mm}
+  % {$\Gamma_2 \ctvdash e : \tau$ \quad $\Code{ToForall}(\Gamma_1,\Gamma_2)$}
+  % {T-CtxForall}
+  % {$\Gamma_1 \ctvdash e : \ctind \tau$}
   \quad
   \mprooftr{32mm}
-  {$\Gamma \ctvdash e_1 : \tau_1 $ \\ $\Gamma \ctcomma x{:}\tau_1 \ctvdash e_2 : \tau_2$}
+  {$\Gamma \ctvdash e_1 : \tau_1 $ \quad $\Gamma \ctcomma x{:}\tau_1 \ctvdash e_2 : \tau_2$}
   {T-Let}
   {$\Gamma \ctvdash \zlet{x}{e_1}{e_2} : \tau_2$}
   \quad
-  \mprooftr{35mm}
+  \mprooftr{32mm}
+  {$\Delta \ctvdash e_1 : \tau_1 $ \quad $\Delta, (\Gamma \ctstar x{:}\tau_1) \ctvdash e_2 : \tau_2$}
+  {T-LetD}
+  {$\Delta, \Gamma \ctvdash \zlet{x}{e_1}{e_2} : \tau_2$}
+  \\[.8em]
+  \mprooftr{32mm}
   {$\Gamma \ctcomma x{:}\tau_x \ctvdash e : \tau$}
   {T-Lam}
   {$\Gamma \ctvdash \zlam{x}{\eraserf{\tau_x}}{e} : x{:}\tau_x \ctsarr \tau$}
+  \quad
+  \mprooftr{32mm}
+  {$\Gamma \ctstar x{:}\tau_x \ctvdash e : \tau$}
+  {T-LamD}
+  {$\Gamma \ctvdash \zlam{x}{\eraserf{\tau_x}}{e} : x{:}\tau_x \ctwand \tau$}
   \\[.8em]
   \mprooftr{40mm}
   {$\Gamma \ctvdash v_1 : x{:}\tau_x \ctsarr \tau_y$ \quad 
   $\Gamma \ctvdash v_2 : \tau_x$ \quad 
-  $\Gamma, y{:}\tau_y \ctvdash e : \tau$ }
+  $\Gamma \ctcomma y{:}\tau_y \ctvdash e : \tau$ }
   {T-AppFun}
   {$\Gamma \ctvdash \zlet{y}{v_1\;v_2}{e} : \tau$}
   \quad
+  \mprooftr{46mm}
+  {$\Gamma \ctvdash v_1 : x{:}\tau_x \ctwand \tau_y$ \quad 
+  $\Delta \ctvdash v_2 : \tau_x$ \quad 
+  $\Delta, (\Gamma \ctstar y{:}\tau_y) \ctvdash e : \tau$ }
+  {T-AppFunD}
+  {$\Delta, \Gamma \ctvdash \zlet{y}{v_1\;v_2}{e} : \tau$}
+  \\[.8em]
   \mprooftr{40mm}
   {$\Gamma \ctvdash \primop : \overline{x_i{:}\tau_i}\ctsarr \tau_y$ \quad 
     $\forall i. \Gamma \ctvdash v_i : \tau_i$ \quad 
-  $\Gamma, \overline{x_i{:}\tau_i} \ctvdash e : \tau$ }
+  $\Gamma \ctcomma \overline{x_i{:}\tau_i} \ctvdash e : \tau$ }
   {T-AppOp}
   {$\Gamma \ctvdash \zlet{y}{\primop\;\overline{v_i}}{e} : \tau$}
+  \quad
+  \mprooftr{50mm}
+  {$\Gamma \ctvdash \primop : \overline{x_i{:}\tau_i}\ctwand \tau_y$ \quad 
+    $\forall i. \Delta \ctvdash v_i : \tau_i$ \quad 
+  $\Delta, (\Gamma \ctstar \overline{x_i{:}\tau_i}) \ctvdash e : \tau$ }
+  {T-AppOpD}
+  {$\Delta, \Gamma \ctvdash \zlet{y}{\primop\;\overline{v_i}}{e} : \tau$}
   \\[.8em]
   \mprooftr{64mm}
   {$\Gamma \ctcomma x{:}\tau_x \ctcomma f{:}(x{:}(\tau_x \ctinter \ort{\eraserf{\tau_x}}{\vnu \prec x} ) \ctsarr \tau) \ctvdash e : \tau$}
   {T-Fix}
   {$\Gamma \ctvdash \zfix{f}{\eraserf{x{:}\tau_x \ctsarr \tau}}{x}{\eraserf{\tau_x}}{e} : x{:}\tau_x \ctsarr \tau$}
+  \\[.8em]
+  \mprooftr{64mm}
+  {$\Gamma \ctstar (x{:}\tau_x \ctcomma f{:}(x{:}(\tau_x \ctinter \ort{\eraserf{\tau_x}}{\vnu \prec x} ) \ctsarr \tau)) \ctvdash e : \tau$}
+  {T-FixD}
+  {$\Gamma \ctvdash \zfix{f}{\eraserf{x{:}\tau_x \ctwand \tau}}{x}{\eraserf{\tau_x}}{e} : x{:}\tau_x \ctwand \tau$}
   \\[.8em]
   \mprooftr{74mm}
   {$\forall i.\;\Gamma_i \ctvdash v : \tau_i \text{ and } \Gamma_i \ctcomma \overline{y{:}\tau_y} \ctvdash d_i(\overline{y}) : \tau_i  \text{ and } \Gamma_i \ctcomma \overline{y{:}\tau_y} \ctvdash e_i : \tau_i$ }

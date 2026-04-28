@@ -753,8 +753,9 @@
 \newcommand{\sep}{\,\*\,}
 % Longer bar than hyphen-minus; tweak \mkern if the star overlaps.
 \newcommand{\wand}{\,\mathrel{\relbar\mkern-8mu*}\,}
-\newcommand{\subExt}{\textcolor{magenta}{\boxed{\mathsf{o}}}}
-\newcommand{\supExt}{\textcolor{CobaltBlue}{\boxed{\mathsf{u}}}}
+% Same ``small box, larger glyph'' tuning as \ctind (outer shrink + inner upscale).
+\newcommand{\subExt}{\textcolor{magenta}{\scalebox{0.55}{\ensuremath{\boxed{\scalebox{1.62}{\ensuremath{\mathsf{o}}}}}}}}
+\newcommand{\supExt}{\textcolor{CobaltBlue}{\scalebox{0.55}{\ensuremath{\boxed{\scalebox{1.62}{\ensuremath{\mathsf{u}}}}}}}}
 \newcommand{\subExtleq}{\textcolor{magenta}{\,\leq_\mathsf{o}\,}}
 \newcommand{\supExtleq}{\textcolor{CobaltBlue}{\,\leq_\mathsf{u}\,}}
 \newcommand{\subExteq}{\textcolor{magenta}{\,\sim_\mathsf{o}\,}}
@@ -798,6 +799,9 @@
 \newcommand{\ctwand}{\textcolor{CBOrange}{\boldsymbol{\wand}}}
 \newcommand{\ctstar}{\textcolor{CBOrange}{\boldsymbol{\,*\,}}}
 \newcommand{\ctpers}{\textcolor{CBOrange}{\boldsymbol{\Box}}}
+% boxed star: outer \scalebox shrinks the box; inner scale ups \ast so the glyph stays readable
+% (approx.\ compensate ast: inner $\approx 1/\text{outer}$, e.g.\ $0.72\times 1.39 \approx 1$.)
+\newcommand{\ctind}{\textcolor{CBOrange}{\scalebox{0.55}{\ensuremath{\boldsymbol{\boxed{\scalebox{1.62}{\ensuremath{\boldsymbol{\ast}}}}}}}}}
 \newcommand{\ctistar}{\textcolor{CBOrange}{\boldsymbol{\mathbin{,\mkern -8mu\ast}}}}
 \newcommand{\ctcomma}{\textcolor{CBOrange}{\,\pmb{,}\,}}
 \newcommand{\ctvdashAux}[1]{\,\textcolor{CBOrange}{\vdash_{#1}}\,}
