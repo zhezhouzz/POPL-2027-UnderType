@@ -263,6 +263,191 @@ When the expressiveness of atomic propositions is rich enough, nested uses of $\
 Then, all formulas in choice logic can be expressed in approximation normal form, i.e., $\subExt$ and $\supExt$ are applied only to pure propositions.
 \end{theorem}
 
+% \subsection{Choice logic rules}
+
+% \paragraph{Bunches.}
+% Antecedents are \emph{bunches}~$\Gamma$ of hypotheses, following the additive/multiplicative
+% pattern from bunched implication (see e.g.\ Simmons's separation-logic
+% lectures, CMU 2009): in that presentation, an additive zone is written with ``$;$'' and a multiplicative one with
+% ``$,$''; here we instead write \emph{comma} for additive bunching (it will match~$\chland$
+% on formulas) and $\chstar$ for multiplicative bunching (matching~$\chstar$ on formulas).
+% This is the same comma/$\chstar$ discipline as for type-level contexts in
+% \autoref{fig:choice-types-syntax} below.
+% Formally,
+% \[
+%   \Gamma ::= \cdot \mid p \mid \Gamma_1 , \Gamma_2 \mid \Gamma_1 \chstar \Gamma_2,
+% \]
+% where each leaf~$p$ is a choice-logic formula (instantiating leaves with atomic
+% $a \in \mathcal{A}$ yields purely atomic bunches).
+% Extend satisfaction from \autoref{def:choice-logic-modalities} to bunches by
+% \begin{align*}
+%   m \models {\cdot}
+%   \quad\text{always}, \qquad
+%   m \models p \;\text{ as before}, \qquad
+%   m \models \Gamma_1 , \Gamma_2 \;\text{ iff }\; m \models \Gamma_1 \text{ and } m \models \Gamma_2,
+%   \\
+%   m \models \Gamma_1 \chstar \Gamma_2 \;\text{ iff }\;
+%   \exists m_1\,m_2.\; m_1 \times m_2 \leq m \text{ and } m_1 \models \Gamma_1 \text{ and } m_2 \models \Gamma_2.
+% \end{align*}
+% Write $\Gamma \vdash q$ when $\forall m \in \Res.\; m \models \Gamma \implies m \models q$.
+% When $\Gamma$ is the singleton bunch consisting of a single formula~$p$, we write
+% $p \vdash q$ instead of $\Gamma \vdash q$ (a single hypothesis is the singleton bunch with
+% leaf~$p$).
+
+% The rules in \autoref{fig:choice-logic-rules} are the proof-theoretic counterpart
+% of the semantic clauses in \autoref{def:choice-logic-modalities}, in the same
+% spirit as BI-style resource entailment.
+% Following standard presentations of bunched typing, we separate the \emph{structural}
+% rules (Weakening, Contraction, Exchange) for the \emph{additive} comma from
+% the logical rules below; the multiplicative $\chstar$ does not admit these three
+% structurals in the basic presentation.
+
+% \begin{figure}[h]
+%   {\footnotesize
+%   \begin{flalign*}
+%     &\text{\textbf{Structural rules (additive ``$,$'')}} && \fbox{$\Gamma \vdash p$}
+%   \end{flalign*}
+%   }
+%   \\ \
+%   \mprooftr{20mm}
+%   {$\Gamma \vdash q$}
+%   {W}
+%   {$\Gamma, \Gamma_2 \vdash q$}
+%   \quad
+%   \mprooftr{20mm}
+%   {$\Gamma_1, \Gamma_2, \Gamma_2 \vdash q$}
+%   {C}
+%   {$\Gamma_1, \Gamma_2 \vdash q$}
+%   \quad
+%   \mprooftr{20mm}
+%   {$\Gamma_2, \Gamma_1 \vdash p$}
+%   {E$_{\chland}$}
+%   {$\Gamma_1, \Gamma_2 \vdash p$}
+%   \quad
+%   \mprooftr{20mm}
+%   {$\Gamma_2 \chstar \Gamma_1 \vdash p$}
+%   {E$_{\chstar}$}
+%   {$\Gamma_1 \chstar \Gamma_2 \vdash p$}
+%   \quad
+%   \mprooftr{20mm}
+%   {$\Gamma_1 \chstar \Gamma_2 \vdash p$}
+%   {E$_{\chstar\chland}$}
+%   {$\Gamma_1 , \Gamma_2 \vdash p$}
+%   \\[.8em]
+%   {\footnotesize
+%   \begin{flalign*}
+%     &\text{\textbf{Logical rules}} && \fbox{$\Gamma \vdash p$}
+%   \end{flalign*}
+%   }
+%   \\ \
+%   \mprooftr{24mm}
+%   {$\Gamma \vdash q_1 \quad \Gamma \vdash q_2$}
+%   {CL-AndI}
+%   {$\Gamma \vdash q_1 \chland q_2$}
+%   \quad
+%   \mprooftr{24mm}
+%   {$\Delta(p_1, p_2) \vdash q$}
+%   {CL-AndE}
+%   {$\Delta(p_1 \chland p_2) \vdash q$}
+%   \\[.8em]
+%   \mprooftr{24mm}
+%   {$\Gamma \vdash p_1$}
+%   {CL-OrI}
+%   {$\Gamma \vdash p_1 \chlor p_2$}
+%   \quad
+%   \mprooftr{34mm}
+%   {$\Delta(p_1) \vdash q$}
+%   {CL-OrE}
+%   {$\Delta(p_1 \chlor p_2) \vdash q$}
+%   \\[.8em]
+%   \mprooftr{22mm}
+%   {$\Gamma, p \vdash q$}
+%   {CL-ImplI}
+%   {$\Gamma\vdash p \chimpl q$}
+%   \quad
+%   \mprooftr{28mm}
+%   {$\Delta(p_2)\vdash q$}
+%   {CL-ImplE}
+%   {$\Delta(p_1, p_1\chimpl p_2) \vdash q$}
+%   \\[.8em]
+%   \mprooftr{24mm}
+%   {$\Gamma_1 \vdash q_1 \quad \Gamma_2 \vdash q_2$}
+%   {CL-StarI}
+%   {$\Gamma_1 \semistar \Gamma_2 \vdash q_1 \chstar q_2$}
+%   \quad
+%   \mprooftr{24mm}
+%   {$\Delta(p_1 \semistar p_2) \vdash q$}
+%   {CL-StarE}
+%   {$\Delta(p_1 \chstar p_2) \vdash q$}
+%   \\[.8em]
+%   \mprooftr{26mm}
+%   {$\Gamma \chstar q \vdash p$}
+%   {CL-WandI}
+%   {$\Gamma \vdash q \chwand p$}
+%   \quad
+%   \mprooftr{32mm}
+%   {$\Delta(p_2) \vdash q$}
+%   {CL-WandE}
+%   {$\Delta(p_1 \semistar p_1 \chwand p_2) \vdash q$}
+%   \\[.8em]
+%   \mprooftr{30mm}
+%   {$\Gamma_1 \vdash q_1 \quad \Gamma_2 \vdash q_2$}
+%   {CL-Oplus}
+%   {$p_1 \choplus p_2 \vdash q_1 \choplus q_2$}
+%   \\[.8em]
+%   \mprooftr{28mm}
+%   {$ $}
+%   {CL-OverI}
+%   {$p_1 \vdash \subExt (p_1 \oplus p_2)$}
+%   \quad
+%   \mprooftr{58mm}
+%   {$\forall p', p' \vdash \subExt p \implies  \Delta(p') \vdash q$}
+%   {CL-OverE}
+%   {$\Delta(\subExt p) \vdash q$}
+%   \\[.8em]
+%   \mprooftr{28mm}
+%   {$ $}
+%   {CL-UnderI}
+%   {$p_1 \oplus p_2 \vdash \supExt p_1$}
+%   \quad
+%   \mprooftr{58mm}
+%   {$\forall p', p' \vdash \supExt p \implies  \Delta(p') \vdash q$}
+%   {CL-UnderE}
+%   {$\Delta(\supExt p) \vdash q$}
+%   \\[.8em]
+%   \mprooftr{38mm}
+%   {$?$}
+%   {CL-FiberI}
+%   {$\Gamma \vdash \forallM{x}p$}
+%   \quad
+%   \mprooftr{38mm}
+%   {$?$}
+%   {CL-FiberE}
+%   {$\Delta(\forallM{x}p) \vdash q$}
+%   \\[.8em]
+%   \mprooftr{26mm}
+%   {$\Code{flip}(\Gamma) \vdash q$}
+%   {CL-PersI}
+%   {$\Gamma \vdash \chpers q$}
+%   \quad
+%   \mprooftr{26mm}
+%   {$\Delta(p) \vdash q$}
+%   {CL-PersE}
+%   {$\Delta(\chpers p) \vdash q$}
+%   \quad
+%   \mprooftr{26mm}
+%   {$\Delta(\chpers p, p) \vdash q$}
+%   {CL-PersDup}
+%   {$\Delta(\chpers p) \vdash q$}
+%   \vspace*{-.1in}
+%   \caption{Choice logic rules: additive structurals (top) and logical rules (bottom).
+%   In \textsc{W}, $\Gamma_2$~ranges over any bunch (possibly~$\cdot$); in \textsc{E}, $\Delta,\Delta'$~are adjacent additive bunches.
+%   \textsc{CL-AndE} is also read with conclusion $\Gamma, p_1 \chland p_2 \vdash p_2$.}
+%   \label{fig:choice-logic-rules}
+%   \vspace*{-.1in}
+% \end{figure}
+
+
 \subsection{Core Language and Choice Types}
 
 \begin{figure}[h]
@@ -272,11 +457,11 @@ Then, all formulas in choice logic can be expressed in approximation normal form
     \\\text{\textbf{Data constructors }}& \quad &d ::= \quad & () ~|~ \Code{true} ~|~ \Code{false} ~|~ \Code{O} ~|~ \Code{S} ~|~ \Code{Cons} ~|~ \Code{Nil} ~|~ \Code{Leaf} ~|~ \Code{Node}
     \\\text{\textbf{Base Types}}& \quad & b  ::= \quad &  \Code{unit} ~|~ \Code{bool} ~|~ \Code{nat} ~|~ \Code{int} ~|~ ...
     \\\text{\textbf{Basic Types}}& \quad & s  ::= \quad &  b ~|~ s\sarr s
-    \\\text{\textbf{Operations}}& \quad & \primop ::= \quad & d ~|~ {+} ~|~ {-} ~|~ {==} ~|~ {<} ~|~ {\leq} ~|~ ...
+    \\\text{\textbf{Operations}}& \quad & \primop ::= \quad & {+} ~|~ {-} ~|~ {==} ~|~ {<} ~|~ {\leq} ~|~ ...
     \\ \text{\textbf{Constants }}& \quad &c ::= \quad & () ~|~ \mathbb{B} ~|~ \mathbb{Z} ~|~ d\ \overline{c}\ ...
     \\ \text{\textbf{Values }}& \quad  & v ::= \quad & c ~|~ x ~|~ \zlam{x}{s}{e} ~|~ \zfix{f}{s}{x}{s}{e}
-    \\ \text{\textbf{Expressions}}& \quad & e ::=\quad & v ~|~ \zlet{x}{e}{e} ~|~ \primop\ \overline{v} ~|~  v\;v ~|~ \match{v} \overline{d\ \overline{y} \to e} 
-    % \\ & & \quad & 
+    \\ \text{\textbf{Expressions}}& \quad & e ::=\quad & v ~|~ \zlet{x}{e}{e} ~|~ \zlet{x{:}s}{e}{e} ~|~ \zlet{x{:}s}{\primop\ \overline{v}}{e} ~|~ 
+    \\ & & \quad & |~  \zlet{x{:}s}{v\;v}{e} ~|~ \match{v} \overline{d\ \overline{y} \to e} 
     % \err ~|~ 
   \end{alignat*}}
 \caption{Core Language Syntax. }
@@ -338,6 +523,8 @@ $\Gamma \ctvdash e : \tau$ and $\Gamma \ctvdash \tau_1 <: \tau_2$ in a single de
 % \end{minted}
 % when we type check $e$, we can have type context $\Gamma_1$ instead of $\Gamma_2$, since the $z$ is actually dependent on the context (the decision of $x$).
 
+
+\newpage
 \subsection{Denotational semantics}
 
 \begin{align*}
@@ -360,246 +547,285 @@ $\Gamma \ctvdash e : \tau$ and $\Gamma \ctvdash \tau_1 <: \tau_2$ in a single de
   \\\denot{\Gamma_1 \ctoplus \Gamma_2} &\doteq \denot{\Gamma_1} \choplus \denot{\Gamma_2}
 \end{align*}\noindent
 
+\newpage
 \subsection{Declarative typing rules}
 
-\include{sections/tech/2-basictyping}
-
-The context formation judgment treats $\ctcomma$ sequentially and $\ctstar$
-in parallel: in $\Gamma \basicvdash \Gamma_1 \ctcomma \Gamma_2$, the right
-component may refer to bindings introduced by the left component, while in
-$\Gamma \basicvdash \Gamma_1 \ctstar \Gamma_2$, both components are checked
-only under the ambient $\Gamma$. Thus the two sides of a separating context
-cannot refer to variables introduced by each other. We do not give context
-holes $\Delta$ an independent well-formedness judgment; rules involving
-$\Delta$ are read under the side condition that the plugged contexts are
-well formed.
-
-\begin{figure}[h!]
+\begin{figure}[h]
   {\small
+  {\normalsize \begin{flalign*}
+    &\text{\textbf{Basic typing rules}} && \fbox{$\eraserf{ \Gamma } \basicvdash e : s \quad \eraserf{ \Gamma } \basicvdash \phi : s \quad \eraserf{ \Gamma } \basicvdash \tau \quad \basicvdash \Gamma $}
+  \end{flalign*}}
   {\normalsize \begin{flalign*}
     &\text{\textbf{Well-formedness rules}} && \fbox{$\Gamma \wfvdash \tau \quad \wfvdash \Gamma$}
   \end{flalign*}}
 \mprooftr{28mm}
-{$\Gamma \basicvdash \tau$ \quad $\wfvdash \Gamma$}
+{$\eraserf{\Gamma} \basicvdash \tau$ \quad $\wfvdash \Gamma$}
 {WfType}
 {$\Gamma \wfvdash \tau$} 
 \quad
 \mprooftr{28mm}
-{$\exists r. \denot{\Gamma}\;r$ \quad $\basicvdash \Gamma$}
+{$\exists r. \denot{\Gamma}\;r$ \quad $\basicvdash \eraserf{\Gamma}$}
 {WfCtx}
 {$\wfvdash \Gamma$} 
 \quad
   {\normalsize \begin{flalign*}
-    &\text{\textbf{Subtyping rules}} && \fbox{$\Gamma \ctvdash \tau <: \tau$ \quad $\Gamma \ctsubseteq{X} \Gamma$ \quad $\Code{ToOver}(\Gamma, \Gamma')$ }
+    &\text{\textbf{Subtyping rules}} && \fbox{$\Gamma \ctvdash \tau <: \tau$ \quad $\Gamma \ctsubseteq{X} \Gamma$ }
   \end{flalign*}}
-\mprooftr{34mm}
+\mprooftr{44mm}
 {$\forall e.\; \denot{\Gamma} \chvdash \denot{\tau_1}\;e \chimpl \denot{\tau_2}\;e$}
 {Sub}
 {$\Gamma \ctvdash \tau_1 <: \tau_2$}
 \quad
-\mprooftr{36mm}
+\mprooftr{40mm}
 {$\forall r. r \models \denot{\Gamma_1} \impl \restrictTo{r}{X} \models \denot{\Gamma_2}$ }
 {CtxSub}
 {$\Gamma_1 \ctsubseteq{X} \Gamma_2$}
-\quad
-	\mprooftr{22mm}
-	{$\subExt \denot{\Gamma_1} \models \denot{\Gamma_2}$ }
-	{CtxOver}
-	{$\Code{ToOver}(\Gamma_1, \Gamma_2)$}
-	  }
-	  \caption{Auxiliary well-formedness and semantic subtyping rules for choice typing. We disallow the contraction rule (duplicate context) for both $\ctcomma$ and $\ctstar$, since the resource will not be consumed but only depended on. The subtyping rules link typing to semantic implication on denotations. $\Code{ToOver}$ is a context-level over-approximation coercion used to type separating let-bindings.}
+\\[.8em]
+% \mprooftr{30mm}
+% {$\denot{\Gamma_2} \chvdash \forallM{\Dom{\Gamma_1}} \denot{\Gamma_1}$}
+% {CtxForall}
+% {$\Code{ToForall}(\Gamma_1, \Gamma_2)$}
+% \quad
+% \mprooftr{54mm}
+% {$\forall e.\; \denot{\Gamma} \models \forallM{\Dom{\Gamma}} (\denot{\tau_1}\;e \chimpl \denot{\tau_2}\;e)$}
+% {Sub$_{\ctstar}$}
+% {$\Gamma \ctvdashs \tau_1 <: \tau_2$}
+
+  % {\normalsize
+  % \begin{flalign*}
+  %   &\text{\textbf{Context splitting rules}} && \fbox{$\Gamma \ctDvdash \Gamma $}
+  % \end{flalign*}}
+  % \mprooftr{22mm}
+  % {$\emptyset \ctvdashc \tau <: \ctpers \tau $}
+  % {SpPers}
+  % {$x{:}\tau \ctoplus x{:}\tau \ctDvdash x{:}\tau$}
+  % \quad
+  % \mprooftr{58mm}
+  % {$ $}
+  % {SpU}
+  % {$x{:}\urt{b}{\phi_1} \ctoplus x{:}\urt{b}{\phi_2} \ctDvdash x{:}\urt{b}{\phi_1 \lor \phi_2}$}
+  % \\[.8em]
+  % \mprooftr{16mm}
+  % {$ $}
+  % {SpEmp}
+  % {$\emptyset \ctoplus \Gamma \ctDvdash \Gamma$}
+  % \quad
+  % \mprooftr{44mm}
+  % {$ $}
+  % {Sp$_{\ctcomma}$}
+  % {$\Gamma_1 \ctcomma (\Gamma_2 \ctoplus \Gamma_3) \ctDvdash (\Gamma_1 \ctcomma \Gamma_2) \ctoplus (\Gamma_1 \ctcomma \Gamma_3)$}
+  % \quad
+  % \mprooftr{46mm}
+  % {$ $}
+  % {Sp$_{\ctstar}$}
+  % {$\Gamma_1 \ctstar (\Gamma_2 \ctoplus \Gamma_3) \ctDvdash (\Gamma_1 \ctstar \Gamma_2) \ctoplus (\Gamma_1 \ctstar \Gamma_3)$}
+  % \\[.8em]
+  }
+  \caption{Auxiliary rules for the core language. We disallow the contraction rule (duplicate context) for both $\ctcomma$ and $\ctstar$, since the resource will not be consumed but only depended on. The subtyping rules link typing to semantic implication on denotations. }
   \label{fig:auxiliary-rules}
   \vspace*{-.1in}
 \end{figure}
 
-\begin{figure}[h!]
+\begin{figure}[h]
   {\small
   {\normalsize \begin{flalign*}
     &\text{\textbf{Typing rules}} && \fbox{$\Gamma \ctvdash \primop : \tau$ \quad  $\Gamma \ctvdash e : \tau$}
   \end{flalign*}}
-  \mprooftr{18mm}
+  % \\[.8em]
+  % \mprooftr{24mm}
+  % {$\Gamma \ctvdash e : \tau_1$ \quad $\Gamma \ctvdash e : \tau_2$}
+  % {T-Inter}
+  % {$\Gamma \ctvdash e : \tau_1 \ctinter \tau_2$}
+  % \quad
+  % \mprooftr{36mm}
+  % {$\Gamma \ctvdash e : \tau_i \quad (i \in \{1,2\})$}
+  % {T-Union}
+  % {$\Gamma \ctvdash e : \tau_1 \ctunion \tau_2$}
+  % \quad
+  % \mprooftr{28mm}
+  % {$\Gamma_1 \ctvdash e : \tau_1$ \quad $\Gamma_2 \ctvdash e : \tau_2$}
+  % {T-Sum}
+  % {$\Gamma_1 \ctoplus \Gamma_2 \ctvdash e : \tau_1 \ctoplus \tau_2$}
+  % \\[.8em]
+  % \mprooftr{24mm}
+  % {$\Gamma \ctvdashs v : \tau$}
+  % {T-Pers}
+  % {$\Gamma \ctvdash v : \ctpers \tau$}
+  % \quad
+  % \mprooftr{24mm}
+  % {$\Gamma \ctvdashs e : \tau$}
+  % {T-Star}
+  % {$\Gamma \ctvdash e : \ctstar \tau$}
+  % \quad
+  \mprooftr{30mm}
   {$\Gamma \ctvdash e : \tau_1$ \quad $\Gamma \ctvdash \tau_1 <: \tau_2$}
   {T-Sub}
   {$\Gamma \ctvdash e : \tau_2$}
   \quad
-  \mprooftr{23mm}
-  {$\Gamma_2 \ctvdash e : \tau$ \quad $\Gamma_1 \ctsubseteq{\Code{FV}(e) \cup \Code{FV}(\tau)} \Gamma_2$}
-  {T-CtxSub}
-  {$\Gamma_1 \ctvdash e : \tau$}
-  \quad
-  \mprooftr{14mm}
+  \mprooftr{20mm}
   {$ $}
   {T-Var}
   {$x{:}\tau \ctvdash x : \tau$}
-  \\[.8em]
-  \mprooftr{26mm}
-  {$ \Code{Ty}(\primop) = \tau $}
-  {T-Op}
-  {$\Gamma \ctvdash \primop : \tau$}
   \quad
-  \mprooftr{26mm}
+  \mprooftr{30mm}
   {$ \emptyset \basicvdash c : b $}
   {T-Const}
   {$\emptyset \ctvdash c : \ort{b}{\vnu = c}$}
   \\[.8em]
+  \mprooftr{23mm}
+  {$\Gamma_2 \ctvdash e : \tau$ \quad $\Gamma_1 \ctsubseteq{\Code{FV}(e) \cup \Code{FV}(\tau)} \Gamma_2$}
+  {T-CtxSub}
+  {$\Gamma_1 \ctvdash e : \tau$}
+  % \quad
+  % \mprooftr{30mm}
+  % {$\Gamma_2 \ctvdash e : \tau$ \quad $\Code{ToForall}(\Gamma_1,\Gamma_2)$}
+  % {T-CtxForall}
+  % {$\Gamma_1 \ctvdash e : \ctind \tau$}
+  \quad
   \mprooftr{34mm}
   {$\Gamma \ctvdash e_1 : \tau_1 $ \quad $\Delta(\Gamma \ctcomma x{:}\tau_1) \ctvdash e_2 : \tau_2$}
   {T-Let}
   {$\Delta(\Gamma) \ctvdash \zlet{x}{e_1}{e_2} : \tau_2$}
   \quad
-  \mprooftr{40mm}
-  {$\Gamma' \ctvdash e_1 : \tau_1 $ \quad $\Code{ToOver}(\Gamma, \Gamma')$ \quad $\Delta(\Gamma \ctstar x{:}\tau_1) \ctvdash e_2 : \tau_2$}
+  \mprooftr{36mm}
+  {$\Gamma_1 \ctvdash e_1 : \tau_1 $ \quad $\Delta((\Gamma_1 \ctcomma x{:}\tau_1) \ctstar \Gamma_2) \ctvdash e_2 : \tau_2$}
   {T-LetD}
-  {$\Delta(\Gamma) \ctvdash \zlet{x}{e_1}{e_2} : \tau_2$}
+  {$\Delta(\Gamma_1 \ctstar \Gamma_2) \ctvdash \zlet{x}{e_1}{e_2} : \tau_2$}
   \\[.8em]
-  \mprooftr{42mm}
-  {$\eraserf{\tau_x} = s_x$ \quad $\Gamma \ctcomma x{:}\tau_x \ctvdash e : \tau$}
+  \mprooftr{32mm}
+  {$\Gamma \ctcomma x{:}\tau_x \ctvdash e : \tau$}
   {T-Lam}
-  {$\Gamma \ctvdash \zlam{x}{s_x}{e} : x{:}\tau_x \ctsarr \tau$}
+  {$\Gamma \ctvdash \zlam{x}{\eraserf{\tau_x}}{e} : x{:}\tau_x \ctsarr \tau$}
   \quad
-  \mprooftr{42mm}
-  {$\eraserf{\tau_x} = s_x$ \quad  $\Gamma \ctstar x{:}\tau_x \ctvdash e : \tau$}
+  \mprooftr{32mm}
+  {$\Gamma \ctstar x{:}\tau_x \ctvdash e : \tau$}
   {T-LamD}
-  {$\Gamma \ctvdash \zlam{x}{s_x}{e} : x{:}\tau_x \ctwand \tau$}
+  {$\Gamma \ctvdash \zlam{x}{\eraserf{\tau_x}}{e} : x{:}\tau_x \ctwand \tau$}
   \\[.8em]
   \mprooftr{40mm}
-  {$\Gamma \ctvdash v_1 : x{:}\tau_x \ctsarr \tau$ \quad 
-  $\Gamma \ctvdash v_2 : \tau_x$ }
+  {$\Gamma \ctvdash v_1 : x{:}\tau_x \ctsarr \tau_y$ \quad 
+  $\Gamma \ctvdash v_2 : \tau_x$ \quad 
+  $\Gamma \ctcomma y{:}\tau_y \ctvdash e : \tau$ }
   {T-AppFun}
-  {$\Gamma \ctvdash v_1\;v_2 : \tau[x \mapsto v_2]$}
+  {$\Gamma \ctvdash \zlet{y}{v_1\;v_2}{e} : \tau$}
   \quad
   \mprooftr{46mm}
-  {$\Gamma_1 \ctvdash v_1 : x{:}\tau_x \ctwand \tau$ \quad 
-  $\Gamma_2 \ctvdash v_2 : \tau_x$  }
+  {$\Delta (\Gamma_1) \ctvdash v_1 : x{:}\tau_x \ctwand \tau_y$ \quad 
+  $\Delta (\Gamma_2) \ctvdash v_2 : \tau_x$ \quad 
+  $\Delta ((\Gamma_1 \ctstar \Gamma_2) \ctcomma y{:}\tau_y) \ctvdash e : \tau$ }
   {T-AppFunD}
-  {$\Gamma_1 \ctstar \Gamma_2 \ctvdash v_1\;v_2 : \tau[x \mapsto v_2]$}
+  {$\Delta (\Gamma_1 \ctstar \Gamma_2) \ctvdash \zlet{y}{v_1\;v_2}{e} : \tau$}
   \\[.8em]
   \mprooftr{40mm}
   {$\Gamma \ctvdash \primop : \overline{x_i{:}\tau_i}\ctsarr \tau_y$ \quad 
-    $\forall i. \Gamma \ctvdash v_i : \tau_i$ }
+    $\forall i. \Gamma \ctvdash v_i : \tau_i$ \quad 
+  $\Gamma \ctcomma \overline{x_i{:}\tau_i} \ctvdash e : \tau$ }
   {T-AppOp}
-  {$\Gamma \ctvdash \primop\;\overline{v_i} : \tau[\overline{x_i \mapsto v_i}]$}
+  {$\Gamma \ctvdash \zlet{y}{\primop\;\overline{v_i}}{e} : \tau$}
   \quad
   \mprooftr{50mm}
-  {$\Gamma \ctvdash \primop : \overline{x_i{:}\tau_i}\ctwand \tau_y$ \quad 
-    $\forall i. \Gamma_i \ctvdash v_i : \tau_i$ }
+  {$\Delta (\Gamma) \ctvdash \primop : \overline{x_i{:}\tau_i}\ctwand \tau_y$ \quad 
+    $\forall i. \Delta (\Gamma_i) \ctvdash v_i : \tau_i$ \quad 
+  $\Delta ((\Gamma \ctstar \overline{\Gamma_i}) \ctcomma y{:}\tau_y) \ctvdash e : \tau$ }
   {T-AppOpD}
-  {$\Gamma \ctstar \overline{\Gamma_i} \ctvdash \primop\;\overline{v_i} : \tau[\overline{x_i \mapsto v_i}]$}
+  {$\Delta (\Gamma \ctstar \overline{\Gamma_i}) \ctvdash \zlet{y}{\primop\;\overline{v_i}}{e} : \tau$}
   \\[.8em]
   \mprooftr{64mm}
-  {$\eraserf{\tau_x} = b$ \quad $\eraserf{\tau} = t$ \quad $\Gamma \ctcomma x{:}\tau_x \ctcomma f{:}(x{:}(\tau_x \ctinter \ort{b}{\vnu \prec x} ) \ctsarr \tau) \ctvdash e : \tau$}
+  {$\Gamma \ctcomma x{:}\tau_x \ctcomma f{:}(x{:}(\tau_x \ctinter \ort{\eraserf{\tau_x}}{\vnu \prec x} ) \ctsarr \tau) \ctvdash e : \tau$}
   {T-Fix}
-  {$\Gamma \ctvdash \zfix{f}{b\sarr t}{x}{b}{e} : x{:}\tau_x \ctsarr \tau$}
+  {$\Gamma \ctvdash \zfix{f}{\eraserf{x{:}\tau_x \ctsarr \tau}}{x}{\eraserf{\tau_x}}{e} : x{:}\tau_x \ctsarr \tau$}
   \\[.8em]
   \mprooftr{64mm}
-  {$\eraserf{\tau_x} = b$ \quad $\eraserf{\tau} = t$ \quad  $\Gamma \ctstar (x{:}\tau_x \ctcomma f{:}(x{:}(\tau_x \ctinter \ort{b}{\vnu \prec x} ) \ctsarr \tau)) \ctvdash e : \tau$}
+  {$\Gamma \ctstar (x{:}\tau_x \ctcomma f{:}(x{:}(\tau_x \ctinter \ort{\eraserf{\tau_x}}{\vnu \prec x} ) \ctsarr \tau)) \ctvdash e : \tau$}
   {T-FixD}
-  {$\Gamma \ctvdash \zfix{f}{b\sarr t}{x}{b}{e} : x{:}\tau_x \ctwand \tau$}
+  {$\Gamma \ctvdash \zfix{f}{\eraserf{x{:}\tau_x \ctwand \tau}}{x}{\eraserf{\tau_x}}{e} : x{:}\tau_x \ctwand \tau$}
   \\[.8em]
   \mprooftr{74mm}
-  {$\forall i.\;\Gamma_i \ctvdash v : \tau_{vi}$  and $\Dom{\Delta_i} = \{\overline{y_{ij}}\}$ and  $\Delta_i(\Gamma_i) \ctvdash d_i(\overline{y_{ij}}) : \tau_{vi}$ and $\Delta_i(\Gamma_i) \ctvdash e_i : \tau_i$ }
+  {$\forall i.\;\Gamma_i \ctvdash v : \tau_{vi} \text{ and } \Gamma_i \ctcomma \overline{y{:}\tau_y} \ctvdash d_i(\overline{y}) : \tau_{vi}  \text{ and } \Gamma_i \ctcomma \overline{y{:}\tau_y} \ctvdash e_i : \tau_i$ }
   {T-Match}
-  {$\ctbigoplus \overline{\Gamma_i} \ctvdash \match{v} \overline{d_i\ \overline{y_{ij}} \to e_i}  : \ctbigoplus \overline{\tau_i}$}
+  {$\ctbigoplus \overline{\Gamma_i} \ctvdash \match{v} \overline{d_i\ \overline{y} \to e_i}  : \ctbigoplus \overline{\tau_i}$}
+  {\normalsize
+  \begin{flalign*}
+    &\text{\textbf{Derived Structural rules (optional)}} && \fbox{$\Gamma \equiv \Gamma$ \quad $\Code{Pres}(\tau)$ }
+  \end{flalign*}}
+  \mprooftr{22mm}
+  {$\Gamma_1 \ctvdash e : \tau$ \quad $\Gamma_1 \ctcomma \Gamma_2 \ctsubseteq{\Dom{\Gamma_1}} \Gamma_1$}
+  {W$_{\ctcomma}$}
+  {$\Gamma_1 \ctcomma \Gamma_2 \ctvdash e : \tau$}
+  \quad
+  \mprooftr{22mm}
+  {$\Gamma_1 \ctvdash e : \tau$ \quad $\Gamma_1 \ctstar \Gamma_2 \ctsubseteq{\Dom{\Gamma_1}} \Gamma_1$}
+  {W$_{\ctstar}$}
+  {$\Gamma_1 \ctstar \Gamma_2 \ctvdash e : \tau$}
+  \quad
+  \mprooftr{22mm}
+  {$\Gamma_2 \ctcomma \Gamma_1 \ctvdash e : \tau$ \quad $\Gamma_1 \ctcomma \Gamma_2 \ctsubseteq{} \Gamma_2 \ctcomma \Gamma_1$}
+  {E$_{\ctcomma}$}
+  {$\Gamma_1 \ctcomma \Gamma_2 \ctvdash e : \tau$}
+  \quad
+  \mprooftr{22mm}
+  {$\Gamma_2 \ctstar \Gamma_1 \ctvdash e : \tau$ \quad $\Gamma_1 \ctstar \Gamma_2 \ctsubseteq{} \Gamma_2 \ctstar \Gamma_1$}
+  {E$_{\ctstar}$}
+  {$\Gamma_1 \ctstar \Gamma_2 \ctvdash e : \tau$}
+  \\[.8em]
+  \mprooftr{22mm}
+  {$\Gamma_1, \Gamma_2 \ctvdash e : \tau$ \quad $\Gamma_1 \ctsubseteq{\Dom{\Gamma_1}} \Gamma_1 \ctcomma \Gamma_2$}
+  {C$_{\ctcomma}$}
+  {$\Gamma_1 \ctvdash e : \tau$}
+  \quad
+  \mprooftr{22mm}
+  {$\Gamma_1 \ctstar \Gamma_2 \ctvdash e : \tau$ \quad $\Gamma_1 \ctsubseteq{\Dom{\Gamma_1}} \Gamma_1 \ctstar \Gamma_2$}
+  {C$_{\ctstar}$}
+  {$\Gamma_1 \ctvdash e : \tau$}
+  \quad
+  \mprooftr{26mm}
+  {$\tau = \ort{b}{\phi}$ or $\eraserf{\tau} = s_1 \sarr s_2$}
+  {Pers}
+  {$\Code{Pres}(\tau)$}
+  \quad
+  \mprooftr{24mm}
+  {$\Code{Pres}(\tau_x)$}
+  {PersM}
+  {$x{:}\tau_x \ctcomma \Gamma \equiv x{:}\tau_x \ctstar \Gamma$}
+  \\[.8em]
+  \mprooftr{22mm}
+  {$ $}
+  {Split$_{\ctstar}$}
+  {$\Gamma_1 \ctstar (\Gamma_2 \ctoplus \Gamma_3) \equiv (\Gamma_1 \ctstar \Gamma_2) \ctoplus (\Gamma_1 \ctstar \Gamma_3)$}
+  \quad
+  \mprooftr{22mm}
+  {$\Code{Pres}(\tau)$}
+  {SplitPers}
+  {$x{:}\tau \equiv x{:}\tau \ctoplus \tau$}
+  \quad
+  \mprooftr{38mm}
+  {$ $}
+  {SplitMerge}
+  {$x{:}\urt{b}{\phi_1 \lor \phi_2} \equiv x{:}\urt{b}{\phi_1} \ctoplus x{:}\urt{b}{\phi_2}$}
+  \\[.8em]
+  \mprooftr{22mm}
+  {$ $}
+  {Split$_{\ctcomma}$}
+  {$\Gamma_1 \ctcomma (\Gamma_2 \ctoplus \Gamma_3) \equiv (\Gamma_1 \ctcomma \Gamma_2) \ctoplus (\Gamma_1 \ctcomma \Gamma_3)$}
+  \quad
+  \mprooftr{22mm}
+  {$\Gamma \ctvdash e : \tau$ \quad $\Delta(\Gamma) \ctsubseteq{\Dom{\Gamma}} \Gamma $}
+  {Frame}
+  {$\Delta(\Gamma) \ctvdash e : \tau$}
+  \\[.8em]
+  \mprooftr{82mm}
+  {$\forall i.\;\Gamma_i \ctvdash v : \tau_{vi} \text{ and } \Gamma_i \ctcomma \overline{y{:}\tau_y} \ctvdash d_i(\overline{y}) : \tau_{vi}  \text{ and } \Gamma_i \ctcomma \overline{y{:}\tau_y} \ctvdash e_i : \ort{b}{\phi}$ }
+  {T-MatchOver}
+  {$\ctbigoplus \overline{\Gamma_i} \ctvdash \match{v} \overline{d_i\ \overline{y} \to e_i}  : \ort{b}{\phi}$}
+  \\[.8em]
+  \mprooftr{82mm}
+  {$\forall i.\;\Gamma_i \ctvdash v : \tau_{vi} \text{ and } \Gamma_i \ctcomma \overline{y{:}\tau_y} \ctvdash d_i(\overline{y}) : \tau_{vi}  \text{ and } \Gamma_i \ctcomma \overline{y{:}\tau_y} \ctvdash e_i : \urt{b}{\phi_i}$ }
+  {T-MatchUnder}
+  {$\ctbigoplus \overline{\Gamma_i} \ctvdash \match{v} \overline{d_i\ \overline{y} \to e_i}  : \urt{b}{\bigvee \phi_i}$}
   }
   \caption{Declarative typing rules for the core language.}
   \label{fig:declaritive-typing-rules}
   \vspace*{-.1in}
-\end{figure}
-
-\begin{figure}[h!]
-{\small
-{\normalsize
-\begin{flalign*}
-  &\text{\textbf{Derived Structural rules (optional)}} && \fbox{$\Gamma \equiv \Gamma$ \quad $\Code{Pres}(\tau)$ }
-\end{flalign*}}
-\mprooftr{22mm}
-{$\Gamma_1 \ctvdash e : \tau$ \quad $\Gamma_1 \ctcomma \Gamma_2 \ctsubseteq{\Dom{\Gamma_1}} \Gamma_1$}
-{W$_{\ctcomma}$}
-{$\Gamma_1 \ctcomma \Gamma_2 \ctvdash e : \tau$}
-\quad
-\mprooftr{22mm}
-{$\Gamma_1 \ctvdash e : \tau$ \quad $\Gamma_1 \ctstar \Gamma_2 \ctsubseteq{\Dom{\Gamma_1}} \Gamma_1$}
-{W$_{\ctstar}$}
-{$\Gamma_1 \ctstar \Gamma_2 \ctvdash e : \tau$}
-\quad
-\mprooftr{22mm}
-{$\Gamma_2 \ctcomma \Gamma_1 \ctvdash e : \tau$ \quad $\Gamma_1 \ctcomma \Gamma_2 \ctsubseteq{} \Gamma_2 \ctcomma \Gamma_1$}
-{E$_{\ctcomma}$}
-{$\Gamma_1 \ctcomma \Gamma_2 \ctvdash e : \tau$}
-\quad
-\mprooftr{22mm}
-{$\Gamma_2 \ctstar \Gamma_1 \ctvdash e : \tau$ \quad $\Gamma_1 \ctstar \Gamma_2 \ctsubseteq{} \Gamma_2 \ctstar \Gamma_1$}
-{E$_{\ctstar}$}
-{$\Gamma_1 \ctstar \Gamma_2 \ctvdash e : \tau$}
-\\[.8em]
-\mprooftr{22mm}
-{$\Gamma_1, \Gamma_2 \ctvdash e : \tau$ \quad $\Gamma_1 \ctsubseteq{\Dom{\Gamma_1}} \Gamma_1 \ctcomma \Gamma_2$}
-{C$_{\ctcomma}$}
-{$\Gamma_1 \ctvdash e : \tau$}
-\quad
-\mprooftr{22mm}
-{$\Gamma_1 \ctstar \Gamma_2 \ctvdash e : \tau$ \quad $\Gamma_1 \ctsubseteq{\Dom{\Gamma_1}} \Gamma_1 \ctstar \Gamma_2$}
-{C$_{\ctstar}$}
-{$\Gamma_1 \ctvdash e : \tau$}
-\quad
-\mprooftr{26mm}
-{$\tau = \ort{b}{\phi}$ or $\eraserf{\tau} = s_1 \sarr s_2$}
-{Pers}
-{$\Code{Pres}(\tau)$}
-\quad
-\mprooftr{24mm}
-{$\Code{Pres}(\tau_x)$}
-{PersM}
-{$x{:}\tau_x \ctcomma \Gamma \equiv x{:}\tau_x \ctstar \Gamma$}
-\\[.8em]
-\mprooftr{22mm}
-{$ $}
-{Split$_{\ctstar}$}
-{$\Gamma_1 \ctstar (\Gamma_2 \ctoplus \Gamma_3) \equiv (\Gamma_1 \ctstar \Gamma_2) \ctoplus (\Gamma_1 \ctstar \Gamma_3)$}
-\quad
-\mprooftr{22mm}
-{$\Code{Pres}(\tau)$}
-{SplitPers}
-{$x{:}\tau \equiv x{:}\tau \ctoplus \tau$}
-\quad
-\mprooftr{38mm}
-{$ $}
-{SplitMerge}
-{$x{:}\urt{b}{\phi_1 \lor \phi_2} \equiv x{:}\urt{b}{\phi_1} \ctoplus x{:}\urt{b}{\phi_2}$}
-\\[.8em]
-\mprooftr{22mm}
-{$ $}
-{Split$_{\ctcomma}$}
-{$\Gamma_1 \ctcomma (\Gamma_2 \ctoplus \Gamma_3) \equiv (\Gamma_1 \ctcomma \Gamma_2) \ctoplus (\Gamma_1 \ctcomma \Gamma_3)$}
-\quad
-\mprooftr{22mm}
-{$\Gamma \ctvdash e : \tau$ \quad $\Delta(\Gamma) \ctsubseteq{\Dom{\Gamma}} \Gamma $}
-{Frame}
-{$\Delta(\Gamma) \ctvdash e : \tau$}
-\quad
-\mprooftr{35mm}
-{$\Gamma \ctcomma x{:}\ort{b}{\phi} \ctvdash e : \tau$}
-{Forall}
-{$\Gamma \ctvdash e : \Code{Forall}(x{:}\phi, \tau)$}
-\\[.8em]
-\mprooftr{35mm}
-{$\Gamma \ctcomma x{:}\urt{b}{\phi} \ctvdash e : \tau$}
-{Exists}
-{$\Gamma \ctvdash e : \Code{Exists}(x{:}\phi, \tau)$}
-\quad
-\mprooftr{65mm}
-{$\forall i.\;\Gamma_i \ctvdash v : \tau_{vi}$  and $\Dom{\Delta_i} = \{\overline{y_{ij}}\}$ and  $\Delta_i(\Gamma_i) \ctvdash d_i(\overline{y_{ij}}) : \tau_{vi}$ and $\Delta_i(\Gamma_i) \ctvdash e_i : \ort{b}{\phi}$ }
-  {T-MatchO}
-  {$\ctbigoplus \overline{\Gamma_i} \ctvdash \match{v} \overline{d_i\ \overline{y_{ij}} \to e_i}  : \ort{b}{\phi}$}
-  \\[.8em]
-\mprooftr{65mm}
-  {$\forall i.\;\Gamma_i \ctvdash v : \tau_{vi}$  and $\Dom{\Delta_i} = \{\overline{y_{ij}}\}$ and  $\Delta_i(\Gamma_i) \ctvdash d_i(\overline{y_{ij}}) : \tau_{vi}$ and $\Delta_i(\Gamma_i) \ctvdash e_i : \urt{b}{\phi_i}$ }
-  {T-MatchU}
-  {$\ctbigoplus \overline{\Gamma_i} \ctvdash \match{v} \overline{d_i\ \overline{y_{ij}} \to e_i}  : \urt{b}{\bigvee \phi_i}$}
-}
-	\caption{Derived rules.}
-\label{fig:declaritive-typing-rules}
-\vspace*{-.1in}
 \end{figure}
 
 \begin{theorem}[Fundamental theorem]
@@ -622,8 +848,8 @@ well formed.
     \item Refinement type check: $\emptyset \ctvdash v_f :  x{:}\ort{b_x}{\phi_x} \ctsarr \ort{b}{\phi}$ implies that $\forall v_x\;v. \phi_x[\vnu \mapsto v_x] \land \mstep{v_f\;v_x}{v} \impl \phi[\vnu \mapsto v]$.
     \item Coverage type check: $\emptyset \ctvdash v_f :  x{:}\ort{b_x}{\phi_x} \ctsarr \urt{b}{\phi}$ implies that $\forall v_x\;v. \phi_x[\vnu \mapsto v_x] \land \phi[\vnu \mapsto v]  \impl \mstep{v_f\;v_x}{v} $.
     \item Incorrectness type check: $\emptyset \ctvdash v_f : \urt{b_x}{\phi_x} \ctsarr \urt{b}{\phi}$ implies that \\ $\forall v. \phi[\vnu \mapsto v] \impl \exists v_x. \phi_x[\vnu \mapsto v_x] \land  \mstep{v_f\;v_x}{v} $.
-    \item Sufficient incorrectness: $\emptyset \ctvdash v_f : \ort{b_x}{\phi_x} \ctsarr \ort{b}{\phi} \ctoplus b$ implies that \\ $\forall v_x. \phi_x[\vnu \mapsto v_x] \impl \exists v. \phi[\vnu \mapsto v] \land \mstep{v_f\;v_x}{v} $.
-    \item Existential type check: $\emptyset \ctvdash v_f : \urt{b_x}{\phi_x} \ctsarr \ort{b}{\phi}\ctoplus b$ implies that \\ $\exists v_x\;v. \phi_x[\vnu \mapsto v_x] \land \phi[\vnu \mapsto v] \land \mstep{v_f\;v_x}{v} $.
+    \item Sufficient incorrectness: $\emptyset \ctvdash v_f : \ort{b_x}{\phi_x} \ctsarr \ort{b}{\phi}_{\ctAff}$ implies that \\ $\forall v_x. \phi_x[\vnu \mapsto v_x] \impl \exists v. \phi[\vnu \mapsto v] \land \mstep{v_f\;v_x}{v} $.
+    \item Existential type check: $\emptyset \ctvdash v_f : \urt{b_x}{\phi_x} \ctsarr \ort{b}{\phi}_{\ctAff}$ implies that \\ $\exists v_x\;v. \phi_x[\vnu \mapsto v_x] \land \phi[\vnu \mapsto v] \land \mstep{v_f\;v_x}{v} $.
   \end{enumerate}
 \end{corollary}
 
@@ -679,15 +905,9 @@ We lose the ability to reason about this kind of terms, although the function ca
   \ctvdash f : x{:}\ort{\Int}{\top} \ctsarr \urt{\Int}{\top}
 \end{align*}\noindent
 And rewrite the function application as:
-\begin{align*}
-  &x{:}(\ort{\Int}{\top} \ctinter \urt{\Int}{\top}) \ctvdash x : \ort{\Int}{\top} \ctinter \urt{\Int}{\top}
-  \\&\underline{\emptyset \ctvdash f : x{:}\ort{\Int}{\top} \ctsarr \urt{\Int}{\top}}
-  \\&\underline{x{:}\ort{\Int}{\top} \ctvdash f\;x : \urt{\Int}{\top}}
-  \\&\underline{x{:}\ort{\Int}{\top} \ctstar y{:}\urt{\Int}{\top} \ctvdash \zlet{y}{f\;x}{e} : \tau}  
-\end{align*}\noindent
 
 \mprooftr{65mm}
-  {$ \emptyset \vdash f\; x : \urt{\Int}{\top}$ \quad $x{:}\urt{\Int}{\top} \ctstar \Box (\emptyset \ctcomma y{:}\urt{\Int}{\top}) \ctvdash e : \tau$}
+  {$ \emptyset \vdash f\; 3 : \urt{\Int}{\top}$ \quad $x{:}\urt{\Int}{\top} \ctstar \Box (\emptyset \ctcomma y{:}\urt{\Int}{\top}) \ctvdash e : \tau$}
   {TApp}
   {$x{:}\urt{\Int}{\top} \ctstar \Box (\emptyset) \ctvdash \zlet{y}{f\;x}{e} : \tau$}
 
@@ -795,4 +1015,5 @@ For example,
   \\&\underline{x{:}\chpers (\Unit\sarr\urt{\Int}{\top}) \vdash e : \tau}
   \\  &\emptyset \vdash \zlet{x}{\lambda ().\Code{nat\_gen()} \oplus \lambda ().\Code{neg\_gen()}}{e} : \tau
 \end{align*}\noindent
+
 
