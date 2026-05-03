@@ -1,0 +1,255 @@
+% \newpage
+% \section{Basic Typing Rules}\label{sec:tech:basic-typing}
+
+The basic typing rules of our core language, qualifiers and refinement types are shown
+in \autoref{fig:basic-type-rules}, \autoref{fig:basic-qualifier-type-rules}, and \autoref{fig:basic-refinement-type-rules}. We use an auxiliary function
+$\Code{BasicTy}$ to provide a basic type for the primitives of our language,
+e.g., constants, built-in operators, and data constructors.
+All basic formation judgments are read under the invariant that the ambient
+context on the left of the turnstile is well formed. The top-level
+well-formedness judgment for contexts establishes this invariant, so the
+individual type and context formation rules below do not repeat it as a
+premise.
+
+\begin{figure}[h!]
+    {\footnotesize
+    {\small
+   \begin{flalign*}
+    &\text{\textbf{Basic Typing }} & \fbox{$\Gamma \basicvdash e : s$}
+   \end{flalign*}}
+   \begin{prooftree}
+   \hypo{}
+   \infer1[\textsc{BtConst}]{
+   \Gamma \basicvdash c : \Code{BasicTy}(c)
+   }
+   \end{prooftree}
+   \quad
+   \begin{prooftree}
+   \hypo{ \Gamma(x) = s }
+   \infer1[\textsc{BtVar}]{
+   \Gamma \basicvdash x : s
+   }
+   \end{prooftree}
+   \quad
+   \begin{prooftree}
+   \hypo{\Gamma, x{:}\eraserf{s_x} \basicvdash e : s}
+   \infer1[\textsc{BtFun}]{
+   \Gamma \basicvdash \lambda x{:}s_x.e : s_x{\sarr}s
+   }
+   \end{prooftree}
+   \\[.8em]
+   \begin{prooftree}
+   \hypo{\Gamma, f{:}\eraserf{b\sarr s} \basicvdash \lambda x{:}b.e : \eraserf{b\sarr s}}
+   \infer1[\textsc{BtFix}]{
+   \Gamma \basicvdash \zfix{f}{b\sarr s}{x}{b}{e}
+   : \eraserf{t_1{\sarr}t_2}
+   }
+   \end{prooftree}
+   \quad
+   \begin{prooftree}
+   \hypo{\Code{BasicTy}(\primop) = \overline{s_i}{\sarr}s \quad \forall i. \Gamma \basicvdash v_i : s_i}
+   \infer1[\textsc{BtPrimOp}]{
+   \Gamma \basicvdash \primop\, \overline{v_i} : s
+   }
+   \end{prooftree}
+   \\[.8em]
+   \begin{prooftree}
+   \hypo{\Gamma \basicvdash v_1 : s_2 {\sarr} s \quad \Gamma \basicvdash v_2 : s_2}
+   \infer1[\textsc{BtApp}]{
+   \Gamma \basicvdash v_1\,v_2 : s
+   }
+   \end{prooftree}
+   \\[.8em]
+   \begin{prooftree}
+   \hypo{\emptyset \basicvdash e_1 : s_x \quad \Gamma, x{:}s_x \basicvdash e_2 : s}
+   \infer1[\textsc{BtLetE}]{
+   \Gamma \basicvdash \zlet{x}{e_1}{e_2} : s
+   }
+   \end{prooftree}
+   \quad
+   \begin{prooftree}
+   \hypo{\Gamma \basicvdash v : s_v \quad
+   \forall i, \Code{BasicTy}(d_i) = \overline{s_j} {\sarr} s_v \quad
+   \Gamma, \overline{y_j{:}s_j} \basicvdash e_i : s}
+   \infer1[\textsc{BtMatch}]{
+   \Gamma \basicvdash \match{v} \overline{d_i\,\overline{y_j} \to e_i} : s
+   }
+   \end{prooftree}
+   }
+   \caption{Basic Typing Rules}
+       \label{fig:basic-type-rules}
+   \end{figure}
+
+   \begin{figure}
+    {\footnotesize
+    {\small
+   \begin{flalign*}
+    &\text{\textbf{Basic Qualifier Typing }} & \fbox{$\eraserf{\Gamma} \basicvdash l: s  \quad \eraserf{\Gamma} \basicvdash \phi: s$}
+   \end{flalign*}}
+   \begin{prooftree}
+   \hypo{\Code{BasicTy}(c) = s }
+   \infer1[\textsc{BtLitConst}]{
+   \Gamma \basicvdash c : s
+   }
+   \end{prooftree}
+   \quad
+   \begin{prooftree}
+   \hypo{ \Gamma(x) = s }
+   \infer1[\textsc{BtLitVar}]{
+   \Gamma \basicvdash x : s
+   }
+   \end{prooftree}
+   \quad
+   \begin{prooftree}
+   \hypo{ }
+   \infer1[\textsc{BtTop}]{
+   \Gamma \basicvdash \top : \Code{bool}
+   }
+   \end{prooftree}
+   \quad
+   \begin{prooftree}
+   \hypo{ }
+   \infer1[\textsc{BtBot}]{
+   \Gamma \basicvdash \bot : \Code{bool}
+   }
+   \end{prooftree}
+   \\[.8em]
+   \begin{prooftree}
+   \hypo{\Code{BasicTy}(\primop) = \overline{s_i}{\sarr}s \quad \forall i. \Gamma \basicvdash l_i : s_i }
+   \infer1[\textsc{BtLitOp}]{
+   \Gamma \basicvdash \primop\,\overline{l_i} : s
+   }
+   \end{prooftree}
+   \quad
+   \begin{prooftree}
+   \hypo{
+   \Gamma \basicvdash \phi : \Code{bool} }
+   \infer1[\textsc{BtNeg}]{
+   \Gamma \basicvdash \neg \phi : \Code{bool}
+   }
+   \end{prooftree}
+   \\[.8em]
+   \begin{prooftree}
+   \hypo{
+   \Gamma \basicvdash \phi_1 : \Code{bool} \quad
+   \Gamma \basicvdash \phi_2 : \Code{bool} }
+   \infer1[\textsc{BtAnd}]{
+   \Gamma \basicvdash \phi_1 \land \phi_2 : \Code{bool}
+   }
+   \end{prooftree}
+   \quad
+   \begin{prooftree}
+   \hypo{
+   \Gamma \basicvdash \phi_1 : \Code{bool} \quad
+   \Gamma \basicvdash \phi_2 : \Code{bool} }
+   \infer1[\textsc{BtOr}]{
+   \Gamma \basicvdash \phi_1 \lor \phi_2 : \Code{bool}
+   }
+   \end{prooftree}
+   \quad
+   \begin{prooftree}
+   \hypo{
+   \Gamma, x{:}b \basicvdash \phi : \Code{bool} }
+   \infer1[\textsc{BtForall}]{
+   \Gamma \basicvdash \forall x{:}b. \phi : \Code{bool}
+   }
+   \end{prooftree}
+   }
+   \caption{Basic Qualifier Typing Rules}
+       \label{fig:basic-qualifier-type-rules}
+   \end{figure}
+
+   
+   \begin{figure}
+    {\footnotesize
+    {\small
+   \begin{flalign*}
+    &\text{\textbf{Basic Refinement Typing }} & \fbox{$\Gamma \basicvdash \tau$ \quad $\Gamma \basicvdash \Gamma$}
+   \end{flalign*}}
+   \begin{prooftree}
+   \hypo{\eraserf{\Gamma}, \vnu{:}b \basicvdash \phi : \Bool}
+   \infer1[\textsc{BtBaseOver}]{
+    \Gamma \basicvdash \ort{b}{\phi}
+   }
+   \end{prooftree}
+   \quad
+   \begin{prooftree}
+    \hypo{\eraserf{\Gamma}, \vnu{:}b \basicvdash \phi : \Bool}
+    \infer1[\textsc{BtBaseUnder}]{
+     \Gamma \basicvdash \urt{b}{\phi}
+    }
+    \end{prooftree}
+    \\[.8em]
+    \begin{prooftree}
+        \hypo{\Gamma \basicvdash \tau_x \quad \Gamma \ctcomma x{:}\eraserf{\tau_x} \basicvdash \tau}
+        \infer1[\textsc{BtArr}]{
+         \Gamma \basicvdash x{:}\tau_x \sarr \tau
+        }
+    \end{prooftree}
+        \quad
+    \begin{prooftree}
+        \hypo{\Gamma \basicvdash \tau_x \quad \Gamma \ctstar x{:}\eraserf{\tau_x} \basicvdash \tau}
+        \infer1[\textsc{BtWand}]{
+            \Gamma \basicvdash x{:}\tau_x \wand \tau
+        }
+    \end{prooftree}
+    \\[.8em]
+    \begin{prooftree}
+        \hypo{\Gamma \basicvdash \tau_1 \quad \Gamma \basicvdash \tau_2 \quad \eraserf{\tau_1} = \eraserf{\tau_2}}
+        \infer1[\textsc{BtInter}]{
+         \Gamma \basicvdash \tau_1 \interty \tau_2
+        }
+    \end{prooftree}
+    \quad
+    \begin{prooftree}
+        \hypo{\Gamma \basicvdash \tau_1 \quad \Gamma \basicvdash \tau_2 \quad \eraserf{\tau_1} = \eraserf{\tau_2}}
+        \infer1[\textsc{BtUnion}]{
+         \Gamma \basicvdash \tau_1 \unionty \tau_2
+        }
+    \end{prooftree}
+    \\[.8em]
+    \begin{prooftree}
+        \hypo{\Gamma \basicvdash \tau_1 \quad \Gamma \basicvdash \tau_2 \quad \eraserf{\tau_1} = \eraserf{\tau_2}}
+        \infer1[\textsc{BtSum}]{
+         \Gamma \basicvdash \tau_1 \ctoplus \tau_2
+        }
+    \end{prooftree}
+    \quad
+    \begin{prooftree}
+        \hypo{}
+        \infer1[\textsc{BtEmp}]{
+            \Gamma \basicvdash \emptyset
+        }
+    \end{prooftree}
+    \quad
+        \begin{prooftree}
+            \hypo{\Gamma \basicvdash \tau_x}
+            \infer1[\textsc{BtSingle}]{
+             \Gamma \basicvdash x{:}\tau_x
+            }
+        \end{prooftree}
+    \\[.8em]
+    \begin{prooftree}
+        \hypo{\Gamma \basicvdash \Gamma_1 \quad \Gamma \ctcomma \Gamma_1 \basicvdash \Gamma_2}
+            \infer1[\textsc{BtComma}]{
+             \Gamma \basicvdash \Gamma_1 \ctcomma \Gamma_2
+        }
+    \end{prooftree}
+    \quad
+    \begin{prooftree}
+        \hypo{\Gamma \basicvdash \Gamma_1 \quad \Gamma \basicvdash \Gamma_2}
+            \infer1[\textsc{BtStar}]{
+             \Gamma \basicvdash \Gamma_1 \ctstar \Gamma_2
+        }
+    \end{prooftree}
+    \quad
+    \begin{prooftree}
+        \hypo{\Gamma \basicvdash \Gamma_1 \quad \Gamma \basicvdash \Gamma_2 \quad \eraserf{\Gamma_1} = \eraserf{\Gamma_2}}
+            \infer1[\textsc{BtSum}]{
+             \Gamma \basicvdash \Gamma_1 \ctoplus \Gamma_2
+        }
+    \end{prooftree}
+   }
+   \caption{Basic Refinement Typing Rules}
+       \label{fig:basic-refinement-type-rules}
+   \end{figure}
