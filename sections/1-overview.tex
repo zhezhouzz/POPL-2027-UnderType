@@ -1,9 +1,15 @@
 \section{Overview}\label{sec:overview}
 
-In type-based program reasoning, prior work models program behavior using
-\emph{over}- and \emph{under}approximate semantics.
-Similar to the Hoare logic or Incorrectness logic (IL), these type systems refine the ordinary types with logic qualifiers to overapproximate or underapproximate the program behavior.
-Concretely, writing $\mstep{e}{v}$ when a term $e$ (non-deterministically) terminates at value $v$
+\autoref{sec:intro} motivated over- versus underapproximate refinements, their
+interaction with compositional reachability reasoning, and the extra challenges
+raised by alternating modalities along curried arrows.
+Here we specialize to the standard consequence readings for primitive types and,
+for arrows, summarize representative modality combinations used throughout the
+paper (\autoref{tab:four-modal-combinations}).
+We then revisit classic refinement and coverage instantiations briefly before
+examining naive mixtures and motivating strategic contexts (\emph{disjointness}).
+
+Writing $\mstep{e}{v}$ when a term $e$ (non-deterministically) terminates at value $v$
 in a call-by-value small-step semantics, over- and underapproximate base (primitive) types are often explained as follows:
 \begin{align*}
     \vdash e : \ort{b}{\phi} &\iff \forall v.\; \mstep{e}{v} \implies \phi[\vnu \mapsto v]
@@ -14,6 +20,7 @@ If we write the behaviors of $e$ as $\{v \mid \mstep{e}{v}\}$, then in
 $\ort{b}{\phi}$ the logical qualifier $\phi$ describes a superset (upper bound) of
 that set, whereas in $\urt{b}{\phi}$ it describes a subset (lower bound).
 
+\paragraph{Existing functional instances.}
 With these over- and under-approximation modalities, existing work reasons about programs in functional languages.
 The traditional refinement types give an overapproximate interpretation to both parameter and return positions. For example, the type $\ort{\Int}{\vnu > 0} \sarr \ort{\Int}{\vnu > 0}$ indicates a function may only return a positive integer (or diverge) when the input argument is also positive. This is analogous to Hoare triples $\{P\}\;e \;\{Q\}$ whose pre- and postconditions are both overapproximate and thereby establish safety:
 ``on every possible execution, the program does not go wrong.''
@@ -42,46 +49,41 @@ However, it is close to bug detection in program analysis, where false positives
 
 \begin{table}[ht!]
   \centering
-  \caption{The four over- and under-approximation combinations for function types.}
+  \caption{Representative modality combinations at function types. Meanings correspond to consequence readings spelled out later in~\autoref{sec:formal}; strategy arrows \(\ctsarr\) make argument dependence syntactic; sums \(\tau_1 \ctoplus \tau_2\) keep branching visible at types.}
   \label{tab:four-modal-combinations}
-  \footnotesize
-  \setlength{\tabcolsep}{7pt}
-  \begin{tabular}{@{}>{\centering\arraybackslash}p{0.24\linewidth}>{\centering\arraybackslash}p{0.35\linewidth}>{\centering\arraybackslash}p{0.36\linewidth}@{}}
+  \scriptsize
+  \setlength{\tabcolsep}{5pt}
+  \begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.29\linewidth}>{\raggedright\arraybackslash}p{0.36\linewidth}>{\raggedright\arraybackslash}p{0.31\linewidth}@{}}
     \toprule
-    \textbf{Type} & \textbf{Meaning} & \textbf{Typical use} \\
+    \textbf{Typing shape for \(f\)} & \textbf{Meaning (consequence form)} & \textbf{Typical use} \\
     \midrule
-    $\vdash f : \ort{b}{\phi} \sarr \ort{b'}{\phi'}$ &
-    For all inputs $x$ in $\phi$, the output $f\;x$ is in $\phi'$. &
-      Safety verification, similar to Hoare triples $\{P\}\,e\,\{Q\}$. \\
-    $\vdash f : \ort{b}{\phi} \sarr \urt{b'}{\phi'}$ &
-    For all inputs $x$ in $\phi$, all values that satisfy $\phi'$ must be returned by $f\;x$. &
-      Testing and random generation; coverage completeness (e.g., coverage types). \\
-    $\vdash f : \urt{b}{\phi} \sarr \ort{b'}{\phi'}$ &
-      Existential witness for some input $x$ such that $f\;x$ is in $\phi'$ or diverges. &
-      Program analysis and bug finding; breadth of alarms at the cost of false positives. \\
-    $\vdash f : \urt{b}{\phi} \sarr \urt{b'}{\phi'}$ &
-      For all values $y$ that satisfy $\phi'$, there exists an $x$ in $\phi$ such that $f\;x$ must return $y$. &
-      Reachability reasoning, similar to incorrectness triples $[P]\,e\,[Q]$. \\
+    $\emptyset \ctvdash f : x{:}\ort{b_x}{\phi_x} \ctsarr \ort{b}{\phi}$ &
+    If $x$ satisfies $\phi_x$ and $f\;x$ terminates at $v$, then $v$ satisfies $\phi$. &
+    Refinement-type safety (over--over), Hoare-style obligations. \\
+    $\emptyset \ctvdash f : x{:}\ort{b_x}{\phi_x} \ctsarr \urt{b}{\phi}$ &
+    If $x$ satisfies $\phi_x$ and output $y$ satisfies $\phi$, then $f\;x$ can reach \(y\) (coverage on returns). &
+    Coverage / generator completeness~\cite{CoverageType}. \\
+    $\emptyset \ctvdash f : x{:}\urt{b_x}{\phi_x} \ctsarr \urt{b}{\phi}$ &
+    For each output \(y\) with \(\phi[\vnu\mapsto y]\), there is some input \(x\) in \(\phi_x\) reaching \(y\) (incorrectness \(\forall_{\mathrm{post}}\exists_{\mathrm{pre}}\)). &
+    Incorrectness triples~\cite{OHP19}. \\
+    $\emptyset \ctvdash f : x{:}\urt{b_x}{\phi_x} \ctsarr \ort{b}{\phi}$ &
+    There exist \(x\) in \(\phi_x\) and output \(y\) with \(\phi[\vnu\mapsto y]\) reached by \(f\,x\) (existential linkage).&
+    Existential summaries; static bug reports that pick one witness. \\
+    $\emptyset \ctvdash f : x{:}\ort{b_x}{\phi_x} \ctsarr \ort{b}{\phi} \ctoplus b$ &
+    For every \(x\) in \(\phi_x\), some branch of \(f\) yields an output satisfying \(\phi\) (sufficient incorrectness with control-flow split). &
+    Must-reach arguments under over-bounded parameters. \\
+    $\emptyset \ctvdash f : x{:}\urt{b_x}{\phi_x} \ctsarr \ort{b}{\phi} \ctoplus b$ &
+    Existential witness where some \(\ctoplus\)-summand reaches \(\phi\) (combined with erased base \(b\) on sibling branches). &
+    Branch-local witnesses under under-bounded inputs. \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-All four combinations thus have natural use cases, summarized in
-\autoref{tab:four-modal-combinations}:
-over--over for safety verification, over--under for testing (generator
-completeness), under--over for program analysis and bug detection, and
-under--under for reachability and incorrectness reasoning.
-They can also be mixed in a pipeline; for example, after a failed safety verification,
-use a static analyzer to narrow candidate bugs, then apply incorrectness
-reasoning to show a real witness.
-It is tempting to seek one type system that uniformly allows \emph{either}
-modality at each position, so that programmers can switch combinations and
-obtain more flexible reasoning.
-
-This ambition runs into theoretical difficulties.
+\autoref{tab:four-modal-combinations} organizes the modality patterns we use in later rules; branching on return types~\(\ctoplus\) matches the \(\ctoplus\)-lifting in~\autoref{sec:formal} for ``OR'' summaries without collapsing independent obligations.
+Allowing each position to swing between modalities is tempting but runs into theoretical difficulties.
 Simply dropping coverage types' restriction that parameters cannot be
 underapproximate leads to multiple problems.
-Some terms behave almost like \emph{linear} resources.
+Some terms behave almost like \emph{substructurally constrained} resources.
 Consider an identity function $\Code{f_{id}} \doteq \lambda x.\,x$.
 It admits an incorrectness-flavoured specification
 $\urt{\Int}{\top} \sarr \urt{\Int}{\top}$: for every possible result $y$ of
@@ -96,23 +98,21 @@ Individually, $y$ and $z$ might have type
 $\urt{\Int}{\top}$ which means that they can cover all integers. As a consequence, $y - z$ should also cover all integers (e.g., let $z = 0$ and impose no constraint on $y$). However,
 $y - z$ can only be $0$.
 Although $y$ and $z$ separately have coverage guarantees similar to a random generator like \Code{int\_gen}, they are always equal.
-One can view this either as saying that the reachability promised by the
-type of $f$ is \emph{consumed} after one use, or as saying that the two
-outputs are \emph{correlated} rather than independent (we borrow
-probabilistic language, but there is no probability here).
+The two outcomes are \emph{correlated} rather than independently drawable under witnesses (we borrow probabilistic language, but there is no probability here); our calculus records that correlation in the bunching of the context rather than by ``spending'' a witness on successful termination.
 
 The issues of correlation among return values are not the whole story.
-In reachability reasoning with errors, a call can also constrain the
-\emph{argument} that remains in scope. Consider the following example:
+A call can also change which refinements may soundly appear \emph{together} on variables that remain in scope---not because our core language crashes and thereby deletes executions, but because the continuation must respect \emph{dependencies} introduced by the call.
+Consider the following \emph{total} example (our core calculus omits failure primitives such as \Code{err}):
 \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \small, escapeinside=??]{OCaml}
-  let f_nonneg x = if x >= 0 then x ?$\oplus$? (-x) else err in
+  let f_abs x = if x >= 0 then x else -x in
   let x = int_gen () in
-  let y = ?$\Code{f_{nonneg}}$? x in
+  let y = ?$\Code{f_{abs}}$? x in
   x
 \end{minted}
-The function $\Code{f_{nonneg}}$ has type
-$\urt{\Int}{\top} \sarr \urt{\Int}{\top}$, where all possible integers $y$ can be reached from its absolute value $|y|$. Note that negative inputs are not reachable according to the else branch of the body of $\Code{f_{nonneg}}$.
-Now consider the final $x$ after the call. It can no longer satisfy $\urt{\Int}{\top}$, because its value is constrained by non-negative integers after the function application of $\Code{f_{nonneg}}$. In this example, the coverage guarantee of $x$ is \emph{partially consumed}, even though it is not an output of function $\Code{f_{nonneg}}$.
+The function $\Code{f_{abs}}$ has type
+$\urt{\Int}{\top} \sarr \urt{\Int}{\top}$: for every nonnegative result $y$ there is some input $x$ with $|x| = y$.
+After the call, $x$ is still the same integer drawn from \Code{int\_gen}, but any reasoning that treats $x$ and $y$ as two $\sep$-independent under-complete draws would overstate what is known, because the total definition forces $y = |x|$.
+This is a phenomenon of \emph{additive} bunching and dependency, not of ruling out classes of executions through unmodeled failure (the core language has no crash primitive).
 
 A third issue is higher-order behavior:
 \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \small, escapeinside=??]{OCaml}
@@ -134,10 +134,9 @@ On the other hand, if $g$ were used only once inside $f$, there would be no such
 returned just $y$, one could still ascribe $\urt{\Bool}{\top}$ to
 $f\;g'$.
 
-In short, underapproximate parameters capture an attractive \emph{external user-specified verification goal}, i.e., ``there exists an input''. However, they do not by themselves spell
-out how such a type interacts with the rest of the context under repeated
-application: whether a function remains usable after one call, whether the
-parameter witness persists, and whether multiple results are independent.
+In short, underapproximate parameters capture an attractive \emph{external user-specified verification goal}, i.e., ``there exists an input''.
+What the bare modalities omit is how a call reshapes whatever else remains live in scope: correlations between successive results, weakening of leftover argument guarantees, or higher-order reuse that forces shared outcomes.
+Those interaction questions are all about \emph{disjointness} between strategy resources, not about the arrow $\sarr$ alone.
 
 \subsection{Logic for Over- and Under-approximation Function Typing}
 
@@ -146,7 +145,8 @@ function types is problematic and can yield unsound reasoning.
 One might patch the type system with linear constraints or substructural typing rules, but
 that may lose expressiveness on reachability reasoning.
 What we really need is a more accurate \emph{logical} interpretation of function
-application than off-the-shelf correctness or incorrectness logics provide. We will demonstrate why existing work (e.g., incorrectness logic and outcome logic) does not face such issues and cannot handle these cases.
+application than off-the-shelf correctness or incorrectness logics provide when their native unit is a global store.
+(A brief comparison with outcome logic's branching idiom is deferred to~\autoref{sec:related}.)
 
 Consider a functional program
 $\mathtt{let}\; y = f\;x\;\mathtt{in}\; \cdots$ which starts with a function application.
@@ -167,23 +167,6 @@ The most informative incorrectness triple for a single call is
 where the postcondition $y = x \land x > 0$ explicitly records the input-output relationship.
 Writing a looser postcondition, for example $[y > 0]$, keeps the same lower bound guarantee on $y$ but loses the relationship between $x$ and $y$, which makes the triple unsound. For example, the state $[x\mapsto 1, y\mapsto 2]$ is allowed by the simplified postcondition but is not reachable by $\Code{f_{id}}$. This issue is already discussed in \cite{OHP19}: every underapproximate postcondition needs to be precise so that it allows only reachable post-states. This requirement is too strong for functions in our setting.
 
-Outcome logic's $\oplus\,\top$ idiom might seem to offer an escape. Although the predicates in OL are interpreted as overapproximation, the $\oplus$ operator here works like control-flow merge to help simulate the incorrectness style postcondition. Consider the following example:
-\[
-  \langle \top\rangle\; y \mathrel{:=} \Code{int\_gen\;()}
-  \;\langle \lceil y > 0 \rceil \oplus \top \rangle
-\]
-The triple shows that application $\Code{int\_gen\;()}$ can ``cover'' positive integers, which is valid since the $\oplus$ operator allows the triple to divide the behaviors of $\Code{int\_gen\;()}$ semantically into two parts $\{v ~|~ v > 0\}$ and $\{v ~|~ v \leq 0\}$. The first part can satisfy the first predicate $\lceil y > 0 \rceil$ and the second part can satisfy the second predicate $\top$ in overapproximation semantics.
-Then, one can write
-\[
-  \langle x > 0\rangle\; y \mathrel{:=} \Code{f_{id}}\;x
-  \;\langle \lceil y > 0 \rceil \oplus \top \rangle
-\]
-in an attempt to obtain a less precise underapproximation postcondition, which is still unsound.
-The problem is that $\Code{f_{id}}$ is deterministic: there is a single computational path, so there are no branches to discard with $\oplus\,\top$.
-More fundamentally, the $\oplus$ operator separates \emph{computational paths}; it does not erase variable bindings \emph{within} a state.
-An outcome triple must still assert $\lceil y > 0 \land y = x \rceil$.
-The branching dimension ($\oplus$) and the argument-return dependency dimension ($y = x$) are orthogonal, and $\oplus\,\top$ addresses only the former.
-
 % The argument-side is symmetric.
 % $\Code{f_{pos}} \doteq \lambda x.\,
 % \zif{x > 0}{\Code{int\_gen()}}{\Code{err}}$
@@ -199,8 +182,7 @@ The branching dimension ($\oplus$) and the argument-return dependency dimension 
 % carry this information structurally, without forcing the caller to repeat it
 % in every surrounding assertion.
 
-The examples above show that lifting imperative program logics (incorrectness logic, outcome logic,
-\ldots) verbatim pushes to the opposite extreme: the underapproximate return
+The examples above show that lifting imperative program logics verbatim pushes to the opposite extreme: the underapproximate return
 type must be precise, which means it must be correlated with the parameter.
 That erodes much of what makes refinement types pleasant.
 For instance, when approximation modalities compose freely, an
@@ -215,13 +197,12 @@ the return position.
 
 We therefore aim for a new logic that does \emph{not} require fully
 explicit expressions of the precise relation between function parameter and return, but still distinguishes the cases that
-matter: whether a function may be invoked more than once, whether parameter
-information persists across calls, and whether multiple outputs are
+matter: whether a function may be invoked more than once, how parameters evolve under calls, and whether multiple outputs are
 independent.
 These are the questions that resource- or permission-based logics (e.g.\
 separation logic) were built to address: output independence as a form of
 disjointness, parameter evolution as permission separation (read versus
-write), and re-entrancy as a persistency question.
+write, metaphorically), and higher-order reuse as a question of how strategic information is shared between invocations.
 
 Importantly, we are \emph{not} importing the usual operational reading of
 ``resources'' as memory or explicit effects, nor do we claim a probabilistic
@@ -233,17 +214,18 @@ Even for a deterministic, heap-free program such as
 $\Code{f_{id}}$, this form of resource reasoning is both available
 and necessary.
 
-\subsection{Choice Logic and Choice Types}
+\subsection{Strategy Logic and Strategy Types}
 
-We develop a resource-based logic and a corresponding type system in which over- and underapproximation are explicit modalities. As motivated above, the framework need not force fully explicit descriptions of the exact dependence of returns on parameters, yet it still distinguishes the cases that matter. In the same spirit as Hoare logic, which reasons about a program under multiple possible execution contexts (for instance, requiring that every state satisfying the precondition reach a state satisfying the postcondition), our logic carries judgments relative to such contexts. The distinguishing feature is that these contexts, which we call \emph{choices}, are treated as \emph{resources}, so that we can express disjointness of choices together with read versus write permission and persistency.
+We develop \emph{strategy logic}---a resource-based modal logic---and matching \emph{strategy types}, in which over- and underapproximation are explicit modalities. As motivated above, the framework need not force fully explicit descriptions of the exact dependence of returns on parameters, yet it still distinguishes the cases that matter. In the same spirit as Hoare logic, which reasons about a program under multiple possible execution contexts (for instance, requiring that every state satisfying the precondition reach a state satisfying the postcondition), judgments are relativized to proof-relevant \emph{strategic contexts}: each hypothesis carries strategy resources that record which assignments remain simultaneously viable. That packaging lets us express disjointness of strategic fragments together with read versus write permission---and finer structure at function types (sums \(\ctoplus\), \(\ctsarr\) versus \(\wand\))---without insisting on imperative-style postconditions over a single global store.
+As in~\autoref{sec:formal}, strategy-type hypotheses are \emph{not} consumed by successful termination; typing tracks \emph{who may depend on whom} (and when an ambient coercion such as \(\Code{ToOver}\) is needed), rather than decrementing a witness budget on crashes.
 
-\paragraph{Choice as resource} The core idea is to read an underapproximation type as a resource that is not duplicable. For example,
+\paragraph{Strategy types as resources} The core idea is to read an underapproximate strategy type as a resource that is not duplicable. For example,
 \begin{align*}
   &x{:}\urt{\Int}{\vnu > 0} \vdash x : \urt{\Int}{\vnu = 1} \quad \judgok
   \\&x{:}\urt{\Int}{\vnu > 0} \vdash x : \urt{\Int}{\vnu = 2} \quad \judgok
   \\&x{:}\urt{\Int}{\vnu > 0} \vdash (x, x) : \urt{\Int \times \Int}{\vnu.1 = 1 \land \vnu.2 = 2} \quad \judgfail
 \end{align*}
-Here $x$ is annotated in the typing context with an underapproximation type $\urt{\Int}{\vnu > 0}$, indicating that $x$ owns choices that may ``write'' or ``decide'' an arbitrary positive integer as needed. The first two lines therefore show that $x$ can be proved equal to $1$ and to $2$, respectively. The last line shows that the pair $(x, x)$ cannot be proved equal to $(1, 2)$: the choices bound to $x$ can be exercised only once. Overapproximation, by contrast, behaves like a resource with ``read'' permission:
+Here $x$ is annotated in the typing context with an underapproximation type $\urt{\Int}{\vnu > 0}$, indicating writable strategy information for $x$: refinements may still ``write'' or steer witnesses within the positive integers as needed. The first two lines therefore show that $x$ can be proved equal to $1$ and to $2$, respectively. The last line shows that the pair $(x, x)$ cannot be proved equal to $(1, 2)$: one cannot treat the two components as \emph{independent} witnesses for separate positive integers, because they are the same $x$ (contraction is disallowed in~\autoref{sec:formal} for exactly this reason). Overapproximation, by contrast, behaves like a resource with ``read'' permission:
 \begin{align*}
   &x{:}\ort{\Int}{\vnu > 0} \vdash x : \ort{\Int}{\vnu > -1} \quad \judgok
   \\&x{:}\ort{\Int}{\vnu > 0} \vdash x : \ort{\Int}{\vnu > -2} \quad \judgok
@@ -251,24 +233,52 @@ Here $x$ is annotated in the typing context with an underapproximation type $\ur
 \end{align*}
 Again $x$ carries an overapproximation type $\ort{\Int}{\vnu > 0}$: the value of $x$ is \emph{decided by others} and treated as ``read-only''. If $x$ is read as some positive integer, it may be shown strictly greater than $-1$ and than $-2$, respectively. Read permission may be duplicated, so both components of $(x, x)$ may simultaneously carry these constraints, unlike under the underapproximation reading.
 
-\paragraph{Disjointness} Separation logic uses $\sep$ to express disjointness of heap resources; analogously, we express disjointness of choices. For example:
+\paragraph{Disjointness} Separation logic uses $\sep$ to express disjointness of heap resources; analogously, we express disjointness of strategic contexts (equivalently: independence of the strategy resources backing them).
+Contexts use three related connectives whose differences matter as soon as more than one under-refinement stays live:
+\begin{itemize}
+\item \(\Gamma_1 \sep \Gamma_2\) asserts \emph{full disjointness}: the two halves are combined multiplicatively, so neither binds variables carrying strategy fragments that overlap the other's unless those fragments genuinely split (the usual separation-logic intuition).
+\item \(\Gamma_1 , \Gamma_2\) plus an \emph{explicit} dependency arises when hypotheses on the right mention variables from the left: the second refinement may refer directly to witnesses bound earlier.
+\item \(\Gamma_1 , \Gamma_2\) with no cross-variable occurrences can still impose \emph{implicit} sequential dependence---the additive bunch is checked after the ambient context absorbs the left block, recording possible correlation even without surface-level name sharing.
+\end{itemize}
+\noindent
+For illustration, juxtaposition without separation rejects independent pairings whenever \(y\) could have been instantiated from \(x\) (e.g.\ \(\zlet{y}{x}{\ldots}\)), whereas separating restores genuine independence when two draws are disjoint:
 \begin{align*}
   &x{:}\urt{\Int}{\vnu > 0}, y{:}\urt{\Int}{\vnu > 0} \vdash (x, y) : \urt{\Int \times \Int}{\vnu.1 = 1 \land \vnu.2 = 2} \quad \judgfail
   \\&x{:}\urt{\Int}{\vnu > 0} * y{:}\urt{\Int}{\vnu > 0} \vdash (x, y) : \urt{\Int \times \Int}{\vnu.1 = 1 \land \vnu.2 = 2} \quad \judgok
 \end{align*}
-Whereas the preceding example fixes $x$ and uses it twice, in a pair $(x, y)$ the variable $y$ may be either independent of $x$ or correlated with it. The separating connective $\sep$ and the non-separating context comma $,$ mark that distinction. The first line does not type-check when $x$ and $y$ may be correlated (e.g.\ $\zlet{y}{x}{...}$); the second line succeeds when $x$ and $y$ are independent.
 
-\paragraph{Function application} Reading over- and underapproximation as read and write permission on choice resources, and with disjointness in hand, we can disentangle the situations that arise from function application without precisely tracking the functional relation between argument and result.
+\paragraph{Functional parameters versus outer context.}
+\emph{(Example forthcoming.)}
+This pattern asks whether introducing (or refining) an underapproximate formal parameter clashes with disjointness assumptions on the enclosing context---for instance whether the caller's strategic context may still be split orthogonally once the callee's witness is unpacked.
+
+\paragraph{Call results versus outer context.}
+\emph{(Example forthcoming.)}
+Symmetrically, this pattern asks whether a freshly bound return behaves as an \(\sep\)-independent observer or must stay correlated with lingering assumptions after \(f\,x\)---the situation that distinguishes ``two draws'' from ``same coin twice.''
+
+\paragraph{Function application} Reading over- and underapproximation as read and write permission on strategy resources, and with disjointness in hand, we can disentangle the situations that arise from function application without precisely tracking the functional relation between argument and result.
 Consider, for instance,
 \begin{align*}
   &x{:}\urt{\Int}{\top} \vdash \zlet{y}{f\;x}{e} : \tau
 \end{align*}
 and focus on the \emph{context} in which the continuation $e$ is typed after the call. For simplicity, suppose $f\;x$ can cover all integers; the following three cases must then be separated:
 \begin{enumerate}
-\item $x$ \emph{loses} write permission after application. For example, let $f$ be $\Code{f_{nonneg}}$, which returns normally only when $x$ is non-negative.
-\item $x$ \emph{retains} write permission, but the resource governing $x$ is \emph{correlated} with the result $y$. For example, let $f$ be $\Code{f_{id}}$, which always returns its argument.
-\item $x$ \emph{retains} write permission and is \emph{independent} of $y$. For example, let $f$ be $\lambda x.\Code{int\_gen()}$, which returns a nondeterministically chosen integer.
+\item The continuation may keep $x$ \emph{over-bounded} (read-only) while still learning an under-complete return $y$---as when \textsc{T-LetD} applies an ambient $\Code{ToOver}$ coercion in~\autoref{sec:formal}, rather than because execution failed and deleted a witness.
+\item $x$ and $y$ both stay under-complete, but the bunch governing them is \emph{correlated} (additive). For example, let $f$ be $\Code{f_{id}}$ or the total $\Code{f_{abs}}$ from above.
+\item $x$ and $y$ are \emph{independent} under-complete draws, separated by $\sep$. For example, let $f$ be $\lambda x.\Code{int\_gen()}$, which returns a nondeterministically chosen integer unrelated to the witness for~$x$.
 \end{enumerate}
+
+\paragraph{Separating \texttt{let} and \textsc{T-LetD}.}
+Rule \textsc{T-LetD} in~\autoref{sec:formal} types a \texttt{let}-binder whose continuation is checked under a separating extension $\Gamma \ctstar y{:}\tau$, while the right-hand side is judged in a related ambient~$\Gamma'$ with $\Code{ToOver}(\Gamma,\Gamma')$.
+Concretely, after an under-complete $x$ is introduced, a second draw may be required $\sep$-independent of the witness for~$x$:
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = false, fontsize = \small, escapeinside=??]{OCaml}
+  let x = int_gen () in
+  let y = int_gen () in
+  (* continuation uses both x and y *)
+\end{minted}
+\noindent
+For the inner \texttt{let}, \Code{int\_gen()} is typed in the coerced context~$\Gamma'$ so that outer variables such as $x$ are read over-bounded for that premise alone; the continuation is then checked with $y$ $\sep$-appended to the outer bunch, yielding the schematic shape of case~1 above ($x$ treated read-only alongside an under-complete~$y$).
+This is the same $\Code{ToOver}$ discipline highlighted in the caption of Figure~\ref{fig:auxiliary-rules}; it records \emph{dependency control} for separating binds, not consumption of coverage by failure.
+
 These regimes correspond to the following typing contexts:
 \begin{align*}
   &x{:}\ort{\Int}{\top}, y{:}\urt{\Int}{\top} \vdash e : \tau \quad \text{(case 1)}
@@ -277,19 +287,19 @@ These regimes correspond to the following typing contexts:
 \end{align*}
 Function types for $f$ that induce these three contexts can be expressed using the ordinary arrow $\sarr$ and the magic wand $\wand$; the next section develops the details.
 
-\paragraph{Persistence and higher-order functions} In general, choice resources are not duplicable, whereas some resources may be freely duplicated. We have already observed that resources carrying read permission, in particular overapproximation types, are duplicable. Functions are more delicate, as shown in the third issue about higher-order function application above. Consider the following two functions:
+\paragraph{Higher-order mixing and branching on function types.}
+Under-complete refinements behave like \emph{non-duplicable} witnesses in the sense of~\autoref{sec:formal} (no naive contraction), whereas overapproximate refinements behave read-only---and function arrows themselves behave like persistent specifications in ordinary refinement systems.
+Higher-order nondeterminism nevertheless forces a sharper distinction between \emph{where} branching lives.
+Consider
 \begin{align*}
   &g_1 \doteq (\lambda ().\true) \oplus (\lambda ().\false)
-  \\&g_2 \doteq \lambda ().(\true \oplus \false)
+  \\&g_2 \doteq \lambda ().(\true \oplus \false).
 \end{align*}
-After a single application, both results of $g_1$ and $g_2$ cover all Boolean values; repeated application, however, preserves this property only for $g_2$. Following other resource-based logics, we introduce the persistence modality $\Box$ to distinguish them:
-\begin{align*}
-  &\vdash g_1 : \Unit \sarr \urt{\Bool}{\top}
-  \\&\vdash g_2 : \Box (\Unit \sarr \urt{\Bool}{\top})
-\end{align*}
-Of course $g_2$ also admits type $\Unit \sarr \urt{\Bool}{\top}$, and $\Box \tau \models \tau$ as in familiar modal logics. 
+After one application either term can expose both Boolean witnesses, but repeating the call aligns with~\autoref{sec:formal}'s discussion: collapsing the choice \emph{between} thunk bodies into a lone return refinement erases branching that must stay observable for sound reuse.
+Informally \(g_2\) admits the customary functional reading \(\Unit \sarr \urt{\Bool}{\top}\) whose internal \(\oplus\) does not correlate repeated answers the way \(g_1\) correlates \(\true\cdot\true\) with \(\false\cdot\false\).
+For \(g_1\) the type discipline instead keeps \(\oplus\) at \emph{function} granularity, exposing a \(\ctoplus\) of two unary arrows (\(\Unit\sarr\cdot\,\ctoplus\,\Unit\sarr\cdot\) as in~\autoref{sec:formal}), which recovers precisely the observable split between \(\lambda ().\mathit{b}_1\) and \(\lambda ().\mathit{b}_2\) callers must respect.
 
-% \paragraph{Choice logic and choice types} After introducing the notion of persistence, we can now define the choice logic and choice types. The choice logic is a modal bunched logic with approximation operators that play the roles of upper and lower bounds with respect to choice. It provides the missing logical distinctions (products, wands, sums, and modalities) that let us express the three application regimes compositionally. The choice types are the layer above: refinement constructors export the modalities to data, while function constructors $\sarr$ and $\wand$ reify exactly the parameter/return dependency patterns listed above, all interpreted by uniform clauses into choice logic.
+% \paragraph{Strategy logic and strategy types} ...
 
 % \paragraph{Resources as possible executions, not states.}
 % We therefore move from predicates on a global store to \emph{resources}:
@@ -297,28 +307,28 @@ Of course $g_2$ also admits type $\Unit \sarr \urt{\Bool}{\top}$, and $\Box \tau
 % consistent way the program might resolve nondeterministic or unknown
 % choices.
 % Combining resources uses a separating product (compatible glueing of
-% partial information) \emph{and} a choice sum (branching), so branching,
+% partial information) \emph{and} a strategy-branching sum (branching), so branching,
 % independent correlation, and framing need not be encoded as mutations
 % of an implicit heap.
 % The carrier is purpose-built for ``which execution possibilities are
 % we keeping track of?'' rather than ``what is the unique concrete
 % state?'' Hence the semantics does not presuppose a stateful language.
 
-% \paragraph{Choice logic and choice types.}
-% On this algebra we define \emph{choice logic}, a modal bunched logic
+% \paragraph{Strategy logic and strategy types.}
+% On this algebra we define \emph{strategy logic}, a modal bunched logic
 % with approximation operators that play the roles of upper and lower
 % bounds with respect to choice.
 % It provides the missing logical distinctions (products,
 % wands, sums, and modalities) that let us express the three application
 % regimes compositionally.
-% \emph{Choice types} are the layer above: refinement constructors export
+% \emph{Strategy types} are the layer above: refinement constructors export
 % the modalities to data, while function constructors $\sarr$ and $\wand$
 % reify exactly the parameter/return dependency patterns listed above,
-% all interpreted by uniform clauses into choice logic.
+% all interpreted by uniform clauses into strategy logic.
 
 % \paragraph{Roadmap.}
-% \autoref{sec:formal} presents substitutions, the choice algebra, pure
-% propositions embedded in it, basic and approximate choice logic, and
+% \autoref{sec:formal} presents substitutions, the strategy algebra, pure
+% propositions embedded in it, basic and approximate strategy logic, and
 % the syntax and denotation of modal refinement types.
 % Syntactic typing rules are deferred; the denotational definition fixes
 % the specification they should implement.

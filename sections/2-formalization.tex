@@ -1,6 +1,6 @@
 \section{Formalization}\label{sec:formal}
 
-This section presents our choice logic and choice types. Similar to separation logic, our choice logic is also based on an underlying resource algebra, although such an algebra is additionally equipped with branching operators. In the rest of this section, we first introduce preliminary definitions and then present the choice algebra, choice logic, and choice types.
+This section presents our strategy logic and strategy types. Similar to separation logic, our strategy logic is also based on an underlying resource algebra, although such an algebra is additionally equipped with branching operators. In the rest of this section, we first introduce preliminary definitions and then present the strategy algebra, strategy logic, and strategy types.
 
 \subsection{Preliminaries}
 
@@ -21,95 +21,95 @@ In a functional language, the context of a program is typically treated as a sto
   \end{align*}
  \end{definition}
 
- As mentioned in \autoref{sec:overview}, a choice resource is a capability to freely choose assignments of variables. Therefore, we define choice resources as follows.
+ As mentioned in \autoref{sec:overview}, a \emph{strategy resource} is a nonempty set of substitutions that jointly represent which assignments remain concurrently viable---the proof-relevant ``state of play'' for strategic contexts. Elements of~\(\Res\) below are precisely these strategy resources.
 
-\begin{definition}[Resource]\label{def:resource}
-A resource is a \emph{non-empty} set of substitutions that \emph{share the same domain}. The resource space is defined as the following.
+\begin{definition}[Strategy resource]\label{def:strategy-resource}
+A strategy resource is a \emph{non-empty} set of substitutions that \emph{share the same domain}. Writing $\Res$ for the collection of such objects, set
 \begin{align*}
-  \Res \doteq \{ m ~|~ m \neq \emptyset \text{ and } m \in \mathcal{P}(\Code{Var} \rightharpoonup \Code{Value}) \text{ and } \forall \sigma\;\sigma' \in m. \Dom{\sigma} = \Dom{\sigma'} \}.
+  \Res \doteq \{ r ~|~ r \neq \emptyset \text{ and } r \in \mathcal{P}(\Code{Var} \rightharpoonup \Code{Value}) \text{ and } \forall \sigma\;\sigma' \in r. \Dom{\sigma} = \Dom{\sigma'} \}.
 \end{align*}
-We also extend the definitions of domain, compatibility, and projection from substitutions to resources. That is,
+We also extend the definitions of domain, compatibility, and projection from substitutions to strategy resources. That is,
 \begin{align*}
-  &\Dom{m} \doteq  \Dom{\subs} \quad \text{for arbitrary } \subs \in m 
-  \\&\mapCompat{m_1}{m_2}
+  &\Dom{r} \doteq  \Dom{\subs} \quad \text{for arbitrary } \subs \in r 
+  \\&\mapCompat{r_1}{r_2}
   \doteq
-  \forall \subs_1 \in m_1.\;\forall \subs_2 \in m_2.\; \mapCompat{\subs_1}{\subs_2}
-  \\&\projectTo{m}{X}
+  \forall \subs_1 \in r_1.\;\forall \subs_2 \in r_2.\; \mapCompat{\subs_1}{\subs_2}
+  \\&\projectTo{r}{X}
   \doteq
-  \{\, \projectTo{\subs}{X} \mid \subs \in m \,\}
+  \{\, \projectTo{\subs}{X} \mid \subs \in r \,\}
 \end{align*}
 \end{definition}
 
-Note that for any resource $m$, $\mapCompat{m}{m}$ always holds since they always agree on their domain. Similarly, singleton set $\{m\}$ is compatible with itself.
+Note that for any strategy resource $r$, $\mapCompat{r}{r}$ always holds since they always agree on their domain. Similarly, singleton set $\{r\}$ is compatible with itself.
 
-\begin{definition}[Resource Operation]\label{def:resource-times} We define two operations ($\Res \times \Res \rightharpoonup \Res$) for resources. The \emph{resource product} $m_1 \times m_2$ is the partial binary operation that produces the pairwise union of two resources, i.e.,
+\begin{definition}[Strategy-resource operations]\label{def:strategy-resource-times} We define two operations ($\Res \times \Res \rightharpoonup \Res$) on strategy resources. The \emph{(strategy) resource product} $r_1 \times r_2$ is the partial binary operation that produces the pairwise union of two strategy resources, i.e.,
   \[
-    m_1 \times m_2 \;\doteq\;
+    r_1 \times r_2 \;\doteq\;
     \begin{cases}
-      \{\, \subs_1 \cup \subs_2 \mid \subs_1 \in m_1,\; \subs_2 \in m_2 \,\}
-        & \text{if } \mapCompat{m_1}{m_2}, \\
+      \{\, \subs_1 \cup \subs_2 \mid \subs_1 \in r_1,\; \subs_2 \in r_2 \,\}
+        & \text{if } \mapCompat{r_1}{r_2}, \\
       \text{undefined}
         & \text{otherwise.}
     \end{cases}
   \]
-The \emph{resource sum} $m_1 + m_2$ is the union of two resources, i.e.,
+The \emph{(strategy) resource sum} $r_1 + r_2$ is the union of two strategy resources, i.e.,
 \[
-  m_1 + m_2 \;\doteq\;
+  r_1 + r_2 \;\doteq\;
   \begin{cases}
-    m_1 \cup m_2
-      & \text{if } \forall m_1 \in m_1.\; \forall m_2 \in m_2.\; \Dom{m_1} = \Dom{m_2}, \\
+    r_1 \cup r_2
+      & \text{if } \forall \subs_1 \in r_1.\; \forall \subs_2 \in r_2.\; \Dom{\subs_1} = \Dom{\subs_2}, \\
     \text{undefined}
       & \text{otherwise.}
   \end{cases}
 \]
   \end{definition}
 
-The partial order $\leq$ over resources is the analogue of ``more information by releasing the variables set constraint''.
+The partial order $\leq$ on strategy resources is the analogue of ``more information by releasing the variables set constraint''.
 
-\begin{definition}[Partial order]\label{def:partial-order} The partial order $\leq$ is defined as 
+\begin{definition}[Partial order]\label{def:partial-order} The partial order $\leq$ on $\Res$ is defined as 
     \begin{align*}
-      m_1 \leq m_2 \doteq \projectTo{m_2}{\Dom{m_1}} = m_1.
+      r_1 \leq r_2 \doteq \projectTo{r_2}{\Dom{r_1}} = r_1.
     \end{align*}
 It is easy to see that $\leq$ is reflexive, antisymmetric, and transitive.
 \end{definition}
 
-\begin{definition}[Fibers over projections]\label{def:res-agree-in-resource}
-  Given a substitution $\sigma_X$ and a resource $m$, we write $\fiberOver{m}{\sigma_X}$ for the fiber over $\sigma_X$, i.e., the set of substitutions in $m$ whose projection to $\Dom{\sigma_X}$ equals~$\sigma_X$:
+\begin{definition}[Fibers on strategy resources]\label{def:strategy-resource-fiber}
+  Given a substitution $\sigma_X$ and a strategy resource $r$, we write $\fiberOver{r}{\sigma_X}$ for the fiber over $\sigma_X$, i.e., the set of substitutions in $r$ whose projection to $\Dom{\sigma_X}$ equals~$\sigma_X$:
   \begin{align*}
-    \fiberOver{m}{\sigma_X} \doteq \{\, \sigma' \mid \sigma' \in m \text{ and } \projectTo{\sigma'}{\Dom{\sigma_X}} = \sigma_X \,\}.
+    \fiberOver{r}{\sigma_X} \doteq \{\, \sigma' \mid \sigma' \in r \text{ and } \projectTo{\sigma'}{\Dom{\sigma_X}} = \sigma_X \,\}.
   \end{align*}
 \end{definition}
 
-\subsection{Choice algebra}
+\subsection{Strategy algebra}
 
-The choice resource forms an algebra, which is not only a partial commutative monoid as in separation logic, but also a partial commutative semiring (PCS).
+Strategy resources below collectively carry algebraic structure used throughout the semantics: the carrier $\Res$ is not only a partial commutative monoid as in separation logic, but also organizes as a partial commutative semiring (PCS).
 
-\begin{definition}[Choice algebra]\label{def:choice-semiring}
+\begin{definition}[Strategy algebra]\label{def:strategy-semiring}
   A \emph{partial commutative semiring without zero}
   $(\mathcal{M},{+},{\times},\mathbf{1})$ consists of a carrier set $\mathcal{M}$ and partial binary operations ${+}$ and ${\times}$ and unit elements $\mathbf{1}$ that satisfies the following properties:
   \begin{itemize}
-  \item Indentity: $\forall m \in \mathcal{M}. m \times \mathbf{1} = m$.
-  \item Commutative (when operations are defined): $\forall m_1\;m_2 \in \mathcal{M}. m_1 + m_2 = m_2 + m_1$ and $m_1 \times m_2 = m_2 \times m_1$.
-  \item Associative (when operations are defined): $\forall m_1\;m_2\;m_3 \in \mathcal{M}. (m_1 + m_2) + m_3 = m_1 + (m_2 + m_3)$ and $(m_1 \times m_2) \times m_3 = m_1 \times (m_2 \times m_3)$.
+  \item Indentity: $\forall r \in \mathcal{M}. r \times \mathbf{1} = r$.
+  \item Commutative (when operations are defined): $\forall r_1\;r_2 \in \mathcal{M}. r_1 + r_2 = r_2 + r_1$ and $r_1 \times r_2 = r_2 \times r_1$.
+  \item Associative (when operations are defined): $\forall r_1\;r_2\;r_3 \in \mathcal{M}. (r_1 + r_2) + r_3 = r_1 + (r_2 + r_3)$ and $(r_1 \times r_2) \times r_3 = r_1 \times (r_2 \times r_3)$.
   \end{itemize}
-The choice algebra is a partial commutative semiring equipped with a partial order $\leq$ that satisfies the bifunctoriality property:
+A \emph{strategy algebra} is a partial commutative semiring equipped with a partial order $\leq$ that satisfies the bifunctoriality property:
   \begin{align*}
-    \forall m_1\;m_2\;m_1'\;m_2' \in \mathcal{M}. m_1 \leq m_1' \land m_2 \leq m_2' &\implies m_1 \times m_2 \leq m_1' \times m_2' 
-    \\& (\text{when } m_1 \times m_2 \text{ and } m_1' \times m_2' \text{ are defined.})
-    \\\forall m_1\;m_2\;m_1'\;m_2' \in \mathcal{M}. m_1 \leq m_1' \land m_2 \leq m_2' &\implies m_1 + m_2 \leq m_1' + m_2' 
-    \\& (\text{when } m_1 + m_2 \text{ and } m_1' + m_2' \text{ are defined.})
+    \forall r_1\;r_2\;r_1'\;r_2' \in \mathcal{M}. r_1 \leq r_1' \land r_2 \leq r_2' &\implies r_1 \times r_2 \leq r_1' \times r_2' 
+    \\& (\text{when } r_1 \times r_2 \text{ and } r_1' \times r_2' \text{ are defined.})
+    \\\forall r_1\;r_2\;r_1'\;r_2' \in \mathcal{M}. r_1 \leq r_1' \land r_2 \leq r_2' &\implies r_1 + r_2 \leq r_1' + r_2' 
+    \\& (\text{when } r_1 + r_2 \text{ and } r_1' + r_2' \text{ are defined.})
   \end{align*}
   \end{definition}
 
-It is easy to see that $(\Res,{+},{\times},\{ \emptyset \})$ and $\leq$ form a choice algebra.
+It is easy to see that $(\Res,{+},{\times},\{ \emptyset \})$ and $\leq$ form a strategy algebra.
 
-\begin{example}[Choice algebra]
-Let $m_x \doteq \{\,[x \mapsto 1],\, [x \mapsto 2]\,\}$, so
-$\Dom{m_x} = \{x\}$.
-Let $m_y \doteq \{\,[y \mapsto 3],\, [y \mapsto 4]\,\}$, with $\Dom{m_y} = \{y\}$.
+\begin{example}[Strategy algebra]
+Let $r_x \doteq \{\,[x \mapsto 1],\, [x \mapsto 2]\,\}$, so
+$\Dom{r_x} = \{x\}$.
+Let $r_y \doteq \{\,[y \mapsto 3],\, [y \mapsto 4]\,\}$, with $\Dom{r_y} = \{y\}$.
 Then
 \[
-  m_x \times m_y
+  r_x \times r_y
   = \left\{
     \begin{array}{@{}l@{}}
       [x \mapsto 1,\, y \mapsto 3],\,
@@ -120,28 +120,28 @@ Then
   \right\}.
 \]
 Now take
-$m_{xy} \doteq \{\, [x \mapsto 1,\, y \mapsto 3],\, [x \mapsto 2,\, y \mapsto 4]\,\}$.
+$r_{xy} \doteq \{\, [x \mapsto 1,\, y \mapsto 3],\, [x \mapsto 2,\, y \mapsto 4]\,\}$.
 We have
-$\projectTo{m_{xy}}{\{x\}} = m_x$ and $\projectTo{m_{xy}}{\{y\}} = m_y$,
+$\projectTo{r_{xy}}{\{x\}} = r_x$ and $\projectTo{r_{xy}}{\{y\}} = r_y$,
 so by the definition of~$\leq$,
-$m_x \leq m_{xy}$ and $m_y \leq m_{xy}$.
+$r_x \leq r_{xy}$ and $r_y \leq r_{xy}$.
 The product satisfies the same restrictions:
-$\projectTo{(m_x \times m_y)}{\{x\}} = m_x$ and
-$\projectTo{(m_x \times m_y)}{\{y\}} = m_y$.
-Nevertheless $|m_x \times m_y| = 4 > 2 = |m_{xy}|$; equivalently,
+$\projectTo{(r_x \times r_y)}{\{x\}} = r_x$ and
+$\projectTo{(r_x \times r_y)}{\{y\}} = r_y$.
+Nevertheless $|r_x \times r_y| = 4 > 2 = |r_{xy}|$; equivalently,
 \[
-  m_x \times m_y
-  = m_{xy} + \{\, [x \mapsto 1,\, y \mapsto 4],\, [x \mapsto 2,\, y \mapsto 3] \,\},
+  r_x \times r_y
+  = r_{xy} + \{\, [x \mapsto 1,\, y \mapsto 4],\, [x \mapsto 2,\, y \mapsto 3] \,\},
 \]
 \end{example}
 
 \paragraph{Partial order, addition, and multiplication} We always have
 \begin{align*}
-  \forall m_1\;m_2 \in \Res. m_1 \leq m_1 \times m_2 \quad (\text{when } m_1 \times m_2 \text{ is defined.})
+  \forall r_1\;r_2 \in \Res. r_1 \leq r_1 \times r_2 \quad (\text{when } r_1 \times r_2 \text{ is defined.})
 \end{align*}
-that is because we always have $\projectTo{m_1 \times m_2}{\Dom{m_1}} = m_1$. However, the similar property does not hold for addition: when $m_1 + m_2$ is defined we do \emph{not}
+that is because we always have $\projectTo{r_1 \times r_2}{\Dom{r_1}} = r_1$. However, the similar property does not hold for addition: when $r_1 + r_2$ is defined we do \emph{not}
 generally expect the usual monotonicity inequality
-$m_1 \leq m_1 + m_2$.
+$r_1 \leq r_1 + r_2$.
 This is unlike incorrectness logic~\cite{OHP19} and outcome
 logic~\cite{ZDS23,Zil25TOPLAS}, where branching is tightly coupled to
 the consequence relation.
@@ -165,58 +165,90 @@ witnesses for~$x$ lie in~$[1,2]$.
 Extending every substitution with arbitrary bindings for a fresh
 variable~$y$ disturbs neither kind of judgment.
 
-\subsection{Choice logic}
+\begin{example}[Strategy algebra]
+  Let $r_x \doteq \{\,[x \mapsto 1],\, [x \mapsto 2]\,\}$, so
+  $\Dom{r_x} = \{x\}$.
+  Let $r_y \doteq \{\,[y \mapsto 3],\, [y \mapsto 4]\,\}$, with $\Dom{r_y} = \{y\}$.
+  Then
+  \[
+    r_x \times r_y
+    = \left\{
+      \begin{array}{@{}l@{}}
+        [x \mapsto 1,\, y \mapsto 3],\,
+        [x \mapsto 1,\, y \mapsto 4],\\[\jot]
+        [x \mapsto 2,\, y \mapsto 3],\,
+        [x \mapsto 2,\, y \mapsto 4]
+      \end{array}
+    \right\}.
+  \]
+  Now take
+  $r_{xy} \doteq \{\, [x \mapsto 1,\, y \mapsto 3],\, [x \mapsto 2,\, y \mapsto 4]\,\}$.
+  We have
+  $\restrictTo{r_{xy}}{\{x\}} = r_x$ and $\restrictTo{r_{xy}}{\{y\}} = r_y$,
+  so by the definition of~$\leq$,
+  $r_x \leq r_{xy}$ and $r_y \leq r_{xy}$.
+  The product satisfies the same restrictions:
+  $\restrictTo{(r_x \times r_y)}{\{x\}} = r_x$ and
+  $\restrictTo{(r_x \times r_y)}{\{y\}} = r_y$.
+  Nevertheless $|r_x \times r_y| = 4 > 2 = |r_{xy}|$; equivalently,
+  \[
+    r_x \times r_y
+    = r_{xy} + \{\, [x \mapsto 1,\, y \mapsto 4],\, [x \mapsto 2,\, y \mapsto 3] \,\},
+  \]
+  \end{example}
 
-\emph{Basic} choice logic is parameterized by a set of atomic propositions $\mathcal{A}$ and has no approximation modalities. Then, every judgment \emph{precisely} describes a resource.
-We write $m \models p$ for satisfaction of a resource proposition $p$
-at world $m \in \Res$.
+\subsection{Strategy logic}
 
-\begin{definition}[Basic choice logic] Let $(\mathcal{M},{+},{\times},\mathbf{1}, \leq)$ to be a choice algebra. Let $\mathcal{A}$ to be atomic propositions. Let $\denot{-} : \mathcal{A} \sarr \mathcal{M}$ be an interpretation function of pure formulas $\phi$. Then we have:
+\emph{Basic} strategy logic is parameterized by a set of atomic propositions $\mathcal{A}$ and has no approximation modalities. Then, every judgment \emph{precisely} describes a resource.
+We write $r \models p$ for satisfaction of a resource proposition $p$
+at world $r \in \Res$.
+
+\begin{definition}[Basic strategy logic] Let $(\mathcal{M},{+},{\times},\mathbf{1}, \leq)$ to be a strategy algebra. Let $\mathcal{A}$ to be atomic propositions. Let $\denot{-} : \mathcal{A} \sarr \mathcal{M}$ be an interpretation function of pure formulas $\phi$. Then we have:
 \begin{itemize}
-\item $m \models \chtrue$ always;
-\item $m \models \chfalse$ never;
-\item $m \models a$ iff $a \in \mathcal{A}$ and $\denot{a} \leq m$;
-\item $m \models p \chland q$ iff $m \models p$ and $m \models q$;
-\item $m \models p \chlor q$ iff $m \models p$ or $m \models q$;
-\item $m \models p \chimpl q$ iff for all $m \leq m'. m' \models p$ implies $m' \models q$;
-% \item $m \models \forall x.p$ iff for all values $v$, $m \models p[x\mapsto v]$;
-% \item $m \models \exists x.p$ iff for some $v$, $m \models p[x\mapsto v]$.
-\item $m \models p \chstar q$ iff $\exists m_1\;m_2.\; m_1 \times m_2 \leq m$ and
-  $m_1 \models p$ and $m_2 \models q$.
-\item $m \models p \chwand q$ iff $\forall m'.\; \mapCompat{m'}{m}$ and $m' \models p$ implies
-  $m' \times m \models q$.
-\item $m \models p \choplus q$ iff $\exists m_1\;m_2.\; m_1 + m_2 \leq m$ and
-  $m_1 \models p$ and $m_2 \models q$.
-\item $m \models \forall x.p$ iff $\forall m'.\Dom{m'} = \Dom{m}\cup\{x\} \text{ and }\restrictTo{m'}{\Dom{m}} = m \text{ implies } m' \models p$.
-\item $m \models \exists x.p$ iff $\exists m'.\Dom{m'} = \Dom{m}\cup\{x\} \text{ and }\restrictTo{m'}{\Dom{m}} = m \text{ and } m' \models p$.
+\item $r \models \chtrue$ always;
+\item $r \models \chfalse$ never;
+\item $r \models a$ iff $a \in \mathcal{A}$ and $\denot{a} \leq r$;
+\item $r \models p \chland q$ iff $r \models p$ and $r \models q$;
+\item $r \models p \chlor q$ iff $r \models p$ or $r \models q$;
+\item $r \models p \chimpl q$ iff for all $r'$, if $r \leq r'$ and $r' \models p$ then $r' \models q$;
+% \item $r \models \forall x.p$ iff for all values $v$, $r \models p[x\mapsto v]$;
+% \item $r \models \exists x.p$ iff for some $v$, $r \models p[x\mapsto v]$.
+\item $r \models p \chstar q$ iff $\exists r_1\;r_2.\; r_1 \times r_2 \leq r$ and
+  $r_1 \models p$ and $r_2 \models q$.
+\item $r \models p \chwand q$ iff $\forall r'.\; \mapCompat{r'}{r}$ and $r' \models p$ implies
+  $r' \times r \models q$.
+\item $r \models p \choplus q$ iff $\exists r_1\;r_2.\; r_1 + r_2 \leq r$ and
+  $r_1 \models p$ and $r_2 \models q$.
+\item $r \models \forall x.p$ iff $\forall r'.\Dom{r'} = \Dom{r}\cup\{x\} \text{ and }\restrictTo{r'}{\Dom{r}} = r \text{ implies } r' \models p$.
+\item $r \models \exists x.p$ iff $\exists r'.\Dom{r'} = \Dom{r}\cup\{x\} \text{ and }\restrictTo{r'}{\Dom{r}} = r \text{ and } r' \models p$.
 \end{itemize}
-We still write $p \models q$ iff for all $m \in \Res$, $m \models p$ implies $m \models q$.
+We still write $p \models q$ iff for all $r \in \Res$, $r \models p$ implies $r \models q$.
 \end{definition}
 
-Intuitively, $m$ models $\subExt p$ (or $\supExt p$) iff there exists a superset (or subset) $m'$ of $m$ that models $p$.
+Intuitively, $r$ models $\subExt p$ (or $\supExt p$) iff there exists a superset (or subset) $r'$ of $r$ that models $p$.
 
 
-\begin{definition}[Choice logic]\label{def:choice-logic-modalities} Choice logic is additionally equipped beyond basic choice logic with the overapproximation modality $\subExt$, the underapproximation modality $\supExt$, and the fiberwise universal modality $\forallM{\cdot}$.
+\begin{definition}[Strategy logic]\label{def:strategy-logic-modalities} Strategy logic is additionally equipped beyond basic strategy logic with the overapproximation modality $\subExt$, the underapproximation modality $\supExt$, and the fiberwise universal modality $\forallM{\cdot}$.
   \begin{itemize}
-    \item $m \models \subExt p$ iff $\exists m'.\; m \subseteq m'$ and
-      $m' \models p$;
-    \item $m \models \supExt p$ iff $\exists m'.\; m' \subseteq m$ and
-      $m' \models p$,
-    \item $m \models \forallM{x}p$ iff $\forall \sigma_x \in \projectTo{m}{\{x\}}. \fiberOver{m}{\sigma_x} \models \sigma_x(p)$;
-    % \item $m \models \chpers p$ iff $\forallM{\Dom{m}} p$, equivalently, $\forall \sigma \in m. \{\sigma\} \models p$.
+    \item $r \models \subExt p$ iff $\exists r'.\; r \subseteq r'$ and
+      $r' \models p$;
+    \item $r \models \supExt p$ iff $\exists r'.\; r' \subseteq r$ and
+      $r' \models p$,
+    \item $r \models \forallM{x}p$ iff $\forall \sigma_x \in \projectTo{r}{\{x\}}. \fiberOver{r}{\sigma_x} \models \sigma_x(p)$;
+    % \item $r \models \chpers p$ iff $\forallM{\Dom{r}} p$, equivalently, $\forall \sigma \in r. \{\sigma\} \models p$.
     \end{itemize}
 \end{definition}
 
 Intuitively, $\forallM{x}p$ is a fiberwise universal modality along the projection
-$m \mapsto \projectTo{m}{\{x\}}$.
+$r \mapsto \projectTo{r}{\{x\}}$.
 For each admissible assignment $\sigma_x$ to variable $x$, we look at the
-corresponding fiber $\fiberOver{m}{\sigma_x}$ and require that $p$ holds after
+corresponding fiber $\fiberOver{r}{\sigma_x}$ and require that $p$ holds after
 substituting $\sigma_x$.
 The notation $\forallM{\overline{x_i}} p$ is shorthand for
-$\forallM{x_1}\,\forallM{x_2}\,\cdots\,\forallM{x_n}\,p$. The $\forallM{x}p$ means that $p$ holds is independent from the decision made by resource $m$ on variable $x$.
-%  The persistent modality $\chpers p$ means that $p$ holds is independent from the decision made by resource $m$.
+$\forallM{x_1}\,\forallM{x_2}\,\cdots\,\forallM{x_n}\,p$. The $\forallM{x}p$ means that $p$ holds is independent from the decision made by strategy resource $r$ on variable $x$.
+%  The persistent modality $\chpers p$ means that $p$ holds is independent from the decision made by resource $r$.
 
-% \paragraph{Persistency and disjointness in logic} The persistent modality ($\chpers \phi$) is a stronger modality than disjointness ($\phi' \chstar \phi$); the former requires $\phi$ is independent from any choice made by resource $m$, while the latter only requires a locally independent choice (i.e., independent from $\phi'$). Typically only singleton underapproximation and overapproximation can has persistent modality.
+% \paragraph{Persistency and disjointness in logic} The persistent modality ($\chpers \phi$) is a stronger modality than disjointness ($\phi' \chstar \phi$); the former requires $\phi$ is independent from any choice made by resource $r$, while the latter only requires a locally independent choice (i.e., independent from $\phi'$). Typically only singleton underapproximation and overapproximation can has persistent modality.
 
 
 \begin{example}[Dependent Underapproximation] There are three different underapproximations:
@@ -242,28 +274,28 @@ The $\forallM{x}(0 < x)$ works as a fiberwise universal constraint on $x$: for e
 admissible assignment of $x$, we check the corresponding fiber where $x$ is fixed.
 Note that it is different from
 \begin{align*}
-  &m \models \subExt (0 < x) \chland \supExt (x \leq y < 3) 
-  \\\iff& m \models \subExt (0 < x) \text{ and } m \models \supExt (x \leq y < 3)
-  \\\implies& \forall \sigma \in m. 0 < \sigma(x) \text{ and } m \models \supExt (x \leq y < 3)
-  \\\implies& \forall \sigma \in m. 0 < \sigma(x) \text{ and } [x=-1;y=2] \in m \quad \judgfail
+  &r \models \subExt (0 < x) \chland \supExt (x \leq y < 3) 
+  \\\iff& r \models \subExt (0 < x) \text{ and } r \models \supExt (x \leq y < 3)
+  \\\implies& \forall \sigma \in r. 0 < \sigma(x) \text{ and } r \models \supExt (x \leq y < 3)
+  \\\implies& \forall \sigma \in r. 0 < \sigma(x) \text{ and } [x=-1;y=2] \in r \quad \judgfail
 \end{align*}\noindent
 The problem is that the $\chland$ cannot make the constraint $0 < x$ be added into the pure proposition $x \leq y < 3$ (i.e., to be $\supExt (0 < x \land x \leq y < 3)$).
 \end{example}
 
-When the expressiveness of atomic propositions is rich enough, nested uses of $\subExt$ and $\supExt$ over logical connectives collapse to $\subExt$ and $\supExt$ applied directly to the underlying pure propositions. For example, $\subExt (\subExt \phi_1 \chland \subExt \phi_2)$ is equivalent to $\subExt \phi_1 \chland \subExt \phi_2$, and $\supExt (\subExt \phi_1 \chland \subExt \phi_2)$ is equivalent to $\supExt (\phi_1 \cap \phi_2)$.
+% When the expressiveness of atomic propositions is rich enough, nested uses of $\subExt$ and $\supExt$ over logical connectives collapse to $\subExt$ and $\supExt$ applied directly to the underlying pure propositions. For example, $\subExt (\subExt \phi_1 \chland \subExt \phi_2)$ is equivalent to $\subExt \phi_1 \chland \subExt \phi_2$, and $\supExt (\subExt \phi_1 \chland \subExt \phi_2)$ is equivalent to $\supExt (\phi_1 \cap \phi_2)$.
 
-\begin{theorem}[Collapse of nested modalities] Assume $\mathcal{A}$ is rich enough, i.e.,
-\begin{align*}
-  % &\forall X. \exists \phi \in \mathcal{A}. \denot{\phi} = \{ \subs \mid \Dom{\subs} = X \}
-  % \\
-  &\forall \phi_1\;\phi_2 \in \mathcal{A}. \exists \phi_3 \in \mathcal{A}. \denot{\phi_3} = \denot{\phi_1} \cap \denot{\phi_2}
-  \\& \forall \phi_1\;\phi_2 \in \mathcal{A}. \exists \phi_3 \in \mathcal{A}. \denot{\phi_3} = \denot{\phi_1} \cup \denot{\phi_2}
-  \\& \forall \phi_1\;\phi_2 \in \mathcal{A}. \exists \phi_3 \in \mathcal{A}. \denot{\phi_3} = \denot{\phi_1} \times \denot{\phi_2}
-\end{align*}
-Then, all formulas in choice logic can be expressed in approximation normal form, i.e., $\subExt$ and $\supExt$ are applied only to pure propositions.
-\end{theorem}
+% \begin{theorem}[Collapse of nested modalities] Assume $\mathcal{A}$ is rich enough, i.e.,
+% \begin{align*}
+%   % &\forall X. \exists \phi \in \mathcal{A}. \denot{\phi} = \{ \subs \mid \Dom{\subs} = X \}
+%   % \\
+%   &\forall \phi_1\;\phi_2 \in \mathcal{A}. \exists \phi_3 \in \mathcal{A}. \denot{\phi_3} = \denot{\phi_1} \cap \denot{\phi_2}
+%   \\& \forall \phi_1\;\phi_2 \in \mathcal{A}. \exists \phi_3 \in \mathcal{A}. \denot{\phi_3} = \denot{\phi_1} \cup \denot{\phi_2}
+%   \\& \forall \phi_1\;\phi_2 \in \mathcal{A}. \exists \phi_3 \in \mathcal{A}. \denot{\phi_3} = \denot{\phi_1} \times \denot{\phi_2}
+% \end{align*}
+% Then, all formulas in strategy logic can be expressed in approximation normal form, i.e., $\subExt$ and $\supExt$ are applied only to pure propositions.
+% \end{theorem}
 
-\subsection{Core Language and Choice Types}
+\subsection{Core Language and Strategy Types}
 
 \begin{figure}[h]
 {\small
@@ -289,7 +321,7 @@ Then, all formulas in choice logic can be expressed in approximation normal form
   {
     \begin{alignat*}{2}
       \text{\textbf{Qualifiers}}& \quad & \phi ::= \quad & c ~|~ x ~|~ \primop\;\overline{v} ~|~ \bot ~|~ \top  ~|~ \neg \phi ~|~ \phi \land \phi ~|~ \phi \lor \phi ~|~ \phi \times \phi ~|~ \phi \impl \phi ~|~ \forall x{:}b. \phi ~|~ \exists x{:}b. \phi
-      \\ \text{\textbf{Choice Types}}& \quad & \tau ::= \quad & \ort{b}{\phi} ~|~ \urt{b}{\phi} ~|~ \tau \ctinter \tau ~|~ \tau \ctunion \tau ~|~ \tau \ctoplus \tau ~|~ x{:}\tau \ctsarr \tau ~|~ x{:}\tau \ctwand \tau
+      \\ \text{\textbf{Strategy Types}}& \quad & \tau ::= \quad & \ort{b}{\phi} ~|~ \urt{b}{\phi} ~|~ \tau \ctinter \tau ~|~ \tau \ctunion \tau ~|~ \tau \ctoplus \tau ~|~ x{:}\tau \ctsarr \tau ~|~ x{:}\tau \ctwand \tau
       %  ~|~  \ctind \tau 
       % ~|~ \ctpers \tau 
       % ~|~ \ctDiv{s}
@@ -307,12 +339,12 @@ Then, all formulas in choice logic can be expressed in approximation normal form
     \\& \eraserf{\emptyset} \doteq \emptyset \quad \eraserf{x{:}\tau} \doteq x{:}\eraserf{\tau} \quad \eraserf{\Gamma_1 \ctcomma \Gamma_2} \doteq \eraserf{\Gamma_1}, \eraserf{\Gamma_2} \quad \eraserf{\Gamma_1 \ctstar \Gamma_2} \doteq \eraserf{\Gamma_1}, \eraserf{\Gamma_2}  \quad \eraserf{\Gamma_1 \ctoplus \Gamma_2} \doteq \eraserf{\Gamma_1}
     \\\text{\textbf{Type lifting}} \quad & \liftrf{b} \doteq \ort{b}{\phi} \quad \liftrf{s_x \sarr s} \doteq x{:}\liftrf{s_x} \ctsarr \liftrf{s}  
     \\&\liftrf{\emptyset} \doteq \emptyset \quad \liftrf{x{:}s} \doteq x{:}\liftrf{s} \quad \liftrf{\Gamma_1 , \Gamma_2} \doteq \liftrf{\Gamma_1} \ctcomma \liftrf{\Gamma_2}
-    \\\text{\textbf{Type alias}}  \quad & s \doteq \liftrf{s} \quad \tau_{\ctAff} \doteq \tau \ctoplus \liftrf{ \eraserf{\tau} } 
+    \\\text{\textbf{Type alias}}  \quad & s \doteq \liftrf{s} \quad \tau_{\ctAff} \doteq \tau \ctoplus \liftrf{ \eraserf{\tau} } \quad \prt{b}{\phi} \doteq \ort{b}{\phi} \interty \urt{b}{\phi}
     \\& \tau_x \ctsarr \tau \doteq x{:}\tau_x \ctsarr \tau \quad (\text{when $x$ is not referenced in $\tau$})
     % \quad \tau^{\ctDivM} \doteq \tau \ctoplus \ctDiv{\eraserf{\tau}} 
   \end{align*}}
-  \caption{Choice Types Syntax. }
-  \label{fig:choice-types-syntax}
+  \caption{Strategy Types Syntax. }
+  \label{fig:strategy-types-syntax}
   \end{figure}
 
 Here $\ort{b}{\phi}$ is an overapproximate refinement and
@@ -341,9 +373,9 @@ $\Gamma \ctvdash e : \tau$ and $\Gamma \ctvdash \tau_1 <: \tau_2$ in a single de
 \subsection{Denotational semantics}
 
 \begin{align*}
-  \\\denot{e}_x &: \Code{Prop_{Choice}} \quad (\text{where $x$ is a free variable})
+  \\\denot{e}_x &: \Code{Prop_{Strat}} \quad (\text{where $x$ is a free variable})
   \\\denot{e}_x &\doteq \Code{Prop}(\{r \mid \forall \sigma \in r. \mstep{\sigma(e)}{\sigma(x)} \})
-  \\\denot{\tau} &: \mathcal{E} \sarr \Code{Prop_{Choice}}
+  \\\denot{\tau} &: \mathcal{E} \sarr \Code{Prop_{Strat}}
   \\\denot{\ort{b}{\phi}} &\doteq \lambda e. \forall \vnu. \denot{e}_\vnu \chimpl \forallM{\Code{FV}(\ort{b}{\phi})}\,\subExt \phi
   \\\denot{\urt{b}{\phi}} &\doteq \lambda e. \forall \vnu. \denot{e}_\vnu \chimpl \forallM{\Code{FV}(\urt{b}{\phi})}\,\supExt \phi
   \\\denot{x{:}\tau_x \ctsarr \tau} &\doteq \lambda e. \forall y. \denot{e}_y \chimpl \forallM{y} (\denot{\tau_x}\;x \chimpl \denot{\tau}\;(y\;x))
@@ -390,7 +422,7 @@ well formed.
 {$\wfvdash \Gamma$} 
 \quad
   {\normalsize \begin{flalign*}
-    &\text{\textbf{Subtyping rules}} && \fbox{$\Gamma \ctvdash \tau <: \tau$ \quad $\Gamma \ctsubseteq{X} \Gamma$ \quad $\Code{ToOver}(\Gamma, \Gamma')$ }
+    &\text{\textbf{Subtyping rules}} && \fbox{$\Gamma \ctvdash \tau <: \tau$ \quad $\Gamma \ctsubseteq{X} \Gamma$ }
   \end{flalign*}}
 \mprooftr{34mm}
 {$\forall e.\; \denot{\Gamma} \chvdash \denot{\tau_1}\;e \chimpl \denot{\tau_2}\;e$}
@@ -401,13 +433,13 @@ well formed.
 {$\forall r. r \models \denot{\Gamma_1} \impl \restrictTo{r}{X} \models \denot{\Gamma_2}$ }
 {CtxSub}
 {$\Gamma_1 \ctsubseteq{X} \Gamma_2$}
-\quad
-	\mprooftr{22mm}
-	{$\subExt \denot{\Gamma_1} \models \denot{\Gamma_2}$ }
-	{CtxOver}
-	{$\Code{ToOver}(\Gamma_1, \Gamma_2)$}
+% \quad
+% 	\mprooftr{22mm}
+% 	{$\subExt \denot{\Gamma_1} \models \denot{\Gamma_2}$ }
+% 	{CtxOver}
+% 	{$\Gamma_1 \ctstar \Gamma_2 = \Gamma_1$}
 	  }
-	  \caption{Auxiliary well-formedness and semantic subtyping rules for choice typing. We disallow the contraction rule (duplicate context) for both $\ctcomma$ and $\ctstar$, since the resource will not be consumed but only depended on. The subtyping rules link typing to semantic implication on denotations. $\Code{ToOver}$ is a context-level over-approximation coercion used to type separating let-bindings.}
+	  \caption{Auxiliary well-formedness and semantic subtyping rules for strategy typing. We disallow the contraction rule (duplicate context) for both $\ctcomma$ and $\ctstar$, since strategy resources will not be consumed but only depended on. The subtyping rules link typing to semantic implication on denotations. $\Code{ToOver}$ is a context-level over-approximation coercion used to type separating let-bindings.}
   \label{fig:auxiliary-rules}
   \vspace*{-.1in}
 \end{figure}
@@ -415,42 +447,42 @@ well formed.
 \begin{figure}[h!]
   {\small
   {\normalsize \begin{flalign*}
-    &\text{\textbf{Typing rules}} && \fbox{$\Gamma \ctvdash \primop : \tau$ \quad  $\Gamma \ctvdash e : \tau$}
+    &\text{\textbf{Typing rules}} && \fbox{$\Gamma \ctvdash e : \tau$}
   \end{flalign*}}
-  \mprooftr{18mm}
-  {$\Gamma \ctvdash e : \tau_1$ \quad $\Gamma \ctvdash \tau_1 <: \tau_2$}
-  {T-Sub}
-  {$\Gamma \ctvdash e : \tau_2$}
-  \quad
-  \mprooftr{23mm}
-  {$\Gamma_2 \ctvdash e : \tau$ \quad $\Gamma_1 \ctsubseteq{\Code{FV}(e) \cup \Code{FV}(\tau)} \Gamma_2$}
-  {T-CtxSub}
-  {$\Gamma_1 \ctvdash e : \tau$}
-  \quad
+  % \mprooftr{26mm}
+  % {$ \Code{Ty}(\primop) = \tau $}
+  % {T-Op}
+  % {$\Gamma \ctvdash \primop : \tau$}
+  % \quad
   \mprooftr{14mm}
   {$ $}
   {T-Var}
   {$x{:}\tau \ctvdash x : \tau$}
-  \\[.8em]
-  \mprooftr{26mm}
-  {$ \Code{Ty}(\primop) = \tau $}
-  {T-Op}
-  {$\Gamma \ctvdash \primop : \tau$}
   \quad
   \mprooftr{26mm}
   {$ \emptyset \basicvdash c : b $}
   {T-Const}
-  {$\emptyset \ctvdash c : \ort{b}{\vnu = c}$}
+  {$\emptyset \ctvdash c : \prt{b}{\vnu = c}$}
   \\[.8em]
+  % \mprooftr{34mm}
+  % {$\Gamma \ctvdash e_1 : \tau_1 $ \quad $\Delta(\Gamma \ctcomma x{:}\tau_1) \ctvdash e_2 : \tau_2$}
+  % {T-Let}
+  % {$\Delta(\Gamma) \ctvdash \zlet{x}{e_1}{e_2} : \tau_2$}
+  % \quad
+  % \mprooftr{40mm}
+  % {$\Gamma' \ctvdash e_1 : \tau_1 $ \quad $\Code{ToOver}(\Gamma, \Gamma')$ \quad $\Delta(\Gamma \ctstar x{:}\tau_1) \ctvdash e_2 : \tau_2$}
+  % {T-LetD}
+  % {$\Delta(\Gamma) \ctvdash \zlet{x}{e_1}{e_2} : \tau_2$}
+  % \\[.8em]
   \mprooftr{34mm}
-  {$\Gamma \ctvdash e_1 : \tau_1 $ \quad $\Delta(\Gamma \ctcomma x{:}\tau_1) \ctvdash e_2 : \tau_2$}
+  {$\Gamma \ctvdash e_1 : \tau_1 $ \quad $\Gamma \ctcomma x{:}\tau_1 \ctvdash e_2 : \tau_2$}
   {T-Let}
-  {$\Delta(\Gamma) \ctvdash \zlet{x}{e_1}{e_2} : \tau_2$}
+  {$\Gamma \ctvdash \zlet{x}{e_1}{e_2} : \tau_2$}
   \quad
   \mprooftr{40mm}
-  {$\Gamma' \ctvdash e_1 : \tau_1 $ \quad $\Code{ToOver}(\Gamma, \Gamma')$ \quad $\Delta(\Gamma \ctstar x{:}\tau_1) \ctvdash e_2 : \tau_2$}
+  {$\Gamma_1 \ctvdash e_1 : \tau_1 $ \quad $\Gamma_2 \ctstar x{:}\tau_1 \ctvdash e_2 : \tau_2$}
   {T-LetD}
-  {$\Delta(\Gamma) \ctvdash \zlet{x}{e_1}{e_2} : \tau_2$}
+  {$\Gamma_1 \ctstar \Gamma_2 \ctvdash \zlet{x}{e_1}{e_2} : \tau_2$}
   \\[.8em]
   \mprooftr{42mm}
   {$\eraserf{\tau_x} = s_x$ \quad $\Gamma \ctcomma x{:}\tau_x \ctvdash e : \tau$}
@@ -473,18 +505,22 @@ well formed.
   $\Gamma_2 \ctvdash v_2 : \tau_x$  }
   {T-AppFunD}
   {$\Gamma_1 \ctstar \Gamma_2 \ctvdash v_1\;v_2 : \tau[x \mapsto v_2]$}
-  \\[.8em]
-  \mprooftr{40mm}
-  {$\Gamma \ctvdash \primop : \overline{x_i{:}\tau_i}\ctsarr \tau_y$ \quad 
+  \\[.8em]  
+  \mprooftr{18mm}
+  {$\Gamma \ctvdash e : \tau_1$ \quad $\Gamma \ctvdash \tau_1 <: \tau_2$}
+  {T-Sub}
+  {$\Gamma \ctvdash e : \tau_2$}
+  \quad
+  \mprooftr{23mm}
+  {$\Gamma_2 \ctvdash e : \tau$ \quad $\Gamma_1 \ctsubseteq{\Code{FV}(e) \cup \Code{FV}(\tau)} \Gamma_2$}
+  {T-CtxSub}
+  {$\Gamma_1 \ctvdash e : \tau$}
+  \quad
+  \mprooftr{34mm}
+  {$\Code{Ty}(\primop) = \overline{x_i{:}\tau_i}\ctsarr \tau_y$ \quad 
     $\forall i. \Gamma \ctvdash v_i : \tau_i$ }
   {T-AppOp}
   {$\Gamma \ctvdash \primop\;\overline{v_i} : \tau[\overline{x_i \mapsto v_i}]$}
-  \quad
-  \mprooftr{50mm}
-  {$\Gamma \ctvdash \primop : \overline{x_i{:}\tau_i}\ctwand \tau_y$ \quad 
-    $\forall i. \Gamma_i \ctvdash v_i : \tau_i$ }
-  {T-AppOpD}
-  {$\Gamma \ctstar \overline{\Gamma_i} \ctvdash \primop\;\overline{v_i} : \tau[\overline{x_i \mapsto v_i}]$}
   \\[.8em]
   \mprooftr{64mm}
   {$\eraserf{\tau_x} = b$ \quad $\eraserf{\tau} = t$ \quad $\Gamma \ctcomma x{:}\tau_x \ctcomma f{:}(x{:}(\tau_x \ctinter \ort{b}{\vnu \prec x} ) \ctsarr \tau) \ctvdash e : \tau$}
@@ -497,9 +533,9 @@ well formed.
   {$\Gamma \ctvdash \zfix{f}{b\sarr t}{x}{b}{e} : x{:}\tau_x \ctwand \tau$}
   \\[.8em]
   \mprooftr{74mm}
-  {$\forall i.\;\Gamma_i \ctvdash v : \tau_{vi}$  and $\Dom{\Delta_i} = \{\overline{y_{ij}}\}$ and  $\Delta_i(\Gamma_i) \ctvdash d_i(\overline{y_{ij}}) : \tau_{vi}$ and $\Delta_i(\Gamma_i) \ctvdash e_i : \tau_i$ }
+  {$\forall i.\;\Code{Ty}(d_i) = \overline{y{:}b_y}\sarr \tau_i$ and $\Delta_i(\Gamma_i) \ctvdash v : \tau_i$ and $\Delta_i(\Gamma_i) \ctvdash e_i : \tau_i$ }
   {T-Match}
-  {$\ctbigoplus \overline{\Gamma_i} \ctvdash \match{v} \overline{d_i\ \overline{y_{ij}} \to e_i}  : \ctbigoplus \overline{\tau_i}$}
+  {$\ctbigoplus \overline{\Gamma_i} \ctvdash \match{v} \overline{d\ \overline{y} \to e}  : \ctbigoplus \overline{\tau_i}$}
   }
   \caption{Declarative typing rules for the core language.}
   \label{fig:declaritive-typing-rules}
@@ -601,6 +637,12 @@ well formed.
 \label{fig:declaritive-typing-rules}
 \vspace*{-.1in}
 \end{figure}
+
+\begin{theorem}[Well-formed operator context] The operator context $\Phi$ is well-formed iff for all primtive operator $\primop$ we have:
+{\begin{align*}
+    &\Phi(\primop) = \overline{x{:}\ort{b_x}{\phi_x}}\ctsarr \prt{b}{\phi} \text{ and } \models \denot{\overline{x{:}\ort{b_x}{\phi_x}}} \chiff \denot{\prt{b}{\phi}}\; (\primop\;\overline{x})
+  \end{align*}}\noindent
+\end{theorem}
 
 \begin{theorem}[Fundamental theorem]
   \begin{align*}

@@ -15,7 +15,7 @@
     \frametitle{Agenda}
 
     \begin{itemize}
-        \item Review of choice algebra.
+        \item Review of strategy algebra.
         \item Typing syntax and denotation.
         \item Some interesting examples.
         \item Typing rules.
@@ -51,9 +51,9 @@
 \end{frame}
 
 \begin{frame}[fragile]
-    \frametitle{Choice Algebra}
+    \frametitle{Strategy Algebra}
 
-\begin{definition}[Choice Algebra] A choice algebra is a tuple $(M, \mathbf{0}, \mathbf{1}, +, \times)$ where:
+\begin{definition}[Strategy Algebra] A strategy algebra is a tuple $(M, \mathbf{0}, \mathbf{1}, +, \times)$ where:
     \begin{itemize}
         \item A resource $m$ is a set of substitutions: $\mathcal{P}(\Code{Var} \rightharpoonup \Code{Value})$.
         \item $M$ is the set of resources.
@@ -93,14 +93,14 @@ where
     \item $\phi \times \psi$ is the pointwise union of $\phi$ and $\psi$.
 \end{itemize}
 
-\textbf{Note:} The denotation of $\phi$ ($\denot{\phi}$) is a set of substitutions that satisfy $\phi$; the denotation of ``choice algebra terms'' is a set of resources.
+\textbf{Note:} The denotation of $\phi$ ($\denot{\phi}$) is a set of substitutions that satisfy $\phi$; the denotation of ``strategy algebra terms'' is a set of resources.
 
 \end{frame}
 
 \begin{frame}[fragile]
-    \frametitle{Basic Choice Logic}
+    \frametitle{Basic Strategy Logic}
 
-\begin{definition}[Basic Choice Logic] Basic choice logic has no approximation; everything needs to be precise.
+\begin{definition}[Basic Strategy Logic] Basic strategy logic has no approximation; everything needs to be precise.
 \end{definition}
 \begin{itemize}
     \item $m \models p * q$ iff $\exists m_1, m_2.\ m_1 \times m_2 \leq m \text{ and } m_1 \models p \text{ and } m_2 \models q$.
@@ -119,9 +119,9 @@ where
 
 
 \begin{frame}[fragile]
-    \frametitle{Choice Logic with Approximation}
+    \frametitle{Strategy Logic with Approximation}
 
-\begin{definition}[Choice Logic with Approximation] We consider two new modalities, $\subExt$ and $\supExt$.
+\begin{definition}[Strategy Logic with Approximation] We consider two new modalities, $\subExt$ and $\supExt$.
     \begin{itemize}
         \item $m \models\subExt\phi$ iff $\exists m_1, m'.\ m + m_1 = m' \text{ and } m' \models\phi$.
         \item $m \models\supExt\phi$ iff $\exists m_1, m'.\ m' + m_1 = m  \text{ and } m' \models\phi$.
@@ -289,7 +289,7 @@ $m_1 \times m_2 = \{ (\emptyset, [x\mapsto 0;y\mapsto 0]), (\emptyset, [x\mapsto
 \begin{frame}[fragile]
     \frametitle{Type Denotation}
 
-We interpret terms and qualifiers as atomic propositions in choice logic.
+We interpret terms and qualifiers as atomic propositions in strategy logic.
 
 \begin{definition}[Qualifier Interpretation] The qualifier interpretation $\denot{\phi}$ is the set of substitutions that satisfy $\phi$: $\denot{\phi} \doteq \{\sigma ~|~ \sigma(\phi) \}$.
 \end{definition}
@@ -302,7 +302,7 @@ We interpret terms and qualifiers as atomic propositions in choice logic.
 \begin{frame}[fragile]
     \frametitle{Type Annotation Interpretation}
 
-We interpret type annotations as formulae in choice logic.
+We interpret type annotations as formulae in strategy logic.
 
 \begin{definition}[Type Annotation Interpretation] We interpret $x:\tau$ as:
 \begin{itemize}

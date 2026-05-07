@@ -1,6 +1,6 @@
 \section{Formalization}\label{sec:formal}
 
-This section presents the our choice logic and choice types. Similar with separation logic, our choice logic is also based on underline resource algebra, although such an algebra is additionally equipped with the branching operators. In the rest of this section, we will first introduce the preliminary definitions and then present the choice algebra, choice logic, and our choice types.
+This section presents the our strategy logic and choice types. Similar with separation logic, our strategy logic is also based on underline resource algebra, although such an algebra is additionally equipped with the branching operators. In the rest of this section, we will first introduce the preliminary definitions and then present the strategy algebra, strategy logic, and our choice types.
 
 \subsection{Preliminaries}
 
@@ -80,11 +80,11 @@ Easily to know, $\leq$ is reflexive, antisymmetric, and transitive.
   \end{align*}
 \end{definition}
 
-\subsection{Choice algebra}
+\subsection{Strategy algebra}
 
 The choice resource forms an algebra, which is not only a partial commutative monoid as in separation logic, but also a partial commutative semiring (PCS).
 
-\begin{definition}[Choice algebra]\label{def:choice-semiring}
+\begin{definition}[Strategy algebra]\label{def:strategy-semiring}
   A \emph{partial commutative semiring without zero}
   $(\mathcal{M},{+},{\times},\mathbf{1})$ consists of a carrier set $\mathcal{M}$ and partial binary operations ${+}$ and ${\times}$ and unit elements $\mathbf{1}$ that satisfies the following properties:
   \begin{itemize}
@@ -92,7 +92,7 @@ The choice resource forms an algebra, which is not only a partial commutative mo
   \item Commutative (when operations are defined): $\forall m_1\;m_2 \in \mathcal{M}. m_1 + m_2 = m_2 + m_1$ and $m_1 \times m_2 = m_2 \times m_1$.
   \item Associative (when operations are defined): $\forall m_1\;m_2\;m_3 \in \mathcal{M}. (m_1 + m_2) + m_3 = m_1 + (m_2 + m_3)$ and $(m_1 \times m_2) \times m_3 = m_1 \times (m_2 \times m_3)$.
   \end{itemize}
-The choice algebra is a partial commutative semiring equipped with a partial order $\leq$ that satisfies the bifunctoriality property:
+The strategy algebra is a partial commutative semiring equipped with a partial order $\leq$ that satisfies the bifunctoriality property:
   \begin{align*}
     \forall m_1\;m_2\;m_1'\;m_2' \in \mathcal{M}. m_1 \leq m_1' \land m_2 \leq m_2' &\implies m_1 \times m_2 \leq m_1' \times m_2' 
     \\& (\text{when } m_1 \times m_2 \text{ and } m_1' \times m_2' \text{ are defined.})
@@ -101,9 +101,9 @@ The choice algebra is a partial commutative semiring equipped with a partial ord
   \end{align*}
   \end{definition}
 
-Easily to know, $(\Res,{+},{\times},\{ \emptyset \})$ and $\leq$ is a choice algebra.
+Easily to know, $(\Res,{+},{\times},\{ \emptyset \})$ and $\leq$ is a strategy algebra.
 
-\begin{example}[Choice algebra]
+\begin{example}[Strategy algebra]
 Let $m_x \doteq \{\,[x \mapsto 1],\, [x \mapsto 2]\,\}$, so
 $\Dom{m_x} = \{x\}$.
 Let $m_y \doteq \{\,[y \mapsto 3],\, [y \mapsto 4]\,\}$, with $\Dom{m_y} = \{y\}$.
@@ -165,13 +165,13 @@ witnesses for~$x$ lie in~$[1,2]$.
 Extending every substitution with arbitrary bindings for a fresh
 variable~$y$ disturbs neither kind of judgment.
 
-\subsection{Choice logic}
+\subsection{Strategy logic}
 
-\emph{Basic} choice logic is parameterized by set of atomic propositions $\mathcal{A}$ and has no approximation or persistency modality. Then, every judgment is \emph{precisely} describes a resource.
+\emph{Basic} strategy logic is parameterized by set of atomic propositions $\mathcal{A}$ and has no approximation or persistency modality. Then, every judgment is \emph{precisely} describes a resource.
 We write $m \models p$ for satisfaction of a resource proposition $p$
 at world $m \in \Res$.
 
-\begin{definition}[Basic choice logic] Let $(\mathcal{M},{+},{\times},\mathbf{1}, \leq)$ to be a choice algebra. Let $\mathcal{A}$ to be atomic propositions. Let $\denot{-} : \mathcal{A} \sarr \mathcal{M}$ be an interpretation function of pure formulas $\phi$. Then we have:
+\begin{definition}[Basic strategy logic] Let $(\mathcal{M},{+},{\times},\mathbf{1}, \leq)$ to be a strategy algebra. Let $\mathcal{A}$ to be atomic propositions. Let $\denot{-} : \mathcal{A} \sarr \mathcal{M}$ be an interpretation function of pure formulas $\phi$. Then we have:
 \begin{itemize}
 \item $m \models \chtrue$ always;
 \item $m \models \chfalse$ never;
@@ -194,7 +194,7 @@ We still write $p \models q$ iff for all $m \in \Res$, $m \models p$ implies $m 
 Intuitively, $m$ models $\subExt p$ (or $\supExt p$) iff there exists a supperset (or subset) $m'$ of $m$ that models $p$. On the other hand, $m$ models $\chpers p$ iff $m$ is a empty resource or a singleton resource that models $p$.
 
 
-\begin{definition}[Choice logic]\label{def:choice-logic-modalities} Choice logic additional equiped with three modalities than basic choice logic, i.e., the overapproximation modality $\subExt$, the underapproximation modality $\supExt$, and the persistency modality $\chpers$.
+\begin{definition}[Strategy logic]\label{def:strategy-logic-modalities} Strategy logic additional equiped with three modalities than basic strategy logic, i.e., the overapproximation modality $\subExt$, the underapproximation modality $\supExt$, and the persistency modality $\chpers$.
   \begin{itemize}
     \item $m \models \subExt p$ iff $\exists m'.\; m \subseteq m'$ and
       $m' \models p$;
@@ -216,12 +216,12 @@ When the expressiveness of atomic propositions is rich enough, the nested uses o
   \\& \forall \phi_1\;\phi_2 \in \mathcal{A}. \exists \phi_3 \in \mathcal{A}. \denot{\phi_3} = \denot{\phi_1} \cup \denot{\phi_2}
   \\& \forall \phi_1\;\phi_2 \in \mathcal{A}. \exists \phi_3 \in \mathcal{A}. \denot{\phi_3} = \denot{\phi_1} \times \denot{\phi_2}
 \end{align*}
-Then, all formula in choice logic can be expressed in approximation normal form, i.e., $\subExt$ and $\supExt$ are only applied to pure propositions.
+Then, all formula in strategy logic can be expressed in approximation normal form, i.e., $\subExt$ and $\supExt$ are only applied to pure propositions.
 \end{theorem}
 
 \paragraph{Erase modality}
 Write $\denot{\phi} \subseteq \Res$ for the set of resources that satisfy~$\phi$.
-Then the $\subseteq$-closures above coincide with the modalities from \autoref{def:choice-logic-modalities}:
+Then the $\subseteq$-closures above coincide with the modalities from \autoref{def:strategy-logic-modalities}:
 \begin{align*}
   \subExt(R) &\doteq \{\, r' \mid \exists r \in R.\; r' \subseteq r \,\},
   \\
@@ -643,7 +643,7 @@ It requires $\restrictTo{r}{\{x\}}$ to satisfy $\supExt (x = 1)$ and $\restrictT
 \begin{enumerate}
   \item The semantics of overapproximation modality can be changed by other modalities.
   \item $\emptyset \models \bot$, where $\bot$ typically never holds.
-  \item A more intuitive analogue in choice logic is the type context; however, all (overapproximated) values in the type context are assumed to be non-empty (in CBV semantics).
+  \item A more intuitive analogue in strategy logic is the type context; however, all (overapproximated) values in the type context are assumed to be non-empty (in CBV semantics).
 \end{enumerate}
 I suggest making the following change: $\emptyset \not\models \bot$, where $\bot$ typically never holds.
 \begin{enumerate}
@@ -725,7 +725,7 @@ We assign a new interpretation to the type $\urt{b}{\phi} \sarr \ort{b}{\neg \ph
 
 \subsection{Typed semantics}
 
-The denotational semantics of a type is given by a function in $\Res \sarr (X \sarr \Res \sarr \Res) \sarr \Code{Prop_{Choice}}$; it takes a context (resource) and a term (via its denotation) and returns a proposition in choice logic stating whether the term inhabits the type under that context.
+The denotational semantics of a type is given by a function in $\Res \sarr (X \sarr \Res \sarr \Res) \sarr \Code{Prop_{Choice}}$; it takes a context (resource) and a term (via its denotation) and returns a proposition in strategy logic stating whether the term inhabits the type under that context.
 \begin{align*}
   \denot{\ort{b}{\phi}} &: \lambda r.\lambda f. \Code{Atom}(f\;\vnu\;r) \chimpl \subExt\phi
   \\&\text{can only be expressed as } \lambda r.\lambda f. f\;\vnu\;r \models \subExt\phi
@@ -742,7 +742,7 @@ Note that we do not require $\restrictTo{(f\;\vnu\;r)}{\Dom{r}} = r$, i.e., that
   % \\\denot{x{:}\tau_x \sarr \tau} &: \lambda r.\lambda f. \forall f_x. (\denot{\tau_x}\;r\;f_x) \chimpl (\denot{\tau}\;r\;(\Code{App}\;f\;f_x)) \chland (\denot{\tau_x}\;\lambda \vnu.\lambda r.f\;\_\;(f_x\;\vnu\;r))  
   \\\denot{x{:}\tau_x \chwand \tau} &: \lambda r.\lambda f. \forall f_x.\exists f_x'. f_x' \sqsubseteq f_x \chimpl (\denot{\tau_x}\;r\;f_x') \chwand (\denot{\tau}\;r\;(\Code{App}\;f\;f_x'))
 \end{align*}\noindent
-The denotation of a typing context is a function in $\Res \sarr \Res \sarr \Code{Prop_{Choice}}$: under a context, it yields a predicate over contexts in choice logic.
+The denotation of a typing context is a function in $\Res \sarr \Res \sarr \Code{Prop_{Choice}}$: under a context, it yields a predicate over contexts in strategy logic.
 \begin{align*}
   \denot{\emptyset} &: \lambda (r,r'). \Code{Atom}(r) \chiff \Code{Atom}(r')
   \\\denot{x{:}\tau} &: \lambda (r,r'). \denot{\tau}\;r\;(\lambda y.\lambda \_.\Code{rename}(x, y, r'))
@@ -794,7 +794,7 @@ which means the input resource $r$ still holds after application.
 \end{align*}
 \end{definition}
 
-\begin{definition}[Choice Logic denotation] In order to simplify the notation, we also define the denotation of the terms in choice logic, which has the same meaning as the force semantics in choice logic.
+\begin{definition}[Strategy Logic denotation] In order to simplify the notation, we also define the denotation of the terms in strategy logic, which has the same meaning as the force semantics in strategy logic.
   \begin{align*}
     \denot{p} &\doteq \{ m ~|~ m \models p \}
   \end{align*}

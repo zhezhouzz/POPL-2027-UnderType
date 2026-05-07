@@ -1,6 +1,6 @@
 \newcommand{\compable}[2]{#1 \circ #2 \downarrow}
 \begin{frame}[fragile]
-    \frametitle{Choice Algebra}
+    \frametitle{Strategy Algebra}
 
 \textbf{Intuition:} Consider a judgement $\Gamma \vdash \phi$, the context constrians choices, the reachability property is existis a choice such that make a property $\phi$ hold.
 
@@ -20,7 +20,7 @@
 \end{frame}
 
 \begin{frame}[fragile]
-    \frametitle{Choice Algebra: Commutative Semiring}
+    \frametitle{Strategy Algebra: Commutative Semiring}
 
 \begin{definition}[Substitution and Carrier Set]
     A substitution $\sigma: \Code{Var} \rightharpoonup \Code{Value}$ is a partial function (mapping) from variables to resources. A element $m$ in carrier is a set of substitutions \textbf{share the same domain}, the carrier set is $\mathcal{M} = \mathcal{P}(\Code{Var} \rightharpoonup \Code{Value})$.
@@ -40,7 +40,7 @@
 \end{frame}
 
 \begin{frame}[fragile]
-    \frametitle{Choice Algebra: Examples}
+    \frametitle{Strategy Algebra: Examples}
 
 \begin{figure}
     \includegraphics[width=0.8\textwidth]{figures/Ex1.drawio.png}
@@ -53,7 +53,7 @@
 \end{frame}
 
 \begin{frame}[fragile]
-    \frametitle{Choice Algebra: Partial Order}
+    \frametitle{Strategy Algebra: Partial Order}
 
 \textbf{Intuition:} The partial order relation $\leq$ is ``entailment'' relation in the logic, where $a \leq b$ means $\forall \phi. a \models \phi \impl b \models \phi$.
 
@@ -69,7 +69,7 @@
 \end{frame}
 
 \begin{frame}[fragile]
-    \frametitle{Choice Algebra: Partial Order}
+    \frametitle{Strategy Algebra: Partial Order}
 
 \textbf{Question:} Compare $m_1$ with $m_1 \times m_2$?
 
@@ -90,9 +90,9 @@
 \end{frame}
 
 \begin{frame}[fragile]
-    \frametitle{Choice Logic}
+    \frametitle{Strategy Logic}
 
-\begin{definition}[Choice Logic] A choice logic is an intuitive logic with $*$, $\wand$, and $\oplus$ operators.
+\begin{definition}[Strategy Logic] A strategy logic is an intuitive logic with $*$, $\wand$, and $\oplus$ operators.
 \end{definition}
 \begin{itemize}
     \item $m \models \phi * \psi$ iff $\exists m_1\; m_2. m_1 \times m_2 \leq m \text{ and } m_1 \models \phi \text{ and } m_2 \models \psi$.
@@ -116,7 +116,7 @@
 \end{frame}
 
 \begin{frame}[fragile]
-    \frametitle{Choice Logic: Monotonicity}
+    \frametitle{Strategy Logic: Monotonicity}
 
     \begin{lemma}[Merge rule]
         $m \models \boxtimes_5 P_1 \oplus \boxtimes_5 P_2$ iff $m \models \boxtimes_5 (P_1 \lor P_2)$.
@@ -138,7 +138,7 @@
 \end{frame}
 
 \begin{frame}[fragile]
-    \frametitle{Choice Logic: Examples}
+    \frametitle{Strategy Logic: Examples}
 
     \begin{figure}
         \includegraphics[width=0.8\textwidth]{figures/Ex2.drawio.png}
@@ -154,7 +154,7 @@
 \end{frame}
 
 \begin{frame}[fragile]
-    \frametitle{Choice Logic: Examples}
+    \frametitle{Strategy Logic: Examples}
 
     \begin{figure}
         \includegraphics[width=0.6\textwidth]{figures/Ex2.drawio.png}
@@ -169,7 +169,7 @@
 \end{frame}
 
 \begin{frame}[fragile]
-    \frametitle{Choice Logic: compare with previous version}
+    \frametitle{Strategy Logic: compare with previous version}
 
 \begin{figure}
     \includegraphics[width=0.6\textwidth]{figures/Ex2.drawio.png}
@@ -185,7 +185,7 @@
 \end{frame}
 
 \begin{frame}[fragile]
-    \frametitle{Choice Logic: compare with previous version}
+    \frametitle{Strategy Logic: compare with previous version}
 
 \begin{figure}
     \includegraphics[width=0.6\textwidth]{figures/Ex2.drawio.png}
@@ -201,7 +201,7 @@
 \end{frame}
 
 \begin{frame}[fragile]
-    \frametitle{Choice Logic: compare with previous version}
+    \frametitle{Strategy Logic: compare with previous version}
 
 \begin{figure}
     \includegraphics[width=0.6\textwidth]{figures/Ex3.drawio.png}
@@ -216,7 +216,7 @@
 \end{frame}
 
 \begin{frame}[fragile]
-    \frametitle{Choice Logic: compare with previous version}
+    \frametitle{Strategy Logic: compare with previous version}
 
 \textbf{Problem:} All complex definition in previous version come from we want to use single resource to track knowledge even out of its domain.
 
@@ -232,7 +232,7 @@
 \end{frame}
 
 \begin{frame}[fragile]
-    \frametitle{Choice Logic: Persistency}
+    \frametitle{Strategy Logic: Persistency}
 
 \textbf{Idea:} Persistent proposition $\phi$ means $\phi$ holds without exclusive ownership; persistent proposition can be duplicated: $\phi * \phi \iff \phi$.
 
@@ -254,7 +254,7 @@
 \end{frame}
 
 \begin{frame}[fragile]
-    \frametitle{Choice Logic: Persistency}
+    \frametitle{Strategy Logic: Persistency}
 
 \begin{definition}[Persistency]
     \begin{itemize}
@@ -275,7 +275,7 @@
 \end{frame}
 
 \begin{frame}[fragile]
-    \frametitle{Choice Logic: Persistency}
+    \frametitle{Strategy Logic: Persistency}
 
 \begin{lemma}[Persistence Pure] A pure proposition $P$ is persistent: $P \models \Box P$.
 \end{lemma}
@@ -294,7 +294,7 @@
 
 
 \begin{frame}[fragile]
-    \frametitle{Choice Logic: Other modalities}
+    \frametitle{Strategy Logic: Other modalities}
 
 \begin{definition}[Modality]
     \begin{itemize}

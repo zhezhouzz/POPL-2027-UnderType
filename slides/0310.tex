@@ -15,9 +15,9 @@
 \end{frame}
 
 \begin{frame}[fragile]
-    \frametitle{Choice Algebra}
+    \frametitle{Strategy Algebra}
 
-\begin{definition}[Choice Algebra] A choice algebra is a tuple $(M, \mathbf{0}, \mathbf{1}, +, \times)$ where:
+\begin{definition}[Strategy Algebra] A strategy algebra is a tuple $(M, \mathbf{0}, \mathbf{1}, +, \times)$ where:
     \begin{itemize}
         \item A resource $m$ is a set of substitutions: $\mathcal{P}(\Code{Var} \rightharpoonup \Code{Value})$.
         \item $M$ is the set of resources.
@@ -38,7 +38,7 @@
 \end{frame}
 
 \begin{frame}[fragile]
-    \frametitle{Choice Algebra: Problem}
+    \frametitle{Strategy Algebra: Problem}
 
 We try to build a unified logic over this algebra.
 
@@ -53,7 +53,7 @@ We try to build a unified logic over this algebra.
 \end{frame}
 
 \begin{frame}[fragile]
-    \frametitle{Choice Algebra: Partial Order}
+    \frametitle{Strategy Algebra: Partial Order}
 
 \textbf{Intuition:} Assume $a + b = c$. It is hard to decide if $a \leq c$, since we must consider both overapproximation and underapproximation.
 
@@ -87,12 +87,12 @@ We try to build a unified logic over this algebra.
 \end{frame}
 
 \begin{frame}[fragile]
-    \frametitle{Basic Choice Logic}
+    \frametitle{Basic Strategy Logic}
 
 \begin{definition}[Atomic Propositions] Atomic proposition $P: M \sarr \Bool$ is a predicate over resources.
 \end{definition}
 
-\begin{definition}[Basic Choice Logic] Basic choice logic has no approximation; everything needs to be precise.
+\begin{definition}[Basic Strategy Logic] Basic strategy logic has no approximation; everything needs to be precise.
 \end{definition}
 \begin{itemize}
     \item $m \models\phi * \psi$ iff $\exists m_1, m_2.\ m_1 \times m_2 \leq m \text{ and } m_1 \models\phi \text{ and } m_2 \models\psi$.
@@ -110,7 +110,7 @@ We try to build a unified logic over this algebra.
 \end{frame}
 
 \begin{frame}[fragile]
-    \frametitle{Basic Choice Logic}
+    \frametitle{Basic Strategy Logic}
 
 \begin{example} Consider variable $x$ of type $\Nat$.
     \begin{itemize}
@@ -124,7 +124,7 @@ We try to build a unified logic over this algebra.
 \end{frame}
 
 \begin{frame}[fragile]
-    \frametitle{Basic Choice Logic: Dependency}
+    \frametitle{Basic Strategy Logic: Dependency}
 
 \begin{example} Consider variables $x$ and $y$ of type $\Nat$.
     \begin{itemize}
@@ -140,7 +140,7 @@ We try to build a unified logic over this algebra.
 \end{frame}
 
 \begin{frame}[fragile]
-    \frametitle{Basic Choice Logic: Sum}
+    \frametitle{Basic Strategy Logic: Sum}
 
 \begin{example} Consider variables $x$ and $y$ of type $\Nat$.
     \begin{itemize}
@@ -160,7 +160,7 @@ We try to build a unified logic over this algebra.
 \end{frame}
 
 \begin{frame}[fragile]
-    \frametitle{Basic Choice Logic: Monotonicity}
+    \frametitle{Basic Strategy Logic: Monotonicity}
 
 \begin{lemma}[Kripke's Monotonicity]
         $m \leq m'$ and $m \models\phi$ implies $m' \models\phi$.
@@ -188,9 +188,9 @@ where
 \end{frame}
 
 \begin{frame}[fragile]
-    \frametitle{Choice Logic with Approximation}
+    \frametitle{Strategy Logic with Approximation}
 
-\begin{definition}[Choice Logic with Approximation] We consider two new modalities, $\subExt$ and $\supExt$.
+\begin{definition}[Strategy Logic with Approximation] We consider two new modalities, $\subExt$ and $\supExt$.
     \begin{itemize}
         \item $m \models\subExt\phi$ iff $\exists m_1, m'.\ m + m_1 = m' \text{ and } m' \models\phi$.
         \item $m \models\supExt\phi$ iff $\exists m_1, m'.\ m' + m_1 = m  \text{ and } m' \models\phi$.
@@ -388,11 +388,11 @@ Consider the mixed case:
 \end{frame}
 
 \begin{frame}[fragile]
-    \frametitle{Simplified Choice Logic with Approximation}
+    \frametitle{Simplified Strategy Logic with Approximation}
 
 \textbf{Idea:} We have proved that all formulas can be converted to AppNF, as long as our atomic propositions include $\Code{All}$.
 
-\begin{definition}[Simplified Choice Logic with Approximation] The syntax is:
+\begin{definition}[Simplified Strategy Logic with Approximation] The syntax is:
 \begin{align*}
     \textbf{Variables} \quad x, y, z  \\
     \textbf{Variable Sets} \quad X, Y, Z \\
