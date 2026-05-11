@@ -1,42 +1,28 @@
 \section{Introduction}\label{sec:intro}
 
-Program verification and reasoning are often described in two complementary styles.
-Classical program logics and refinement typing typically articulate
-\emph{may}/\emph{safety}-style reasoning through \emph{overapproximation}: whenever
-initialization satisfies a precondition and the program terminates, the outcome
-\emph{may only} lie in a post-set of states deemed safe (\emph{e.g.},\allowbreak{} no crashes).
-\emph{Dual} readings instead package \emph{must}/reachability commitments through
-\emph{underapproximation}: one proves that chosen poststates really are reachable
-from hypotheses, as in incorrectness triples~\cite{OHP19}.
-Underapproximate refinement is not narrowly ``about bugs'': coverage
-types~\cite{CoverageType} use the same \emph{must}-style viewpoint for a different
-goal---establishing what good behaviors \emph{must} be attainable (\emph{e.g.}, that a
-generator \emph{must} expose all tests in a stated coverage obligation), rather than
-proving that undesirable errors \emph{must} occur.
+Refinement typing is now a standard way to package \emph{may}/safety reasoning:
+an overapproximate qualifier states which outcomes an expression \emph{may} produce.
+Its dual, \emph{must}/reachability reasoning, is underapproximate:
+the qualifier describes outcomes a computation \emph{must} be able to realize.
+Coverage types~\cite{CoverageType} show that this dual reading is useful in practice even when
+the goal is not bug finding: one verifies that good behaviors are not merely allowed but
+must be attainable.
 
-Unifying \emph{may}- and \emph{must}-style reasoning inside one semantic framework has
-been repeatedly motivated in both theory and tooling.
-Classic compositional ``may/must'' program analysis~\cite{CompositionalMayMust}, for instance,
-shows how summaries interact within analysis pipelines:
-once may-style safety reasoning blocks a naive proof, must-style evidence narrows witnesses and points to where specifications or implementations need repair,
-while reciprocally may-style unreachable regions prune search for must witnesses.
-Compositional refutations supply structured witnesses explaining why refinement checking fails~\cite{RefinementTypeRefutations};
-separately, counterfactual symbolic execution searches for concrete counterexamples to refinement obligations~\cite{RefinementTypeSymbolicExecution}.
-These techniques deliver must-style evidence to refinement users, but they are still largely orthogonal to the core typing judgment---they complement modular checking rather than reformulating it so that both modalities appear uniformly in typing rules throughout.
+Recent type-theoretic work also studies incorrectness and refutation directly
+through two-sided/refutational typing~\cite{Ill-types,RamsayIncorType}.
+Together, these lines establish a clear message:
+\emph{must}-style reasoning belongs in type systems, not only in external analysis engines.
+Yet, in most refinement-based implementations, core typing and subtyping judgments remain
+primarily \emph{may}-oriented; must-style evidence is often delegated to separate search
+procedures or post-hoc counterexample tools.
 
-Judgment-level unifications have progressed further on the logic side:
-program logics now internalize several styles in shared forms---outcome logic~\cite{ZDS23}, together with successor metatheory,
-with related lifts to hyperproperties~\cite{HyperHoareLogic}.
-Incorrectness separation logic supports modular local reasoning about the \emph{presence} of bugs~\cite{RBD+20}.
-Complementary tooling composes incorrectness logic with sufficient incorrectness logic---pairing reachable error states with explanations of which inputs witness them---for stronger incorrectness analyses~\cite{UTurn}.
-
-By contrast, refinement type systems have yet to unify both styles at the level of their core judgments.
-Today's refinement type checkers are still organized primarily around
-\emph{may}-style subtyping and entailments between qualifiers; heavyweight must-style evidence
-typically lives outside that judgment (dedicated symbolic engines and counterexample search).
-A single refinement type system that accommodates both reduces the friction of moving between modular safety-oriented checking and the reachability analyses programmers use when a refinement proof fails or when specifications mix approximation modes.
-This gap is not merely an implementation backlog to close later: refinement type systems are a natural compositional setting for
-\emph{both} over- and underapproximation, but a genuinely unified account for typed functional programs encounters problems inherent to \(\lambda\)-calculus---going beyond what imperative judgment-level unifications (\emph{e.g.}, outcome logic) settle on their own.
+This paper targets that gap at the judgment level.
+We seek one higher-order refinement typing discipline that can freely mix over- and
+underapproximate modes in function interfaces, while retaining concise, compositional
+types for functional programs.
+The challenge is not adding one extra modality bit.
+The challenge is to control dependencies induced by underapproximate choices across
+abstraction and application.
 
 Most of those challenges stem from abstraction and application, not from imagining I/O as a flat global store:
 while triple-style accounts classify whole input/output envelopes as uniformly over or under, refinement typing interleaves the two modality families along curried introductions.
@@ -52,44 +38,37 @@ Hence the design goal goes beyond attaching one extra modality tag to overapprox
 \emph{compositionally reconcile} arbitrary modality regimes throughout higher-order pipelines,
 including coverage typing's hallmark over-parameter with under-return arrangement~\cite{CoverageType}.
 
-Second, refinement typing favors concise interfaces, whereas incorrectness logic often forces programmers to spell out fully explicit descriptions of reachable stores.
-Incorrectness proofs often require painfully precise jointly refined poststores even when auxiliary
-locations do not visibly change.
-O'Hearn's canonical triple~\cite{OHP19}
+Second, refinement typing favors concise interfaces, but underapproximate reasoning is sensitive to hidden dependency.
+This tension already appears in canonical incorrectness examples~\cite{OHP19}:
 \begin{align*}
     [ \top ] \; \Code{if\; \I{even}(x)\; \&\&\; \I{odd}(y)\; then\; z := 42} \; [\Code{z} = 42 \land \I{even}(\Code{x}) \land \I{odd}(\Code{y})]
 \end{align*}\noindent
-must mention \(x\) and \(y\) in the postcondition (preserving oddness of \(y\)) \emph{despite} their
-not being assigned: omitting that guard information would unsoundly admit states such as
-\([\Code{x}=0;\Code{y}=1;\Code{z}=42]\) where \(y\) is not odd.
-By contrast, we would like type-level interfaces to stay short, for example
+the postcondition must carry guard information on \(x\) and \(y\), even though only \(z\) is assigned.
+By contrast, type interfaces should stay short, for example
 \begin{align*}
     x{:}\urt{\Int}{\top} \sarr y{:}\ort{\Int}{\vnu > 0} \sarr \urt{\Int}{\vnu = 42}
 \end{align*}\noindent
-(letting the result value be the third position) without spelling every relational tie between
-\(x\), \(y\), and the returned integer.
-Whether such abstraction is sound depends on later continuations: some uses allow treating
-parameters independently (a variable of type \(x{:}\urt{\Int}{\top}\) may still be used in isolation), while others
-depend on joint behaviour (so naive combinations such as \(x+z\) need not behave as if \(x\) and \(z\) were independent underapproximate draws), meaning
-hidden dependency must be tracked modularly---a task that store-native presentations struggle to surface
-for higher-order judgments.
+(treating the return value as the final position) without re-stating every relation among
+\(x\), \(y\), and that result.
+Whether this abstraction is sound depends on continuation structure:
+some uses can treat variables independently, while others rely on joint behavior.
+So the type system must track hidden dependency modularly.
 
 This paper builds \emph{strategy types}, a resource-modal refinement type system that keeps
 over- and underapproximation as first-class modalities on refinements and function positions.
-Semantically, we reuse the alternating structure familiar from semantic games and from quantifier alternation in QBF:
-some unknowns are modeled as externally fixed resolutions subject to \emph{may}-style overapproximate bounds,
-others as verifier-guided choices drawn from \emph{must}-style underapproximate witness sets that may shrink as derivations proceed.
-Following standard terminology, these correspond to universal/demonic and existential/angelic choice, respectively:
-underapproximate assumptions may still be strengthened by narrowing witnesses, whereas overapproximate assumptions are interpreted may-style and are not arbitrarily refinable during verification without additional constraints.
-Typings record proof-relevant \emph{strategy information} on hypotheses; under this reading, a typing derivation can be viewed as a strategy in which over-refinements constrain universal choices and under-refinements constrain existential ones.
-For the mixed specification above, the universally quantified tag \(n\) is fixed first; the existentially controlled part must still realize the stated coverage obligation at that \(n\).
+Operationally, underapproximate hypotheses represent witness choices that are consumed linearly:
+once fixed, they cannot be silently renegotiated.
+Overapproximate hypotheses remain may-style bounds.
+This asymmetry is exactly where dependency control matters in higher-order typing.
+At the semantic level, this interpretation aligns with alternating
+universal/existential choice (equivalently demonic/angelic choice), but the
+typing discipline is formulated directly as a refinement type system.
 
-We treat strategy as a resource in the type system.
-Operationally, an underapproximated refinement type in the context indicates that the prover is free to make a choice \emph{linearly}; once fixed, it cannot be renegotiated.
-The resource reading also gives a modular way to track dependencies between refinements.
-Instead of encoding dependencies solely through explicit reachability-style dependency annotations on
-types~\cite{ReachabilityTypes}, we structure contexts with additive \(\ctcomma\) and separating \(\ctstar\), following separation logic~\cite{SeparationLogic} and bunched typing~\cite{BunchedType}.
-The resulting bunched contexts distinguish which refinements may share witness state and which must be treated as disjoint, so that standard local reasoning principles (including framing) apply.
+Our key technical move is \emph{bunched typing}.
+Instead of carrying dependency only in qualifiers, we structure contexts with
+additive \(\ctcomma\) and separating \(\ctstar\), following bunched typing~\cite{BunchedType}
+and resource-sensitive local reasoning principles.
+These bunched contexts distinguish assumptions that may share witness state from those that must remain disjoint, enabling a precise ``who may depend on whom'' discipline and framing-style modularity at the type level.
 
 %% ZZ: not sure if we need to highlight this part
 % Following~\autoref{sec:overview}, those phenomena are modelled through \emph{strategic contexts} built
@@ -103,12 +82,12 @@ The resulting bunched contexts distinguish which refinements may share witness s
 \paragraph{Contributions.}
 We summarize the main technical contributions as follows.
 \begin{itemize}[leftmargin=*]
-\item We define a \emph{strategy algebra} of strategy resources and a modal \emph{strategy logic} whose connectives interpret approximation operators, independence, branching, and a fiberwise universal modality used to express dependence control.
-\item We present \emph{strategy types}, a unified refinement type system that freely combines over- and underapproximate modalities at function positions while retaining a declarative typing judgment shaped for functional programs.
-\item We give strategy types a compositional denotational semantics in strategy logic  and extract declarative typing and subtyping rules that implement the intended ``who may depend on whom'' discipline.
+\item We present \emph{strategy types}, a resource-modal and bunched refinement type system that freely combines over- and underapproximate modalities at higher-order function positions.
+\item We define a strategy-resource semantics (with a corresponding modal strategy logic) that gives a compositional account of approximation, independence, and branching for typed functional programs.
+\item From this semantics, we derive declarative typing and subtyping rules that enforce an explicit dependency policy---which assumptions may be correlated, which must be separated, and how those constraints propagate compositionally.
 \end{itemize}
 
 \paragraph{Roadmap.}
-\autoref{sec:overview} develops modality combinations at function types, explains why naive modality mixing fails, and introduces strategic contexts informally.
-\autoref{sec:formal} presents the strategy algebra, strategy logic, syntax of strategy types, and the semantic typing judgment.
-\autoref{sec:related} situates the design with respect to outcome logic and related program logics.
+\autoref{sec:overview} develops modality combinations at function types, explains why naive mixing fails, and introduces bunched strategic contexts informally.
+\autoref{sec:formal} presents strategy resources, strategy logic, the syntax of strategy types, and the semantic typing judgment.
+\autoref{sec:related} discusses connections to program logics and other type-based approaches to incorrectness and refutation.
