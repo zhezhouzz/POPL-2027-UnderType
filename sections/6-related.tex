@@ -53,3 +53,31 @@ $y$ in the store, and the question of how $x$'s coverage relates to
 $y$'s is left entirely to the content of $\chi$.
 Outcome logic therefore does not, by itself, supply a
 \emph{function-type-first} account of application.
+
+Judgment-level unifications have progressed further on the logic side:
+program logics now internalize several styles in shared forms---outcome logic~\cite{ZDS23}, together with successor metatheory,
+with related lifts to hyperproperties~\cite{HyperHoareLogic}.
+Incorrectness separation logic supports modular local reasoning about the \emph{presence} of bugs~\cite{RBD+20}.
+Complementary tooling composes incorrectness logic with sufficient incorrectness logic---pairing reachable error states with explanations of which inputs witness them---for stronger incorrectness analyses~\cite{UTurn}.
+
+Second, refinement typing favors concise interfaces, whereas incorrectness logic often forces programmers to spell out fully explicit descriptions of reachable stores.
+Incorrectness proofs often require painfully precise jointly refined poststores even when auxiliary
+locations do not visibly change.
+O'Hearn's canonical triple~\cite{OHP19}
+\begin{align*}
+    [ \top ] \; \Code{if\; \I{even}(x)\; \&\&\; \I{odd}(y)\; then\; z := 42} \; [\Code{z} = 42 \land \I{even}(\Code{x}) \land \I{odd}(\Code{y})]
+\end{align*}\noindent
+must mention \(x\) and \(y\) in the postcondition (preserving oddness of \(y\)) \emph{despite} their
+not being assigned: omitting that guard information would unsoundly admit states such as
+\([\Code{x}=0;\Code{y}=1;\Code{z}=42]\) where \(y\) is not odd.
+By contrast, we would like type-level interfaces to stay short, for example
+\begin{align*}
+    x{:}\urt{\Int}{\top} \sarr y{:}\ort{\Int}{\vnu > 0} \sarr \urt{\Int}{\vnu = 42}
+\end{align*}\noindent
+(letting the result value be the third position) without spelling every relational tie between
+\(x\), \(y\), and the returned integer.
+Whether such abstraction is sound depends on later continuations: some uses allow treating
+parameters independently (a variable of type \(x{:}\urt{\Int}{\top}\) may still be used in isolation), while others
+depend on joint behaviour (so naive combinations such as \(x+z\) need not behave as if \(x\) and \(z\) were independent underapproximate draws), meaning
+hidden dependency must be tracked modularly---a task that store-native presentations struggle to surface
+for higher-order judgments.

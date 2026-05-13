@@ -1,74 +1,101 @@
 \section{Introduction}\label{sec:intro}
 
-Refinement typing is now a standard way to package \emph{may}/safety reasoning:
-an overapproximate qualifier states which outcomes an expression \emph{may} produce.
-Its dual, \emph{must}/reachability reasoning, is underapproximate:
-the qualifier describes outcomes a computation \emph{must} be able to realize.
-Coverage types~\cite{CoverageType} show that this dual reading is useful in practice even when
-the goal is not bug finding: one verifies that good behaviors are not merely allowed but
-must be attainable.
+Type-based reasoning has become a standard approach to functional program verification.
+Refinement types are a prominent example: they support overapproximate safety reasoning by embedding logical safety properties directly into types.
+Under a typing judgment \(\vdash e : \tau\), every result to which \(e\) may reduce should lie in the set described by \(\tau\), so \(\tau\) is an overapproximation of \(e\)'s behavior.
+This is a \emph{may}-style reading, since not every behavior allowed by \(\tau\) needs to be realized by \(e\). Moreover, the type context is typically interpreted in a universal style: \emph{for any} allowed context, the typing judgment should hold.
+The dual reading treats \(\tau\) as an underapproximate subset of behaviors that \(e\) must realize, and interprets the context in an existential style, which facilitates reachability and completeness reasoning.
+Coverage types~\cite{CoverageType} demonstrate the practical value of this view by verifying coverage completeness of test input generators: expected good behaviors are not merely permitted, but guaranteed to be attainable.
+More broadly, must-style reasoning has been shown to reduce false positives in bug detection~\cite{OHP19,Ill-types} and to provide reachability guarantees.
 
-Recent type-theoretic work also studies incorrectness and refutation directly
-through two-sided/refutational typing~\cite{Ill-types,RamsayIncorType}.
-Together, these lines establish a clear message:
-\emph{must}-style reasoning belongs in type systems, not only in external analysis engines.
-Yet, in most refinement-based implementations, core typing and subtyping judgments remain
-primarily \emph{may}-oriented; must-style evidence is often delegated to separate search
-procedures or post-hoc counterexample tools.
+Unifying over- and underapproximate reasoning within one semantic framework is not just a theoretically elegant proposal; it has been a recurring goal in verification theory and tooling.
+Classic compositional may/must analysis already illustrates the potential synergy: may-style reasoning prunes infeasible regions, while must-style evidence narrows witnesses and localizes specification or implementation defects~\cite{CompositionalMayMust}.
+In current type-based verification practice, however, overapproximate and underapproximate reasoning are still often separated at the judgment level.
+For example, refinement-typing workflows often rely on external mechanisms such as symbolic execution to search for concrete counterexamples to refinement obligations, rather than integrating underapproximate reasoning directly into typing judgments~\cite{RefinementTypeSymbolicExecution}.
+This split leaves overapproximate typing judgments and underapproximate witnesses at different methodological layers, limiting the modularity and reuse that type-system-native reasoning would otherwise provide.
+Our goal is therefore not to bolt must-style analysis onto refinement typing, but to internalize both modalities uniformly in typing rules for higher-order functional programs.
 
-This paper targets that gap at the judgment level.
-We seek one higher-order refinement typing discipline that can freely mix over- and
-underapproximate modes in function interfaces, while retaining concise, compositional
-types for functional programs.
-The challenge is not adding one extra modality bit.
-The challenge is to control dependencies induced by underapproximate choices across
-abstraction and application.
-
-Most of those challenges stem from abstraction and application, not from imagining I/O as a flat global store:
-while triple-style accounts classify whole input/output envelopes as uniformly over or under, refinement typing interleaves the two modality families along curried introductions.
+Building a type-theoretic foundation for over- and underapproximate reasoning in functional languages is non-trivial.
+Standard refinement typing can be read as ``overapproximated parameters'' (interpreted as \emph{for any} inputs) plus an ``overapproximated return'' (interpreted as an upper bound on application results).
+Coverage types use ``overapproximated parameters'' with an ``underapproximated return'' to express coverage-completeness guarantees of test generators for any input.
+However, these systems usually treat each curried premise as uniformly ``purely over'' or ``purely under'' in isolation, which loses the ability to mix over- and underapproximation modalities in arbitrary ways.
 For instance, consider a curried refinement type whose argument positions interchange over- and underapproximate qualifiers:
 \begin{align*}
-    n{:}\ort{\Int}{\top} \sarr \urt{\List[\Int]}{\I{mem}(\vnu,n)} \sarr \urt{\List[\Int]}{\I{hd}(\vnu, n)} 
+    \vdash \Code{existsElem} : n{:}\ort{\Nat}{\top} \sarr \urt{\List[\Nat]}{\top} \sarr \urt{\Bool}{\vnu = \true} 
 \end{align*}\noindent
-This specification bundles a parameterized coverage obligation: given an arbitrarily tagged integer \(n\), if we supply all possible input lists that contain \(n\), the return type demands that outputs \emph{must} cover every list whose head is \(n\) (one possible implementation is to sort the inputs). This function mixes modality patterns along the spine rather than collapsing either side of the arrow to a uniform over- or underapproximate reading.
-Neither curried premise is uniformly ``purely over'' or ``purely under'' in isolation.
-Translating arbitrarily through global-store encodings restores at best four coarse corners
-(one over/under choice per precondition/postcondition knot) without the fine modality patterns function refinement typing already demands.
+The first parameter is overapproximated (colored in pink), while the second parameter and return type are underapproximated (colored in blue).
+This specification says: ``\textcolor{magenta}{\emph{for any}} element $n$, if the second parameter \textcolor{CobaltBlue}{\emph{covers}} all possible lists, a desired \Code{existsElem} function \textcolor{CobaltBlue}{\emph{must}} be able to return $\true$.'' 
+This function type mixes modality patterns along the spine rather than collapsing either side of the arrow to a uniform over- or underapproximate reading.
 Hence the design goal goes beyond attaching one extra modality tag to overapproximation: a unified system must
-\emph{compositionally reconcile} arbitrary modality regimes throughout higher-order pipelines,
-including coverage typing's hallmark over-parameter with under-return arrangement~\cite{CoverageType}.
+\emph{compositionally reconcile} arbitrary modality regimes throughout higher-order pipelines.
 
-Second, refinement typing favors concise interfaces, but underapproximate reasoning is sensitive to hidden dependency.
-This tension already appears in canonical incorrectness examples~\cite{OHP19}:
+When we consider fine-grained over- and underapproximate modalities for a multi-parameter function, one challenge is dependency between parameters.
+Consider the following potential client of \Code{findElem}:
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    let x = nat_gen () in
+    let l = nat_list_gen () in
+    let l' = if mem l x then [] else l in
+    findElem x l'
+\end{minted}
+$x$ is a random element and $l$ is a random list.
+More interestingly, we construct a new list $l'$ that contains only lists that do not contain $x$.
+This is a ``wrong case'' where \Code{findElem} can never return $\true$.
+At first glance, $x$ and $l'$ seem to satisfy the parameter types of \Code{findElem}: $x$ is always a natural number, and $l'$ may look as if it can still cover all lists.
+But there is a hidden dependency: if we require $l'$ to cover, say, $[0;1]$, then $x$ can no longer be $0$ or $1$.
+In contrast, \Code{findElem} assumes the two parameter choices are independent.
+In general, fine-grained over/underapproximate reasoning requires a typing language expressive enough to describe parameter dependencies, and a type system that can track data-flow dependencies modularly.
+
+The situation becomes more complicated for higher-order functions, where a function itself is an input.
+An input function may produce results with over- or underapproximate modality, but what is the relation between repeated results of the same function?
+Consider:
 \begin{align*}
-    [ \top ] \; \Code{if\; \I{even}(x)\; \&\&\; \I{odd}(y)\; then\; z := 42} \; [\Code{z} = 42 \land \I{even}(\Code{x}) \land \I{odd}(\Code{y})]
+    &\vdash \lambda g \doteq f.(f\;() == f\;()) : f{:}(\Unit\sarr\urt{\Bool}{\top})\sarr\urt{\Bool}{\vnu = \false}
 \end{align*}\noindent
-the postcondition must carry guard information on \(x\) and \(y\), even though only \(z\) is assigned.
-By contrast, type interfaces should stay short, for example
+where we expect $f$ to be able to produce different results across two applications.
+Note that ``producing two different values one by one'' and ``producing two different values nondeterministically'' are quite different.
+For example, for
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    let x = bool_gen () in let f = ?$\lambda ().$?x in (* body *)
+\end{minted}
+the function $f$ can cover all boolean values nondeterministically, but in the let-body above it can only generate the same value on both calls.
+Thus, the application \(g\;f\) can only evaluate to $\true$, which is not what we expect.
+Whether a higher-order function is ``duplicatable'' is therefore another feature that our type language must handle.
+
+This paper develops \emph{resolution types}, a resource-modal refinement type system that keeps over- and underapproximation as first-class modalities and allows fine-grained mixing of the two in arbitrary ways.
+For a nondeterministic program, demonic execution corresponds to overapproximation (all possible executions must be as expected), while angelic execution corresponds to underapproximation (there exists some execution as expected).
+For example, given two reductions $\mstep{e}{v_1}$ and $\mstep{e}{v_2}$, a demonic resolution considers all combinations of these reductions (to $v_1$, to $v_2$, or both), while an angelic resolution selects as needed.
+Moreover, the resolving power that enables demonic or angelic choices is treated as a resource in the type system.
+At the extreme, for a singleton-valued term (e.g., $\mstep{1+1}{2}$), angelic and demonic resolutions collapse, since there is no space for them to differ.
+With this resource-based view, we build an underlying resource algebra and resource logic that provide a Kripke semantics for over- and underapproximate modalities.
+
+This resource-based view also addresses both dependency tracking and function duplicability.
+In general, over- and underapproximate modalities can be related in two ways: dependent or independent, which naturally recalls classical bunched typing~\cite{BunchedType} and other resource-based disjointness reasoning approaches.
+For example, our type system provides a \emph{magic wand} ($\ctwand$), in addition to the normal arrow ($\ctsarr$), to express independence requirements between function parameters:
 \begin{align*}
-    x{:}\urt{\Int}{\top} \sarr y{:}\ort{\Int}{\vnu > 0} \sarr \urt{\Int}{\vnu = 42}
+    \vdash \Code{existsElem} : n{:}\ort{\Nat}{\top} \ctwand \urt{\List[\Nat]}{\top} \ctwand \urt{\Bool}{\vnu = \true} 
 \end{align*}\noindent
-(treating the return value as the final position) without re-stating every relation among
-\(x\), \(y\), and that result.
-Whether this abstraction is sound depends on continuation structure:
-some uses can treat variables independently, while others rely on joint behavior.
-So the type system must track hidden dependency modularly.
+With bunched typing, we can track complex data-flow dependencies in a tree-structured context and apply framing rules for local reasoning.
+To express function duplicability, we also introduce a \emph{persistent} modality $\ctpers$, meaning the function is independent of demonic or angelic decisions made by the context (i.e., the contextual resource is singleton).
+The function then makes decisions solely from the nondeterminism encapsulated in its body, and is therefore allowed to produce different results across multiple applications.
 
-This paper builds \emph{strategy types}, a resource-modal refinement type system that keeps
-over- and underapproximation as first-class modalities on refinements and function positions.
-Operationally, underapproximate hypotheses represent witness choices that are consumed linearly:
-once fixed, they cannot be silently renegotiated.
-Overapproximate hypotheses remain may-style bounds.
-This asymmetry is exactly where dependency control matters in higher-order typing.
-At the semantic level, this interpretation aligns with alternating
-universal/existential choice (equivalently demonic/angelic choice), but the
-typing discipline is formulated directly as a refinement type system.
 
-Our key technical move is \emph{bunched typing}.
-Instead of carrying dependency only in qualifiers, we structure contexts with
-additive \(\ctcomma\) and separating \(\ctstar\), following bunched typing~\cite{BunchedType}
-and resource-sensitive local reasoning principles.
-These bunched contexts distinguish assumptions that may share witness state from those that must remain disjoint, enabling a precise ``who may depend on whom'' discipline and framing-style modularity at the type level.
+
+% Semantically, we reuse the alternating structure familiar from semantic games and from quantifier alternation in QBF:
+% some unknowns are modeled as externally fixed resolutions subject to \emph{may}-style overapproximate bounds,
+% others as verifier-guided choices drawn from \emph{must}-style underapproximate witness sets that may shrink as derivations proceed.
+% Following standard terminology, these correspond to universal/demonic and existential/angelic choice, respectively:
+% underapproximate assumptions may still be strengthened by narrowing witnesses, whereas overapproximate assumptions are interpreted may-style and are not arbitrarily refinable during verification without additional constraints.
+% Typings record proof-relevant \emph{strategy information} on hypotheses; under this reading, a typing derivation can be viewed as a strategy in which over-refinements constrain universal choices and under-refinements constrain existential ones.
+% For the mixed specification above, the universally quantified tag \(n\) is fixed first; the existentially controlled part must still realize the stated coverage obligation at that \(n\).
+
+% We treat strategy as a resource in the type system.
+% Operationally, an underapproximated refinement type in the context indicates that the prover is free to make a choice \emph{linearly}; once fixed, it cannot be renegotiated.
+% The resource reading also gives a modular way to track dependencies between refinements.
+% Instead of encoding dependencies solely through explicit reachability-style dependency annotations on
+% types~\cite{ReachabilityTypes}, we structure contexts with additive \(\ctcomma\) and separating \(\ctstar\), following separation logic~\cite{SeparationLogic} and bunched typing~\cite{BunchedType}.
+% The resulting bunched contexts distinguish which refinements may share witness state and which must be treated as disjoint, so that standard local reasoning principles (including framing) apply.
+
+
 
 %% ZZ: not sure if we need to highlight this part
 % Following~\autoref{sec:overview}, those phenomena are modelled through \emph{strategic contexts} built
@@ -82,12 +109,12 @@ These bunched contexts distinguish assumptions that may share witness state from
 \paragraph{Contributions.}
 We summarize the main technical contributions as follows.
 \begin{itemize}[leftmargin=*]
-\item We present \emph{strategy types}, a resource-modal and bunched refinement type system that freely combines over- and underapproximate modalities at higher-order function positions.
-\item We define a strategy-resource semantics (with a corresponding modal strategy logic) that gives a compositional account of approximation, independence, and branching for typed functional programs.
-\item From this semantics, we derive declarative typing and subtyping rules that enforce an explicit dependency policy---which assumptions may be correlated, which must be separated, and how those constraints propagate compositionally.
+\item We define a \emph{resolution algebra} of resolution resources and a modal \emph{resolution logic} whose connectives interpret approximation operators, dependence, and persistence.
+\item We present \emph{resolution types} for functional programs, allowing users to mix over- and underapproximate modalities in arbitrary ways within types. We give resolution types a compositional denotational semantics in resolution logic.
+\item We design declarative typing and subtyping rules sufficient to prove semantic soundness of resolution types, and evaluate the design through case studies that combine over- and underapproximate reasoning.
 \end{itemize}
 
 \paragraph{Roadmap.}
-\autoref{sec:overview} develops modality combinations at function types, explains why naive mixing fails, and introduces bunched strategic contexts informally.
-\autoref{sec:formal} presents strategy resources, strategy logic, the syntax of strategy types, and the semantic typing judgment.
-\autoref{sec:related} discusses connections to program logics and other type-based approaches to incorrectness and refutation.
+\autoref{sec:overview} develops modality combinations at function types, explains why naive modality mixing fails, and introduces resolution contexts informally.
+\autoref{sec:formal} presents the resolution algebra, resolution logic, syntax of resolution types, and the semantic typing judgment.
+\autoref{sec:related} situates the design with respect to outcome logic and related program logics.

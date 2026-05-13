@@ -40,6 +40,32 @@ We also extend the definitions of domain, compatibility, and projection from sub
 \end{align*}
 \end{definition}
 
+% \paragraph{\textcolor{red}{New product}} Problem: we cannot show the overapproximation modality is persistent, $\subExt (x > 0) \models \subExt (x > 0) \chstar \subExt (x > 0)$ is wrong. Consider a resource $r \doteq \{[x\mapsto 1], [x\mapsto 2]\}$, we have
+% \begin{align*}
+%   &\subs_1 \doteq [x\mapsto 1] \in r \quad \subs_2 \doteq [x\mapsto 2] \in r \quad \text{ and } \neg \mapCompat{\subs_1}{\subs_2}
+% \end{align*}
+% Previous definition of $r_1 \times r_2$ works well in most over situation besides the case when $r_1$ and $r_2$ has the same domain. If they has the same domain, the $\subExt (x > 0) \chstar \subExt (x > 0)$ means singleton resource, which is too restrict. Ideally, the overapproximation modality should be naturally persistent, and persistent means it is independent from the resource. More precisely, we want
+% \begin{align*}
+%   r \models P \iff \forall r'. r' \subseteq r \implies r' \models P
+% \end{align*}\noindent
+% where \textcolor{red}{we do overapproximation on the left hand side resource, instead of denotation of $P$}. This intuition make a deep connection over the resource modality (underapproximation) with overapproximation modality. Now, the problem is generalize the definition of $\mapCompat{r_1}{r_2}$ and $r_1 \times r_2$ to satisfy the new intuition. The intuition here is that $P \chstar Q$ should be treat as \textcolor{red}{after I makes a decision on $P$ allowed, then I can still have freedom to make decision on $Q$ allowed, and \textbf{vice versa}}. Previously, we define:
+% \begin{align*}
+%   r_1 \times r_2 \;\doteq\;
+%     \begin{cases}
+%       \{\, \subs_1 \cup \subs_2 \mid \subs_1 \in r_1,\; \subs_2 \in r_2 \,\}
+%         & \text{if } \forall \subs_1 \in r_1.\;\forall \subs_2 \in r_2.\; \mapCompat{\subs_1}{\subs_2}, \\
+%       \text{undefined}
+%         & \text{otherwise.}
+%     \end{cases}
+% \end{align*}\noindent
+% which doesn't works for $r \times r$.
+
+Formally, make a decision in our setting is fixing a store from the resource, thus we can define:
+\begin{align*}
+  r_1 \vec{\times} r_2 \doteq \bigcup_{\sigma_1 \in r_1} \{ \sigma_1 \cup \sigma_2 \mid \mapCompat{\sigma_1}{\sigma_2} \}
+\end{align*}\noindent
+Assume we have $r_1 \doteq \{[x\mapsto 1], [x\mapsto 2]\}$ and $r_2 \doteq \{[x\mapsto 1], [x\mapsto 2], [x\mapsto 3]\}$. Then we have
+
 Note that for any strategy resource $r$, $\mapCompat{r}{r}$ always holds since they always agree on their domain. Similarly, singleton set $\{r\}$ is compatible with itself.
 
 \begin{definition}[Strategy-resource operations]\label{def:strategy-resource-times} We define two operations ($\Res \times \Res \rightharpoonup \Res$) on strategy resources. The \emph{(strategy) resource product} $r_1 \times r_2$ is the partial binary operation that produces the pairwise union of two strategy resources, i.e.,
@@ -235,7 +261,7 @@ Intuitively, $r$ models $\subExt p$ (or $\supExt p$) iff there exists a superset
     \item $r \models \supExt p$ iff $\exists r'.\; r' \subseteq r$ and
       $r' \models p$,
     \item $r \models \forallM{x}p$ iff $\forall \sigma_x \in \projectTo{r}{\{x\}}. \fiberOver{r}{\sigma_x} \models \sigma_x(p)$;
-    % \item $r \models \chpers p$ iff $\forallM{\Dom{r}} p$, equivalently, $\forall \sigma \in r. \{\sigma\} \models p$.
+    \item $r \models \chpers p$ iff $|r| = 1$ and $r \models p$.
     \end{itemize}
 \end{definition}
 
@@ -323,7 +349,7 @@ The problem is that the $\chland$ cannot make the constraint $0 < x$ be added in
       \text{\textbf{Qualifiers}}& \quad & \phi ::= \quad & c ~|~ x ~|~ \primop\;\overline{v} ~|~ \bot ~|~ \top  ~|~ \neg \phi ~|~ \phi \land \phi ~|~ \phi \lor \phi ~|~ \phi \times \phi ~|~ \phi \impl \phi ~|~ \forall x{:}b. \phi ~|~ \exists x{:}b. \phi
       \\ \text{\textbf{Strategy Types}}& \quad & \tau ::= \quad & \ort{b}{\phi} ~|~ \urt{b}{\phi} ~|~ \tau \ctinter \tau ~|~ \tau \ctunion \tau ~|~ \tau \ctoplus \tau ~|~ x{:}\tau \ctsarr \tau ~|~ x{:}\tau \ctwand \tau
       %  ~|~  \ctind \tau 
-      % ~|~ \ctpers \tau 
+      ~|~ \ctpers \tau 
       % ~|~ \ctDiv{s}
       \\ \text{\textbf{Type Contexts}}& \quad & \Gamma ::= \quad & \emptyset ~|~ x{:}\tau ~|~ \Gamma \ctstar \Gamma ~|~ \Gamma \ctcomma \Gamma ~|~ \Gamma \ctoplus \Gamma
       \\ \text{\textbf{Contexts With Holes}}& \quad & \Delta ::= \quad & \Box ~|~ \Gamma ~|~ \Delta \ctstar \Delta ~|~ \Delta \ctcomma \Delta ~|~ \Delta \ctoplus \Delta
@@ -372,16 +398,27 @@ $\Gamma \ctvdash e : \tau$ and $\Gamma \ctvdash \tau_1 <: \tau_2$ in a single de
 
 \subsection{Denotational semantics}
 
+\begin{definition}[Totality under a strategy resource]\label{def:total-under-resource}
+For $r \in \Res$ and $e$ with $\FV(e) \subseteq \Dom{r}$, lift $\Code{Total}(e)$ to strategy logic by:
+\[
+  r \models \denot{\Code{Total}(e)} \;\iff\;
+  \forall \sigma \in r.\; \exists v.\; \mstep{\sigma(e)}{v},
+\]
+\end{definition}
+
 \begin{align*}
   \\\denot{e}_x &: \Code{Prop_{Strat}} \quad (\text{where $x$ is a free variable})
   \\\denot{e}_x &\doteq \Code{Prop}(\{r \mid \forall \sigma \in r. \mstep{\sigma(e)}{\sigma(x)} \})
+  % \\\denot{e}_x &\doteq \forallM{\Code{FV}(e)} \Code{Atom}(\mstep{e}{x})
   \\\denot{\tau} &: \mathcal{E} \sarr \Code{Prop_{Strat}}
   \\\denot{\ort{b}{\phi}} &\doteq \lambda e. \forall \vnu. \denot{e}_\vnu \chimpl \forallM{\Code{FV}(\ort{b}{\phi})}\,\subExt \phi
   \\\denot{\urt{b}{\phi}} &\doteq \lambda e. \forall \vnu. \denot{e}_\vnu \chimpl \forallM{\Code{FV}(\urt{b}{\phi})}\,\supExt \phi
-  \\\denot{x{:}\tau_x \ctsarr \tau} &\doteq \lambda e. \forall y. \denot{e}_y \chimpl \forallM{y} (\denot{\tau_x}\;x \chimpl \denot{\tau}\;(y\;x))
-  \\\denot{x{:}\tau_x \ctwand \tau} &\doteq \lambda e. \forall y. \denot{e}_y \chimpl \forallM{y} (\denot{\tau_x}\;x \chwand \denot{\tau}\;(y\;x))
+  % \\\denot{x{:}\tau_x \ctsarr \tau} &\doteq \lambda e. \forall y. \denot{e}_y \chimpl \forallM{y} (\denot{\tau_x}\;x \chimpl \denot{\tau}\;(y\;x))
+  % \\\denot{x{:}\tau_x \ctwand \tau} &\doteq \lambda e. \forall y. \denot{e}_y \chimpl \forallM{y} (\denot{\tau_x}\;x \chwand \denot{\tau}\;(y\;x))
+  \\\denot{x{:}\tau_x \ctsarr \tau} &\doteq \lambda e. \forall x.\denot{\tau_x}\;x \chimpl \denot{\tau}\;(e\;x)
+  \\\denot{x{:}\tau_x \ctwand \tau} &\doteq \lambda e. \forall x.\denot{\tau_x}\;x \chwand \denot{\tau}\;(e\;x)
   % \\\denot{\ctind \tau} &\doteq \lambda e. \forallM{\Code{FV}(\tau) \cup \Code{FV}(e)} (\denot{\tau}\;e)
-  % \\\denot{\ctpers \tau} &\doteq \lambda e. \forall x.\denot{e}_x \chimpl \chpers (\denot{\tau}\;x)
+  \\\denot{\ctpers \tau} &\doteq \lambda e. \forall x.\denot{e}_x \chimpl \chpers  (\denot{\tau}\;x)
   \\\denot{\tau_1 \ctoplus \tau_2} &\doteq \lambda e. \denot{\tau_1}\;e \choplus \denot{\tau_2}\;e
   \\\denot{\tau_1 \ctinter \tau_2} &\doteq \lambda e. \denot{\tau_1}\;e \chland \denot{\tau_2}\;e
   \\\denot{\tau_1 \ctunion \tau_2} &\doteq \lambda e. \denot{\tau_1}\;e \chlor \denot{\tau_2}\;e
@@ -646,7 +683,7 @@ well formed.
 
 \begin{theorem}[Fundamental theorem]
   \begin{align*}
-    \Gamma \ctvdash e : \tau \text{ implies } \denot{\Gamma} \chvdash \denot{\tau}\;e
+    \Gamma \ctvdash e : \tau \text{ implies } \denot{\Gamma} \chvdash \denot{\tau}\;e \chland \Code{Total}(e)
   \end{align*}\noindent
 \end{theorem}
 
@@ -836,5 +873,50 @@ For example,
   \\&\emptyset \vdash \lambda ().\Code{nat\_gen()} \oplus \lambda ().\Code{neg\_gen()} : \chpers (\Unit\sarr\urt{\Int}{\top}) \judgfail
   \\&\underline{x{:}\chpers (\Unit\sarr\urt{\Int}{\top}) \vdash e : \tau}
   \\  &\emptyset \vdash \zlet{x}{\lambda ().\Code{nat\_gen()} \oplus \lambda ().\Code{neg\_gen()}}{e} : \tau
+\end{align*}\noindent
+
+\paragraph{Some consideration about persistency} In current setting, only persistency means holds under singleton resource (it is really hard to generalize and somehow counter-intuitive). One straightforward result is ``$\subExt \phi$'' is not persistent. Consider several examples:
+\begin{align*}
+  &\subExt (x > 0)\chland \supExt (y > 0) \models \subExt (x > 0)\chstar \supExt (y > 0) \judgfail
+\end{align*}\noindent
+Consider $m \doteq \{ [x=1;y=1], [x=2;y=2], ... \}$ which holds the left-hand side, but not the right-hand side. Actually, in this case $x$ and $y$ are still dependent, if we decide the value of $x$, the value of $y$ will also be determined. In general, 
+\begin{align*}
+  &\chpers \subExt (x > 0)\chland \supExt (y > 0) \models \chpers\subExt (x > 0)\chstar \supExt (y > 0) \judgok
+\end{align*}\noindent
+where I call $\chpers \subExt \phi$ as \emph{universal} modality. For example,
+\begin{align*}
+  &\denot{\subExt (0 \leq x \leq 1)} =\{ \{ [x=0] \},  \{ [x=1] \}, \{ [x=0], [x=1] \}, ... \}
+  \\&\denot{\chpers \subExt (0 \leq x \leq 1)} =\{ \{ [x=0] \},  \{ [x=1] \}, ... \}
+\end{align*}\noindent
+which means that the universal modality is persistent. When overapproximation appears at negative position, they are equivalent to the persistent modality in some cases:
+\begin{align*}
+  &\subExt p \models \subExt q \iff \chpers \subExt p \models \subExt q
+  \\&\subExt p \models \supExt q \iff \chpers \supExt p \models \supExt q
+\end{align*}\noindent
+However, in general, they are not equivalent. For example,
+\begin{align*}
+  &\chpers \subExt (0 \leq x \leq 1) \models (x = 0) \chlor (x = 1) \judgok
+  \\&\subExt (0 \leq x \leq 1) \models (x = 0) \chlor (x = 1) \judgfail
+\end{align*}\noindent
+Here is another typing example:
+\begin{align*}
+  & \vdash \lambda x.x : x{:}\ort{\Bool}{\top} \sarr \ort{\Bool}{\vnu = \true} \unionty \ort{\Bool}{\vnu = \false} \judgfail
+  \\&\vdash \lambda x.x : x{:}(\chpers\ort{\Bool}{\top}) \sarr \ort{\Bool}{\vnu = \true} \unionty \ort{\Bool}{\vnu = \false} \judgok
+\end{align*}\noindent
+It means that when $\lambda x.x$ apply to $\true$ or $\false$, the result is either $\true$ or $\false$.  However, when $\lambda x.x$ applies to $\Code{bool\_gen()}$, the result is not guaranteed to be either $\true$ or $\false$ (can be both).
+This issue comes from the following fact that ``logical disjunction'' is not the same as `Semantical typing-level union'' in an non-deterministic language.
+\begin{align*}
+  & \denot{\ort{b}{\phi_1 \lor \phi_2}} \not= \denot{\ort{b}{\phi_1} \unionty \ort{b}{\phi_2}} 
+\end{align*}\noindent
+which is pointed out by Jana Dunfield and Frank Pfenning\cite{UnionTypeAssignment}, and they mentioned that in single-valued languages, the two are equivalent. Thus, in standard refinement type system which is single-valued, all type $\{\vnu : b ~|~ \phi \}$ can expressed as $\ctpers \ort{b}{\phi}$ in our system, which omit the different between $\ctcomma$ and $\ctstar$.
+
+\paragraph{Another Persistent modality} Another persistent modality force make sure $\subExt \phi$ is persistent, which can be defined as: 
+\begin{align*}
+  r \models \chpers p &\text{ iff } \forall \sigma \in r. \{\sigma \} \models p
+\end{align*}\noindent
+It has a disadvantage, which still allowing the non-singleton resource to hold the property. Thus,
+\begin{align*}
+  &\chpers p \chland q \models \chpers p \chstar q \judgfail
+  &\chpers p \models \chpers p \chstar \chpers p \judgfail
 \end{align*}\noindent
 

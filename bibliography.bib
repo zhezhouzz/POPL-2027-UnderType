@@ -1,3 +1,16 @@
+@inproceedings{UnionTypeAssignment,
+author = {Dunfield, Jana and Pfenning, Frank},
+title = {Type assignment for intersections and unions in call-by-value languages},
+year = {2003},
+isbn = {3540008977},
+abstract = {We develop a system of type assignment with intersection types, union types, indexed types, and universal and existential dependent types that is sound in a call-by-value functional language. The combination of logical and computational principles underlying our formulation naturally leads to the central idea of type-checking subterms in evaluation order. We thereby provide a uniform generalization and explanation of several earlier isolated systems. The proof of progress and type preservation, usually formulated for closed terms only, relies on a notion of definite substitution.},
+booktitle = {Proceedings of the 6th International Conference on Foundations of Software Science and Computation Structures and Joint European Conference on Theory and Practice of Software},
+pages = {250–266},
+numpages = {17},
+location = {Warsaw, Poland},
+series = {FOSSACS'03/ETAPS'03}
+}
+
 @inproceedings{SeparationLogic,
   author    = {Reynolds, John C.},
   title     = {{Separation Logic: A Logic for Shared Mutable Data Structures}},
@@ -9,15 +22,63 @@
   url       = {https://doi.org/10.1109/LICS.2002.1029817}
 }
 
+@article{Ill-types,
+  author     = {Ramsay, Steven and Walpole, Charlie},
+  title      = {Ill-Typed Programs Don’t Evaluate},
+  year       = {2024},
+  issue_date = {January 2024},
+  publisher  = {Association for Computing Machinery},
+  address    = {New York, NY, USA},
+  volume     = {8},
+  number     = {POPL},
+  url        = {https://doi.org/10.1145/3632909},
+  doi        = {10.1145/3632909},
+  abstract   = {We introduce two-sided type systems, which are sequent calculi for typing formulas. Two-sided type systems allow for hypothetical reasoning over the typing of compound program expressions, and the refutation of typing formulas. By incorporating a type of all values, these type systems support more refined notions of well-typing and ill-typing, guaranteeing both that well-typed programs don’t go wrong and that ill-typed programs don’t evaluate - that is, reach a value. This makes two-sided type systems suitable for incorrectness reasoning in higher-order program verification, which we illustrate through an application to precise data-flow typing in a language with constructors and pattern matching. Finally, we investigate the internalisation of the meta-level negation in the system as a complement operator on types. This motivates an alternative semantics for the typing judgement, which guarantees that ill-typed programs don’t evaluate, but in which well-typed programs may yet go wrong.},
+  journal    = {Proc. ACM Program. Lang.},
+  month      = jan,
+  articleno  = {67},
+  numpages   = {31},
+  keywords   = {type systems, higher-order program verification, incorrectness}
+}
+
+@misc{TypeBasedIncor,
+  title         = {Type-Based Incorrectness Reasoning},
+  author        = {Zhe Zhou and Benjamin Delaware and Suresh Jagannathan},
+  year          = {2025},
+  eprint        = {2509.01511},
+  archiveprefix = {arXiv},
+  primaryclass  = {cs.PL},
+  url           = {https://arxiv.org/abs/2509.01511}
+}
+
+@article{RamsayIncorType,
+  author     = {Li, Celia Mengyue and Pull, Sophie and Ramsay, Steven},
+  title      = {A Complementary Approach to Incorrectness Typing},
+  year       = {2026},
+  issue_date = {January 2026},
+  publisher  = {Association for Computing Machinery},
+  address    = {New York, NY, USA},
+  volume     = {10},
+  number     = {POPL},
+  url        = {https://doi.org/10.1145/3776724},
+  doi        = {10.1145/3776724},
+  abstract   = {We introduce a new two-sided type system for verifying the correctness and incorrectness of functional programs with atoms and pattern matching. A key idea in the work is that types should range over sets of normal forms, rather than sets of values, and this allows us to define a complement operator on types that acts as a negation on typing formulas. We show that the complement allows us to derive a wide range of refutation principles within the system, including the type-theoretic analogue of co-implication, and we use them to certify that a number of Erlang-like programs go wrong. An expressive axiomatisation of the complement operator via subtyping is shown decidable, and the type system as a whole is shown to be not only sound, but also complete for normal forms.},
+  journal    = {Proc. ACM Program. Lang.},
+  month      = jan,
+  articleno  = {82},
+  numpages   = {29},
+  keywords   = {higher-order program verification, incorrectness, refutations, type systems}
+}
+
 @article{BunchedType,
-  title={On bunched typing},
-  author={O'hearn, Peter},
-  journal={Journal of functional Programming},
-  volume={13},
-  number={4},
-  pages={747--796},
-  year={2003},
-  publisher={Cambridge University Press}
+  title     = {On bunched typing},
+  author    = {O'hearn, Peter},
+  journal   = {Journal of functional Programming},
+  volume    = {13},
+  number    = {4},
+  pages     = {747--796},
+  year      = {2003},
+  publisher = {Cambridge University Press}
 }
 
 @article{ReachabilityTypes,

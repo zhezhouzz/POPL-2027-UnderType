@@ -287,17 +287,50 @@ These regimes correspond to the following typing contexts:
 \end{align*}
 Function types for $f$ that induce these three contexts can be expressed using the ordinary arrow $\sarr$ and the magic wand $\wand$; the next section develops the details.
 
-\paragraph{Higher-order mixing and branching on function types.}
-Under-complete refinements behave like \emph{non-duplicable} witnesses in the sense of~\autoref{sec:formal} (no naive contraction), whereas overapproximate refinements behave read-only---and function arrows themselves behave like persistent specifications in ordinary refinement systems.
-Higher-order nondeterminism nevertheless forces a sharper distinction between \emph{where} branching lives.
-Consider
+\paragraph{Higher-order functions and Persistence}
+Different from the first order case, functional language that supports higher-order functions, where the parameter of a function can also be another function. This extension introduce more chelleges into our modal type system. Consider the following type context:
 \begin{align*}
-  &g_1 \doteq (\lambda ().\true) \oplus (\lambda ().\false)
-  \\&g_2 \doteq \lambda ().(\true \oplus \false).
+  &x{:}\ort{\Int}{\top} \vdash (f\;x) + (g\;x) : \tau  \quad \judgok \quad &\text{(when $f$ and $g$ has type $\ort{\Int}{\top} \sarr \urt{\Int}{\vnu = 1}$)}
+  \\&x{:}\urt{\Int}{\top} \vdash (f\;x) + (g\;x) : \tau \quad \judgfail \quad &\text{(when $f$ and $g$ has type $\urt{\Int}{\top} \sarr \urt{\Int}{\vnu = 1}$)}
 \end{align*}
-After one application either term can expose both Boolean witnesses, but repeating the call aligns with~\autoref{sec:formal}'s discussion: collapsing the choice \emph{between} thunk bodies into a lone return refinement erases branching that must stay observable for sound reuse.
-Informally \(g_2\) admits the customary functional reading \(\Unit \sarr \urt{\Bool}{\top}\) whose internal \(\oplus\) does not correlate repeated answers the way \(g_1\) correlates \(\true\cdot\true\) with \(\false\cdot\false\).
-For \(g_1\) the type discipline instead keeps \(\oplus\) at \emph{function} granularity, exposing a \(\ctoplus\) of two unary arrows (\(\Unit\sarr\cdot\,\ctoplus\,\Unit\sarr\cdot\) as in~\autoref{sec:formal}), which recovers precisely the observable split between \(\lambda ().\mathit{b}_1\) and \(\lambda ().\mathit{b}_2\) callers must respect.
+Unlike overapproximation, the variable $x$ with underapproximation type cannot be used for multiple times in the second line, since the $f$ and $g$ has hidden and potentially different assumptions about their parameters. In a first order setting, the overapproximation and underapproximation is sufficient to distinguish weather a variable can be used for multiple times.
+However, when we have function parameters, the thing goes more complicated since a function type is allowed to mixed these two modalities in our setting. Moreover, even for the same function types, the case that allowed to be used for multiple times or not are still coexisting. Consider the following example:
+\begin{align*}
+  &x{:}\urt{\Bool}{\top} \vdash f_1 \doteq \lambda ().(\true \oplus \false) : \Unit\sarr\urt{\Bool}{\top} \quad \judgok
+  \\&x{:}\urt{\Bool}{\top} \vdash f_2 \doteq \lambda ().\true \oplus \lambda ().\false : \Unit\sarr\urt{\Bool}{\top} \quad \judgok 
+  \\&x{:}\urt{\Bool}{\top} \vdash f_3 \doteq \lambda ().x : \Unit\sarr\urt{\Bool}{\top} \quad \judgok
+\end{align*}\noindent
+The three functions $f_1$, $f_2$, and $f_3$ above both has type $\Unit\sarr\urt{\Bool}{\top}$, which means that they must non-deterministically returns all boolean values. The difference is that $f_1$ encapsulates the non-determinism into its function body, $f_2$ exposes the non-determinism to top level, where $f_3$ is depends on non-determinitsm from context (i.e., $\zlet{x}{\Code{int\_gen()}}{f_3}$). These three functions looks similar, while only $f_1$ can be used for multiple times. Consider the following use case 
+\begin{align*}
+  &x{:}\urt{\Bool}{\top} \vdash g \doteq \lambda f.(f\;() == f\;()) : f{:}(\Unit\sarr\urt{\Bool}{\top})\sarr\urt{\Bool}{\vnu = \false} \quad \textbf{\textcolor{red}{???}}
+\end{align*}
+The higher-order function $g$ takes a function and applies it for twices, and expects the result can be different. We show the reduction results of apply $g$ for $f_1$, $f_2$, and $f_3$ respectively:
+\begin{align*}
+  g\;f_1 &\hookrightarrow^* \true == \true \text{  or  } \true == \false \text{  or  } \false == \true \text{  or  } \false == \false \quad \judgok
+  \\&\hookrightarrow^* \true \text{  or  } \false \quad \judgfail
+  \\g\;f_2 &\hookrightarrow^* \true == \true \text{  or  } \false == \false \hookrightarrow^* \true 
+  \\g\;f_3 &\hookrightarrow^* x == x \hookrightarrow^* \true \quad \judgfail
+\end{align*}
+As shown above, only $g\;f_1$ can result to the value $\false$, and two other cases can only result to the value $\true$. The intuition here is that only the non-determinism that is encapsulated in function body are duplicatable, since it is independent from the decision of external context of operational semantics.
+
+In order to express this decision independence, we introduce a the \emph{persistency} modality $\ctpers$ as other resource-based logics and types systems do. The key intuition is that the \emph{singleton} resource (i.e., the resource contains only one store) remains no decision to make, thus a type judgement holds under singleton resource is persistent. We would highlight that the resource we consider is both derived from the context and also the decision made by the operational semantics. For example, the context relied by $f_3$ is not singleton, and the term $f_2$ will not just reduce to a single value, thus both of them cannot have persistent type. On the other hand, the parameter of $g$ is required to be persistent. In general, the overapproximation type in the type context can be treated as persistent, while typically the underapproximation type is not persistent, and function types should be explictly marked as persistent or not.
+In order to introduce a persistent type in our type system (i.e., $\Gamma \ctvdash e : \tau$), we require the type context $\Gamma$ only consist with persistent types (to rule out the case like $f_3$) and $e$ itself should be single valued (to rule out the case like $f_2$).
+For example, the following type judgement holds:
+\begin{align*}
+  &x{:}\ort{\Int}{\vnu > 0} \vdash \lambda ().\zif{x > 0}{(\true \oplus \false)}{\true} : \ctpers (\Unit\sarr\urt{\Bool}{\top}) \quad \judgok
+\end{align*}\noindent
+On the other hand, the parameter type of $g$ should also marked as persistent, since input function parameter used twice in $g$.
+
+% Under-complete refinements behave like \emph{non-duplicable} witnesses in the sense of~\autoref{sec:formal} (no naive contraction), whereas overapproximate refinements behave read-only---and function arrows themselves behave like persistent specifications in ordinary refinement systems.
+% Higher-order nondeterminism nevertheless forces a sharper distinction between \emph{where} branching lives.
+% Consider
+% \begin{align*}
+%   &g_1 \doteq (\lambda ().\true) \oplus (\lambda ().\false)
+%   \\&g_2 \doteq \lambda ().(\true \oplus \false).
+% \end{align*}
+% After one application either term can expose both Boolean witnesses, but repeating the call aligns with~\autoref{sec:formal}'s discussion: collapsing the choice \emph{between} thunk bodies into a lone return refinement erases branching that must stay observable for sound reuse.
+% Informally \(g_2\) admits the customary functional reading \(\Unit \sarr \urt{\Bool}{\top}\) whose internal \(\oplus\) does not correlate repeated answers the way \(g_1\) correlates \(\true\cdot\true\) with \(\false\cdot\false\).
+% For \(g_1\) the type discipline instead keeps \(\oplus\) at \emph{function} granularity, exposing a \(\ctoplus\) of two unary arrows (\(\Unit\sarr\cdot\,\ctoplus\,\Unit\sarr\cdot\) as in~\autoref{sec:formal}), which recovers precisely the observable split between \(\lambda ().\mathit{b}_1\) and \(\lambda ().\mathit{b}_2\) callers must respect.
 
 % \paragraph{Strategy logic and strategy types} ...
 
