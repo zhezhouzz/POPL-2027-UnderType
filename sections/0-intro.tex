@@ -57,8 +57,8 @@ However, the counterexample above does not answer the following questions:
 \end{align*}\noindent
 In fact, when the first list is empty or a singleton, $\Code{merge}$ behaves correctly.
 These questions characterize ``how wrong'' the function is, which helps localize the bug.
-The function is correct for the first two $\Code{match}$ branches (lines $3$--$4$), and also for the case $\Code{h1}=\Code{h2}$ (line $7$).
-This perspective also avoids false-positive alarms on correct runs, e.g., $\Code{merge}\;[1;2]\;[0;4] = [0;1;2;4]$.
+The function is correct for the first two $\Code{match}$ branches (lines $3$--$4$), and also for the case $\Code{h1}=\Code{h2}$ (line $9$).
+This perspective also avoids false-positive alarms on correct runs, e.g., $\Code{merge}\;[1]\;[0;4] = [0;1;4]$.
 Since listing potentially infinitely many counterexamples is not practical, we ask the following mixed-modality incorrectness question:
 
 \textbf{Mixed-modality context:} \emph{For every sorted list $\Code{l1}$, does there exist another sorted list $\Code{l2}$ such that the merged list is unsorted?}
