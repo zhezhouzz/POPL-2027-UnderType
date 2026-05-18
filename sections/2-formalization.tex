@@ -1,3 +1,4 @@
+% !TeX root = ../main.tex
 \section{Formalization}\label{sec:formal}
 
 This section presents our strategy logic and strategy types. Similar to separation logic, our strategy logic is also based on an underlying resource algebra, although such an algebra is additionally equipped with branching operators. In the rest of this section, we first introduce preliminary definitions and then present the strategy algebra, strategy logic, and strategy types.
@@ -708,6 +709,29 @@ well formed.
 
 \newpage
 \subsection{Examples}
+
+\paragraph{Function applying multiple times} Consider the following example:
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    let f = fun () -> 1 ?$\oplus$? 2 in
+    let x = f () in
+    let y = f () in
+    x + y
+\end{minted}
+We have
+\begin{align*}
+  &f{:}\Unit\sarr\urt{\Nat}{\vnu = 1 \lor \vnu = 2} \vdash f : \Unit\sarr\urt{\Nat}{\vnu = 1 \lor \vnu = 2}
+  \\&\underline{\emptyset \vdash () : \Unit}
+  \\&\underline{\emptyset \ctstar f{:}\Unit\sarr\urt{\Nat}{\vnu = 1 \lor \vnu = 2} \vdash f(): \urt{\Nat}{\vnu = 1 \lor \vnu = 2}}
+  \\&\underline{f{:}\Unit\sarr\urt{\Nat}{\vnu = 1 \lor \vnu = 2} \vdash f(): \urt{\Nat}{\vnu = 1 \lor \vnu = 2}}
+  \\&\underline{\emptyset \ctstar x{:}\urt{\Nat}{\vnu = 1 \lor \vnu = 2} \vdash \zlet{y}{f()}{ x + y}: \urt{\Nat}{\vnu = 1 \lor \vnu = 2}} \quad \judgfail
+  \\&\emptyset \ctstar f{:}\Unit\sarr\urt{\Nat}{\vnu = 1 \lor \vnu = 2} \vdash \zlet{x}{f()}{ ...}: \urt{\Nat}{\vnu = 1 \lor \vnu = 2}
+\end{align*}\noindent
+What we want:
+\begin{align*}
+  &\underline{f{:}\Unit\sarr\urt{\Nat}{\vnu = 1 \lor \vnu = 2} \ctstar f{:}\Unit\sarr\urt{\Nat}{\vnu = 1 \lor \vnu = 2} \vdash ... : ...} 
+  \\&f{:}\Unit\sarr\urt{\Nat}{\vnu = 1 \lor \vnu = 2} \vdash ... : ...
+\end{align*}\noindent
+Thus, the function $f$ is duplicatable.
 
 \paragraph{What provious $\ctpers$ modality does? How our type system does ?} It means this typing can be duplicate and has no different with $\ctstar$ and $\ctcomma$. Currently, the over-base type and function type are persistent. Although we disallowing duplication, we can have duplicates during spliting. For example, consider:
 \begin{align*}

@@ -1,5 +1,118 @@
 \section{Overview}\label{sec:overview}
 
+Building a type-theoretic foundation for over- and underapproximate reasoning in functional languages is non-trivial.
+Standard refinement typing can be read as ``overapproximated parameters'' (interpreted as \emph{for any} inputs) plus an ``overapproximated return'' (interpreted as an upper bound on application results).
+Coverage types use ``overapproximated parameters'' with an ``underapproximated return'' to express coverage-completeness guarantees of test generators for any input.
+However, these systems usually treat each curried premise as uniformly ``purely over'' or ``purely under'' in isolation, which loses the ability to mix over- and underapproximation modalities in arbitrary ways.
+For instance, consider a curried refinement type whose argument positions interchange over- and underapproximate qualifiers:
+\begin{align*}
+    \vdash \Code{existsElem} : n{:}\ort{\Nat}{\top} \sarr \urt{\List[\Nat]}{\top} \sarr \urt{\Bool}{\vnu = \true} 
+\end{align*}\noindent
+The first parameter is overapproximated (colored in pink), while the second parameter and return type are underapproximated (colored in blue).
+This specification says: ``\textcolor{magenta}{\emph{for any}} element $n$, if the second parameter \textcolor{CobaltBlue}{\emph{covers}} all possible lists, a desired \Code{existsElem} function \textcolor{CobaltBlue}{\emph{must}} be able to return $\true$.'' 
+This function type mixes modality patterns along the spine rather than collapsing either side of the arrow to a uniform over- or underapproximate reading.
+Hence the design goal goes beyond attaching one extra modality tag to overapproximation: a unified system must
+\emph{compositionally reconcile} arbitrary modality regimes throughout higher-order pipelines.
+
+When we consider fine-grained over- and underapproximate modalities for a multi-parameter function, one challenge is dependency between parameters.
+Consider the following potential client of \Code{findElem}:
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    let x = nat_gen () in
+    let l = nat_list_gen () in
+    let l' = if mem l x then [] else l in
+    findElem x l'
+\end{minted}
+$x$ is a random element and $l$ is a random list.
+More interestingly, we construct a new list $l'$ that contains only lists that do not contain $x$.
+This is a ``wrong case'' where \Code{findElem} can never return $\true$.
+At first glance, $x$ and $l'$ seem to satisfy the parameter types of \Code{findElem}: $x$ is always a natural number, and $l'$ may look as if it can still cover all lists.
+But there is a hidden dependency: if we require $l'$ to cover, say, $[0;1]$, then $x$ can no longer be $0$ or $1$.
+In contrast, \Code{findElem} assumes the two parameter choices are independent.
+In general, fine-grained over/underapproximate reasoning requires a typing language expressive enough to describe parameter dependencies, and a type system that can track data-flow dependencies modularly.
+
+The situation becomes more complicated for higher-order functions, where a function itself is an input.
+An input function may produce results with over- or underapproximate modality, but what is the relation between repeated results of the same function?
+Consider:
+\begin{align*}
+    &\vdash \lambda g \doteq f.(f\;() == f\;()) : f{:}(\Unit\sarr\urt{\Bool}{\top})\sarr\urt{\Bool}{\vnu = \false}
+\end{align*}\noindent
+where we expect $f$ to be able to produce different results across two applications.
+Note that ``producing two different values one by one'' and ``producing two different values nondeterministically'' are quite different.
+For example, for
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    let x = bool_gen () in let f = ?$\lambda ().$?x in (* body *)
+\end{minted}
+the function $f$ can cover all boolean values nondeterministically, but in the let-body above it can only generate the same value on both calls.
+Thus, the application \(g\;f\) can only evaluate to $\true$, which is not what we expect.
+Whether a higher-order function is ``duplicatable'' is therefore another feature that our type language must handle.
+
+idea: list contains a sequence of resources. pattern matching devides the list into two parts (two resources), the recursive call consume the second part, and the first part is used later.
+
+\begin{align*}
+  &\overtext{\forall \Code{l1}. \I{sorted}(\Code{l1}) \land P_1(\Code{l1})} \impl \overtext{\forall \Code{l2}. \I{sorted}(\Code{l2}) \land P_2(\Code{l1}, \Code{l2})} \impl \overtext{\neg \I{sorted}(\Code{merge\;l1\;l2})} 
+\end{align*}
+
+
+\begin{align*}
+  &\overtext{\forall \Code{l1}. \I{sorted}(\Code{l1}) \land 2 \leq \I{len}(\Code{l1})} \impl \undertext{\exists \Code{l2}. \I{sorted}(\Code{l2})} \land \overtext{\neg \I{sorted}(\Code{merge\;l1\;l2})} 
+\end{align*}
+
+
+\begin{align*}
+  \Code{l1}{:}\ort{\List[\Elem]}{\I{sorted}(\vnu)} \sarr \Code{l2}{:}\urt{\List[\Elem]}{\I{sorted}(\vnu)} \sarr \urt{\List[\Elem]}{\I{sorted}(\vnu)}
+\end{align*}
+
+The specification means: ``for any element $x$, there exists a list $l$ that triggers the bugs in \Code{delete} function, i.e., the result list still mistakenly contains element $x$.''
+
+In order to demonstrate how angelic context can help correctness and incorrectness reasoning, consider the example shown in \autoref{fig:merge}. The function \Code{merge} is the core part of merge sort algorithm, which supposed to have the following refinement type:
+\begin{align*}
+    &\Code{l1}{:}\ort{\List[\Elem]}{\I{sorted}(\vnu)} \sarr \Code{l2}{:}\ort{\List[\Elem]}{\I{sorted}(\vnu)} \sarr \ort{\List[\Elem]}{\I{sorted}(\vnu)} \tag{$\tau_{\Code{merge}}$}
+\end{align*}\noindent
+The specificatin treats the context in a demonic style, which means that
+\begin{align*}
+    &\overtext{\forall \Code{l1}.\I{sorted}(\Code{l1})} \impl \overtext{\forall \Code{l2}. \I{sorted}(\Code{l2})} \impl \I{sorted}(\Code{merge\;l1\;l2})
+\end{align*}\noindent
+The context chooses arbirary two sorted lists, then we expected the merged lists is still sorted. However, the refinement type system will raise a type failure which can means the program is indeed buggy or the specification is too weak (e.g., need also include membership perserving property). Then, an incorrectness reasoning can help us to narrow down the witnesses and localizes specification or implementation defects. Formally, the incorrectness question is ``do there exists two sorted lists that makes the merged lists unsorted?''
+\begin{align*}
+    &\undertext{\exists \Code{l1}. \I{sorted}(\Code{l1})} \land \undertext{\exists \Code{l2}. \I{sorted}(\Code{l2})} \land \neg \I{sorted}(\Code{merge\;l1\;l2}) 
+\end{align*}\noindent
+As shown above, this is an angelic context which can smartly choose the desiable inputs. For this question, symbolic execution or even an concrete counterexample can help:
+\begin{align*}
+    \texttt{Counterexample:}&\quad  \text{ when } \Code{l1} = [1;2] \text{ and } \Code{l2} = [3;4] \text{ then } \mstep{\Code{merge}\;[1;2]\;[3;4]}{[1;3;2;4]}
+\end{align*}\noindent
+
+\paragraph{Resource Partitioning}
+
+\begin{align*}
+  &x{:}\urt{\Nat}{\top} \vdash x : \ort{\Nat}{\vnu > 3} \quad \text{exists $x$ that is grater than $3$}
+  \\&x{:}\urt{\Nat}{\top} \vdash x : \ort{\Nat}{\vnu \leq 3} \quad \text{exists $x$ that is less equal to $3$}
+  \\&x{:}\urt{\Nat}{\top} \vdash x : \ort{\Nat}{\vnu > 3} \interty \ort{\Nat}{\vnu 
+  \leq 3} \quad ??
+\end{align*}\noindent
+Ideally we want the type-level intersection is indeed a logical conjunction of the two types, which means
+\begin{align*}
+  \Gamma \vdash e : \ort{b}{\phi_1} \interty \ort{b}{\phi_2} \iff \Gamma \vdash e : \ort{b}{\phi_1 \land \phi_2}
+\end{align*}\noindent
+The problem is that the ``exists'' semantics is ``affine'', which means that it will directly drop is possibility of other potential angelic choices for other goals. For example, to show $x > 3$, we select $x = 4$, however, we lose the possibility of $x = 1$ which can be used to show $x \leq 3$. In order to keep all possibility, we introduce the ``contextual sum'' operation $\ctoplus$ which explicitly express the context splitting. With the help of $\ctoplus$, we can express the true existing semantics as follows:
+\begin{align*}
+  &x{:}\urt{\Nat}{\top} \vdash x : \ort{\Nat}{\vnu > 3} \ctoplus \ort{\Nat}{\top}
+\end{align*}\noindent
+where we explicitly drop the possibility of $x \leq 3$ into right branch. Similarly, we have:
+\begin{align*}
+  &x{:}\urt{\Nat}{\top} \vdash x : \ort{\Nat}{\top} \ctoplus \ort{\Nat}{\vnu \leq 3} 
+\end{align*}\noindent
+The intersection of these two types is not conflicting now:
+\begin{align*}
+  &\ort{\Nat}{\vnu > 3} \ctoplus \ort{\Nat}{\top} \interty \ort{\Nat}{\top} \ctoplus \ort{\Nat}{\vnu \leq 3}  \equiv \ort{\Nat}{\vnu > 3} \ctoplus \ort{\Nat}{\vnu \leq 3}
+\end{align*}\noindent
+The intersected types says ``if we divide the context into two parts, $x$ is greater than $3$ in one part and less equal to $3$ in the other part''.
+
+\paragraph{Back to motiviting examples} The expect types for \Code{merge} function should be:
+\begin{align*}
+  &\Code{l1}{:}\ort{\List[\Elem]}{\I{sorted}(\vnu)} \ctwand \Code{l2}{:}\urt{\List[\Elem]}{\I{sorted}(\vnu)} \ctwand
+  \\&\quad\ort{\List[\Elem]}{\neg \I{sorted}(\vnu)} \ctoplus \ort{\List[\Elem]}{\top}
+\end{align*}
+
 \autoref{sec:intro} motivated over- versus underapproximate refinements, their
 interaction with compositional reachability reasoning, and the extra challenges
 raised by alternating modalities along curried arrows.
@@ -288,13 +401,13 @@ These regimes correspond to the following typing contexts:
 Function types for $f$ that induce these three contexts can be expressed using the ordinary arrow $\sarr$ and the magic wand $\wand$; the next section develops the details.
 
 \paragraph{Higher-order functions and Persistence}
-Different from the first order case, functional language that supports higher-order functions, where the parameter of a function can also be another function. This extension introduce more chelleges into our modal type system. Consider the following type context:
-\begin{align*}
-  &x{:}\ort{\Int}{\top} \vdash (f\;x) + (g\;x) : \tau  \quad \judgok \quad &\text{(when $f$ and $g$ has type $\ort{\Int}{\top} \sarr \urt{\Int}{\vnu = 1}$)}
-  \\&x{:}\urt{\Int}{\top} \vdash (f\;x) + (g\;x) : \tau \quad \judgfail \quad &\text{(when $f$ and $g$ has type $\urt{\Int}{\top} \sarr \urt{\Int}{\vnu = 1}$)}
-\end{align*}
-Unlike overapproximation, the variable $x$ with underapproximation type cannot be used for multiple times in the second line, since the $f$ and $g$ has hidden and potentially different assumptions about their parameters. In a first order setting, the overapproximation and underapproximation is sufficient to distinguish weather a variable can be used for multiple times.
-However, when we have function parameters, the thing goes more complicated since a function type is allowed to mixed these two modalities in our setting. Moreover, even for the same function types, the case that allowed to be used for multiple times or not are still coexisting. Consider the following example:
+% Different from the first order case, functional language that supports higher-order functions, where the parameter of a function can also be another function. This extension introduce more chelleges into our modal type system. Consider the following type context:
+% \begin{align*}
+%   &x{:}\ort{\Int}{\top} \vdash (f\;x) + (g\;x) : \tau  \quad \judgok \quad &\text{(when $f$ and $g$ has type $\ort{\Int}{\top} \sarr \urt{\Int}{\vnu = 1}$)}
+%   \\&x{:}\urt{\Int}{\top} \vdash (f\;x) + (g\;x) : \tau \quad \judgfail \quad &\text{(when $f$ and $g$ has type $\urt{\Int}{\top} \sarr \urt{\Int}{\vnu = 1}$)}
+% \end{align*}
+% Unlike overapproximation, the variable $x$ with underapproximation type cannot be used for multiple times in the second line, since the $f$ and $g$ has hidden and potentially different assumptions about their parameters. In a first order setting, the overapproximation and underapproximation is sufficient to distinguish weather a variable can be used for multiple times.
+When we have function parameters, the thing goes more complicated since a function type is allowed to mixed these two modalities in our setting. Moreover, even for the same function types, the case that allowed to be used for multiple times or not are still coexisting. Consider the following example:
 \begin{align*}
   &x{:}\urt{\Bool}{\top} \vdash f_1 \doteq \lambda ().(\true \oplus \false) : \Unit\sarr\urt{\Bool}{\top} \quad \judgok
   \\&x{:}\urt{\Bool}{\top} \vdash f_2 \doteq \lambda ().\true \oplus \lambda ().\false : \Unit\sarr\urt{\Bool}{\top} \quad \judgok 
@@ -315,10 +428,10 @@ As shown above, only $g\;f_1$ can result to the value $\false$, and two other ca
 
 In order to express this decision independence, we introduce a the \emph{persistency} modality $\ctpers$ as other resource-based logics and types systems do. The key intuition is that the \emph{singleton} resource (i.e., the resource contains only one store) remains no decision to make, thus a type judgement holds under singleton resource is persistent. We would highlight that the resource we consider is both derived from the context and also the decision made by the operational semantics. For example, the context relied by $f_3$ is not singleton, and the term $f_2$ will not just reduce to a single value, thus both of them cannot have persistent type. On the other hand, the parameter of $g$ is required to be persistent. In general, the overapproximation type in the type context can be treated as persistent, while typically the underapproximation type is not persistent, and function types should be explictly marked as persistent or not.
 In order to introduce a persistent type in our type system (i.e., $\Gamma \ctvdash e : \tau$), we require the type context $\Gamma$ only consist with persistent types (to rule out the case like $f_3$) and $e$ itself should be single valued (to rule out the case like $f_2$).
-For example, the following type judgement holds:
-\begin{align*}
-  &x{:}\ort{\Int}{\vnu > 0} \vdash \lambda ().\zif{x > 0}{(\true \oplus \false)}{\true} : \ctpers (\Unit\sarr\urt{\Bool}{\top}) \quad \judgok
-\end{align*}\noindent
+% For example, the following type judgement holds:
+% \begin{align*}
+%   &x{:}\ort{\Int}{\vnu > 0} \vdash \lambda ().\zif{x > 0}{(\true \oplus \false)}{\true} : \ctpers (\Unit\sarr\urt{\Bool}{\top}) \quad \judgok
+% \end{align*}\noindent
 On the other hand, the parameter type of $g$ should also marked as persistent, since input function parameter used twice in $g$.
 
 % Under-complete refinements behave like \emph{non-duplicable} witnesses in the sense of~\autoref{sec:formal} (no naive contraction), whereas overapproximate refinements behave read-only---and function arrows themselves behave like persistent specifications in ordinary refinement systems.

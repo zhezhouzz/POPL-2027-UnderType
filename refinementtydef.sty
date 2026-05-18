@@ -54,6 +54,10 @@
 %   \mathbin{{+}\mspace{-8mu}{+}}%
 % }
 \newcommand\listconcat{{\concat}}
+\newcommand{\overcolor}{magenta}
+\newcommand{\undercolor}{CobaltBlue}
+\newcommand{\overtext}[1]{\textcolor{\overcolor}{#1}}
+\newcommand{\undertext}[1]{\textcolor{\undercolor}{#1}}
 \newcommand{\impl}{{\,\Rightarrow\,}}
 \newcommand{\notiff}{%
   \mathrel{{\ooalign{\hidewidth$\not\phantom{"}$\hidewidth\cr$\iff$}}}}
@@ -714,6 +718,7 @@
 \newcommand{\bindC}{\Code{bind^C}}
 \newcommand{\CM}[2]{\mathcal{M}\;{#1}\;{#2}}
 \newcommand{\CInt}{\Code{Int}}
+\newcommand{\Elem}{\Code{elem}}
 \newcommand{\Int}{\Code{int}}
 \newcommand{\Bool}{\Code{bool}}
 \newcommand{\Unit}{\Code{unit}}
