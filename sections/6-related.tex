@@ -81,3 +81,15 @@ parameters independently (a variable of type \(x{:}\urt{\Int}{\top}\) may still 
 depend on joint behaviour (so naive combinations such as \(x+z\) need not behave as if \(x\) and \(z\) were independent underapproximate draws), meaning
 hidden dependency must be tracked modularly---a task that store-native presentations struggle to surface
 for higher-order judgments.
+
+This view has proved useful in incorrectness reasoning, which aims to show that unexpected behaviors must occur~\cite{OHP19}.
+For example, Incorrectness Logic~\cite{OHP19} uses underapproximate triples $[P]\;\Code{C}\;[Q]$, where the postcondition $Q$ is treated as a lower bound of $\Code{C}$'s behavior under an angelic precondition $P$.
+The states in $Q$ underapproximate the states reachable from some state in $P$ by executing $\Code{C}$.
+Importantly, $P$ is interpreted angelically: the context can choose a suitable pre-state $\sigma$ to justify a target post-state $\sigma'$.
+This style of reasoning is widely studied in program logic, especially to reduce overwhelming false positives in bug finding and reachability analyses.
+
+However, analogous incorrectness reasoning is not yet established in type-based verification.
+Coverage Type~\cite{CoverageType} interprets types as underapproximations of test-input-generator behavior, and can prove coverage completeness (e.g., all binary search trees can be generated nondeterministically).
+But it does not provide the angelic-style context central to Incorrectness Logic.
+Meanwhile, refinement-typing workflows are often extended with external mechanisms such as symbolic execution to search for concrete counterexamples, instead of integrating underapproximation reasoning directly into typing judgments~\cite{RefinementTypeSymbolicExecution}.
+This split leaves overapproximate typing judgments and underapproximate witnesses at different methodological layers, limiting the modularity and reuse that type-system-native reasoning would otherwise provide.
