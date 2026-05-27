@@ -1,13 +1,28 @@
 \section{Introduction}\label{sec:intro}
 
-Type-based reasoning has become a standard approach to functional program verification.
-Refinement types are a prominent example: they support overapproximate safety reasoning by embedding logical safety properties directly into types.
+Type-based verification provides a compositional way to reason about functional programs.
+The type language provides enable people to specify the safety properties aligning with the program syntax directly, then typecheck can be reinterpreted as a logical deduction to prove the all possible program behavior are allowed by the types.
 For a typing judgment $\Gamma \vdash e : \tau$,
 the result of $e$ may lie in the set described by the type $\tau$ under that context.
 Not every behavior admitted by $\tau$ needs to be realized by $e$, so $\tau$ is an overapproximation of $e$'s behavior.
 This relation must hold for all \emph{environment} admitted by type context $\Gamma$, yielding the usual safety guarantee: a well-typed program never goes wrong under all possible environments. We can interpret this in another way, where we say the type context $\Gamma$ is \emph{demonic}: it will choose the worst possible context adversarially. In order to ``defense'' the demonic context, we should make sure $e$ consistent with the type $\tau$ under all possible environments that the demonic context can choose.
 
-Dually, we can adopt an underapproximate interpretation, where $\tau$ gives a lower bound of $e$'s behavior under an angelic style context $\Gamma$. Consider the following example:
+By reinterpreting the typecheck as a logical deduction, people can specify the safety properties 
+
+has become a standard approach to functional program verification.
+
+Type-based reasoning has become a standard approach to functional program verification.
+
+For a typing judgment $\Gamma \vdash e : \tau$,
+the result of $e$ may lie in the set described by the type $\tau$ under that context.
+Not every behavior admitted by $\tau$ needs to be realized by $e$, so $\tau$ is an overapproximation of $e$'s behavior.
+This relation must hold for all \emph{environment} admitted by type context $\Gamma$, yielding the usual safety guarantee: a well-typed program never goes wrong under all possible environments. We can interpret this in another way, where we say the type context $\Gamma$ is \emph{demonic}: it will choose the worst possible context adversarially. In order to ``defense'' the demonic context, we should make sure $e$ consistent with the type $\tau$ under all possible environments that the demonic context can choose.
+
+Dually, we can adopt an underapproximate interpretation, where $\tau$ gives a lower bound of $e$'s behavior under an angelic style context $\Gamma$. 
+
+Refinement types are a prominent example: they support overapproximate safety reasoning by embedding logical safety properties directly into types.
+
+Consider the following example:
 \begin{align*}
     &x{:}\ort{\Nat}{\top}, y{:}\ort{\Nat}{\top} \vdash x - y : \ort{\Nat}{\vnu > 0} \judgfail
     \\&x{:}\urt{\Nat}{\top}, y{:}\urt{\Nat}{\top} \vdash x - y : \urt{\Nat}{\vnu > 0} \judgok
