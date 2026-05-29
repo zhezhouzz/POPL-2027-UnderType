@@ -1,55 +1,41 @@
 \section{Introduction}\label{sec:intro}
 
-Type-based verification provides a compositional way to reason about functional programs.
-Refinement types are a prominent example: the type language enables people to specify safety properties that align directly with program syntax, and then a typing judgement $e:\tau$ can be reinterpreted as a logical deduction showing that term $e$ is safe with respect to type $\tau$, which encodes the allowed superset of program behavior. It is a \emph{may-style} reasoning since not all behaviors admitted by type $\tau$ need to be realized by term $e$.
-Moreover, type-based verification provides a compositional way to enable safety verification under different \emph{environments}.
-For a typing judgment $\Gamma \vdash e : \tau$, we require term $e$ to be safe with respect to type $\tau$ under all \emph{environments} admitted by \emph{context} $\Gamma$, yielding the usual safety guarantee: a well-typed program never goes wrong under all possible environments.
-Alternatively, we can interpret this in another way: the type context $\Gamma$ is \emph{demonic}, choosing the worst possible environment adversarially. In order to defend against the demonic context, we should make sure that $e$ is consistent with type $\tau$ under all possible environments that the demonic context can choose.
+Type-based verification provides a compositional way to reason about \emph{safety} and \emph{reachability} properties through \emph{may}- or \emph{must}-style reasoning, respectively.
+These properties can be specified directly by the type language, where the typecheck procedure can then be reinterpreted as a logical deduction to prove that behaviors are consistent with these types. In a may-style type system, a typing judgement $\Gamma \vdash e : \tau$ requires the result value of term $e$ \emph{may} lie in the safety specification specified by type $\tau$ under \emph{all} possible environments admitted by context $\Gamma$, which yields the safety guarantee: a well-typed program never goes wrong under all possible environments. We can interpret this in another way: the type context $\Gamma$ is \emph{demonic}, choosing the worst possible environment adversarially. In order to defend against the demonic context, we should make sure that $e$ is consistent with type $\tau$ under all possible environments that the demonic context can choose. Dually, a must-style type system can enable reachability verification by requiring all behaviors admitted by type $\tau$ \emph{must} be realized by term $e$ as long as there \emph{exists} an environment admitted by the context. Then context $\Gamma$ is interpreted in \emph{angelic} style, which smartly chooses the desired environment according to the reachability goal.
+
+May-style safety verification has been studied for years in type-based verification, where refinement type systems are a prominent example. On the other hand, reachability reasoning via must/angelic-style interpretation has recently been studied in program logic\cite{ReverseHoareLogic, OHP19, ZDS23}, and is used to reason about ``incorrectness'' properties of programs, i.e., the existence of witnesses of buggy program behavior that can avoid overwhelming false positives in bug detection. There are relatively few forms of must-style reasoning in type-based verification. Recent refinement type systems~\cite{RefinementTypeSymbolicExecution,RefinementTypeRefutations} provide must-instantiation for type failure via symbolic execution to search for concrete counterexamples. Some must-style type systems focus on specific reachability properties: coverage type~\cite{CoverageType} reasoning focuses on all desirable test inputs that must be produced by a test input generator, while \citet{Ill-types} focus on a necessary reasoning of ``ill-typed must get stuck''.
+
+However, these systems typically can only choose one of may- or must-style reasoning, which blocks many verification tasks that require considering both safety and reachability properties simultaneously. For example, a type judgement $\Gamma \vdash x\;\Code{div}\;y : \tau_{\Code{even}}$ tries to show there exists some assignment of $x$ and $y$ that may make an even division result. Type $\tau_{\Code{even}}$ is interpreted in may-style while context $\Gamma$ is interpreted in angelic style that smartly chooses a desirable assignment of $x$ and $y$. Moreover, the type of division operator $\Code{div}$ also has a safety guard that the divisor $y$ is non-zero. None of the above systems can unify these notions of may/demonic-style and must/angelic-style reasoning in a foundational type theory, which enables both safety and reachability reasoning in a single type system.
 
 \newcommand{\natminus}{\ensuremath{-_{\Code{nat}}}}
 
-Dually, we can adopt an \emph{existential} interpretation of an \emph{angelic} context, which enables \emph{must-style} reasoning about the \emph{reachability} of term $e$ with respect to type $\tau$, which encodes the lower bound of program behavior. Consider the following example:
+Enabling both may-style and must-style reasoning in type-based verification is challenging in functional languages, where functions themselves can have their own context. This means the context can be mixed with angelic and demonic interpretations in arbitrary ways. Consider the following example:
 \begin{align*}
-    &(\natminus):\tau_{\Code{minus}}, x{:}\ort{\Nat}{\vnu > 0}, y{:}\ort{\Nat}{\vnu > 0} \vdash x \natminus y : \ort{\Nat}{\vnu > 0} \quad \judgfail
-    \\&(\natminus):\tau_{\Code{minus}}, x{:}\urt{\Nat}{\vnu > 0}, y{:}\urt{\Nat}{\vnu > 0} \vdash x \natminus y : \urt{\Nat}{\vnu > 0}
-    \\&\quad {\text{where } \tau_{\Code{minus}} \doteq x{:}\ort{\Nat}{\top} \sarr y{:}\ort{\Nat}{\vnu \leq x} \sarr \ort{\Nat}{\vnu = x - y}}
+    &x{:}\urt{\Nat}{\vnu > 0} \vdash \lambda y.x - y : y{:}\urt{\Nat}{\vnu > 0} \sarr \urt{\Nat}{\vnu > 0} 
+    \\&x{:}\ort{\Nat}{\vnu > 0} \vdash \lambda y.x - y : y{:}\urt{\Nat}{\vnu > 0} \sarr \urt{\Nat}{\vnu > 0}
 \end{align*}\noindent
-We use $\ort{b}{\phi}$ to express that a primitive type $b$ is refined with a qualifier $\phi(\vnu)$ in may and demonic style to enable safety verification, and $\urt{b}{\phi}$ for must and angelic style to enable reachability verification. The primitive operator $(\natminus)$ requires the second parameter to be less than or equal to the first parameter to avoid return a negative number that out of the range of natural numbers.
-The two judgements have the same term and qualifier, but different interpretations:
+We use $\ort{b}{\phi}$ to express that a primitive type $b$ is refined with a qualifier $\phi(\vnu)$ in may and demonic style, and $\urt{b}{\phi}$ for must and angelic style. In this sense, type $y{:}\urt{\Nat}{\vnu > 0} \sarr \urt{\Nat}{\vnu > 0}$ requires that the function can reach any positive number when parameter $y$ is angelically assigned a positive number.
+The two judgements have the same term and types, but different interpretations of their contexts. The first judgement simply asks \emph{if the context can assign $x$ and $y$ angelically, can all positive numbers be reached by $x - y$?} The answer is yes. Assume we want to reach a positive number $n$; then the angelic context can choose a desirable environment $[x \mapsto n + 1, y \mapsto 1]$. More interestingly, the second judgement asks: \emph{if context $\Gamma$ can assign $x$ demonically, can function $\lambda y.x - y$ still reach any positive number with an angelically assigned $y$?} The answer is no, since a demonic context can choose a bad environment $[x \mapsto 0]$, which makes the execution result of term $x - y$ reach only $0$, whatever the angelically assigned $y$ is. This means that a foundational type theory should provide a principled way to compose pieces of demonic and angelic context.
 
-\textbf{Safety:} \emph{If the context $\Gamma$ can assign any positive number to $x$ and $y$ demonically, is the execution result of the term $x \natminus y$ still positive?}
-
-\noindent The answer is no, since a demonic context can choose a bad environment $[x \mapsto 1, y \mapsto 1]$, which makes the execution result of the term $x - y$ equal to $0$. Alternatively, the second judgement asks a reachability question:
-
-\textbf{Reachability:} \emph{Do there exist desirable positive numbers that an angelic type context can assign to $x$ and $y$ such that all positive numbers must be reached by the term $x \natminus y$?}
-
-\noindent The answer is yes. Assume we want to reach a positive number $n$; then the angelic context can choose a desirable environment $[x \mapsto n + 1, y \mapsto 1]$. Note that the angelic context first knows the reachability goal and then chooses the environment, which enables ``reverse-style'' reasoning.
-
-This reachability reasoning via must/angelic-style interpretation has recently been studied in program logic\cite{ReverseHoareLogic, OHP19, ZDS23}, and is used to reason about ``incorrectness'' properties of programs, i.e., the existence of witnesses of buggy program behavior that can avoid overwhelming false positives in bug detection. There are relatively few forms of must-style reasoning in type-based verification. Recent refinement type systems~\cite{RefinementTypeSymbolicExecution,RefinementTypeRefutations} provide must-instantiation for type failure via symbolic execution to search for concrete counterexamples. Some must-style type systems focus on specific reachability properties: coverage type~\cite{CoverageType} reasoning focuses on all desirable test inputs that must be produced by a test input generator, while \citet{Ill-types} focus on constructing ill-formed terms. However, none of the above unify these notions of may/demonic-style and must/angelic-style reasoning in a foundational theory, e.g., the may-style type $\tau_{\Code{minus}}$ that has a safety guard within the must-style reasoning shown in the example above.
-
-Enabling both may-style and must-style reasoning in type-based verification is challenging in functional languages which enable higher-order functions. The context in a functional language can also provide function values demonically or angelically, where the functions themselves can have their own context. Consider the previous example in a curried-isomorphic form:
+Moreover, the functional language also allows a function to \emph{capture} part of the current context, which makes verification of higher-order functions more challenging. In the previous example, we highlight that there are two input contexts for function $\lambda y.x - y$: a ``captured context'' $x{:}\urt{\Nat}{\vnu > 0}$ contains the variables referred to by the function body, while ``parameter context'' $y{:}\urt{\Nat}{\vnu > 0}$ is the context expected by this function during application. This complicated context dependency makes higher-order functions more difficult to reason about.
 \begin{align*}
-    &(\natminus):\tau_{\Code{minus}}, x{:}\urt{\Nat}{\vnu > 0} \vdash \lambda y.x \natminus y : y{:}\urt{\Nat}{\vnu > 0} \sarr \urt{\Nat}{\vnu > 0} \tag{$\tau_f$}
+    x{:}\urt{\Nat}{\vnu > 0}, y{:}\urt{\Nat}{\vnu > 0} &\vdash  \lambda f. f\;x : f{:}\tau_f \sarr \urt{\Nat}{\vnu > 0} \quad\judgfail
 \end{align*}\noindent
-We highlight that there are two input contexts for a lambda function: a ``captured context'' $x{:}\urt{\Nat}{\vnu > 0}$ contains the variables referred to by the function $\lambda y.x - y$, while ``parameter context'' $y{:}\urt{\Nat}{\vnu > 0}$ is the context expected by this function during application. This complicated context dependency makes higher-order functions more difficult to reason about.
+As shown above, the higher-order function $\lambda f. f\;x$ takes a function $f$ that is assumed to have type $\tau_f$ discussed above and directly applies $f$ to $x$. At first glance, it should guarantee reachability of all positive numbers. However, when $f$ is the function $\lambda y.x - y$, it always returns $0$.
 \begin{align*}
-    (\natminus):\tau_{\Code{minus}}, x{:}\urt{\Nat}{\vnu > 0}, y{:}\urt{\Nat}{\vnu > 0} &\vdash  \lambda f. f\;x : f{:}\tau_f \sarr \urt{\Nat}{\vnu > 0} \judgfail
-\end{align*}\noindent
-As shown above, the higher-order function $\lambda f. f\;x$ takes a function $f$ that is assumed to have type $\tau_f$ discussed above and directly applies $f$ to $x$. At first glance, it should guarantee reachability of all positive numbers. However, when $f$ is the function $\lambda y.x \natminus y$, it always returns $0$.
-\begin{align*}
-    &f_1 \doteq \lambda y.x \natminus y \quad 
+    &f_1 \doteq \lambda y.x - y \quad 
     \\&\zlet{x}{e_x}{\boxed{(\lambda f. f\;x)\;f_1}} \;\hookrightarrow^*\; \zlet{x}{e_x}{\boxed{x - x}} \;\hookrightarrow^*\; 0 
 \end{align*}\noindent
 As shown above, we use $\zlet{x}{e_x}{...}$ to express the environment chosen by the angelic context.
 The problem is that the ``captured context'' of function $\lambda y.x - y$ contains variable $x$, which creates a hidden dependency: parameter $y$ is expected not to alias with $x$. Moreover, a similar alias problem can happen with the ``result context'' of function application. Consider the following nested-application example:
 \begin{align*}
-    (-):\tau_{\Code{minus}}, x{:}\urt{\Nat}{\vnu > 0}, y{:}\urt{\Nat}{\vnu > 0} \vdash \lambda f. f(f\;y) : f{:}\tau_f \sarr \urt{\Nat}{\vnu > 0} \judgfail
+    x{:}\urt{\Nat}{\vnu > 0}, y{:}\urt{\Nat}{\vnu > 0} \vdash \lambda f. f(f\;y) : f{:}\tau_f \sarr \urt{\Nat}{\vnu > 0} \quad \judgfail
 \end{align*}\noindent
 Although the first application $f\;y$ works as expected, the second application $f(f\;y)$ uses the result of the previous application, which is problematic. Here is a counter-example:
 \begin{align*}
     &f_2 \doteq \lambda y.\zif{y = 1}{x}{2} \quad
     \\& \zlet{x}{e_x}{\zlet{y}{e_y}{\boxed{(\lambda f. f\;(f\;y))\;f_2}}} \;\hookrightarrow^*\;
-    \\& \zlet{x}{e_x}{\boxed{f_2\;(f_2\;1)}} \;\hookrightarrow^*\;  \quad \text{\textcolor{gray}{(angelic choose $y = 1$)}}  
+    \\& \zlet{x}{e_x}{\boxed{f_2\;(f_2\;1)}} \;\hookrightarrow^*\;  \quad \text{\textcolor{gray}{(angelic chooses $y = 1$)}}  
     \\& \zlet{x}{e_x}{\boxed{f\;x}} \;\hookrightarrow^*\; \zlet{x}{e_x}{\boxed{\zif{x = 1}{x}{2}}} \;\hookrightarrow^*\; \boxed{1 \text{ or } 2}
 \end{align*}\noindent
 The function $\lambda y.\zif{y = 1}{x}{2}$ can have type $\tau_f$, since the parameter context can angelically assign value $1$ to $y$ to make the function return $x$. However, the result of the first application then depends on $x$, which makes the nested application fail to reach any value greater than $2$.
@@ -61,7 +47,7 @@ The context types have the normal function type $\ctsarr$ and magic wand type $\
 \begin{align*}
     &x{:}\urt{\Nat}{\vnu > 0} \vdash \lambda y.x - y : y{:}\urt{\Nat}{\vnu > 0} \ctwand \urt{\Nat}{\vnu > 0}
 \end{align*}\noindent
-The magic wand above requires parameter $y$ to be independent of the current context (i.e., $x{:}\urt{\Nat}{\vnu > 0}$), which guarantees that $y$ can be chosen angelically regardless of $x$. The result context will always be dependent on input context for a deterministic language; however, we also generalize our system to support disjoint result context in a functional language allowing nondeterministic behavior.
+The magic wand above requires parameter $y$ to be independent of the current context (i.e., $x{:}\urt{\Nat}{\vnu > 0}$), which guarantees that $y$ can be chosen angelically regardless of $x$. The result context will always be dependent on the input context for a deterministic language; however, we also generalize our system to support disjoint result context in a functional language allowing nondeterministic behavior.
 
 \paragraph{Contributions.}
 We summarize the main technical contributions as follows.
@@ -76,6 +62,3 @@ We summarize the main technical contributions as follows.
 
 
 
-
-
-% In general, context dependency is the core challenge for reasoning about angelic context in functional languages that enable higher-order functions. The design of type context should carefully handle three different contexts related to a function. That is, a function not only takes ``parameter context'' as input and produces ``result context'' as output, but can also have hidden ``captured context'' referred to by the function. For a curried type context $\overline{x_i:\tau_i}$ that can be decomposed into sub-contexts with binders $x_i$, it is important for a type system to track whether two variables are dependent or disjoint. Note that this complexity is not revealed in standard refinement type systems, which only involve demonic context. The intuition is that angelic context performs ``reverse-style'' reasoning that allows the environment of a function to remain ``undecided'' until the result of function application is known. However, this reverse reasoning conflicts with call-by-value semantics, which requires function application to happen after the argument value is decided.
