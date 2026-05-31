@@ -50,7 +50,15 @@ $\Code{y}$ as a positive even number and asserts that the result is even:
 This type has both a safety component -- $\Code{div}$ does not fault
 since $\Code{y}$ is non-zero; and a reachability component -- every
 even number can be produced (aka reached) by some instantiation of
-$\Code{x}$ and $\Code{y}$.
+$\Code{x}$ and $\Code{y}$.  By considering just safety, we could
+verify the former but would be unable to guarantee that any even
+number is actually reachable, admitting a vacuously safe
+implementation that just returns a constant. Conversely, by viewing
+this specification from a reachability lens, we could verify the
+latter but would be unable to guarantee that the operation does not
+fault on some inputs.  A unified treatment would simultaneously
+establish that the implementation is both \emph{safe} and
+\emph{complete} with respect to its specification.
 
 \newcommand{\natminus}{\ensuremath{-_{\Code{nat}}}}
 
@@ -79,7 +87,7 @@ $y$ consistent with their types such that their difference yields $v$.
 In the second judgement, $x$'s type merely constrains its value to be
 some positive number.  Since $x$'s type requires that we demonically
 account for all positive values, no single choice works for every
-combination of $y$ and desired output $v$, and so the judgement is not
+combination of $y$ and output $v$, and so the judgement is not
 valid.
 
 The availability of first-class functions adds additional
