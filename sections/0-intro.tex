@@ -5,25 +5,24 @@ way to reason about a program's \emph{safety} properties~\cite{...}.
 The procedure can be thought of as defining a logical deduction system
 that validates a program's behaviors with respect to its type
 specification.  For example, a typing judgement $\Gamma \vdash e :
-\tau$ asserts that $e$ satisfies the
-specification given by type $\tau$ under a typing context $\Gamma$.
-This interpretation provides a safety guarantee: the result of a
-well-typed term is always contained in $\tau$.  Note that under this
-\emph{demonic} interpretation, the evaluation of $e$ \emph{may}
-produce a value in $\tau$'s denotation (but nothing else), and must be
-able to be evaluated in \emph{all} environments whose bindings are
+\tau$ asserts that $e$ satisfies the specification given by type
+$\tau$ under a typing context $\Gamma$.  This \emph{demonic}
+interpretation provides a safety guarantee: the result of a well-typed
+term is always contained in $\tau$.  Concretely, the evaluation of $e$
+\emph{may} produce a value in $\tau$'s denotation (but nothing else),
+and must evaluate in \emph{all} environments whose bindings are
 consistent with $\Gamma$.
 
 A less studied, but equally valuable, verification procedure is one in
 which types are used to establish \emph{reachability}, rather than
 safety, properties.  Here, a typing judgement asserts that $e$
 \emph{realizes} the specification given by type $\tau$ under a typing
-context $\Gamma$.  This interpretation provides a reachability
-guarantee: every value that inhabits $\tau$ must be the result of a
-well-typed term.  Note that under this \emph{angelic} interpretation,
-the evaluation of $e$ \emph{must} produce every value in $\tau$'s
-denotation (but possibly more), and must be able to be evaluated in
-\emph{some} environment whose bindings are consistent with $\Gamma$.
+context $\Gamma$.  This \emph{angelic} interpretation provides a
+reachability guarantee: every value that inhabits $\tau$ must be the
+result of a well-typed term.  Concretely, the evaluation of $e$
+\emph{must} produce every value in $\tau$'s denotation (but possibly
+more), and must evaluate in \emph{some} environment whose bindings are
+consistent with $\Gamma$.
 
 Reachability reasoning~\cite{ReverseHoareLogic, OHP19, ZDS23} has
 typically been used to prove claims about ``incorrectness'' properties
