@@ -44,7 +44,7 @@ safety and reachability properties together, limiting their ability to
 address useful verification tasks.  For example, consider a
 specification for natural number division ($\Code{div}$) that types
 $\Code{y}$ as a positive even number and asserts that the result is even:
-\[\Code{x} : \Code{nat}, \Code{y} : \Code{\{\Code{nat}\, |\, \nu > 0\}}
+\[x : \Code{nat}, y : \Code{\{\Code{nat}\, |\, \nu > 0\}}
 \vdash x\;\Code{div}\;y : \{\Code{nat}\, |\, \Code{even}(\vnu)\}\]
 This type has both a safety component -- $\Code{div}$ does not fault
 since $\Code{y}$ is non-zero; and a reachability component -- every
