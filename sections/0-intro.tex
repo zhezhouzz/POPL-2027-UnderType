@@ -60,8 +60,8 @@ is challenging in functional languages, where functions may have
 free variables whose types determine whether a safety or reachability
 guarantee can be established.  Consider the following example:
 \begin{align*}
-    &x{:}\urt{\Nat}{\vnu > 0} \vdash \lambda y.x - y : y{:}\urt{\Nat}{\vnu > 0} \sarr \urt{\Nat}{\vnu > 0} \quad\ \text{\ding{51}}
-    \\&x{:}\ort{\Nat}{\vnu > 0} \vdash \lambda y.x - y : y{:}\urt{\Nat}{\vnu > 0} \sarr \urt{\Nat}{\vnu > 0} \quad \text{\ding{55}}
+    &x{:}\urt{\Nat}{\vnu > 0} \vdash \lambda y.x - y : y{:}\urt{\Nat}{\vnu > 0} \sarr \urt{\Nat}{\vnu > 0} \quad\ \textcolor{green}{\text{\ding{51}}}
+    \\&x{:}\ort{\Nat}{\vnu > 0} \vdash \lambda y.x - y : y{:}\urt{\Nat}{\vnu > 0} \sarr \urt{\Nat}{\vnu > 0} \quad\judgfail
 \end{align*}\noindent
 We use $\ort{b}{\phi}$ to express that a primitive type $b$ refined
 with a qualifier $\phi$ should be interpreted as a safety constraint:
