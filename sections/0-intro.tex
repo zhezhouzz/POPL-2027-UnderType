@@ -5,7 +5,7 @@ way to reason about a program's \emph{safety} properties~\cite{...}.
 The procedure can be thought of as defining a logical deduction system
 that validates a program's behaviors with respect to its type
 specification.  For example, a typing judgement $\Gamma \vdash e :
-\tau$ asserts that $e$ satisfies the specification given by type
+\tau$ asserts that $e$ \emph{satisfies} the specification given by type
 $\tau$ under a typing context $\Gamma$.  This \emph{demonic}
 interpretation provides a safety guarantee: the result of a well-typed
 term is always contained in $\tau$.  Concretely, the evaluation of $e$
