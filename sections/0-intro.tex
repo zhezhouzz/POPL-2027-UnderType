@@ -49,7 +49,7 @@ $\Code{y}$ as a positive even number and asserts that the result is even:
 This type has both a safety component -- $\Code{div}$ does not fault
 since $\Code{y}$ is non-zero; and a reachability component -- every
 even number can be produced (aka reached) by some instantiation of
-$\Code{x}$ and $\Code{y}$.  By considering just safety, we could
+$x$ and $y$.  By considering just safety, we could
 verify the former but would be unable to guarantee that any even
 number is actually reachable, admitting a vacuously safe
 implementation that just returns a constant. Conversely, by viewing
