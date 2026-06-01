@@ -42,22 +42,29 @@ Existing approaches, however, typically fix on one style of reasoning
 or the other and are not equipped to simultaneously consider both
 safety and reachability properties together, limiting their ability to
 address useful verification tasks.  For example, consider a
-specification for natural number division ($\Code{div}$) that types
-$\Code{y}$ as a positive even number and asserts that the result is even:
-\[x : \Code{nat}, y : \Code{\{\Code{nat}\, |\, \nu > 0\}}
-\vdash x\;\Code{div}\;y : \{\Code{nat}\, |\, \Code{even}(\vnu)\}\]
-This type has both a safety component -- $\Code{div}$ does not fault
-since $\Code{y}$ is non-zero; and a reachability component -- every
-even number can be produced (aka reached) by some instantiation of
-$x$ and $y$.  By considering just safety, we could
-verify the former but would be unable to guarantee that any even
-number is actually reachable, admitting a vacuously safe
-implementation that just returns a constant. Conversely, by viewing
-this specification from a reachability lens, we could verify the
-latter but would be unable to guarantee that the operation does not
-fault on some inputs.  A unified treatment would simultaneously
-establish that the implementation is both \emph{safe} and
-\emph{complete} with respect to its specification.
+specification for subtraction ($\Code{-}_{\Code{natpos}}$) that types
+argument $y$ as a natural number less than 
+$x$ and asserts that the result is a natural number greater
+than 0 but at most $x$:
+\[x : \{\Code{nat}\, |\ 0 < \nu\}, y : \Code{\{\Code{nat}\, |\, 0 \leq \nu < x\}}
+\vdash x\;\Code{-}_{\Code{natpos}}\;y : \{\Code{nat}\, |\, 0 < \nu
+\leq x \}\] This type has both a safety component --
+$\Code{-}_{\Code{natpos}}$ must produce a result in the range (0,$x$];
+  and a reachability component -- every natural number in (0,$x$] can
+    be produced by instantiating $y$ appropriately.  By considering
+    just safety, we could verify the former but would be unable to
+    guarantee reachability.  For example, an implementation that
+    simply returned the constant 1 would be vacuously safe, but would
+    not satisfy reachability.    Conversely, by
+    viewing this specification from a reachability lens, we could
+    verify the latter but would be unable to guarantee that the
+    operation is actually safe.  For example, an implementation that
+    returns an arbitrary positive number satisfies the reachability
+    requirement since it can return every value in $(0, x]$, but is
+      unsafe since it may also return values outside this range.  A
+      unified treatment would simultaneously establish that the
+      implementation is both \emph{sound} and \emph{complete} with
+      respect to its specification.
 
 \newcommand{\natminus}{\ensuremath{-_{\Code{nat}}}}
 
@@ -83,11 +90,13 @@ the type ascribed to the free variable $x$.  In the first judgement,
 $x$'s type mandates it produce every positive number.  This means that
 for any desired output $v$, we can angelically pick values for $x$ and
 $y$ consistent with their types such that their difference yields $v$.
-In the second judgement, $x$'s type merely constrains its value to be
-some positive number.  Since $x$'s type requires that we demonically
-account for all positive values, no single choice works for every
-combination of $y$ and output $v$, and so the judgement is not
-valid.
+For example, to produce output $v$, we can choose $x = v + 1$ and $y =
+1$, both of which are positive and satisfy their respective types, and
+whose difference is $v$.  In the second judgement, $x$'s type merely
+constrains its value to be some positive number.  Since $x$'s type
+requires that we demonically account for all positive values, no
+single choice works for every combination of $y$ and output $v$, and
+so the judgement is not valid.
 
 The availability of first-class functions adds additional
 complications.  Observe that the previous example exposed two input
