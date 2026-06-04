@@ -66,33 +66,35 @@ guarantee that all ill-typed programs will definitely get stuck.
 %       implementation is both \emph{sound} and \emph{complete} with
 %       respect to its specification.
 
-  Existing approaches, however, typically fix on one style of reasoning
-      or the other and are not equipped to simultaneously consider both
-      safety and reachability properties together, limiting their ability to
-      address useful verification tasks.  For example, consider a
-      specification for subtraction over natural numbers ($\Code{-}_{\Code{nat}}$) that types
-      argument $x$ and $y$ as a integer greater equal to $0$ and asserts that the result is an integer greater equal to $0$ but less equal to $x$:
+Existing approaches, however, typically fix on one style of reasoning
+or the other and are not equipped to simultaneously consider both
+safety and reachability properties together, limiting their ability to
+address useful verification tasks.  For example, consider a
+specification for subtraction over natural numbers
+($\Code{-}_{\Code{nat}}$) that types argument $x$ and $y$ as positive integers
+and asserts that the result is a positive integer less than or equal to $x$:
       \[x : \{\Code{int}\, |\ 0 \leq \nu\}, y : \Code{\{\Code{int}\, |\, 0 \leq \nu \}}
-      \vdash x\;\Code{-}_{\Code{nat}}\;y : \{\Code{int}\, |\, 0 \leq \nu
-      \leq x \}\] 
-      The standard implementation is $\Code{-}_{\Code{nat}} \doteq \lambda x.\lambda y. \zif{x \leq y}{0}{x - y}$.
-      This type has both a safety component -- the subtraction function 
-      $\Code{-}_{\Code{nat}}$ must produce a result in the range $[0,x]$;
-        and a reachability component -- every integer in $[0,x]$ can
-          be produced by instantiating $y$ appropriately.  By considering
-          just safety, we could verify the former but would be unable to
-          guarantee reachability.  For example, an implementation that
-          simply returned the constant $1$ would be vacuously safe, but would
-          not satisfy reachability.    Conversely, by
-          viewing this specification from a reachability lens, we could
-          verify the latter but would be unable to guarantee that the
-          operation is actually safe.  For example, an implementation that
-          returns an arbitrary natural number satisfies the reachability
-          requirement since it can return every value in $[0, x]$, but is
-            unsafe since it may also return values outside this range (e.g., $3\;\Code{-}_{\Code{nat}}\;10 = 13$).  A
-            unified treatment would simultaneously establish that the
-            implementation is both \emph{sound} and \emph{complete} with
-            respect to its specification.
+      \vdash x\;\Code{-}_{\Code{nat}}\;y : \{\Code{int}\, |\, 0 \leq
+      \nu \leq x \}\]
+\noindent A standard implementation is $\Code{-}_{\Code{nat}} \doteq
+\lambda x.\lambda y. \zif{x \leq y}{x - y}{0}$.  Its type has both a
+safety component -- the function $\Code{-}_{\Code{nat}}$ must produce
+a result in the range $[0,x]$; and a reachability component -- every
+integer in $[0,x]$ can be produced by instantiating $y$ appropriately.
+By considering just safety, however, we could verify the former but
+would be unable to guarantee reachability.  For example, an
+alternative (incorrect) implementation that ignores its inputs and
+simply returns the constant $1$ would be vacuously safe, but would not
+satisfy reachability.  Conversely, by viewing this specification from
+a reachability lens, we could verify the latter but would be unable to
+guarantee that the operation is actually safe.  For example, an
+alternative (incorrect) implementation that ignores its inputs and
+simply returns the output of a random number generator satisfies the
+desired reachability requirement since it can potentially return every
+value in $[0, x]$, but is unsafe since it may also return values
+outside this range.  A unified treatment would simultaneously
+establish that the standard implementation is both \emph{sound} and
+\emph{complete} with respect to its type specification.
 
 \newcommand{\natminus}{\ensuremath{-_{\Code{nat}}}}
 
