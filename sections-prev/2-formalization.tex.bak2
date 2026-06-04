@@ -1,0 +1,564 @@
+\section{Formalization}\label{sec:formal}
+
+This section presents the our choice logic and choice types. Similar with separation logic, our choice logic is also based on underline resource algebra, although such an algebra is additionally equipped with the branching operators. In the rest of this section, we will first introduce the preliminary definitions and then present the choice algebra, choice logic, and our choice types.
+
+\subsection{Preliminaries}
+
+In functional language, the context of a program typically be treated as a store or substitution. We provides the corresponding definition and related operations as the following.
+
+\begin{definition}[Substitution]\label{def:subst-compat}
+  Substitutions are partial maps from variables to values, i.e., $\Code{Var} \rightharpoonup \Code{Value}$. We write $\Dom{\subs}$ for its domain, i.e., the set of variables where the substitution is defined.
+  Write $\mapCompat{\sigma_1}{\sigma_2}$ when $\sigma_1$ and $\sigma_2$ are
+  \emph{compatible}, i.e.\ they agree on the intersection of their domains.
+  \[
+    \mapCompat{\sigma_1}{\sigma_2}
+    \doteq
+    \forall x \in \Dom{\sigma_1} \cap \Dom{\sigma_2}.\; \sigma_1(x) = \sigma_2(x).
+  \]
+  Under $\mapCompat{\sigma_1}{\sigma_2}$, the \emph{union} of substitutions is again a substitution, written $\sigma_1 \cup \sigma_2$ as usual. Fix finite $X \subseteq_{\mathrm{fin}} \Code{Var}$ and a substitution $\sigma$, we write $\projectTo{\sigma}{X}$ for the projection of $\sigma$ to $\Dom{\sigma} \cap X$, i.e.,
+  \begin{align*}
+    \projectTo{\sigma}{X} \doteq \{ [x\mapsto \sigma(x)] \mid x \in \Dom{\sigma} \cap X \}.
+  \end{align*}
+ \end{definition}
+
+ As mentioned in \autoref{sec:overview}, the choice resource is an capablity to freely decide assignments of variables. Therefore, we define the choice resource the following.
+
+\begin{definition}[Resource]\label{def:resource}
+A resource is a \emph{non-empty} set of substitutions that \emph{share the same domain}. The resource space is defined as the following.
+\begin{align*}
+  \Res \doteq \{ m ~|~ m \neq \emptyset \text{ and } m \in \mathcal{P}(\Code{Var} \rightharpoonup \Code{Value}) \text{ and } \forall \sigma\;\sigma' \in m. \Dom{\sigma} = \Dom{\sigma'} \}.
+\end{align*}
+We also extends the definition of domain, compatible, and projection from substitutions to resources. That is,
+\begin{align*}
+  &\Dom{m} \doteq  \Dom{\subs} \quad \text{for arbitrary } \subs \in m 
+  \\&\mapCompat{m_1}{m_2}
+  \doteq
+  \forall \subs_1 \in m_1.\;\forall \subs_2 \in m_2.\; \mapCompat{\subs_1}{\subs_2}
+  \\&\projectTo{m}{X}
+  \doteq
+  \{\, \projectTo{\subs}{X} \mid \subs \in m \,\}
+\end{align*}
+\end{definition}
+
+Note that for any resource $m$, $\mapCompat{m}{m}$ always holds since they always agree on their domain. Similarly, singleton set $\{m\}$ is compatible with itself.
+
+\begin{definition}[Resource Operation]\label{def:resource-times} We define two operations ($\Res \times \Res \rightharpoonup \Res$) for resources. The \emph{resource product} $m_1 \times m_2$ is the partial binary operation which produce peicewise union of two resources, i.e.,
+  \[
+    m_1 \times m_2 \;\doteq\;
+    \begin{cases}
+      \{\, \subs_1 \cup \subs_2 \mid \subs_1 \in m_1,\; \subs_2 \in m_2 \,\}
+        & \text{if } \mapCompat{m_1}{m_2}, \\
+      \text{undefined}
+        & \text{otherwise.}
+    \end{cases}
+  \]
+The \emph{resource sum} $m_1 + m_2$ is the union of two resources, i.e.,
+\[
+  m_1 + m_2 \;\doteq\;
+  \begin{cases}
+    m_1 \cup m_2
+      & \text{if } \forall m_1 \in m_1.\; \forall m_2 \in m_2.\; \Dom{m_1} = \Dom{m_2}, \\
+    \text{undefined}
+      & \text{otherwise.}
+  \end{cases}
+\]
+  \end{definition}
+
+The partial order $\leq$ over resources is the analogue of ``more information by releasing the variables set constraint''.
+
+\begin{definition}[Partial order]\label{def:partial-order} The partial order $\leq$ is defined as 
+    \begin{align*}
+      m_1 \leq m_2 \doteq \projectTo{m_2}{\Dom{m_1}} = m_1.
+    \end{align*}
+Easily to know, $\leq$ is reflexive, antisymmetric, and transitive.
+\end{definition}
+
+\begin{definition}[Fibers over projections]\label{def:res-agree-in-resource}
+  Given a substitution $\sigma_X$ and a resource $m$, we write $\fiberOver{m}{\sigma_X}$ for the fiber over $\sigma_X$, i.e., the set of substitutions in $m$ whose projection to $\Dom{\sigma_X}$ equals~$\sigma_X$:
+  \begin{align*}
+    \fiberOver{m}{\sigma_X} \doteq \{\, \sigma' \mid \sigma' \in m \text{ and } \projectTo{\sigma'}{\Dom{\sigma_X}} = \sigma_X \,\}.
+  \end{align*}
+\end{definition}
+
+\subsection{Choice algebra}
+
+The choice resource forms an algebra, which is not only a partial commutative monoid as in separation logic, but also a partial commutative semiring (PCS).
+
+\begin{definition}[Choice algebra]\label{def:choice-semiring}
+  A \emph{partial commutative semiring without zero}
+  $(\mathcal{M},{+},{\times},\mathbf{1})$ consists of a carrier set $\mathcal{M}$ and partial binary operations ${+}$ and ${\times}$ and unit elements $\mathbf{1}$ that satisfies the following properties:
+  \begin{itemize}
+  \item Indentity: $\forall m \in \mathcal{M}. m \times \mathbf{1} = m$.
+  \item Commutative (when operations are defined): $\forall m_1\;m_2 \in \mathcal{M}. m_1 + m_2 = m_2 + m_1$ and $m_1 \times m_2 = m_2 \times m_1$.
+  \item Associative (when operations are defined): $\forall m_1\;m_2\;m_3 \in \mathcal{M}. (m_1 + m_2) + m_3 = m_1 + (m_2 + m_3)$ and $(m_1 \times m_2) \times m_3 = m_1 \times (m_2 \times m_3)$.
+  \end{itemize}
+The choice algebra is a partial commutative semiring equipped with a partial order $\leq$ that satisfies the bifunctoriality property:
+  \begin{align*}
+    \forall m_1\;m_2\;m_1'\;m_2' \in \mathcal{M}. m_1 \leq m_1' \land m_2 \leq m_2' &\implies m_1 \times m_2 \leq m_1' \times m_2' 
+    \\& (\text{when } m_1 \times m_2 \text{ and } m_1' \times m_2' \text{ are defined.})
+    \\\forall m_1\;m_2\;m_1'\;m_2' \in \mathcal{M}. m_1 \leq m_1' \land m_2 \leq m_2' &\implies m_1 + m_2 \leq m_1' + m_2' 
+    \\& (\text{when } m_1 + m_2 \text{ and } m_1' + m_2' \text{ are defined.})
+  \end{align*}
+  \end{definition}
+
+Easily to know, $(\Res,{+},{\times},\{ \emptyset \})$ and $\leq$ is a choice algebra.
+
+\begin{example}[Choice algebra]
+Let $m_x \doteq \{\,[x \mapsto 1],\, [x \mapsto 2]\,\}$, so
+$\Dom{m_x} = \{x\}$.
+Let $m_y \doteq \{\,[y \mapsto 3],\, [y \mapsto 4]\,\}$, with $\Dom{m_y} = \{y\}$.
+Then
+\[
+  m_x \times m_y
+  = \left\{
+    \begin{array}{@{}l@{}}
+      [x \mapsto 1,\, y \mapsto 3],\,
+      [x \mapsto 1,\, y \mapsto 4],\\[\jot]
+      [x \mapsto 2,\, y \mapsto 3],\,
+      [x \mapsto 2,\, y \mapsto 4]
+    \end{array}
+  \right\}.
+\]
+Now take
+$m_{xy} \doteq \{\, [x \mapsto 1,\, y \mapsto 3],\, [x \mapsto 2,\, y \mapsto 4]\,\}$.
+We have
+$\projectTo{m_{xy}}{\{x\}} = m_x$ and $\projectTo{m_{xy}}{\{y\}} = m_y$,
+so by the definition of~$\leq$,
+$m_x \leq m_{xy}$ and $m_y \leq m_{xy}$.
+The product satisfies the same restrictions:
+$\projectTo{(m_x \times m_y)}{\{x\}} = m_x$ and
+$\projectTo{(m_x \times m_y)}{\{y\}} = m_y$.
+Nevertheless $|m_x \times m_y| = 4 > 2 = |m_{xy}|$; equivalently,
+\[
+  m_x \times m_y
+  = m_{xy} + \{\, [x \mapsto 1,\, y \mapsto 4],\, [x \mapsto 2,\, y \mapsto 3] \,\},
+\]
+\end{example}
+
+\paragraph{Partial order, addition, and multiplication} We always have
+\begin{align*}
+  \forall m_1\;m_2 \in \Res. m_1 \leq m_1 \times m_2 \quad (\text{when } m_1 \times m_2 \text{ is defined.})
+\end{align*}
+that is because we always have $\projectTo{m_1 \times m_2}{\Dom{m_1}} = m_1$. However, the similar property does not hold for addition: when $m_1 + m_2$ is defined we do \emph{not}
+generally expect the usual monotonicity inequality
+$m_1 \leq m_1 + m_2$.
+This is unlike incorrectness logic~\cite{OHP19} and outcome
+logic~\cite{ZDS23,Zil25TOPLAS}, where branching is tightly coupled to
+the consequence relation.
+Here, $+$ simply adjoins more substitutions---i.e.\ it records strictly
+more alternatives---and whether that strengthens or weakens a
+judgment depends on the approximation mode.
+Under an overapproximate interpretation, extra alternatives relax universal
+guarantees (more ways a safety property can fail); under an
+underapproximate interpretation, they add witnesses for existential or
+reachability claims.
+Because the two modes are dual and our modalities can mark formulas
+with either interpretation, a logic that uniformly enforces Kripke monotonicity
+should not identify $\leq$ with enrichment by~$+$.
+By contrast, expanding or shrinking the set of tracked variables is
+orthogonal to over- versus under-approximation: for example, the same
+resource
+$\{\,[x \mapsto 0],\, [x \mapsto 1],\, [x \mapsto 2]\,\}$
+is compatible with an overapproximate interpretation that $x$ may range
+over~$[0,5]$ and, separately, with an underapproximate interpretation that
+witnesses for~$x$ lie in~$[1,2]$.
+Extending every substitution with arbitrary bindings for a fresh
+variable~$y$ disturbs neither kind of judgment.
+
+\subsection{Choice logic}
+
+\emph{Basic} choice logic is parameterized by set of atomic propositions $\mathcal{A}$ and has no approximation or persistency modality. Then, every judgment is \emph{precisely} describes a resource.
+We write $m \models p$ for satisfaction of a resource proposition $p$
+at world $m \in \Res$.
+
+\begin{definition}[Basic choice logic] Let $(\mathcal{M},{+},{\times},\mathbf{1}, \leq)$ to be a choice algebra. Let $\mathcal{A}$ to be atomic propositions. Let $\denot{-} : \mathcal{A} \sarr \mathcal{M}$ be an interpretation function of pure formulas $\phi$. Then we have:
+\begin{itemize}
+\item $m \models \chtrue$ always;
+\item $m \models \chfalse$ never;
+\item $m \models a$ iff $a \in \mathcal{A}$ and $\denot{a} \leq m$;
+\item $m \models p \chland q$ iff $m \models p$ and $m \models q$;
+\item $m \models p \chlor q$ iff $m \models p$ or $m \models q$;
+\item $m \models p \chimpl q$ iff for all $m \leq m'. m' \models p$ implies $m' \models q$;
+% \item $m \models \forall x.p$ iff for all values $v$, $m \models p[x\mapsto v]$;
+% \item $m \models \exists x.p$ iff for some $v$, $m \models p[x\mapsto v]$.
+\item $m \models p \chstar q$ iff $\exists m_1\;m_2.\; m_1 \times m_2 \leq m$ and
+  $m_1 \models p$ and $m_2 \models q$.
+\item $m \models p \chwand q$ iff $\forall m'.\; \mapCompat{m'}{m}$ and $m' \models p$ implies
+  $m' \times m \models q$.
+\item $m \models p \choplus q$ iff $\exists m_1\;m_2.\; m_1 + m_2 \leq m$ and
+  $m_1 \models p$ and $m_2 \models q$.
+\end{itemize}
+We still write $p \models q$ iff for all $m \in \Res$, $m \models p$ implies $m \models q$.
+\end{definition}
+
+Intuitively, $m$ models $\subExt p$ (or $\supExt p$) iff there exists a supperset (or subset) $m'$ of $m$ that models $p$. On the other hand, $m$ models $\chpers p$ iff $m$ is a empty resource or a singleton resource that models $p$.
+
+
+\begin{definition}[Choice logic]\label{def:choice-logic-modalities} Choice logic additional equiped with three modalities than basic choice logic, i.e., the overapproximation modality $\subExt$, the underapproximation modality $\supExt$, and the persistency modality $\chpers$.
+  \begin{itemize}
+    \item $m \models \subExt p$ iff $\exists m'.\; m \subseteq m'$ and
+      $m' \models p$;
+    \item $m \models \supExt p$ iff $\exists m'.\; m' \subseteq m$ and
+      $m' \models p$,
+    \item $m \models \forallM{x} p$ iff $\forall \sigma_x \in \projectTo{m}{\{x\}}. \fiberOver{m}{\sigma_x} \models \sigma_x(p)$;
+    \item $m \models \chpers p$ iff $\forall \sigma \in m. \{\sigma\} \models p$.
+    \end{itemize}
+\end{definition}
+
+Intuitively, $\forallM{X} p$ is a fiberwise universal modality along the projection
+$m \mapsto \projectTo{m}{X}$.
+For each admissible assignment $\sigma_X$ to the read variables $X$, we look at the
+corresponding fiber $\fiberOver{m}{\sigma_X}$ and require that $p$ holds after
+substituting $\sigma_X$.
+
+
+\begin{example}[Dependent Underapproximation] There are three different underapproximations:
+  \begin{enumerate}
+    \item (dependent) $\supExt (0 < x) \chland \supExt (y < 3)$
+    \item (independent, square) $\supExt (0 < x) \chstar \supExt (y < 3)$
+    \item (dependent, triangle) $\supExt (0 < x) \chland \supExt (x \leq y < 3)\judgfail$. The actually preresentation is:
+    \begin{align*}
+      \supExt (0 < x) \chland \forallM {x} \supExt (x \leq y < 3)
+    \end{align*}
+  \end{enumerate}
+We have:
+\begin{align*}
+  \{[x=1; y=1], [x=1; y=2]\} &\models \forallM {x} \supExt (x \leq y < 3)
+  \\\{[x=2; y=2]\} &\models \forallM {x} \supExt (x \leq y < 3)
+  \\\{[x=1; y=1], [x=2; y=2]\} &\models \forallM {x} \supExt (x \leq y < 3) \judgfail
+  \\&\text{For each fixed-$x$ fiber,}
+  \\&\text{all corresponding $y$ outcomes must be present.}
+  \\\{[x=1; y=1], [x=1; y=2], [x=2; y=2]\} &\models \forallM {x} \supExt (x \leq y < 3) \judgok
+  \\&\text{Different $x$-fibers can coexist in the same resource.}
+\end{align*}
+The $\forallM {x} (0 < x)$ works as a ``read'' permission for $x$: for each
+admissible assignment of $x$, we check the corresponding fiber where $x$ is fixed.
+Note that it is different from
+\begin{align*}
+  &m \models \subExt (0 < x) \chland \supExt (x \leq y < 3) 
+  \\\iff& m \models \subExt (0 < x) \text{ and } m \models \supExt (x \leq y < 3)
+  \\\implies& \forall \sigma \in m. 0 < \sigma(x) \text{ and } m \models \supExt (x \leq y < 3)
+  \\\implies& \forall \sigma \in m. 0 < \sigma(x) \text{ and } [x=-1;y=2] \in m \quad \judgfail
+\end{align*}\noindent
+The problem is that the $\chland$ cannot make the constraint $0 < x$ be added into the pure proposition $x \leq y < 3$ (i.e., to be $\supExt (0 < x \land x \leq y < 3)$).
+\end{example}
+
+When the expressiveness of atomic propositions is rich enough, the nested uses of $\subExt$ and $\supExt$ over logical connectives collapse to $\subExt$ and $\supExt$ applied to the underlying pure propositions directly. For example, $\subExt (\subExt \phi_1 \chland \subExt \phi_2)$ is equivalent to $\subExt \phi_1 \chland \subExt \phi_2$, and $\supExt (\subExt \phi_1 \chland \subExt \phi_2)$ is equivalent to $\supExt (\phi_1 \cap \phi_2)$.
+
+\begin{theorem}[Collapse of nested modalities] Assume $\mathcal{A}$ is rich enough, i.e.,
+\begin{align*}
+  % &\forall X. \exists \phi \in \mathcal{A}. \denot{\phi} = \{ \subs \mid \Dom{\subs} = X \}
+  % \\
+  &\forall \phi_1\;\phi_2 \in \mathcal{A}. \exists \phi_3 \in \mathcal{A}. \denot{\phi_3} = \denot{\phi_1} \cap \denot{\phi_2}
+  \\& \forall \phi_1\;\phi_2 \in \mathcal{A}. \exists \phi_3 \in \mathcal{A}. \denot{\phi_3} = \denot{\phi_1} \cup \denot{\phi_2}
+  \\& \forall \phi_1\;\phi_2 \in \mathcal{A}. \exists \phi_3 \in \mathcal{A}. \denot{\phi_3} = \denot{\phi_1} \times \denot{\phi_2}
+\end{align*}
+Then, all formula in choice logic can be expressed in approximation normal form, i.e., $\subExt$ and $\supExt$ are only applied to pure propositions.
+\end{theorem}
+
+\subsection{Core Language and Choice Types}
+
+\begin{figure}[h]
+{\small
+  \begin{alignat*}{2}
+    \text{\textbf{Variables }}& \quad &\quad& x, y, z, \vnu, ...
+    \\\text{\textbf{Data constructors }}& \quad &d ::= \quad & () ~|~ \Code{true} ~|~ \Code{false} ~|~ \Code{O} ~|~ \Code{S} ~|~ \Code{Cons} ~|~ \Code{Nil} ~|~ \Code{Leaf} ~|~ \Code{Node}
+    \\\text{\textbf{Base Types}}& \quad & b  ::= \quad &  \Code{unit} ~|~ \Code{bool} ~|~ \Code{nat} ~|~ \Code{int} ~|~ ...
+    \\\text{\textbf{Basic Types}}& \quad & s  ::= \quad &  b ~|~ s\sarr s
+    \\\text{\textbf{Operations}}& \quad & \primop ::= \quad & {+} ~|~ {-} ~|~ {==} ~|~ {<} ~|~ {\leq} ~|~ ...
+    \\ \text{\textbf{Constants }}& \quad &c ::= \quad & () ~|~ \mathbb{B} ~|~ \mathbb{Z} ~|~ d\ \overline{c}\ ...
+    \\ \text{\textbf{Values }}& \quad  & v ::= \quad & c ~|~ x ~|~ \zlam{x}{s}{e} ~|~ \zfix{f}{s}{x}{s}{e}
+    \\ \text{\textbf{Expressions}}& \quad & e ::=\quad & v ~|~ \err ~|~ \zlet{x}{e}{e} ~|~ \zlet{x{:}s}{e}{e} ~|~ \zlet{x{:}s}{\primop\ \overline{v}}{e} ~|~ 
+    \\ & & \quad & |~  \zlet{x{:}s}{v\;v}{e} ~|~ \match{v} \overline{d\ \overline{y} \to e} 
+  \end{alignat*}}
+\caption{Core Language Syntax. }
+\label{fig:core-lang-syntax}
+\end{figure}
+
+\begin{figure}[h]
+  {\small
+    \begin{alignat*}{2}
+      \text{\textbf{Qualifiers}}& \quad & \phi ::= \quad & c ~|~ x ~|~ \primop\;\overline{v} ~|~ \bot ~|~ \top  ~|~ \neg \phi ~|~ \phi \land \phi ~|~ \phi \lor \phi ~|~ \phi \times \phi ~|~ \phi \impl \phi ~|~ \forall x{:}b. \phi ~|~ \exists x{:}b. \phi
+      \\ \text{\textbf{Choice Types}}& \quad & \tau ::= \quad & \ort{b}{\phi} ~|~ \urt{b}{\phi} ~|~ \tau \interty \tau ~|~ \tau \unionty \tau ~|~ \tau \choplus \tau ~|~ x{:}\tau \sarr \tau ~|~ x{:}\tau \chwand \tau ~|~ x{:}b \garr \tau
+      \\ \text{\textbf{Type Contexts}}& \quad & \Gamma ::= \quad & \emptyset ~|~ x{:}\tau ~|~ \Gamma \chstar \Gamma ~|~ \Gamma, \Gamma
+    \end{alignat*}}
+  \caption{Choice Types Syntax. }
+  \label{fig:choice-types-syntax}
+  \end{figure}
+
+Here $\ort{b}{\phi}$ is an overapproximate refinement and
+$\urt{b}{\phi}$ underapproximate; $\oplus$ on types mirrors resource
+sum at the kind level; $\sarr$ and $\wand$ distinguish
+multiplicative versus ``frame-preserving'' dependency in function
+abstraction (as in the semantic clauses below); and $x{:}b \garr \tau$
+is a dependent telescope familiar from refinement-type presentations.
+The context former $\Gamma_1 \sep \Gamma_2$ uses the separating
+combinator (syntax for $*$ at the context level), while ``,'' is the
+ordinary additive conjunction of hypotheses.
+
+\newpage
+\subsection{Denotational semantics}
+
+\paragraph{No quotient modality anymore} We will flip the underapproximation type $x{:}\urt{b}{\phi}$ directly into $x{:}\ort{b}{\top}$. If user want a tighter safety constraint, they should explictly tell us, e.g.,
+\begin{align*}
+  x{:}(\urt{\Int}{\vnu = 3} \interty \ort{\Int}{\vnu > 0}) ...
+\end{align*}\noindent
+after flip we will get
+\begin{align*}
+  x{:}(\ort{\Int}{\top} \interty \ort{\Int}{\vnu > 0}) ...
+\end{align*}\noindent
+
+\paragraph{Existential parameter} We need to distinguish the differency between ``exists a peramter'' and ``input paramter that has underapproximation guarantee (incorrectness logic)''. Consider the following example
+\begin{align*}
+  &\vdash f : x{:}\urt{\Int}{\vnu > 0} \sarr \urt{\Int}{\vnu > 0}
+  \\\text{\textcolor{blue}{Incorrectness style:} }& \text{if input cover ``positive numbers'', the output also covers ``positive numbers''.}
+  \\\text{\textcolor{DeepGreen}{Exists style:} }& \text{exists one ``positive'' input makes the output also covers ``positive numbers''.}
+  \\& f_1 = \lambda x.x \quad (\text{Incorrectness}\; \judgok) \quad (\text{Exists}\; \judgfail)
+  \\& f_2 = \lambda x.\Code{int\_gen()} \quad (\text{Incorrectness}\; \judgok) \quad (\text{Exists}\; \judgok)
+\end{align*} 
+We need another way to express ``exists-style''. One proposal is using $\choplus$:
+\begin{align*}
+  &\vdash f : x{:}\urt{\Int}{\vnu > 0} \sarr \ort{\Int}{\vnu > 0} \choplus \ort{\Int}{\top} 
+  \\\text{\textcolor{DeepGreen}{Exists style:} }& \text{exists one ``positive'' input makes the output also ``positive''.}
+  \\& \text{The resource is non-empty, thus we cannot also choose the second case in $\choplus$.}
+  \\&\vdash f : x{:}\urt{\Int}{\vnu > 0} \sarr \urt{\Int}{\vnu > 0} \choplus \ort{\Int}{\top} 
+  \\\text{\textcolor{DeepGreen}{Exists style:} }& \text{exists ``positive'' input makes the output cover ``positive numbers''.}
+  \\& f_1 = \lambda x.x \quad (\text{Incorrectness}\; \judgok) \quad (\text{Exists}\; \judgfail)
+  \\& f_3 = \lambda x.(x - 1) \quad (\text{Incorrectness}\; \judgok) \quad (\text{Exists}\; \judgok)
+  \\& \supExt(x > 0) = \supExt(x > 1) \oplus \supExt(x = 1)  
+\end{align*} 
+The problem here is that we don't force there exists only \emph{one} input, which can be solved by the persistency modality (correct under singleton resource):
+\begin{align*}
+  &\vdash f : x{:}\urt{\Int}{\vnu > 0} \sarr (\chpers \urt{\Int}{\vnu > 0}) \choplus \ort{\Int}{\top} 
+  \\\text{\textcolor{DeepGreen}{Exists style:} }& \text{exists ``positive'' input makes the output cover ``positive numbers''.}
+  \\& f_3 = \lambda x.(x - 1) \quad (\text{Incorrectness}\; \judgok) \quad (\text{Exists}\; \judgfail)
+  \\& f_2 = \lambda x.\Code{int\_gen()} \quad (\text{Incorrectness}\; \judgok) \quad (\text{Exists}\; \judgok)
+\end{align*}\noindent
+We talk about the details of persistency later.
+
+\paragraph{Persistent modality and persistent propersition} The \emph{persisency} means ``the prove doesn't rely any resource ownership (resource consumption)'', it means this result can be used for multiple time. A \emph{persistent property} means that the property itself implies that it is persistent. Formally we have:
+\begin{align*}
+  r \models \chpers p &\text{ iff } \forall \sigma \in r. \{\sigma \} \models p\\
+  \Code{Persistent}(p) &\text{ iff } p \models \chpers p 
+\end{align*}\noindent
+Intuitively, the overapproximation modality is persistent, since it can be duplicate arbitrarily. This fact can be proved as the following:
+\begin{align*}
+  &\subExt p \models \chpers \subExt p
+  \\\iff& \forall r. r \models \subExt p \implies r \models \chpers \subExt p
+  \\\iff& \forall r. r \models \subExt p \implies \forall \sigma \in r. \{\sigma\} \models \subExt p
+  \\\text{Note that: }& \{\sigma\} \subseteq r
+  \\\text{Thus: }& \forall \sigma \in r. \{\sigma\} \models \subExt \subExt p = \subExt p 
+\end{align*}\noindent
+Note that I have modified the definition of persistent property to be more general, previously:
+\begin{align*}
+  r \models \chpers p &\text{ iff } |r| = 1 \land r \models p
+\end{align*}\noindent
+which disallowing
+\begin{align*}
+  \{ [x=1], [x=2] \} \models \chpers \subExt (x > 0)
+\end{align*}\noindent
+where the righthand side is obversily should be a persistent property. We would like to highlight that the persistent modality is different from persistent proposition (or type). The over type $\ort{b}{\phi}$ is persistent type, and the under type $\urt{b}{\phi}$ is not (unless singleton under type). However, we can have $\chpers \urt{b}{\phi}$ which means that the proof of this type judgement doesn't rely any resource ownership.
+
+According to the definition of persistent modality, we find that it indeed ``flip'' a resource into its ``for all'' style version, which build a deep connection between the underapproximation and overapproximation modalities. Precisely, we can have:
+\begin{align*}
+  &\Gamma \vdash e_x : \chpers \tau_x
+  \\&\underline{\Gamma \chstar x{:}\tau_x \vdash e : \tau}
+  \\&\Gamma \vdash \zlet{x}{e_x}{e} : \tau
+\end{align*}\noindent
+Since the proof of $\Gamma \vdash e_x : \chpers \tau_x$ doesn't rely any resource ownership, thus it is actually can be disjointed with the type context. Moreover, we have:
+\begin{align*}
+  &\underline{\Code{flip}(\Gamma) \vdash e : \tau}
+  \\&\Gamma \vdash e : \chpers \tau
+\end{align*}\noindent
+which is similar with we require a propersition holds under all possible singleton resources, here we use ``overapproximation modality'' to express the ``for all'' style version. As a concrete example, we have:
+\begin{align*}
+  &\underline{y{:}\ort{\Int}{\top} \vdash \Code{int\_gen()} : \urt{\Int}{\top}} \judgok
+  &\underline{y{:}\ort{\Int}{\top} \vdash y : \urt{\Int}{\top}} \judgfail
+  \\&y{:}\urt{\Int}{\top} \vdash \Code{int\_gen()} : \chpers \urt{\Int}{\top}
+  &y{:}\urt{\Int}{\top} \vdash y : \chpers \urt{\Int}{\top}
+  \\&\underline{y{:}\urt{\Int}{\top} \chstar x{:}\urt{\Int}{\top} \vdash e : \tau}
+  &\underline{y{:}\urt{\Int}{\top} \chstar x{:}\urt{\Int}{\top} \vdash e : \tau}
+  \\&y{:}\urt{\Int}{\top} \vdash \zlet{x}{\Code{int\_gen()}}{e} : \tau
+  &y{:}\urt{\Int}{\top} \vdash \zlet{x}{y}{e} : \tau
+\end{align*}\noindent
+Note that the type of $x$ in the type context cannot be persistent again, thus it cannot be duplicated anymore \emph{after binding into a specific variable}. In a call-by-value semantics, a variable cannot be bound into two different values. When can $x$ has a persistent type? only when $x$ already bind to a specific value.
+\begin{align*}
+  &\Gamma \vdash v_x : \chpers \tau_x
+  \\&\underline{\Gamma \chstar x{:}\chpers \tau_x \vdash e : \tau}
+  \\&\Gamma \vdash \zlet{x}{v_x}{e} : \tau
+\end{align*}\noindent
+For example,
+\begin{align*}
+  &\emptyset \vdash \lambda ().\Code{int\_gen()} : \chpers (\Unit\sarr\urt{\Int}{\top})  \judgok
+  \\&\underline{x{:}\chpers (\Unit\sarr\urt{\Int}{\top}) \vdash e : \tau}
+  \\&\emptyset \vdash \zlet{x}{\lambda ().\Code{int\_gen()}}{e} : \tau
+  \\
+  \\&\emptyset \vdash \lambda ().\Code{nat\_gen()} \oplus \lambda ().\Code{neg\_gen()} : \chpers (\Unit\sarr\urt{\Int}{\top}) \judgfail
+  \\&\underline{x{:}\chpers (\Unit\sarr\urt{\Int}{\top}) \vdash e : \tau}
+  \\  &\emptyset \vdash \zlet{x}{\lambda ().\Code{nat\_gen()} \oplus \lambda ().\Code{neg\_gen()}}{e} : \tau
+\end{align*}\noindent
+
+
+\begin{align*}
+  \\\denot{e} &: X \sarr \Code{Prop_{Choice}}
+  \\\denot{e} &\doteq \lambda x.\Code{Prop}(\{r \mid \forall \sigma \in r. \mstep{\sigma(e)}{\sigma(x)} \})
+  \\\denot{\tau} &: \mathcal{E} \sarr \Code{Prop_{Choice}}
+  \\\denot{\ort{b}{\phi}} &\doteq \lambda e. \forall \vnu. (\denot{e}\;\vnu) \chimpl \forallM{\Code{FV}(\phi)} \subExt \phi
+  \\\denot{\urt{b}{\phi}} &\doteq \lambda e. \forall \vnu. (\denot{e}\;\vnu) \chimpl \forallM{\Code{FV}(\phi)} \supExt \phi
+  \\\denot{x{:}\tau_x \sarr \tau} &\doteq \lambda e. \denot{\tau_x}\;x \chimpl \denot{\tau}\;(e\;x)
+  \\\denot{x{:}\tau_x \chwand \tau} &\doteq \lambda e. \denot{\tau_x}\;x \chwand \denot{\tau}\;(e\;x)
+  \\\denot{\chpers \tau} &\doteq \lambda e. \chpers (\denot{\tau}\;e)
+  \\\denot{\tau_1 \choplus \tau_2} &\doteq \lambda e. \denot{\tau_1}\;e \choplus \denot{\tau_2}\;e
+  \\\denot{\emptyset} &\doteq \Code{Atom}(\textbf{1})
+  \\\denot{x{:}\tau} &\doteq \denot{\tau}\;x
+  \\\denot{\Gamma_1, \Gamma_2} &\doteq \denot{\Gamma_1} \chland \denot{\Gamma_2}
+  \\\denot{\Gamma_1 \chstar \Gamma_2} &\doteq \denot{\Gamma_1} \chstar \denot{\Gamma_2}
+\end{align*}\noindent
+
+\begin{theorem}[Fundamental theorem]
+  \begin{align*}
+    \Gamma \vdash e : \tau \text{ when } \denot{\Gamma}  \models \denot{\tau}\;e
+  \end{align*}\noindent
+\end{theorem}
+
+\begin{example}[Term denotation] Consider a term $e = x \oplus x + 1$. the denotation $\denot{e}\;y$ contians:
+  \begin{align*}
+    &\{ [x=1;y=1], [x=1;y=2] \}\\
+    &\{ [x=2;y=2], [x=2;y=3] \}\\
+    &\{ [x=1;y=1], [x=1;y=2], [x=2;y=2], [x=2;y=3] \}\\
+    &\{ [z=0;x=1;y=1], [z=0;x=1;y=2] \}...
+  \end{align*}
+\end{example}
+
+\begin{example}[Base case] When a term $x + 1$ can have the following type?
+  \begin{align*}
+    &r \in \denot{\urt{\Int}{0 \leq \vnu \leq 3}}\;(x + 1)
+    \\\iff& r \models \forall \vnu.\{\sigma[\vnu \mapsto \sigma(x) + 1 ] ~|~ \sigma \in r \} \chimpl \supExt (0 \leq \vnu \leq 3)
+    \\\iff& \forall \vnu. \{\sigma[\vnu \mapsto \sigma(x) + 1 ] ~|~ \sigma \in r \} \models \supExt (0 \leq \vnu \leq 3)
+    \\\iff& \projectTo{r}{\{x\}} \models \supExt (-1 \leq \vnu \leq 2)
+    \\\iff& \text{we have $x{:}\urt{\Int}{-1 \leq \vnu \leq 2}$ in the type context}
+  \end{align*}
+  When a term $x + 1$ can have the following type?
+  \begin{align*}
+    &r \in \denot{\urt{\Int}{x < \vnu \leq 3}}\;(x + 1)
+    \\\iff& r \models \forall \vnu.\{\sigma[\vnu \mapsto \sigma(x) + 1 ] ~|~ \sigma \in r \} \chimpl \forallM{x} \supExt (x < \vnu \leq 3)
+    \\\iff& \forall \vnu. \{\sigma[\vnu \mapsto \sigma(x) + 1 ] ~|~ \sigma \in r \} \models \forallM{x} \supExt (x < \vnu \leq 3)
+    \\\iff& \forall \vnu. \forall v_x \in \projectTo{r}{\{x\}}. \{\sigma[\vnu \mapsto v_x + 1 ] ~|~ \sigma \in r \text{ and } \sigma(x) = v_x \} \models \supExt (v_x < \vnu \leq 3)
+    \\\text{(note that)}& [\vnu \mapsto v_x + 1] \models \supExt (v_x < \vnu \leq 3) \text{ only when } v_x = 2 
+    \\\iff& \projectTo{r}{\{x\}} \subseteq \{[x \mapsto 2]\}
+    \\\iff& \text{we have $x{:}\urt{\Int}{\vnu = 2}$ or $x{:}\ort{\Int}{\vnu = 2}$ in the type context}
+    \\\iff& \text{we need to use $\supExtQ$ to erase redundant resources for $x{:}\urt{\Int}{\vnu = 2}$. } 
+  \end{align*}
+\end{example}
+  
+\begin{example}[Type context] Consider the following type context:
+  \begin{align*}
+    &r \in \denot{x{:}\urt{\Int}{0 \leq \vnu \leq 3}}
+    \\\iff& r \models \supExtQ (\denot{\urt{\Int}{0 \leq \vnu \leq 3}}\;x)
+    \\\iff& r \models \supExtQ \forall \vnu. \{\sigma[\vnu \mapsto \sigma(x) ] ~|~ \sigma \in r \} \chimpl \supExt (0 \leq \vnu \leq 3)
+    \\\iff& r \models \supExtQ (\Code{Atom}(r) \chimpl \supExt (0 \leq x \leq 3))
+    \\\iff& r \models (0 \leq x \leq 3)
+  \end{align*}
+Overapproximation:
+\begin{align*}
+  &r \in \denot{x{:}\ort{\Int}{0 \leq \vnu \leq 3}}
+  \\\iff& r \models \supExtQ (\denot{\ort{\Int}{0 \leq \vnu \leq 3}}\;x)
+  \\\iff& r \models \supExtQ \forall \vnu. \{\sigma[\vnu \mapsto \sigma(x) ] ~|~ \sigma \in r \} \chimpl \subExt (0 \leq \vnu \leq 3)
+  \\\iff& r \models \supExtQ (\Code{Atom}(r) \chimpl )
+  \\\iff& r \models \supExtQ\subExt (0 \leq x \leq 3)
+  \\\iff& r = \{[x = 0]\} \text{ or } r = \{[x = 1]\} \text{ or } r = \{[x = 2]\} \text{ or } r = \{[x = 3]\}
+\end{align*}
+Variable dependency:
+\begin{align*}
+  &r \in \denot{y{:}\urt{\Int}{x \leq \vnu \leq 3}}
+  \\\iff& r \models \supExtQ (\denot{\urt{\Int}{x \leq \vnu \leq 3}}\;x)
+  \\\iff& r \models \supExtQ \forall \vnu. \forall v_x \in \projectTo{r}{\{x\}}. \{\sigma[\vnu \mapsto v_x ] ~|~ \sigma \in r \text{ and } \sigma(x) = v_x \} \chimpl \supExt (v_x \leq \vnu \leq 3)
+  \\\iff& r \models \supExtQ \forall v_x \in \projectTo{r}{\{x\}}. \fiberOver{r}{[x\mapsto v_x]}  \chimpl \supExt (v_x \leq y \leq 3)
+  \\\iff& r \models \supExtQ \{\{ [x = 3;y = 3] \}, \{ [x = 3;y = 3], [x = 3;y = 4] \} 
+  \\& \qquad\qquad \{ [x = 2;y = 2], [x = 2;y = 3] \}, \{ [x = 2;y = 2], [x = 2;y = 3], [x=2;y=4] \} ... \}
+  \\\iff& r \models \{\{ [x = 3;y = 3] \}, \{ [x = 2;y = 2], [x = 2;y = 3] \}, \{ [x = 1;y = 1], [x = 1;y = 2], [x = 1;y = 3] \} ...  \}
+\end{align*}
+Normal conjuction:
+\begin{align*}
+  &r \in \denot{x{:}\urt{\Int}{1 \leq \vnu \leq 3}, y{:}\urt{\Int}{x \leq \vnu \leq 3}}
+  \\\iff& \projectTo{r}{\{x\}} = (1 \leq \vnu \leq 3) \text{ and } r \in \{ ... \}
+  \\\iff& r = \{[x = 3;y = 3], [x = 2;y = 2], [x = 2;y = 3], [x = 1;y = 1], [x = 1;y = 2], [x = 1;y = 3]  \}
+\end{align*}
+Over and under:
+\begin{align*}
+  &r \in \denot{x{:}\ort{\Int}{2 \leq \vnu \leq 3}, y{:}\urt{\Int}{x \leq \vnu \leq 3}}
+  \\\iff& \projectTo{r}{\{x\}} \in \{[x = 2], [x = 3]\} \text{ and } r \in \{ ... \}
+  \\\iff& r = \{ [x = 2;y = 2], [x = 2;y = 3]  \} \text{ or } r = \{[x = 3;y = 3]  \}
+\end{align*}
+Disjoint conjuction:
+\begin{align*}
+  &r \in \denot{x{:}\urt{\Int}{1 \leq \vnu \leq 3} \chstar y{:}\urt{\Int}{x \leq \vnu \leq 3}}
+  \\\iff& \text{no such resource, not a square}
+  \\&r \in \denot{x{:}\urt{\Int}{\vnu = 2} \chstar y{:}\urt{\Int}{x \leq \vnu \leq 3}}
+  \\\iff& r = \{ [x = 2;y = 2], [x = 2;y = 3] \}
+\end{align*}
+Disjoint Over and under: Since the over resource is always singleton, thus it is always a square.
+\end{example}
+
+\paragraph{Erase modality}
+Write $\denot{\phi} \subseteq \Res$ for the set of resources that satisfy~$\phi$.
+Then the $\subseteq$-closures above coincide with the modalities from \autoref{def:choice-logic-modalities}:
+\begin{align*}
+  \subExt(R) &\doteq \{\, r' \mid \exists r \in R.\; r' \subseteq r \,\},
+  \\
+  \supExt(R) &\doteq \{\, r' \mid \exists r \in R.\; r \subseteq r' \,\},
+  \\
+  \denot{\subExt p} &\doteq \subExt(\denot{p}) \\
+  \denot{\supExt p} &\doteq \supExt(\denot{p}).
+\end{align*}
+We would like to erase the redundant proof obligations when we want to prove a underapproximation task.
+Consider the following preorder on resources:
+\begin{align*}
+  % r \subExteq r' &\doteq \forall R. r \in \subExt(R) \iff r' \in \subExt(R)\\
+  r \supExtleq r' &\doteq \forall R.\; r \in \supExt(R) \impl r' \in \supExt(R).
+\end{align*}
+It means that for $r \supExtleq r'$, if $r \models p$ holds, then $r' \models p$ also holds, these $r'$ are the redundant proof obligations.
+Write $\supExtQ(S)$ for the set of \emph{$\supExtleq$-minimal} elements of $S \subseteq \Res$, i.e.\ those $r \in S$ with no strictly $\supExtleq$-smaller witness in~$S$:
+\begin{align*}
+  \supExtQ(S) &\doteq
+  \{\, r \in S \mid \forall r' \in S.\; r' \supExtleq r \impl r = r' \,\}.
+\end{align*}
+Intuitively, $\supExt$ \emph{fattens} a set of resources (upward closure), whereas $\supExtQ$ keeps only $\supExtleq$-minimal witnesses (erase redundancy); heuristically the two sit at opposite ends of the same Galois-style pairing familiar from posets and Alexandrov spaces. For example, we have:
+\begin{align*}
+  &\supExtQ(R_1) \subseteq R_2 \iff R_1 \subseteq \supExt(R_2)
+\end{align*}\noindent
+We define the erase modality by collecting these minimal witnesses in the denotation of~$p$:
+\begin{align*}
+  % \denot{\subExtQ \phi} &= \supExtQ(\denot{\phi}) \\
+  \denot{\supExtQ p} &\doteq \supExtQ(\denot{p}).
+\end{align*}
+When a property (not need to be underapproximated) appears at negative position, the erase modality can be used to erase the redundant proof obligations.
+\begin{align*}
+  &\forall p_1\;p_2.  \supExtQ p_1 \impl p_2 \implies p_1 \impl p_2
+\end{align*}\noindent
+Note that the following fact holds, where $\subExt \supExtQ p $ means ``flip'' the property $p$ (at negative position) from under to over:
+\begin{align*}
+  &\forall \phi\;p.  \subExt \supExtQ \supExt \phi \impl p \implies \subExt \phi \impl p
+  \\&\forall \phi\;p. \subExt \supExtQ \subExt \phi \impl p \implies \subExt \phi \impl p
+\end{align*}
+
+\paragraph{Termination} Assume the term $e$ can diverge.
+\begin{align*}
+  &\denot{e}_{ok} = \{ r \mid r \models \forall \sigma \in r. \exists v. \mstep{\sigma(e)}{v} \}
+  &\denot{e}_{err} = \{ r \mid r \models \forall \sigma \in r. \neg \exists v. \mstep{\sigma(e)}{v} \}
+\end{align*} 
+We then refine the type denotation to:
+\begin{align*}
+  \\\denot{\tau} &: \mathcal{E} \sarr \Code{Prop_{Choice}}
+  \\\denot{\bot} &\doteq \lambda e. \denot{e}_{err}
+  \\\denot{\ort{b}{\phi}} &\doteq \lambda e. \denot{e}_{ok} \chland  \forall \vnu. (\denot{e}\;\vnu) \chimpl \forallM{\Code{FV}(\phi)} \subExt \phi
+  \\\denot{\urt{b}{\phi}} &\doteq \lambda e. \denot{e}_{err} \chland \forall \vnu. (\denot{e}\;\vnu) \chimpl \forallM{\Code{FV}(\phi)} \supExt \phi
+  \\\denot{x{:}\tau_x \sarr \tau} &\doteq \lambda e. \supExtQ(\denot{\tau_x}\;x) \chimpl \denot{\tau}\;(e\;x)
+  \\\denot{x{:}\tau_x \chwand \tau} &\doteq \lambda e. \supExtQ(\denot{\tau_x}\;x) \chwand \denot{\tau}\;(e\;x)
+  \\\denot{\chpers \tau} &\doteq \lambda e. \chpers (\denot{\tau}\;e)
+  \\\denot{\tau_1 \choplus \tau_2} &\doteq \lambda e. \denot{\tau_1}\;e \choplus \denot{\tau_2}\;e
+  \\\denot{\emptyset} &\doteq \Code{Atom}(\textbf{1})
+  \\\denot{x{:}\tau} &\doteq \supExtQ (\denot{\tau}\;x)
+  \\\denot{\Gamma_1, \Gamma_2} &\doteq \denot{\Gamma_1} \chland \denot{\Gamma_2}
+  \\\denot{\Gamma_1 \chstar \Gamma_2} &\doteq \denot{\Gamma_1} \chstar \denot{\Gamma_2}
+\end{align*}\noindent

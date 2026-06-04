@@ -1,0 +1,80 @@
+\section{Typing Rules}\label{sec:rules}
+
+
+\begin{figure}[!t]
+  {\footnotesize
+  {\footnotesize
+  \begin{flalign*}
+   &\text{\textbf{Auxiliary Typing}} & & \fbox{$\Gamma \vdash \tau <: \tau$} &\text{\textbf{Typing}} &  & \fbox{$\Gamma\vdash \primop: t \quad \Gamma\vdash v : \tau \quad \Gamma \vdash e: \tau$}
+  \end{flalign*}
+  }
+  \\ \
+  \mprooftr{18mm}
+  {$\Gamma \vdash v: \tau$}
+  {TPersistent}
+  {$\Gamma\vdash v: \chpers \tau$}
+  \quad
+  \mprooftr{26mm}
+  {$\Gamma, x{:}t_x \vdash e: \tau$}
+  {TFun1}
+  {$\Gamma\vdash \zlam{x}{s}{e} :  x{:}t_x\sarr \tau$}
+  \quad
+  \mprooftr{26mm}
+  {$\Gamma \chstar x{:}t_x \vdash e: \tau$}
+  {TFun2}
+  {$\Gamma\vdash \zlam{x}{s}{e} :  x{:}t_x\chwand \tau$}
+  \\[.8em]
+  \mprooftr{25mm}
+  {$x \in \Dom{\Gamma}$}
+  {TVarO}
+  {$\Gamma \vdash x: \ort{b}{\vnu = x}$}
+  \quad
+  \mprooftr{25mm}
+  {$x \in \Dom{\Gamma}$}
+  {TVarU}
+  {$\Gamma \vdash x: \urt{b}{\vnu = x}$}
+  \quad
+  \mprooftr{25mm}
+  {$(x, \tau) \in \Gamma$}
+  {TVarFun}
+  {$\Gamma \vdash x: \tau$}
+  \\[.8em]
+  \mprooftr{50mm}
+  {$\Gamma_1 \vdash v_1 : x{:}t_x \sarr \tau_y$ \quad
+   $\Gamma_2 \vdash v_2 : t_x$ \quad
+   $\Gamma_3, y{:}t_y \vdash e: \tau$}
+  {TApp1}
+  {$\Gamma_1, \Gamma_2, \Gamma_3 \vdash \zlet{y}{v_1\;v_2}{e}: \tau$}
+  \quad
+  \mprooftr{50mm}
+  {$\Gamma_1 \vdash v_1 : x{:}t_x \wand \tau_y$ \quad
+   $\Gamma_2 \vdash v_2 : t_x$ \quad
+   $\Gamma_3, y{:}t_y \vdash e: \tau$}
+  {TApp2}
+  {$\Gamma_1 \chstar \Gamma_2 \chstar \Gamma_3 \vdash \zlet{y}{v_1\;v_2}{e}: \tau$}
+  \\[.8em]
+  \mprooftr{20mm}
+  {$\Gamma_2, \Gamma_1 \vdash e: \tau$}
+  {TExchange1}
+  {$\Gamma_1, \Gamma_2 \vdash e: \tau$}
+  \quad
+  \mprooftr{20mm}
+  {$\Gamma_2 \chstar \Gamma_1 \vdash e: \tau$}
+  {TExchange1}
+  {$\Gamma_1 \chstar \Gamma_2 \vdash e: \tau$}
+  \\[.8em]
+  \mprooftr{20mm}
+  {$\Gamma_1, \Gamma_2 \vdash e: \tau$}
+  {TContract1}
+  {$\Gamma_1, \Gamma_2, \Gamma_2 \vdash e: \tau$}
+  \quad
+  \mprooftr{20mm}
+  {$\Gamma_2 \chstar \Gamma_1 \vdash e: \tau$}
+  {TWeakening}
+  {$\Gamma_1 \vdash e: \tau$}
+  }
+  \vspace*{-.1in}
+  \caption{Selected typing rules.}
+  \label{fig:selected-typing-rules}
+  \vspace*{-.15in}
+  \end{figure}

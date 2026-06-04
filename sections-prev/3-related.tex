@@ -1,0 +1,22 @@
+\section{Related Work}\label{sec:related}
+
+\paragraph{Outcome logic.}
+Outcome logic predicates are typically read as overapproximations even when one's goal resembles incorrectness-style sufficiency~\cite{ZDS23,Zil25TOPLAS}.
+In particular, OL's branching connective \(\oplus\) splits \emph{computational branches}, not variable-level dependence inside a single branch.
+Concrete triples illustrate the limitation when one lifts imperative logics to functional ``return types'' verbatim.
+Suppose \(y\) is assigned from \(\Code{f_{id}} x\) with \(\Code{f_{id}} \doteq \lambda x.\,x\).
+
+The branching idiom \(\oplus\,\top\) is helpful for nondeterministic generators: for instance,
+ \[
+   \langle \top\rangle\; y \mathrel{:=} \Code{int\_gen\;()}
+   \;\langle \lceil y > 0 \rceil \oplus \top \rangle
+\]
+splits nonnegative versus positive covers.
+One might therefore try (unsoundly) to weaken the \(\Code{f_{id}}\) postcondition similarly:
+\[
+   \langle x > 0\rangle\; y \mathrel{:=} \Code{f_{id}}\;x
+   \;\langle \lceil y > 0 \rceil \oplus \top \rangle.
+\]
+Determinism defeats the branching reading: \(\oplus\,\top\) only adds alternatives between \emph{paths}, whereas \(y\) and \(x\) stay synchronized on every path---one still needs \(\lceil y > 0 \land y = x \rceil\).
+Hence \(\oplus\,\top\) addresses control-flow branching, which is orthogonal to argument--result correlation.
+Our overview (\autoref{sec:overview}) uses this contrast motivationally; the relational distinctions we rely on (\(\ctstar\) versus \(\ctcomma\), strategy-branching sums \(\ctoplus\), and \(\ctsarr\) versus \(\ctwand\)) are developed in~\autoref{sec:formal}.

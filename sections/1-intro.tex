@@ -1,0 +1,247 @@
+\section{Introduction}\label{sec:intro}
+
+A typical type-based verification procedure provides a compositional
+way to reason about a program's \emph{safety} properties~\cite{...}.
+The procedure can be thought of as defining a logical deduction system
+that validates a program's behaviors with respect to its type
+specification.  For example, a typing judgement $\Gamma \vdash e :
+\tau$ asserts that $e$ \emph{satisfies} the specification given by type
+$\tau$ under a typing context $\Gamma$.  This \emph{demonic}
+interpretation provides a safety guarantee: the result of a well-typed
+term is always contained in $\tau$.  Concretely, the evaluation of $e$
+\emph{may} produce a value in $\tau$'s denotation (but nothing else),
+and must evaluate in \emph{all} environments whose bindings are
+consistent with $\Gamma$.
+
+A less studied, but equally valuable, verification procedure is one in
+which types are used to establish \emph{reachability}, rather than
+safety, properties.  Here, a typing judgement asserts that $e$
+\emph{realizes} the specification given by type $\tau$ under a typing
+context $\Gamma$.  This \emph{angelic} interpretation provides a
+reachability guarantee: every value that inhabits $\tau$ must be the
+result of a well-typed term.  Concretely, the evaluation of $e$
+\emph{must} produce every value in $\tau$'s denotation (but possibly
+more), and must evaluate in \emph{some} environment whose bindings are
+consistent with $\Gamma$.
+
+Reachability reasoning~\cite{ReverseHoareLogic, OHP19, ZDS23} has
+typically been used to prove claims about ``incorrectness'' properties
+of programs, i.e., the existence of witnesses of buggy program
+behavior that can avoid overwhelming false positives in bug
+detection. There have been relatively few forms of must-style
+reasoning in type-based verification, however. Recent refinement type
+systems~\cite{RefinementTypeSymbolicExecution,RefinementTypeRefutations}
+instantiate must-style reasoning to refute type specifications by
+searching for concrete counterexamples.  Some must-style type systems
+focus on specific reachability properties: \emph{coverage
+  types}~\cite{CoverageType} ensures that all desirable test inputs
+will be produced by a test input generator, while \citet{Ill-types}
+guarantee that all ill-typed programs will definitely get stuck.
+
+% Existing approaches, however, typically fix on one style of reasoning
+% or the other and are not equipped to simultaneously consider both
+% safety and reachability properties together, limiting their ability to
+% address useful verification tasks.  For example, consider a
+% specification for subtraction ($\Code{-}_{\Code{natpos}}$) that types
+% argument $y$ as a natural number less than 
+% $x$ and asserts that the result is a natural number greater
+% than 0 but at most $x$:
+% \[x : \{\Code{nat}\, |\ 0 < \nu\}, y : \Code{\{\Code{nat}\, |\, 0 \leq \nu < x\}}
+% \vdash x\;\Code{-}_{\Code{natpos}}\;y : \{\Code{nat}\, |\, 0 < \nu
+% \leq x \}\] This type has both a safety component --
+% $\Code{-}_{\Code{natpos}}$ must produce a result in the range (0,$x$];
+%   and a reachability component -- every natural number in (0,$x$] can
+%     be produced by instantiating $y$ appropriately.  By considering
+%     just safety, we could verify the former but would be unable to
+%     guarantee reachability.  For example, an implementation that
+%     simply returned the constant 1 would be vacuously safe, but would
+%     not satisfy reachability.    Conversely, by
+%     viewing this specification from a reachability lens, we could
+%     verify the latter but would be unable to guarantee that the
+%     operation is actually safe.  For example, an implementation that
+%     returns an arbitrary positive number satisfies the reachability
+%     requirement since it can return every value in $(0, x]$, but is
+%       unsafe since it may also return values outside this range.  A
+%       unified treatment would simultaneously establish that the
+%       implementation is both \emph{sound} and \emph{complete} with
+%       respect to its specification.
+
+  Existing approaches, however, typically fix on one style of reasoning
+      or the other and are not equipped to simultaneously consider both
+      safety and reachability properties together, limiting their ability to
+      address useful verification tasks.  For example, consider a
+      specification for subtraction over natural numbers ($\Code{-}_{\Code{nat}}$) that types
+      argument $x$ and $y$ as a integer greater equal to $0$ and asserts that the result is an integer greater equal to $0$ but less equal to $x$:
+      \[x : \{\Code{int}\, |\ 0 \leq \nu\}, y : \Code{\{\Code{int}\, |\, 0 \leq \nu \}}
+      \vdash x\;\Code{-}_{\Code{nat}}\;y : \{\Code{int}\, |\, 0 \leq \nu
+      \leq x \}\] 
+      The standard implementation is $\Code{-}_{\Code{nat}} \doteq \lambda x.\lambda y. \zif{x \leq y}{0}{x - y}$.
+      This type has both a safety component -- the subtraction function 
+      $\Code{-}_{\Code{nat}}$ must produce a result in the range $[0,x]$;
+        and a reachability component -- every integer in $[0,x]$ can
+          be produced by instantiating $y$ appropriately.  By considering
+          just safety, we could verify the former but would be unable to
+          guarantee reachability.  For example, an implementation that
+          simply returned the constant $1$ would be vacuously safe, but would
+          not satisfy reachability.    Conversely, by
+          viewing this specification from a reachability lens, we could
+          verify the latter but would be unable to guarantee that the
+          operation is actually safe.  For example, an implementation that
+          returns an arbitrary natural number satisfies the reachability
+          requirement since it can return every value in $[0, x]$, but is
+            unsafe since it may also return values outside this range (e.g., $3\;\Code{-}_{\Code{nat}}\;10 = 13$).  A
+            unified treatment would simultaneously establish that the
+            implementation is both \emph{sound} and \emph{complete} with
+            respect to its specification.
+
+\newcommand{\natminus}{\ensuremath{-_{\Code{nat}}}}
+
+Unifying safety and reachability reasoning in a type-based setting
+is challenging in functional languages, where functions may have
+free variables whose types determine whether a safety or reachability
+guarantee can be established.  Consider the following example:
+\begin{align*}
+    &x{:}\urt{\Nat}{\vnu > 0} \vdash \lambda y.x - y : y{:}\urt{\Nat}{\vnu > 0} \sarr \urt{\Nat}{\vnu > 0} \quad\ \textcolor{green}{\text{\ding{51}}}
+    \\&x{:}\ort{\Nat}{\vnu > 0} \vdash \lambda y.x - y : y{:}\urt{\Nat}{\vnu > 0} \sarr \urt{\Nat}{\vnu > 0} \quad\judgfail
+\end{align*}\noindent
+We use $\ort{b}{\phi}$ to express that a primitive type $b$ refined
+with a qualifier $\phi$ should be interpreted as a safety constraint:
+a term that has this type cannot produce any value outside the set of
+values the type denotes.  Conversely, $\urt{b}{\phi}$ establishes a
+reachability constraint: a term that has this type must produce every
+value found in the set the type denotes.  Thus, the type
+$y{:}\urt{\Nat}{\vnu > 0} \sarr \urt{\Nat}{\vnu > 0}$ specifies that
+the function, $\lambda\, y. x - y$, must be able to produce every
+positive number from its input $y$, whose type also guarantees that it
+must produce every positive number.  The two judgements differ only in
+the type ascribed to the free variable $x$.  In the first judgement,
+$x$'s type mandates it produce every positive number.  This means that
+for any desired output $v$, we can angelically pick values for $x$ and
+$y$ consistent with their types such that their difference yields $v$.
+For example, to produce output $v$, we can choose $x = v + 1$ and $y =
+1$, both of which are positive and satisfy their respective types, and
+whose difference is $v$.  In the second judgement, $x$'s type merely
+constrains its value to be some positive number.  Since $x$'s type
+requires that we demonically account for all positive values, no
+single choice works for every combination of $y$ and output $v$, and
+so the judgement is not valid.
+
+The availability of first-class functions adds additional
+complications.  Observe that the previous example exposed two input
+type contexts for function $\lambda y.x - y$.  The first,
+$x{:}\urt{\Nat}{\vnu > 0}$, captures the type of the free variable
+$x$, while the second specifies the type for the parameter,
+$y{:}\urt{\Nat}{\vnu > 0}$ that must be satisfied at the point of
+application.  Managing these contexts separately is necessary because
+the angelic witnesses for free variables and for parameters are chosen
+at different points in the program's evaluation. To illustrate,
+consider the following type judgement:
+\begin{align*}
+    x{:}\urt{\Nat}{\vnu > 0}, y{:}\urt{\Nat}{\vnu > 0} &\vdash  \lambda f. f\;x : f{:}\tau_f \sarr \urt{\Nat}{\vnu > 0} \quad\judgfail
+\end{align*}\noindent
+The higher-order function $F \doteq\ \lambda f. f\;x$ takes a function
+$f$ that is assumed to have type $\tau_f$ and directly applies $f$ to
+$x$.  The type context defines a type binding for $x$ and $y$ that
+specifies they both reach every positive number.  Without constraining
+$\tau_f$ to account for the free variable $x$ in $F$'s closure,
+we cannot guarantee that an arbitrary function supplied for $f$ will
+satisfy the reachability requirement on $F$'s result.  For example,
+when $f$ is the function $\lambda y.x - y$, $F$ always returns $0$.
+\begin{align*}
+    &f_1 \doteq \lambda y.x - y \quad 
+    \\&\zlet{x}{e_x}{\boxed{(\lambda f. f\;x)\;f_1}} \;\hookrightarrow^*\; \zlet{x}{e_x}{\boxed{x - x}} \;\hookrightarrow^*\; 0 
+\end{align*}\noindent
+The problem is that the ``captured context'' of function $\lambda y.x
+- y$ contains variable $x$.  For the type judgement to be valid, we
+must enforce that parameter $y$ not alias with $x$.  This requires
+a form of (anti)-dependence tracking to guide the angelic decisions
+the type system is allowed to make.
+
+The above example illustrates a \emph{static} aliasing problem: the
+captured variable $x$ and the parameter $y$ refer to the same
+binding, so the angelic choice of $y$ is constrained.  The example
+given below illustrates a more subtle \emph{dynamic} dependency problem:
+even when there is no static aliasing, the result of an intermediate
+function application may itself depend on a captured variable,
+constraining the angelic choices available to subsequent applications:
+\begin{align*}
+    x{:}\urt{\Nat}{\vnu > 0}, y{:}\urt{\Nat}{\vnu > 0} \vdash \lambda f. f(f\;y) : f{:}\tau_f \sarr \urt{\Nat}{\vnu > 0} \quad \judgfail
+\end{align*}\noindent
+A counter-example to the validity of this judgement is given below:
+\begin{align*}
+    &f_2 \doteq \lambda y.\zif{y = 1}{x}{2} \quad
+    \\& \zlet{x}{e_x}{\zlet{y}{e_y}{\boxed{(\lambda f. f\;(f\;y))\;f_2}}} \;\hookrightarrow^*\;
+    \\& \zlet{x}{e_x}{\boxed{f_2\;(f_2\;1)}} \;\hookrightarrow^*\;  \quad \text{\textcolor{gray}{(we angelically choose $y = 1$)}}  
+    \\& \zlet{x}{e_x}{\boxed{f_2\;x}} \;\hookrightarrow^*\; \zlet{x}{e_x}{\boxed{\zif{x = 1}{x}{2}}} \;\hookrightarrow^*\; \boxed{1 \text{ or } 2}
+\end{align*}\noindent
+Angelically choosing $y = 1$, the first application ($f_2\; 1$)
+returns $x$. This result is then passed to $f_2$
+again, but since $x$
+is a captured variable rather than a fresh angelic choice,
+the second application $(f_2\; x)$
+can only return 1 or 2, and so the nested application
+fails to reach any positive number greater than 2.
+
+In order to define a type theory that uniformly supports both safety
+and reachability reasoning, we treat these two styles of
+interpretation as first-class modalities, and support fine-grained
+mixing in arbitrary ways.  To solve the context dependency issues
+raised above, we equip contexts with \emph{capabilities} that are
+treated as \emph{resources} that mediate demonic or angelic choices as
+necessary. We then introduce a \emph{resource algebra} to compose and
+destruct these capabilities in a principled way.  This approach
+enables us to handle context disjointness analogously to the way
+bunched implications~\cite{...} handle resource separation, lifting
+the additive/multiplicative conjunction distinction from the level of
+propositions to the level of type contexts.
+
+Our framing naturally leads to the notion of a \emph{context type}
+that unifies safety and reachability reasoning in a pure functional
+language.  Specifically, we allow type contexts to be related via
+dependent ($\Gamma_1 \ctcomma \Gamma_2$) and disjoint ($\Gamma_1
+\ctstar \Gamma_2$) conjunction.  The type constructor $\ctsarr$
+internalizes dependent conjunction, typing functions whose argument
+context is dependent on the closure context, while $\ctwand$
+internalizes disjoint conjunction, typing functions whose argument
+context is disjoint from it, directly reflecting whether angelic
+choices for the argument are constrained by the closure.
+
+This bunched type system thus enables the tracking of complex
+data-flow dependencies and guides the angelic choices that are
+permissible in a typing judgement.  Specifically, since contexts can
+be combined via context combinators, the structure of a context is
+naturally a binary tree whose internal nodes record how sub-contexts
+are combined, enabling frame-based local reasoning.
+For example, in the judgement
+\begin{align*}
+    &x{:}\urt{\Nat}{\vnu > 0} \vdash \lambda y.x - y : y{:}\urt{\Nat}{\vnu > 0} \ctwand \urt{\Nat}{\vnu > 0}
+\end{align*}\noindent
+the type constructor ($\ctwand$) requires parameter $y$ to be
+independent of the current context (i.e., $x{:}\urt{\Nat}{\vnu > 0}$),
+which guarantees that $y$ can be chosen angelically regardless of $x$.
+While the result context of a deterministic function is always
+dependent on its input context, nondeterministic functions may produce
+results that are independent of some inputs, a distinction that our
+system captures via disjoint result contexts using $\ctwand$; we 
+elaborate on this point in Section~\ref{nondet}.
+
+\noindent \paragraph{Contributions.}
+The paper makes the following contributions:
+
+\begin{itemize}[leftmargin=*]
+\item We interpret the capability of a context to make angelic or
+  demonic choices as a resource, and introduce a resource algebra to
+  express compositional operations over this capability.
+\item Building on this algebra, we define an associated modal
+  \emph{context logic} that supports dependent and disjoint mixing of
+  safety/demonic and reachability/angelic modalities.
+\item We introduce \emph{context types}, a bunched modal type system
+  interpreted in our context logic, to support both safety and
+  reachability reasoning for deterministic functional programs. We
+  further generalize context types to a functional language extended
+  with nondeterministic choice (Section~\ref{nondet}), where the
+  result context is allowed to be disjoint from the input context.
+\item We formalize our core language and type system in Rocq, and
+  provide corresponding helper tactics to automate reasoning about
+  context disjointness and capability decomposition.
+\end{itemize}
