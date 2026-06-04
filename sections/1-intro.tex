@@ -77,7 +77,7 @@ and asserts that the result is a positive integer less than or equal to $x$:
       \vdash x\;\Code{-}_{\Code{nat}}\;y : \{\Code{int}\, |\, 0 \leq
       \nu \leq x \}\]
 \noindent A standard implementation is $\Code{-}_{\Code{nat}} \doteq
-\lambda x.\lambda y. \zif{x \leq y}{x - y}{0}$.  Its type has both a
+\lambda x.\lambda y. \zif{x \leq y}{0}{x - y}$.  Its type has both a
 safety component -- the function $\Code{-}_{\Code{nat}}$ must produce
 a result in the range $[0,x]$; and a reachability component -- every
 integer in $[0,x]$ can be produced by instantiating $y$ appropriately.
