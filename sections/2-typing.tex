@@ -1,0 +1,353 @@
+\section{Context Types}\label{sec:context-typing}
+
+In this section, we introduce the core language and the context type system for it.
+
+\subsection{Core Language}
+
+\begin{figure}[h]
+  {\small
+    \begin{alignat*}{2}
+      \text{\textbf{Variables }}& \quad &\quad& x, y, z, \vnu, ...
+      \\\text{\textbf{Data Constructors }}& \quad &d ::= \quad & () ~|~ \Code{true} ~|~ \Code{false} ~|~ \Code{O} ~|~ \Code{S} ~|~ \Code{Cons} ~|~ \Code{Nil} ~|~ ...
+      \\\text{\textbf{Operations}}& \quad & \primop ::= \quad & d ~|~ {+} ~|~ {-} ~|~ {==} ~|~ {<} ~|~ {\leq} ~|~ ...
+      \\ \text{\textbf{Constants }}& \quad &c ::= \quad & () ~|~ \mathbb{B} ~|~ \mathbb{Z} ~|~ d\ \overline{c}\ ...
+      \\ \text{\textbf{Values}}& \quad  & v ::= \quad & c ~|~ x ~|~ \zlam{x}{s}{e} ~|~ \zfix{f}{s}{x}{s}{e}
+      \\ \text{\textbf{Expressions}}& \quad & e ::=\quad & v ~|~ \zlet{x{:}s}{e}{e} ~|~ \primop\ \overline{v} ~|~  v\;v ~|~ \match{v} \overline{d\ \overline{y} \to e} 
+      \\\text{\textbf{Base Types}}& \quad & b  ::= \quad &  \Code{unit} ~|~ \Code{bool} ~|~ \Code{nat} ~|~ \List[b] ~|~ ...
+      \\\text{\textbf{Basic Types}}& \quad & s  ::= \quad &  b ~|~ s\sarr s
+      \\\text{\textbf{Basic Type Context}}& \quad & \Sigma ::= \quad &  \emptyset ~|~ x{:}s ~|~ \Sigma, \Sigma
+    \end{alignat*}}
+  \caption{Core Language Syntax \langname{}. }
+  \label{fig:core-lang-syntax}
+  \end{figure}
+
+\paragraph{Terms and basic types} In order to concretize the context type system, we introduce a core language \langname{} for terms. The language \langname{}, whose syntax is summarized in \autoref{fig:core-lang-syntax}, is a standard call-by-value lambda calculus with pattern-matching, inductive datatypes, and recursive functions. The syntax of our core language is expressed in monadic normal form (MNF)~\cite{JO94}, a variant of A-Normal Form (ANF)~\cite{FSDF93}
+that allows nested let-bindings. We also equip the language with basic types (i.e., $s$) that contain base types (i.e., primitive types $b$) and function types (i.e., $s\sarr s$). As in other refinement type systems, we only consider well-typed terms in the basic type system, i.e., $\Sigma \basicvdash e : s$, where details are provided in \techreport. Concretely, we require the term to explicitly annotate variable types (e.g., $\zlam{x}{s}{e}$) to avoid issues in basic type inference. When the context is clear, we omit type annotations for variables for brevity.
+
+\begin{figure}[h]
+  {
+    \begin{alignat*}{2}
+      \text{\textbf{Qualifiers}}& \quad & \phi ::= \quad & c ~|~ x ~|~ \primop\;\overline{v} ~|~ \bot ~|~ \top  ~|~ \neg \phi ~|~ \phi \land \phi ~|~ \phi \lor \phi ~|~  \phi \impl \phi ~|~ \forall x{:}b. \phi ~|~ \exists x{:}b. \phi
+      \\ \text{\textbf{Refinement Types}}& \quad & \tau ::= \quad & \ort{b}{\phi} ~|~ \urt{b}{\phi} ~|~ \tau \ctinter \tau ~|~ \tau \ctunion \tau ~|~ \tau \ctoplus \tau ~|~ x{:}\tau \ctsarr \tau ~|~ x{:}\tau \ctwand \tau
+      % ~|~ \ctpers \tau 
+      \\ \text{\textbf{Type Contexts}}& \quad & \Gamma ::= \quad & \emptyset ~|~ x{:}\tau ~|~ \Gamma \ctstar \Gamma ~|~ \Gamma \ctcomma \Gamma ~|~ \Gamma \ctoplus \Gamma
+      % \\ \text{\textbf{Contexts With Holes}}& \quad & \Delta ::= \quad & \Box ~|~ \Gamma ~|~ \Delta \ctstar \Delta ~|~ \Delta \ctcomma \Delta ~|~ \Delta \ctoplus \Delta
+    \end{alignat*}}
+  \vspace*{-.1in}
+  {\small
+  \begin{align*}
+    \text{\textbf{Type erasure}} \quad & \eraserf{\ort{b}{\phi}} \doteq b \quad \eraserf{\urt{b}{\phi}} \doteq b \quad \eraserf{\tau_1 \ctinter \tau_2} \doteq \eraserf{\tau_1} \quad \eraserf{\tau_1 \ctunion \tau_2} \doteq \eraserf{\tau_1}
+    \\&\eraserf{\tau_1 \ctoplus \tau_2} \doteq \eraserf{\tau_1} \quad  \eraserf{x{:}\tau_x \ctsarr \tau} \doteq \eraserf{\tau_x} \sarr \eraserf{\tau} \quad  
+    \\& \eraserf{\emptyset} \doteq \emptyset \quad \eraserf{x{:}\tau} \doteq x{:}\eraserf{\tau} \quad \eraserf{\Gamma_1 \ctcomma \Gamma_2} \doteq \eraserf{\Gamma_1}, \eraserf{\Gamma_2} \quad \eraserf{\Gamma_1 \ctstar \Gamma_2} \doteq \eraserf{\Gamma_1}, \eraserf{\Gamma_2}  \quad \eraserf{\Gamma_1 \ctoplus \Gamma_2} \doteq \eraserf{\Gamma_1}
+    % \\\text{\textbf{Type lifting}} \quad & \liftrf{b} \doteq \ort{b}{\phi} \quad \liftrf{s_x \sarr s} \doteq x{:}\liftrf{s_x} \ctsarr \liftrf{s}  
+    % \\&\liftrf{\emptyset} \doteq \emptyset \quad \liftrf{x{:}s} \doteq x{:}\liftrf{s} \quad \liftrf{\Gamma_1 , \Gamma_2} \doteq \liftrf{\Gamma_1} \ctcomma \liftrf{\Gamma_2}
+  \end{align*}}
+  \caption{Context Types Syntax. }
+  \label{fig:context-types-syntax}
+\end{figure}
+
+\subsection{Context Type Language}
+
+The syntax of context types is shown in \autoref{fig:context-types-syntax}. As in standard refinement types, context types refine basic types with qualifiers $\phi$, demonic and angelic modalities ($\otparenth{...}$ and $\utparenth{...}$), bunching operators (e.g., $\ctsarr$, $\ctwand$), the sum operator ($\ctoplus$) for control flow, and standard type intersection/union ($\ctinter$, $\ctunion$). Readers can see this connection via the type erasure function $\eraserf{\tau}$, which converts context types to basic types by erasing these refinements. In the following paragraphs, we introduce these refinements in detail via examples.
+
+\paragraph{Approximation Modality} We allow base type $b$ to be refined with a qualifier $\phi$ in first-order logic that is interpreted in either a demonic ($\ort{b}{\phi}$) or angelic ($\urt{b}{\phi}$) way, enabling both safety and reachability verification. As illustrated in prior works~\cite{?}, there is a deep connection between safety/may-style/overapproximation/demonic context and reachability/must-style/underapproximation/angelic context. Intuitively, as discussed in \autoref{sec:intro}, a demonic context $x{:}\ort{b}{\phi}$ may assign any value $v$ that is consistent with qualifier $\phi$ to $x$, where $\phi$ is an overapproximation of the actual contextual capability. Conversely, an angelic context $x{:}\urt{b}{\phi}$ must have the capability to at least assign all values allowed by qualifier $\phi$ to $x$, where $\phi$ is an underapproximation of the actual contextual capability. 
+
+% Informally, we have
+% \begin{align*}
+%   &\vdash e : \ort{b}{\phi} \quad\text{iff}\quad \forall v. \mstep{e}{v} \implies \phi[\vnu \mapsto v]
+%   \\&\vdash e : \urt{b}{\phi} \quad\text{iff}\quad \forall v. \phi[\vnu \mapsto v] \implies  \mstep{e}{v}
+% \end{align*}\noin
+
+Consider the following typing judgements of a constant term $1$ in different base types:
+\begin{align*}
+  &\vdash 1 : \ort{\Nat}{\top}\;\judgok
+  && \vdash 1 : \urt{\Nat}{\top}\;\judgfail
+  \\&\vdash 1 : \ort{\Nat}{\vnu > 0}\;\judgok
+  && \vdash 1 : \urt{\Nat}{\vnu > 0}\;\judgfail
+  \\&\vdash 1 : \ort{\Nat}{\vnu = 1}\;\judgok
+  && \vdash 1 : \urt{\Nat}{\vnu = 1}\;\judgok
+\end{align*}\noindent
+While overapproximation interpretation follows the style of standard refinement type systems, where constant $1$ should satisfy the qualifier in the base type, underapproximation interpretation requires that \emph{all values satisfying the qualifier must be reachable}. Constant $1$ cannot reach all natural numbers or all possible numbers; thus, the first two typing judgements fail. Readers may ask when a term can have a non-trivial underapproximation type (i.e., not a singleton type as in the third typing judgement) in a pure functional language without randomness; the answer is \emph{under an angelic context}.
+\begin{align*}
+  x{:}\urt{\Nat}{\top} \vdash x - 3 : \urt{\Nat}{\vnu > 0}\;\judgok
+\end{align*}\noindent
+As shown above, $x - 3$ can reach all positive numbers since the corresponding type context $x{:}\urt{\Nat}{\top}$ assumes that assignments to variable $x$ can reach all natural numbers. Alternatively, we can say the type context is angelic, which smartly chooses the desirable assignment of $x$ depending on which positive number the right-hand-side type wants to reach; e.g., in order to reach $n$, the assignment of $x$ should be $n + 3$. 
+Similar to the IO monad, our context type system assumes there is a potential \emph{external impure environment} that can make smart or non-deterministic inputs to our program in a pure functional language.
+Readers can imagine that an outside test generator provides assignments to $x$ randomly in a testing setting, or a human or artificial intelligence agent provides assignments to $x$ to validate the reachability property.
+
+\paragraph{Context-based view} We already saw how angelic context works in the previous example, and we highlight that ``context'' is a first-class citizen in our context types. For example, a typing judgement $\Gamma \vdash e : \tau$ should be interpreted as ``$e$ produces a new type context $\vnu{:}\tau$ under context $\Gamma$,'' where $\vnu$ is a fresh variable that $e$ can bind to. With this view, our type system can be treated as a sequent calculus over context, which enables compositional reachability reasoning. In the following example, reachability of the let-expression can be decomposed into two reachability judgements via local variable $y$.
+\begin{align*}
+  &x{:}\urt{\Nat}{\top} \vdash x - 3 : \urt{\Nat}{\vnu > 0}
+  \\&\underline{x{:}\urt{\Nat}{\top} \ctcomma y{:}\urt{\Nat}{\vnu > 0} \vdash y - 5 : \urt{\Nat}{\vnu > 0}}
+  \\&x{:}\urt{\Nat}{\top} \vdash \zlet{y}{x - 3}{y - 5} : \urt{\Nat}{\vnu > 0}
+\end{align*}\noindent
+The term $x - 3$ produces a new context $y{:}\urt{\Nat}{\vnu > 0}$ under context $x{:}\urt{\Nat}{\top}$; then the term $y - 5$ produces a new context $z{:}\urt{\Nat}{\vnu > 0}$ under context $x{:}\urt{\Nat}{\top} \ctcomma y{:}\urt{\Nat}{\vnu > 0}$ ($z$ can be any fresh variable).
+
+\paragraph{Demonic Context and Angelic Context} We now provide a detailed explanation of demonic context and angelic context via the following example.
+\begin{align*}
+  &x{:}\ort{\Nat}{\vnu > 0} \vdash x : \ort{\Nat}{\top}\;\judgok
+  &&x{:}\urt{\Nat}{\vnu > 0} \vdash x : \urt{\Nat}{\top}\;\judgfail
+  \\&x{:}\ort{\Nat}{\vnu > 0} \vdash x : \ort{\Nat}{\vnu > 1}\;\judgfail
+  &&x{:}\urt{\Nat}{\vnu > 0} \vdash x : \urt{\Nat}{\vnu > 1}\;\judgok
+\end{align*}\noindent
+The term $x$ can be treated as an identity function that returns the input context. The demonic context has a subtype relation that is covariant with the qualifier, while the angelic context is contravariant with the qualifier. For example, the last typing judgement on the right-hand side can be understood as ``an angelic context that can cover all positive numbers can also be treated as an angelic context that covers all numbers greater than $1$.'' Moreover, our subtype relation allows context shifts between these two modalities. In general, a demonic context cannot be treated as a non-trivial angelic context:
+\begin{align*}
+  &x{:}\ort{\Nat}{\vnu > 0} \vdash x : \urt{\Nat}{\top}\;\judgfail
+  &&x{:}\ort{\Nat}{\vnu > 0} \vdash x : \urt{\Nat}{\vnu > 1}\;\judgfail
+  \\&x{:}\ort{\Nat}{\vnu = 3} \vdash x : \urt{\Nat}{\vnu = 3}\;\judgok
+  &&x{:}\urt{\Nat}{\vnu > 0} \vdash x : \urt{\Nat}{\bot}\;\judgok
+\end{align*}\noindent
+As shown above, the conversion succeeds when the qualifier is trivially false ($\bot$), or when the qualifier is singleton ($\vnu = 3$), which makes angelic interpretation the same as demonic interpretation. In other words, the \emph{capability} of values that can be assigned to $x$ is too limited to distinguish the two modalities. We have the following facts for converting angelic context to demonic context:
+\begin{align*}
+  x{:}\urt{\Nat}{\vnu > 0} \vdash x : \ort{\Nat}{\top}\;\judgok
+  &&x{:}\urt{\Nat}{\vnu > 0} \vdash x : \ort{\Nat}{\vnu > 1}\;\judgfail
+\end{align*}\noindent
+Note that $x{:}\urt{\Nat}{\vnu > 0}$ allows the context to assign $1$ to $x$, which cannot be treated as a valid assignment for a demonic context that requires $x$ to be greater than $1$.
+
+\paragraph{Disjointness} One challenge in context types is dependency between context pieces, as illustrated by the problem shown in \autoref{sec:intro}.
+\begin{align*}
+  &x{:}\urt{\Nat}{\vnu > 0} \ctcomma y{:}\urt{\Nat}{\vnu > 0} \vdash x - y : \urt{\Nat}{\vnu > 0} \;\judgfail
+\end{align*}\noindent
+As shown above, we would like to see that term $x - y$ can reach all positive numbers with an angelic context over $x$ and $y$, or that ``term $x - y$ takes the given input context and produces a new context $\vnu{:}\urt{\Nat}{\vnu > 0}$.'' However, one can imagine that the input context is also produced by another term:
+\begin{align*}
+  &x{:}\urt{\Nat}{\vnu > 0} \vdash \zlet{y}{x}{x - y} : \urt{\Nat}{\vnu > 0} \;\judgfail
+\end{align*}\noindent
+Since $y$ is equal to $x$, $x - y$ can only be $0$. The issue is that context piece $y{:}\urt{\Nat}{\vnu > 0}$ is dependent on $x{:}\urt{\Nat}{\vnu > 0}$, where we need a ``disjointness'' operator $\ctstar$ to avoid bad contexts such as $\zlet{y}{x}{\boxed{e}}$. 
+\begin{align*}
+  &x{:}\urt{\Nat}{\vnu > 0} \ctstar y{:}\urt{\Nat}{\vnu > 0} \vdash x - y : \urt{\Nat}{\vnu > 0} \;\judgok
+\end{align*}\noindent
+Intuitively, $\Gamma_1 \ctstar \Gamma_2$ means that the context can be divided into two parts: angelic or demonic decisions made by $\Gamma_1$ do not interfere with $\Gamma_2$. Context $\zlet{y}{x}{\boxed{e}}$ cannot satisfy the disjointness requirement, since once assignment of $x$ is decided, assignment of $y$ is also fixed. We would like to highlight that dependency is not only required by angelic context; consider the following example:
+\begin{align*}
+  &x{:}\urt{\Nat}{\top} \ctcomma y{:}\ort{\Nat}{\top} \vdash x + y : \ort{\Nat}{\I{odd}(\vnu)} \;\judgfail
+  \\&x{:}\urt{\Nat}{\top} \ctstar y{:}\ort{\Nat}{\top} \vdash x + y : \ort{\Nat}{\I{odd}(\vnu)} \;\judgok
+\end{align*}\noindent
+where previous $\zlet{x}{y}{\boxed{e}}$ is still a valid context for the first judgement since $y$ can always have type $\ort{\Nat}{\top}$, which will make $x + y$ always be an even number. Conversely, in the second judgement, angelic context $x{:}\urt{\Nat}{\top}$ can always smartly assign $x$ with a number of different parity from $y$, since the capability to angelically select $x$ is not interfered with by demonic selection of $y$.
+
+We highlight that the dependency we consider is not simple data dependency in a dependent type system, since context pieces shown in previous examples have no variable reference but can still be dependent.
+A context connected with dependent conjunction ($\Gamma_1 \ctcomma \Gamma_2$) works like additive logic conjunction, which indicates the current context can be treated as either a context satisfying $\Gamma_1$ or $\Gamma_2$.
+Consider the following fact, which holds even with context $\zlet{y}{x}{\boxed{e}}$:
+\begin{align*}
+  &x{:}\urt{\Nat}{\vnu > 0} \ctcomma y{:}\urt{\Nat}{\vnu > 0} \vdash x : \urt{\Nat}{\vnu > 0} \;\judgok
+  \\&x{:}\urt{\Nat}{\vnu > 0} \ctcomma y{:}\urt{\Nat}{\vnu > 0} \vdash y : \urt{\Nat}{\vnu > 0} \;\judgok
+\end{align*}\noindent
+Approximation modality does not change if we focus on only one side of dependent conjunction; however, variables $x$ and $y$ cannot have the reachability guarantee \emph{at the same time}. One can build a linear type system with more restrictive resource usage by assuming let-expression $\zlet{y}{x}{\boxed{e}}$ ``consumes'' capability of $x$ and produces capability for $y$. This ``linear-style'' can partially solve variable dependency, but it limits the body expression $e$ from using variable $x$. Alternatively, our type system does not ``consume'' any capability, but keeps both and labels them as ``entangled'' ($\Gamma_1 \ctcomma \Gamma_2$), which allows the term to choose either side to use. This idea aligns with the intuition of bunched typing~\cite{BunchedType}, where we additionally use two different conjunctions to form a tree-like structure that represents complex dataflow dependency. For example,
+\begin{align*}
+  &x{:}\urt{\Nat}{\vnu > 0} \ctstar (y{:}\urt{\Nat}{\vnu > 0} \ctcomma z{:}\urt{\Nat}{\vnu > 0}) \vdash x - y : \urt{\Nat}{\vnu > 0} \;\judgok
+  \\&x{:}\urt{\Nat}{\vnu > 0} \ctstar (y{:}\urt{\Nat}{\vnu > 0} \ctcomma z{:}\urt{\Nat}{\vnu > 0}) \vdash x - z : \urt{\Nat}{\vnu > 0} \;\judgok
+  \\&x{:}\urt{\Nat}{\vnu > 0} \ctstar (y{:}\urt{\Nat}{\vnu > 0} \ctcomma z{:}\urt{\Nat}{\vnu > 0}) \vdash y - z : \urt{\Nat}{\vnu > 0} \;\judgfail
+\end{align*}\noindent
+The context above tracks variable dependency as ``$x$ is independent from $y$ and $z$'' and ``$y$ and $z$ are dependent,'' which is still sufficient to enable reachability verification of $x - y$ and $x - z$. 
+
+\paragraph{Function Types} Our bunched type system also has dependent function type ($\ctsarr$) and disjointed function type ($\ctwand$), which are adjunctions of dependent and disjointed conjunction in type context:
+\begin{align*}
+  \Gamma \vdash e_f : x{:}\tau_x \ctsarr \tau \quad &\text{ iff } \quad \Gamma \ctcomma x{:}\tau_x \vdash (e_f\;x) : \tau 
+  \\\Gamma \vdash e_f : x{:}\tau_x \ctwand \tau \quad &\text{ iff } \quad \Gamma \ctstar x{:}\tau_x \vdash (e_f\;x) : \tau 
+\end{align*}\noindent
+Intuitively, $x{:}\tau_x \ctsarr \tau$ requires that $x$ is disjointed with the current context. Thus, subtraction operator $(-)$ can have the following type:
+\begin{align*}
+  &\vdash (-) : x{:}\urt{\Nat}{\vnu > 0} \ctwand y{:}\urt{\Nat}{\vnu > 0} \ctwand \urt{\Nat}{\vnu > 0}
+  \\&\vdash (-) : x{:}\urt{\Nat}{\vnu > 0} \ctsarr y{:}\urt{\Nat}{\vnu > 0} \ctwand \urt{\Nat}{\vnu > 0}
+\end{align*}\noindent
+Note that the second type only requires $y$ to be disjointed with $x$ and has no disjointness requirement for $x$. However, it cannot have the following type:
+\begin{align*}
+  &\vdash (-) : x{:}\urt{\Nat}{\vnu > 0} \ctwand y{:}\urt{\Nat}{\vnu > 0} \ctsarr \urt{\Nat}{\vnu > 0}
+\end{align*}\noindent
+where the counterexample is shown as follows:
+\begin{align*}
+  &z{:}\urt{\Nat}{\vnu > 0} \ctstar x{:}\urt{\Nat}{\vnu > 0} \vdash \zlet{y}{x}{x - y} : \urt{\Nat}{\vnu > 0} \;\judgfail
+\end{align*}\noindent
+where $x$ is independent from $z$, while $y$ is dependent on $x$. In the example of $(-)$, the first arrow can be either disjointed or dependent since operator $(-)$ is a closed term whose implementation does not capture the current context. However, as discussed in \autoref{sec:intro}, function $\zzlam{y}{x - y}$ can capture the current context and thus requires $y$ to be disjointed with the current context.
+
+Higher-order functions lead to more complex context dependency, as shown in the following example:
+\begin{align*}
+  &x{:}\urt{\Nat}{\vnu > 0} \ctstar y{:}\urt{\Nat}{\vnu > 0} \vdash \zzlam{f}{x - (f\; (f\;y))} :
+  \\&\quad  \underbrace{f{:}(\underbrace{y{:}\urt{\Nat}{\vnu > 0} \ctsarr}_\texttt{$y$ can depend on context during application} \urt{\Nat}{\vnu > 0}) \ctwand}_\texttt{$f$ is independent from $x$ and $y$} \urt{\Nat}{\vnu > 0}
+\end{align*}\noindent
+Similar to the previous example, in order to make $x - (f\;(f\;y))$ reach all positive numbers, $x$ and $f\;(f\;y)$ should be disjointed. Readers may assume that all arrows on the right-hand side should be disjointed, which is wrong. As shown above, if parameter $f$ has a disjointed function type, it will ``consume'' parameter $y$ during each application, which rejects the nested application $f\;(f\;y)$. Although the first invocation succeeds, the second invocation fails because corresponding argument $(f\;y)$ actually depends on $f$. On the other hand, the types shown above are sufficient to type check. The higher-order function itself has a disjointed function type, which leads to the following consequence via adjunction: 
+\begin{align*}
+  &x{:}\urt{\Nat}{\vnu > 0} \ctstar 
+  \\&\quad (y{:}\urt{\Nat}{\vnu > 0} \ctstar f{:}(y{:}\urt{\Nat}{\vnu > 0} \ctsarr \urt{\Nat}{\vnu > 0})) \vdash x - (f\; (f\;y)) : \urt{\Nat}{\vnu > 0} 
+\end{align*}\noindent
+Since $x$ is disjointed from $y$ and $f$, $x$ is also disjointed from $f\;(f\;y)$, which guarantees term $x - (f\; (f\;y))$ can reach all positive numbers.
+
+
+
+
+\paragraph{Control Flow and Context Sum} Standard refinement types interpret context in demonic style, which requires all control flows within the program to be consistent with the safety property. Alternatively, when an angelic context can reach multiple control flows, we need additional handling.
+Consider the following example:
+\begin{align*}
+  &x{:}\urt{\Nat}{\top} \vdash \zif{x > 0}{5}{3} : \ort{\Nat}{\vnu > 4} \quad \text{(reach true branch)}
+  \\&x{:}\urt{\Nat}{\top} \vdash \zif{x > 0}{5}{3} : \ort{\Nat}{\vnu < 4} \quad \text{(reach false branch)}
+\end{align*}\noindent
+Ideally, we would like to say ``there exists an input natural number $x$ such that we may reach some number greater (less, resp.) than $4$.'' This is mix-style reasoning, as mentioned in \autoref{sec:intro}, with angelic context and demonic (overapproximation) type. However, this is problematic since it violates our ``context-based view'' and compositional reasoning. For example, the first judgement says ``angelic context $x{:}\urt{\Nat}{\top}$ can be converted into a demonic context $y:\ort{\Nat}{\vnu > 4}$ by term $\zlet{y}{\zif{x > 0}{5}{3}}{...}$,'' which is wrong since $y$ can also be a value less than $4$. This interpretation also breaks the semantic intersection type in refinement type systems:
+\begin{align*}
+  &\Gamma \vdash e : \ort{b}{\phi_1} \ctinter \ort{b}{\phi_2} \text{ iff } \Gamma \vdash e : \ort{b}{\phi_1 \land \phi_2}
+\end{align*}\noindent
+No term can have type $\ort{\Nat}{\vnu > 4 \land \vnu < 4}$. The point is that angelic context cannot be treated as existential quantification (e.g., there exists an $x$ such that $x = 0$ to reach the true branch) that ``drops'' the possibility that $x$ can also be a positive number, which is important for reachability of the false branch. In order to preserve all possibilities but still enable an ``existential-like'' interpretation of angelic context, we introduce ``context sum'' operation $\ctoplus$, which explicitly expresses expected control flows. Typing judgement $\Gamma \vdash e : \tau_1 \ctoplus \tau_2$ means that $e$ can be type checked with $\tau_1$ and $\tau_2$ in some parts of situations of $\Gamma$; moreover, all possibilities of $\Gamma$ are considered by $\tau_1$ and $\tau_2$ (i.e., no possibility is lost). 
+\begin{align*}
+  &x{:}\urt{\Nat}{\vnu > 0} \vdash x : \ort{\Nat}{\vnu = 0}\ctoplus \ort{\Nat}{\vnu > 0} \;\judgok
+  \\&x{:}\urt{\Nat}{\vnu > 0} \vdash \zif{x > 0}{5}{3} : \ort{\Nat}{\vnu > 4}\ctoplus \ort{\Nat}{\vnu < 4} \;\judgok
+\end{align*}\noindent
+As shown above, we convert angelic context $x{:}\urt{\Nat}{\vnu > 0}$ into the sum of two parts: $\ort{\Nat}{\vnu = 0}$ and $\ort{\Nat}{\vnu > 0}$, which align with the conditional expression. Note that sum type explicitly records the shape of control flows and precisely expresses the types of every branch. Although type $\ort{\Nat}{\vnu > 4}\ctoplus \ort{\Nat}{\vnu < 4}$ is a subtype of $\ort{\Nat}{\vnu < 4 \lor \vnu > 4}$, which means the conditional expression cannot reach value $4$, the reverse is not true since it loses precision. 
+One can also specify mix-style reachability for only one branch:
+\begin{align*}
+  &x{:}\urt{\Nat}{\top} \vdash \zif{x > 0}{5}{3} : \ort{\Nat}{\vnu > 4} \ctoplus \ort{\Nat}{\top} \quad \judgok
+  \\&x{:}\urt{\Nat}{\top} \vdash \zif{x > 0}{5}{3} : \ort{\Nat}{\vnu < 4} \ctoplus \ort{\Nat}{\top} \quad \judgok
+\end{align*}\noindent
+The types above use $\tau \ctoplus \ort{b}{\top}$ to express an explicit \emph{affine} style reachability analysis, which allows types to drop uninterested branches into top type. This affine style precisely expresses the semantics of existential quantification, which effectively means ``angelically select one possibility and drop other possibilities.''
+
+\subsection{Declarative typing rules}
+
+Our type system follows the intuition of bunched implication and refinement types; however, it differs from both due to support for angelic context and mix-style reasoning.
+
+\begin{figure}[h!]
+  {\small
+  {\normalsize \begin{flalign*}
+    &\text{\textbf{Well-formedness rules}} && \fbox{$\Sigma \wfvdash \tau \quad \Sigma \wfvdash \Gamma$}
+  \end{flalign*}}
+% \mprooftr{28mm}
+% {$\Gamma \basicvdash \tau$ \quad $\wfvdash \Gamma$}
+% {WfType}
+% {$\Gamma \wfvdash \tau$} 
+% \quad
+\mprooftr{35mm}
+{$\exists r. r \models \denot{\Gamma_1 \ctcomma \Gamma_2}$ \quad $\Sigma \wfvdash \Gamma_1$ \quad $\Sigma, \eraserf{\Gamma_1} \wfvdash \Gamma_2$}
+{WfComma}
+{$\Sigma \wfvdash \Gamma_1 \ctcomma \Gamma_2$}
+\quad
+\mprooftr{35mm}
+{$\exists r. r \models \denot{\Gamma_1 \ctstar \Gamma_2}$ \quad $\Sigma \wfvdash \Gamma_1$ \quad $\Sigma \wfvdash \Gamma_2$}
+{WfStar}
+{$\Sigma \wfvdash \Gamma_1 \ctstar \Gamma_2$}
+\quad
+  {\normalsize \begin{flalign*}
+    &\text{\textbf{Subtyping rules}} && \fbox{$\Gamma \ctvdash \tau <: \tau$ \quad $\Gamma \ctsubseteq{X} \Gamma$ }
+  \end{flalign*}}
+\mprooftr{53mm}
+{$\forall r. r \models \denot{\Gamma} \impl \forall e. r \models \denot{\tau_1}\;e \impl r \models \denot{\tau_2}\;e$}
+{Sub}
+{$\Gamma \ctvdash \tau_1 <: \tau_2$}
+\quad
+\mprooftr{50mm}
+{$\forall r. \denot{\Gamma_1}\;r \impl \exists r'. \restrictTo{r}{X} \sqsubseteq r' \land \denot{\Gamma_2}\;r'$ }
+{CtxSub}
+{$\Gamma_1 \ctsubseteq{X} \Gamma_2$}
+	  }
+	  \caption{Selected auxiliary well-formedness and semantic subtyping rules for context typing.}
+  \label{fig:auxiliary-rules}
+  \vspace*{-.1in}
+\end{figure}
+
+Similar to other refinement type systems, our type system depends on two auxiliary relations shown in
+\autoref{fig:auxiliary-rules}. The first group defines well-formedness
+of types and type contexts. A type is well-formed under a basic type context ($\Sigma \wfvdash \tau$) if type qualifiers are well-typed under erasure of such context ($\eraserf{\Gamma}$). More interestingly, type-context well-formedness deals with dependent conjunction (i.e., \textsc{WfComma}) and disjointed conjunction (\textsc{WfStar}) differently, where $\Gamma_2$ in the disjointed case is disallowed from referencing bindings introduced by left component $\Gamma_1$. This constraint is used to ensure $\Gamma_1$ and $\Gamma_2$ are indeed independent even in a dependent type system, and also enables further framing-style local reasoning:
+\begin{align*}
+  \Gamma_2 \vdash e : \tau \implies \Gamma_1 \ctstar \Gamma_2  \vdash e : \tau
+\end{align*}\noindent
+The well-formed type context also disallows vacuous contexts (e.g., $x{:}\ort{\Nat}{\bot}$) that do not have inhabitants in their denotation (i.e., $\exists r. r \models \denot{\Gamma}$). We introduce details of type denotation and corresponding metatheory in \autoref{sec:meta}. The subtyping relation is the same as in standard refinement types, i.e., inhabitants of $\tau_1$ are also inhabitants of $\tau_2$ under context $\Gamma$. We also introduce subtyping over type context $\Gamma_1 \ctsubseteq{X} \Gamma_2$; intuitively, it requires that inhabitants of $\Gamma_1$ are also inhabitants of $\Gamma_2$ when restricted to a subset of variables $X$, which is typically the free variables of the term and types in a typing judgement.
+
+
+
+
+% The context formation judgment treats $\ctcomma$ sequentially and $\ctstar$
+% in parallel: in $\Gamma \basicvdash \Gamma_1 \ctcomma \Gamma_2$, the right
+% component may refer to bindings introduced by the left component, while in
+% $\Gamma \basicvdash \Gamma_1 \ctstar \Gamma_2$, both components are checked
+% only under the ambient $\Gamma$. Thus the two sides of a separating context
+% cannot refer to variables introduced by each other. We do not give context
+% holes $\Delta$ an independent well-formedness judgment; rules involving
+% $\Delta$ are read under the side condition that the plugged contexts are
+% well formed.
+
+
+
+\begin{figure}[h!]
+  {\small
+  {\normalsize \begin{flalign*}
+    &\text{\textbf{Typing rules}} && \fbox{$\Gamma \ctvdash e : \tau$}
+  \end{flalign*}}
+  \mprooftr{14mm}
+  {$ $}
+  {T-Var}
+  {$x{:}\tau \ctvdash x : \tau$}
+  \quad
+  \mprooftr{43mm}
+  {$ \emptyset \basicvdash c : b $}
+  {T-Const}
+  {$\emptyset \ctvdash c : \ort{b}{\vnu = c} \ctinter \urt{b}{\vnu = c}$}
+  \\[.8em]
+  \mprooftr{34mm}
+  {$\Gamma \ctvdash e_1 : \tau_1 $ \quad $\Gamma \ctcomma x{:}\tau_1 \ctvdash e_2 : \tau_2$}
+  {T-Let}
+  {$\Gamma \ctvdash \zlet{x}{e_1}{e_2} : \tau_2$}
+  \quad
+  \mprooftr{40mm}
+  {$\Gamma_1 \ctvdash e_1 : \tau_1 $ \quad $\Gamma_2 \ctstar x{:}\tau_1 \ctvdash e_2 : \tau_2$}
+  {T-LetD}
+  {$\Gamma_1 \ctstar \Gamma_2 \ctvdash \zlet{x}{e_1}{e_2} : \tau_2$}
+  \\[.8em]
+  \mprooftr{42mm}
+  {$\eraserf{\tau_x} = s_x$ \quad $\Gamma \ctcomma x{:}\tau_x \ctvdash e : \tau$}
+  {T-Lam}
+  {$\Gamma \ctvdash \zlam{x}{s_x}{e} : x{:}\tau_x \ctsarr \tau$}
+  \quad
+  \mprooftr{42mm}
+  {$\eraserf{\tau_x} = s_x$ \quad  $\Gamma \ctstar x{:}\tau_x \ctvdash e : \tau$}
+  {T-LamD}
+  {$\Gamma \ctvdash \zlam{x}{s_x}{e} : x{:}\tau_x \ctwand \tau$}
+  \\[.8em]
+  \mprooftr{40mm}
+  {$\Gamma \ctvdash v_1 : x{:}\tau_x \ctsarr \tau$ \quad 
+  $\Gamma \ctvdash v_2 : \tau_x$ }
+  {T-AppFun}
+  {$\Gamma \ctvdash v_1\;v_2 : \tau[x \mapsto v_2]$}
+  \quad
+  \mprooftr{46mm}
+  {$\Gamma_1 \ctvdash v_1 : x{:}\tau_x \ctwand \tau$ \quad 
+  $\Gamma_2 \ctvdash v_2 : \tau_x$  }
+  {T-AppFunD}
+  {$\Gamma_1 \ctstar \Gamma_2 \ctvdash v_1\;v_2 : \tau[x \mapsto v_2]$}
+  \\[.8em]  
+  \mprooftr{18mm}
+  {$\Gamma \ctvdash e : \tau_1$ \quad $\Gamma \ctvdash \tau_1 <: \tau_2$}
+  {T-Sub}
+  {$\Gamma \ctvdash e : \tau_2$}
+  \quad
+  \mprooftr{23mm}
+  {$\Gamma_2 \ctvdash e : \tau$ \quad $\Gamma_1 \ctsubseteq{\Code{FV}(e) \cup \Code{FV}(\tau)} \Gamma_2$}
+  {T-CtxSub}
+  {$\Gamma_1 \ctvdash e : \tau$}
+  \quad
+  \mprooftr{34mm}
+  {$\Code{Ty}(\primop) = \overline{x_i{:}\tau_i}\ctsarr \tau_y$ \quad 
+    $\forall i. \Gamma \ctvdash v_i : \tau_i$ }
+  {T-AppOp}
+  {$\Gamma \ctvdash \primop\;\overline{v_i} : \tau[\overline{x_i \mapsto v_i}]$}
+  \\[.8em]
+  \mprooftr{64mm}
+  {$\Gamma \ctcomma x{:}\tau_x \ctcomma f{:}(x{:}\ort{b}{\phi \land \vnu \prec x} \ctsarr \tau) \ctvdash e : \tau$}
+  {T-Fix}
+  {$\Gamma \ctvdash \zzfix{f}{x}{e} : x{:}\ort{b}{\phi} \ctsarr \tau$}
+  \\[.8em]
+  \mprooftr{74mm}
+  {$\forall i.\;\Code{Ty}(d_i) = \overline{y{:}b_y}\sarr \tau_i$ and $\Delta_i(\Gamma_i) \ctvdash v : \tau_i$ and $\Delta_i(\Gamma_i) \ctvdash e_i : \tau_i$ }
+  {T-Match}
+  {$\ctbigoplus \overline{\Gamma_i} \ctvdash \match{v} \overline{d\ \overline{y} \to e}  : \ctbigoplus \overline{\tau_i}$}
+  }
+  \caption{Declarative typing rules for the core language.}
+  \label{fig:declaritive-typing-rules}
+  \vspace*{-.1in}
+\end{figure}
+
+
+\begin{corollary}[Simulate different reasoning styles] The following facts hold:
+  \begin{enumerate}
+    \item $\emptyset \ctvdash e : \ort{b}{\phi}$ implies that $\forall v. \mstep{e}{v} \impl \phi[\vnu \mapsto v]$.
+    \item $\emptyset \ctvdash e : \urt{b}{\phi}$ implies that $\forall v. \phi[\vnu \mapsto v] \impl \mstep{e}{v}$.
+    \item Refinement type check: $\emptyset \ctvdash v_f :  x{:}\ort{b_x}{\phi_x} \ctsarr \ort{b}{\phi}$ implies that $\forall v_x\;v. \phi_x[\vnu \mapsto v_x] \land \mstep{v_f\;v_x}{v} \impl \phi[\vnu \mapsto v]$.
+    \item Coverage type check: $\emptyset \ctvdash v_f :  x{:}\ort{b_x}{\phi_x} \ctsarr \urt{b}{\phi}$ implies that $\forall v_x\;v. \phi_x[\vnu \mapsto v_x] \land \phi[\vnu \mapsto v]  \impl \mstep{v_f\;v_x}{v} $.
+    \item Incorrectness type check: $\emptyset \ctvdash v_f : \urt{b_x}{\phi_x} \ctsarr \urt{b}{\phi}$ implies that \\ $\forall v. \phi[\vnu \mapsto v] \impl \exists v_x. \phi_x[\vnu \mapsto v_x] \land  \mstep{v_f\;v_x}{v} $.
+    \item Sufficient incorrectness: $\emptyset \ctvdash v_f : \ort{b_x}{\phi_x} \ctsarr \ort{b}{\phi} \ctoplus b$ implies that \\ $\forall v_x. \phi_x[\vnu \mapsto v_x] \impl \exists v. \phi[\vnu \mapsto v] \land \mstep{v_f\;v_x}{v} $.
+    \item Existential type check: $\emptyset \ctvdash v_f : \urt{b_x}{\phi_x} \ctsarr \ort{b}{\phi}\ctoplus b$ implies that \\ $\exists v_x\;v. \phi_x[\vnu \mapsto v_x] \land \phi[\vnu \mapsto v] \land \mstep{v_f\;v_x}{v} $.
+  \end{enumerate}
+\end{corollary}

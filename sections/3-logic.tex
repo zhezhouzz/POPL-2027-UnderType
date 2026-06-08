@@ -1,5 +1,5 @@
 % !TeX root = ../main.tex
-\section{Contextual Capabilities and Context Logic}\label{sec:capabilities}
+\section{Metatheory}\label{sec:meta}
 
 In this section, we introduce the contextual capabilities that form a standard Kripke resource algebra. Later on, we define the corresponding context logic, which is a bunched implication based on contextual capabilities.
 
@@ -348,3 +348,48 @@ On the other hand, an Incorrectness triple $[x > 0]\;\Code{y := x + 1}\;[y > 2]$
     r \sqsubseteq r' \text{ implies } r \models P \text{ implies } r' \models P
   \end{align*}\noindent
 \end{theorem}
+
+\subsection{Denotational semantics}
+
+\begin{definition}[Totality under a context resource]\label{def:total-under-resource}
+For $r \in \Res$ and $e$ with $\FV(e) \subseteq \Dom{r}$, lift $\Code{Total}(e)$ to context logic by:
+\[
+  r \models \denot{\Code{Total}(e)} \;\iff\;
+  \forall \sigma \in r.\; \exists v.\; \mstep{\sigma(e)}{v},
+\]
+\end{definition}
+
+\begin{align*}
+  r \models \denot{x := e} &\doteq \forall \sigma \in r. \mstep{\sigma(e)}{\sigma(x)} \qquad (\text{where $x$ is a free variable})
+  % \\\denot{\tau} &: \mathcal{E} \sarr \Code{Prop_{Strat}}
+  \\\denot{\ort{b}{\phi}}\;e &\doteq \denot{\vnu := e} \chimpl \forallM{\Code{FV}(\ort{b}{\phi})}\,\subExt \phi
+  \\\denot{\urt{b}{\phi}}\;e &\doteq \denot{\vnu := e} \chimpl \forallM{\Code{FV}(\urt{b}{\phi})}\,\supExt \phi
+  \\\denot{x{:}\tau_x \ctsarr \tau}\; e &\doteq \denot{\tau_x}\;x \chimpl \denot{\tau}\;(e\;x)
+  \\\denot{x{:}\tau_x \ctwand \tau}\; x &\doteq \denot{\tau_x}\;x \chwand \denot{\tau}\;(e\;x)
+  \\\denot{\tau_1 \ctoplus \tau_2}\; e &\doteq \denot{\tau_1}\;e \choplus \denot{\tau_2}\;e
+  \\\denot{\tau_1 \ctinter \tau_2}\; e &\doteq \denot{\tau_1}\;e \chland \denot{\tau_2}\;e
+  \\\denot{\tau_1 \ctunion \tau_2}\; e &\doteq \denot{\tau_1}\;e \chlor \denot{\tau_2}\;e
+  \\\denot{\emptyset} &\doteq \Code{Atom}(\textbf{1})
+  \\\denot{x{:}\tau} &\doteq \denot{\tau}\;x
+  \\\denot{\Gamma_1 \ctcomma \Gamma_2} &\doteq \denot{\Gamma_1} \chland \denot{\Gamma_2}
+  \\\denot{\Gamma_1 \ctstar \Gamma_2} &\doteq \denot{\Gamma_1} \chstar \denot{\Gamma_2}
+  \\\denot{\Gamma_1 \ctoplus \Gamma_2} &\doteq \denot{\Gamma_1} \choplus \denot{\Gamma_2}
+\end{align*}\noindent
+
+\begin{theorem}[Well-formed operator context] The operator context $\Phi$ is well-formed iff for all primtive operator $\primop$ we have:
+  {\begin{align*}
+      &\Phi(\primop) = \overline{x{:}\ort{b_x}{\phi_x}}\ctsarr \ort{b}{\phi} \ctinter \urt{b}{\phi} \text{ and } \models \denot{\overline{x{:}\ort{b_x}{\phi_x}}} \chiff \denot{\ort{b}{\phi} \ctinter \urt{b}{\phi}}\; (\primop\;\overline{x})
+    \end{align*}}\noindent
+  \end{theorem}
+  
+  \begin{theorem}[Fundamental theorem]
+    \begin{align*}
+      \Gamma \ctvdash e : \tau \text{ implies } \denot{\Gamma} \chvdash \denot{\tau}\;e \chland \Code{Total}(e)
+    \end{align*}\noindent
+  \end{theorem}
+  
+  \begin{theorem}[Denotational Soundness]
+    \begin{align*}
+      \emptyset \ctvdash e : \tau \text{ implies } \forall x. \{[x\mapsto v] ~|~ \mstep{e}{v}\} \models \denot{\tau}\; x
+    \end{align*}\noindent
+  \end{theorem}

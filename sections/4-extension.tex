@@ -1,0 +1,239 @@
+\section{Nondeterministic extension}\label{sec:extension}
+
+
+\subsection{Examples}
+
+\paragraph{Function applying multiple times} Consider the following example:
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    let f = fun () -> 1 ?$\oplus$? 2 in
+    let x = f () in
+    let y = f () in
+    x + y
+\end{minted}
+We have
+\begin{align*}
+  &f{:}\Unit\sarr\urt{\Nat}{\vnu = 1 \lor \vnu = 2} \vdash f : \Unit\sarr\urt{\Nat}{\vnu = 1 \lor \vnu = 2}
+  \\&\underline{\emptyset \vdash () : \Unit}
+  \\&\underline{\emptyset \ctstar f{:}\Unit\sarr\urt{\Nat}{\vnu = 1 \lor \vnu = 2} \vdash f(): \urt{\Nat}{\vnu = 1 \lor \vnu = 2}}
+  \\&\underline{f{:}\Unit\sarr\urt{\Nat}{\vnu = 1 \lor \vnu = 2} \vdash f(): \urt{\Nat}{\vnu = 1 \lor \vnu = 2}}
+  \\&\underline{\emptyset \ctstar x{:}\urt{\Nat}{\vnu = 1 \lor \vnu = 2} \vdash \zlet{y}{f()}{ x + y}: \urt{\Nat}{\vnu = 1 \lor \vnu = 2}} \quad \judgfail
+  \\&\emptyset \ctstar f{:}\Unit\sarr\urt{\Nat}{\vnu = 1 \lor \vnu = 2} \vdash \zlet{x}{f()}{ ...}: \urt{\Nat}{\vnu = 1 \lor \vnu = 2}
+\end{align*}\noindent
+What we want:
+\begin{align*}
+  &\underline{f{:}\Unit\sarr\urt{\Nat}{\vnu = 1 \lor \vnu = 2} \ctstar f{:}\Unit\sarr\urt{\Nat}{\vnu = 1 \lor \vnu = 2} \vdash ... : ...} 
+  \\&f{:}\Unit\sarr\urt{\Nat}{\vnu = 1 \lor \vnu = 2} \vdash ... : ...
+\end{align*}\noindent
+Thus, the function $f$ is duplicatable.
+
+\paragraph{What provious $\ctpers$ modality does? How our type system does ?} It means this typing can be duplicate and has no different with $\ctstar$ and $\ctcomma$. Currently, the over-base type and function type are persistent. Although we disallowing duplication, we can have duplicates during spliting. For example, consider:
+\begin{align*}
+  &\ctvdash (\lambda ().1) \ctoplus (\lambda ().2) : \Unit \sarr \urt{\Int}{\vnu = 1} \ctoplus \Unit \sarr \urt{\Int}{\vnu = 2} \quad \judgok 
+  \\&\ctvdash (\lambda ().1) \ctoplus (\lambda ().2) : \Unit \sarr \urt{\Int}{\vnu = 1 \lor \vnu = 2} \quad \judgfail
+\end{align*}\noindent
+
+\paragraph{What provious $\ctstar$ modality does? How our type system does ?} It means the type judgement is independent of the context. Currently, we directly using framing rule to indicates the dependency requirement:
+
+\mprooftr{22mm}
+  {$ \Gamma \vdash e : \tau$}
+  {Frame}
+  {$\Gamma \ctstar \Gamma' \vdash e : \tau$}
+
+\paragraph{What we lose without $\ctstar$ modality?} Consider a function $f$:
+\begin{align*}
+  f \doteq \zlam{x}{\Int}{\Code{int\_gen()}}
+\end{align*}\noindent
+Then, we have:
+
+\mprooftr{65mm}
+  {$ x{:}\urt{\Int}{\top} \vdash f\; x : \urt{\Int}{\top}$ \quad $x{:}\urt{\Int}{\top} \ctcomma y{:}\urt{\Int}{\top} \ctvdash e : \tau$}
+  {TApp}
+  {$x{:}\urt{\Int}{\top} \ctstar \zlet{y}{f\;x}{e} : \tau$}
+
+Here, the $y$ is always dependent on the arguement $x$, whatever normal arrow or magic wand the type of $f$ is (they can only distinguish the dependency of the parameter $x$).
+\begin{align*}
+  &\ctvdash f : x{:}\urt{\Int}{\top} \ctsarr \urt{\Int}{\top}
+  \\&\ctvdash f : x{:}\urt{\Int}{\top} \ctwand \urt{\Int}{\top}
+\end{align*}\noindent
+
+In this example, the assignment of $x$ is indeed independent of $y$, but the type system cannot tell this. Thus, we want:
+
+\mprooftr{65mm}
+  {$ x{:}\urt{\Int}{\top} \vdash f\; x : \ctstar \urt{\Int}{\top}$ \quad $x{:}\urt{\Int}{\top} \ctstar y{:}\urt{\Int}{\top} \ctvdash e : \tau$}
+  {TApp}
+  {$x{:}\urt{\Int}{\top} \ctstar \zlet{y}{f\;x}{e} : \tau$}
+
+Moreover, in order to type check the $\ctstar$ modality, we need to add the following rule:
+
+\mprooftr{65mm}
+  {$ x{:}\ort{\Int}{\top} \vdash f\; x : \urt{\Int}{\top}$}
+  {TFlip}
+  {$ x{:}\urt{\Int}{\top} \vdash f\; x : \ctstar \urt{\Int}{\top}$}
+
+We lose the ability to reason about this kind of terms, although the function can has a more precise type:
+\begin{align*}
+  \ctvdash f : x{:}\ort{\Int}{\top} \ctsarr \urt{\Int}{\top}
+\end{align*}\noindent
+And rewrite the function application as:
+\begin{align*}
+  &x{:}(\ort{\Int}{\top} \ctinter \urt{\Int}{\top}) \ctvdash x : \ort{\Int}{\top} \ctinter \urt{\Int}{\top}
+  \\&\underline{\emptyset \ctvdash f : x{:}\ort{\Int}{\top} \ctsarr \urt{\Int}{\top}}
+  \\&\underline{x{:}\ort{\Int}{\top} \ctvdash f\;x : \urt{\Int}{\top}}
+  \\&\underline{x{:}\ort{\Int}{\top} \ctstar y{:}\urt{\Int}{\top} \ctvdash \zlet{y}{f\;x}{e} : \tau}  
+\end{align*}\noindent
+
+\mprooftr{65mm}
+  {$ \emptyset \vdash f\; x : \urt{\Int}{\top}$ \quad $x{:}\urt{\Int}{\top} \ctstar \Box (\emptyset \ctcomma y{:}\urt{\Int}{\top}) \ctvdash e : \tau$}
+  {TApp}
+  {$x{:}\urt{\Int}{\top} \ctstar \Box (\emptyset) \ctvdash \zlet{y}{f\;x}{e} : \tau$}
+
+% \mprooftr{65mm}
+%   {$ x{:}\ort{\Int}{\top} \vdash f\; x : \urt{\Int}{\top}$ \quad $x{:}\ort{\Int}{\top} \ctcomma y{:}\urt{\Int}{\top} \ctvdash e : \tau$}
+%   {TApp}
+%   {$x{:}\ort{\Int}{\top} \ctvdash \zlet{y}{f\;x}{e} : \tau$}
+
+
+\paragraph{No quotient modality anymore} We flip the underapproximation type $x{:}\urt{b}{\phi}$ directly into $x{:}\ort{b}{\top}$. If users want a tighter safety constraint, they should explicitly state it, e.g.,
+\begin{align*}
+  x{:}(\urt{\Int}{\vnu = 3} \interty \ort{\Int}{\vnu > 0}) ...
+\end{align*}\noindent
+after flipping we get
+\begin{align*}
+  x{:}(\ort{\Int}{\top} \interty \ort{\Int}{\vnu > 0}) ...
+\end{align*}\noindent
+
+\paragraph{Existential parameter} We need to distinguish the difference between ``there exists a parameter'' and ``an input parameter that has an underapproximation guarantee (incorrectness logic)''. Consider the following example:
+\begin{align*}
+  &\vdash f : x{:}\urt{\Int}{\vnu > 0} \sarr \urt{\Int}{\vnu > 0}
+  \\\text{\textcolor{blue}{Incorrectness style:} }& \text{if inputs cover ``positive numbers'', the output also covers ``positive numbers''.}
+  \\\text{\textcolor{DeepGreen}{Exists style:} }& \text{there exists one ``positive'' input such that the output also covers ``positive numbers''.}
+  \\& f_1 = \lambda x.x \quad (\text{Incorrectness}\; \judgok) \quad (\text{Exists}\; \judgfail)
+  \\& f_2 = \lambda x.\Code{int\_gen()} \quad (\text{Incorrectness}\; \judgok) \quad (\text{Exists}\; \judgok)
+\end{align*} 
+We need another way to express ``exists-style''. One proposal is to use $\choplus$:
+\begin{align*}
+  &\vdash f : x{:}\urt{\Int}{\vnu > 0} \sarr \ort{\Int}{\vnu > 0} \choplus \ort{\Int}{\top} 
+  \\\text{\textcolor{DeepGreen}{Exists style:} }& \text{there exists one ``positive'' input such that the output is also ``positive''.}
+  \\& \text{The resource is non-empty, thus we cannot also choose the second case in $\choplus$.}
+  \\&\vdash f : x{:}\urt{\Int}{\vnu > 0} \sarr \urt{\Int}{\vnu > 0} \choplus \ort{\Int}{\top} 
+  \\\text{\textcolor{DeepGreen}{Exists style:} }& \text{exists ``positive'' input makes the output cover ``positive numbers''.}
+  \\& f_1 = \lambda x.x \quad (\text{Incorrectness}\; \judgok) \quad (\text{Exists}\; \judgfail)
+  \\& f_3 = \lambda x.(x - 1) \quad (\text{Incorrectness}\; \judgok) \quad (\text{Exists}\; \judgok)
+  \\& \supExt(x > 0) = \supExt(x > 1) \oplus \supExt(x = 1)  
+\end{align*} 
+The problem here is that we do not enforce that there exists only \emph{one} input, which can be addressed by the persistency modality (correct under singleton resources):
+\begin{align*}
+  &\vdash f : x{:}\urt{\Int}{\vnu > 0} \sarr (\chpers \urt{\Int}{\vnu > 0}) \choplus \ort{\Int}{\top} 
+  \\\text{\textcolor{DeepGreen}{Exists style:} }& \text{exists ``positive'' input makes the output cover ``positive numbers''.}
+  \\& f_3 = \lambda x.(x - 1) \quad (\text{Incorrectness}\; \judgok) \quad (\text{Exists}\; \judgfail)
+  \\& f_2 = \lambda x.\Code{int\_gen()} \quad (\text{Incorrectness}\; \judgok) \quad (\text{Exists}\; \judgok)
+\end{align*}\noindent
+We discuss the details of persistency later.
+
+\paragraph{Persistent modality and persistent proposition} \emph{Persistency} means ``the proof does not rely on any resource ownership (resource consumption)'', so this result can be used multiple times. A \emph{persistent property} means that the property itself implies that it is persistent. Formally, we have:
+\begin{align*}
+  r \models \chpers p &\text{ iff } \forall \sigma \in r. \{\sigma \} \models p\\
+  \Code{Persistent}(p) &\text{ iff } p \models \chpers p 
+\end{align*}\noindent
+Intuitively, the overapproximation modality is persistent, since it can be duplicated arbitrarily. This fact can be proved as follows:
+\begin{align*}
+  &\subExt p \models \chpers \subExt p
+  \\\iff& \forall r. r \models \subExt p \implies r \models \chpers \subExt p
+  \\\iff& \forall r. r \models \subExt p \implies \forall \sigma \in r. \{\sigma\} \models \subExt p
+  \\\text{Note that: }& \{\sigma\} \subseteq r
+  \\\text{Thus: }& \forall \sigma \in r. \{\sigma\} \models \subExt \subExt p = \subExt p 
+\end{align*}\noindent
+Note that I have modified the definition of persistent property to be more general, previously:
+\begin{align*}
+  r \models \chpers p &\text{ iff } |r| = 1 \land r \models p
+\end{align*}\noindent
+which disallows
+\begin{align*}
+  \{ [x=1], [x=2] \} \models \chpers \subExt (x > 0)
+\end{align*}\noindent
+where the right-hand side should obviously be a persistent property. We would like to highlight that the persistent modality is different from a persistent proposition (or type). The over type $\ort{b}{\phi}$ is a persistent type, and the under type $\urt{b}{\phi}$ is not (unless it is a singleton under type). However, we can have $\chpers \urt{b}{\phi}$, which means that the proof of this type judgment does not rely on any resource ownership.
+
+According to the definition of persistent modality, we find that it indeed ``flips'' a resource into its ``for all'' style version, which builds a deep connection between the underapproximation and overapproximation modalities. Precisely, we have:
+\begin{align*}
+  &\Gamma \vdash e_x : \chpers \tau_x
+  \\&\underline{\Gamma \chstar x{:}\tau_x \vdash e : \tau}
+  \\&\Gamma \vdash \zlet{x}{e_x}{e} : \tau
+\end{align*}\noindent
+Since the proof of $\Gamma \vdash e_x : \chpers \tau_x$ does not rely on any resource ownership, it can be made disjoint from the type context. Moreover, we have:
+\begin{align*}
+  &\underline{\Code{flip}(\Gamma) \vdash e : \tau}
+  \\&\Gamma \vdash e : \chpers \tau
+\end{align*}\noindent
+which is similar to requiring that a proposition hold under all possible singleton resources; here we use the ``overapproximation modality'' to express the ``for all'' style version. As a concrete example, we have:
+\begin{align*}
+  &\underline{y{:}\ort{\Int}{\top} \vdash \Code{int\_gen()} : \urt{\Int}{\top}} \judgok
+  &\underline{y{:}\ort{\Int}{\top} \vdash y : \urt{\Int}{\top}} \judgfail
+  \\&y{:}\urt{\Int}{\top} \vdash \Code{int\_gen()} : \chpers \urt{\Int}{\top}
+  &y{:}\urt{\Int}{\top} \vdash y : \chpers \urt{\Int}{\top}
+  \\&\underline{y{:}\urt{\Int}{\top} \chstar x{:}\urt{\Int}{\top} \vdash e : \tau}
+  &\underline{y{:}\urt{\Int}{\top} \chstar x{:}\urt{\Int}{\top} \vdash e : \tau}
+  \\&y{:}\urt{\Int}{\top} \vdash \zlet{x}{\Code{int\_gen()}}{e} : \tau
+  &y{:}\urt{\Int}{\top} \vdash \zlet{x}{y}{e} : \tau
+\end{align*}\noindent
+Note that the type of $x$ in the type context cannot be persistent again, so it cannot be duplicated anymore \emph{after binding to a specific variable}. In a call-by-value semantics, a variable cannot be bound to two different values. When can $x$ have a persistent type? Only when $x$ is already bound to a specific value.
+\begin{align*}
+  &\Gamma \vdash v_x : \chpers \tau_x
+  \\&\underline{\Gamma \chstar x{:}\chpers \tau_x \vdash e : \tau}
+  \\&\Gamma \vdash \zlet{x}{v_x}{e} : \tau
+\end{align*}\noindent
+For example,
+\begin{align*}
+  &\emptyset \vdash \lambda ().\Code{int\_gen()} : \chpers (\Unit\sarr\urt{\Int}{\top})  \judgok
+  \\&\underline{x{:}\chpers (\Unit\sarr\urt{\Int}{\top}) \vdash e : \tau}
+  \\&\emptyset \vdash \zlet{x}{\lambda ().\Code{int\_gen()}}{e} : \tau
+  \\
+  \\&\emptyset \vdash \lambda ().\Code{nat\_gen()} \oplus \lambda ().\Code{neg\_gen()} : \chpers (\Unit\sarr\urt{\Int}{\top}) \judgfail
+  \\&\underline{x{:}\chpers (\Unit\sarr\urt{\Int}{\top}) \vdash e : \tau}
+  \\  &\emptyset \vdash \zlet{x}{\lambda ().\Code{nat\_gen()} \oplus \lambda ().\Code{neg\_gen()}}{e} : \tau
+\end{align*}\noindent
+
+\paragraph{Some consideration about persistency} In current setting, only persistency means holds under singleton resource (it is really hard to generalize and somehow counter-intuitive). One straightforward result is ``$\subExt \phi$'' is not persistent. Consider several examples:
+\begin{align*}
+  &\subExt (x > 0)\chland \supExt (y > 0) \models \subExt (x > 0)\chstar \supExt (y > 0) \judgfail
+\end{align*}\noindent
+Consider $m \doteq \{ [x=1;y=1], [x=2;y=2], ... \}$ which holds the left-hand side, but not the right-hand side. Actually, in this case $x$ and $y$ are still dependent, if we decide the value of $x$, the value of $y$ will also be determined. In general, 
+\begin{align*}
+  &\chpers \subExt (x > 0)\chland \supExt (y > 0) \models \chpers\subExt (x > 0)\chstar \supExt (y > 0) \judgok
+\end{align*}\noindent
+where I call $\chpers \subExt \phi$ as \emph{universal} modality. For example,
+\begin{align*}
+  &\denot{\subExt (0 \sqsubseteq x \sqsubseteq 1)} =\{ \{ [x=0] \},  \{ [x=1] \}, \{ [x=0], [x=1] \}, ... \}
+  \\&\denot{\chpers \subExt (0 \sqsubseteq x \sqsubseteq 1)} =\{ \{ [x=0] \},  \{ [x=1] \}, ... \}
+\end{align*}\noindent
+which means that the universal modality is persistent. When overapproximation appears at negative position, they are equivalent to the persistent modality in some cases:
+\begin{align*}
+  &\subExt p \models \subExt q \iff \chpers \subExt p \models \subExt q
+  \\&\subExt p \models \supExt q \iff \chpers \supExt p \models \supExt q
+\end{align*}\noindent
+However, in general, they are not equivalent. For example,
+\begin{align*}
+  &\chpers \subExt (0 \sqsubseteq x \sqsubseteq 1) \models (x = 0) \chlor (x = 1) \judgok
+  \\&\subExt (0 \sqsubseteq x \sqsubseteq 1) \models (x = 0) \chlor (x = 1) \judgfail
+\end{align*}\noindent
+Here is another typing example:
+\begin{align*}
+  & \vdash \lambda x.x : x{:}\ort{\Bool}{\top} \sarr \ort{\Bool}{\vnu = \true} \unionty \ort{\Bool}{\vnu = \false} \judgfail
+  \\&\vdash \lambda x.x : x{:}(\chpers\ort{\Bool}{\top}) \sarr \ort{\Bool}{\vnu = \true} \unionty \ort{\Bool}{\vnu = \false} \judgok
+\end{align*}\noindent
+It means that when $\lambda x.x$ apply to $\true$ or $\false$, the result is either $\true$ or $\false$.  However, when $\lambda x.x$ applies to $\Code{bool\_gen()}$, the result is not guaranteed to be either $\true$ or $\false$ (can be both).
+This issue comes from the following fact that ``logical disjunction'' is not the same as `Semantical typing-level union'' in an non-deterministic language.
+\begin{align*}
+  & \denot{\ort{b}{\phi_1 \lor \phi_2}} \not= \denot{\ort{b}{\phi_1} \unionty \ort{b}{\phi_2}} 
+\end{align*}\noindent
+which is pointed out by Jana Dunfield and Frank Pfenning\cite{UnionTypeAssignment}, and they mentioned that in single-valued languages, the two are equivalent. Thus, in standard refinement type system which is single-valued, all type $\{\vnu : b ~|~ \phi \}$ can expressed as $\ctpers \ort{b}{\phi}$ in our system, which omit the different between $\ctcomma$ and $\ctstar$.
+
+\paragraph{Another Persistent modality} Another persistent modality force make sure $\subExt \phi$ is persistent, which can be defined as: 
+\begin{align*}
+  r \models \chpers p &\text{ iff } \forall \sigma \in r. \{\sigma \} \models p
+\end{align*}\noindent
+It has a disadvantage, which still allowing the non-singleton resource to hold the property. Thus,
+\begin{align*}
+  &\chpers p \chland q \models \chpers p \chstar q \judgfail
+  &\chpers p \models \chpers p \chstar \chpers p \judgfail
+\end{align*}\noindent
+
