@@ -419,7 +419,7 @@ Note that parameter types are demonic and dependent, while return type is an int
 \end{align*}
 where we want to show there exists a natural number for $x$ to make the term reach a value less than $4$. We first divide the type context via subsumption rule \textsc{T-CtxSub}.
 \begin{align*}
-  x{:}\urt{\Nat}{\top} \ctsubseteq{\{x\}} x{:}\urt{\Nat}{\vnu > 0} \ctoplus x{:}\urt{\Nat}{\vnu = 0}
+  x{:}\urt{\Nat}{\top} \ctsubseteq{\{x\}} x{:}\urt{\Nat}{\vnu = 0} \ctoplus x{:}\urt{\Nat}{\vnu > 0}
 \end{align*}\noindent
 In order to apply rule \textsc{T-Match} to type-check the pattern-matching expression, we need to extend context $x{:}\urt{\Nat}{\vnu > 0}$ into $x{:}\urt{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}$ such that
 \begin{align*}
