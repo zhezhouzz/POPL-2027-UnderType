@@ -354,18 +354,17 @@ On the other hand, an Incorrectness triple $[x > 0]\;\Code{y := x + 1}\;[y > 2]$
 \begin{definition}[Totality under a context resource]\label{def:total-under-resource}
 For $r \in \Res$ and $e$ with $\FV(e) \subseteq \Dom{r}$, lift $\Code{Total}(e)$ to context logic by:
 \[
-  r \models \denot{\Code{Total}(e)} \;\iff\;
+  r \models \denot{\Code{Total}(e) \land \eraserf{\Gamma}\basicvdash e : \eraserf{\tau} } \;\iff\;
   \forall \sigma \in r.\; \exists v.\; \mstep{\sigma(e)}{v},
 \]
 \end{definition}
 
 \begin{align*}
-  r \models \denot{x := e} &\doteq \forall \sigma \in r. \mstep{\sigma(e)}{\sigma(x)} \qquad (\text{where $x$ is a free variable})
-  % \\\denot{\tau} &: \mathcal{E} \sarr \Code{Prop_{Strat}}
-  \\\denot{\ort{b}{\phi}}\;e &\doteq \denot{\vnu := e} \chimpl \forallM{\Code{FV}(\ort{b}{\phi})}\,\subExt \phi
-  \\\denot{\urt{b}{\phi}}\;e &\doteq \denot{\vnu := e} \chimpl \forallM{\Code{FV}(\urt{b}{\phi})}\,\supExt \phi
-  \\\denot{x{:}\tau_x \ctsarr \tau}\; e &\doteq \denot{\tau_x}\;x \chimpl \denot{\tau}\;(e\;x)
-  \\\denot{x{:}\tau_x \ctwand \tau}\; x &\doteq \denot{\tau_x}\;x \chwand \denot{\tau}\;(e\;x)
+  \denot{e}_x &\doteq \forallM{\Code{FV}(e)} \Code{Atom}(\mstep{e}{x})
+  \\\denot{\ort{b}{\phi}}\;e &\doteq \denot{e}_\vnu \chimpl \forallM{\Code{FV}(\ort{b}{\phi})}\,\subExt \phi \quad \text{($\vnu$ is a fresh variable)}
+  \\\denot{\urt{b}{\phi}}\;e &\doteq \denot{e}_\vnu \chimpl \forallM{\Code{FV}(\urt{b}{\phi})}\,\supExt \phi \quad \text{($\vnu$ is a fresh variable)}
+  \\\denot{x{:}\tau_x \ctsarr \tau}\; e &\doteq \denot{\tau_x}\;x \chimpl \denot{\tau}\;(e\;x) \quad \text{($x$ is a fresh variable)}
+  \\\denot{x{:}\tau_x \ctwand \tau}\; x &\doteq \denot{\tau_x}\;x \chwand \denot{\tau}\;(e\;x) \quad \text{($x$ is a fresh variable)}
   \\\denot{\tau_1 \ctoplus \tau_2}\; e &\doteq \denot{\tau_1}\;e \choplus \denot{\tau_2}\;e
   \\\denot{\tau_1 \ctinter \tau_2}\; e &\doteq \denot{\tau_1}\;e \chland \denot{\tau_2}\;e
   \\\denot{\tau_1 \ctunion \tau_2}\; e &\doteq \denot{\tau_1}\;e \chlor \denot{\tau_2}\;e
@@ -384,7 +383,7 @@ For $r \in \Res$ and $e$ with $\FV(e) \subseteq \Dom{r}$, lift $\Code{Total}(e)$
   
   \begin{theorem}[Fundamental theorem]
     \begin{align*}
-      \Gamma \ctvdash e : \tau \text{ implies } \denot{\Gamma} \chvdash \denot{\tau}\;e \chland \Code{Total}(e)
+      \Gamma \ctvdash e : \tau \text{ implies } \denot{\Gamma} \chvdash \denot{\tau}\;e
     \end{align*}\noindent
   \end{theorem}
   

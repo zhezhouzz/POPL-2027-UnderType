@@ -105,6 +105,7 @@
 \newcommand{\perform}[4]{\mykw{let}\ {#1}\ {=}\ \Code{#2}\ {#3}\ \mykw{in}\ {#4}}
 \newcommand{\zlam}[3]{\lambda {#1}{:}{#2}.{#3} }
 \newcommand{\zif}[3]{\mykw{if}\ {#1}\ \mykw{then}\ {#2} \ \mykw{else}\ {#3}}
+\newcommand{\zmatchNat}[4]{\mykw{match}\ {#1}\ \mykw{with}\ \Code{O} \to {#2} \ | \ \Code{S}\ {#3} \to {#4} }
 \newcommand{\zzlam}[2]{\lambda {#1}.{#2} }
 \newcommand{\zfix}[5]{\mykw{fix}{#1}{:}{#2}.\zlam{#3}{#4}{#5}}
 \newcommand{\zzfix}[3]{\mykw{fix}{#1}.\zzlam{#2}{#3}}
@@ -826,6 +827,8 @@
 \newcommand{\ctDiv}[1]{\textcolor{CBOrange}{\,\pmb{\lightning}_{#1}\,}}
 \newcommand{\ctDivM}{\textcolor{CBOrange}{\pmb{\lightning}}}
 \newcommand{\ctAff}{\textcolor{CBOrange}{A}}
+\newcommand{\ctsubseteqA}{\textcolor{CBOrange}{\,\sqsubseteq\,}}
+\newcommand{\subty}{\textcolor{CBOrange}{\,<:\,}}
 \newcommand{\ctsubseteq}[1]{\textcolor{CBOrange}{\,\sqsubseteq_{#1}\,}}
 \newcommand{\prt}[2]{\langle {\vnu}{:}\;{#1}\, |\, {#2} \rangle}
 % \newcommand{\ctsubseteq}{\textcolor{CBOrange}{\,\sqsubseteq\,}}

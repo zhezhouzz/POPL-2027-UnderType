@@ -1,0 +1,14 @@
+\section{Case Study}
+\label{sec:case}
+
+\begin{corollary}[Simulate different reasoning styles] The following facts hold:
+    \begin{enumerate}
+      \item $\emptyset \ctvdash e : \ort{b}{\phi}$ implies that $\forall v. \mstep{e}{v} \impl \phi[\vnu \mapsto v]$.
+      \item $\emptyset \ctvdash e : \urt{b}{\phi}$ implies that $\forall v. \phi[\vnu \mapsto v] \impl \mstep{e}{v}$.
+      \item Refinement type check: $\emptyset \ctvdash v_f :  x{:}\ort{b_x}{\phi_x} \ctsarr \ort{b}{\phi}$ implies that $\forall v_x\;v. \phi_x[\vnu \mapsto v_x] \land \mstep{v_f\;v_x}{v} \impl \phi[\vnu \mapsto v]$.
+      \item Coverage type check: $\emptyset \ctvdash v_f :  x{:}\ort{b_x}{\phi_x} \ctsarr \urt{b}{\phi}$ implies that $\forall v_x\;v. \phi_x[\vnu \mapsto v_x] \land \phi[\vnu \mapsto v]  \impl \mstep{v_f\;v_x}{v} $.
+      \item Incorrectness type check: $\emptyset \ctvdash v_f : \urt{b_x}{\phi_x} \ctsarr \urt{b}{\phi}$ implies that \\ $\forall v. \phi[\vnu \mapsto v] \impl \exists v_x. \phi_x[\vnu \mapsto v_x] \land  \mstep{v_f\;v_x}{v} $.
+      \item Sufficient incorrectness: $\emptyset \ctvdash v_f : \ort{b_x}{\phi_x} \ctsarr \ort{b}{\phi} \ctoplus b$ implies that \\ $\forall v_x. \phi_x[\vnu \mapsto v_x] \impl \exists v. \phi[\vnu \mapsto v] \land \mstep{v_f\;v_x}{v} $.
+      \item Existential type check: $\emptyset \ctvdash v_f : \urt{b_x}{\phi_x} \ctsarr \ort{b}{\phi}\ctoplus b$ implies that \\ $\exists v_x\;v. \phi_x[\vnu \mapsto v_x] \land \phi[\vnu \mapsto v] \land \mstep{v_f\;v_x}{v} $.
+    \end{enumerate}
+  \end{corollary}
