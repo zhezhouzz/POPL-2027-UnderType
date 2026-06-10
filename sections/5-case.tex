@@ -1,6 +1,59 @@
 \section{Case Study}
 \label{sec:case}
 
+\subsection{Coverage Completeness Verification}
+
+\begin{figure}[h!]
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+let sized_list_gen (s: nat) (nat_gen: unit -> nat) : list nat =
+  match s with
+  | 0 -> []
+  | S s' ->
+    let x = nat_gen () in
+    let l = siz_list_gen s' nat_gen in
+    [] ?$\oplus$? (x :: l)
+\end{minted}
+\end{figure}
+
+\begin{align*}
+  &\emptyset \vdash \Code{sized\_list\_gen} : 
+  \\&\qquad \Code{s}{:}\ort{\Nat}{\top} \ctwand \Code{nat\_gen}(\ort{\Unit}{\top}\ctsarr\urt{\Nat}{\top}) \ctwand \urt{\List[\Nat]}{\I{size}(\vnu) \leq s}
+\end{align*}\noindent
+
+\subsection{Incorrectness style Reachability}
+
+\begin{figure}[h!]
+    \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    let reverse (l: list nat) : list nat =
+      match l with
+      | [] -> []
+      | x :: xs -> reverse xs ++ [x]
+    \end{minted}
+\end{figure}
+
+\begin{align*}
+    &\emptyset \vdash \Code{reverse} :  \Code{l}{:}\urt{\List[\Nat]}{\top} \ctwand \urt{\List[\Nat]}{\top}
+  \end{align*}\noindent
+
+\subsection{Disprove Reasoning}
+
+\begin{figure}[h!]
+    \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    let rec deleteElem (l: list nat) (x: nat) : nat =
+        match l with
+        | [] -> []
+        | y :: ys -> if x == y then ys else y :: deleteElem ys x
+    \end{minted}
+\end{figure}
+
+\begin{align*}
+    &\emptyset \vdash \Code{deleteElem} : \Code{l}{:}\ort{\List[\Nat]}{\top} \ctsarr \Code{x}{:}\ort{\Nat}{\top} \ctsarr \ort{\List[\Nat]}{\neg\I{mem}(\Code{l}, x)} \quad \judgfail
+    \\&\emptyset \vdash \Code{deleteElem} : 
+    \\&\qquad \Code{l}{:}\urt{\List[\Nat]}{\top} \ctwand \Code{x}{:}\urt{\Nat}{\top} \ctwand \ort{\List[\Nat]}{\I{mem}(\Code{l}, x)}
+    \\&\qquad \Code{l}{:}\urt{\List[\Nat]}{\top} \ctwand \Code{x}{:}\ort{\Nat}{\top} \ctwand \ort{\List[\Nat]}{\I{mem}(\Code{l}, x)}
+\end{align*}\noindent
+
+
 \begin{corollary}[Simulate different reasoning styles] The following facts hold:
     \begin{enumerate}
       \item $\emptyset \ctvdash e : \ort{b}{\phi}$ implies that $\forall v. \mstep{e}{v} \impl \phi[\vnu \mapsto v]$.

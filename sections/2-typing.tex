@@ -227,7 +227,7 @@ Our type system follows the intuition of bunched implication and refinement type
 % \mprooftr{53mm}
 % {$\forall r. r \models \denot{\Gamma} \impl \forall e. r \models \denot{\tau_1}\;e \impl r \models \denot{\tau_2}\;e$}
 % {Sub}
-% {$\Gamma \ctvdash \tau_1 <: \tau_2$}
+% {$\Gamma \vdash \tau_1 <: \tau_2$}
 % \quad
 % \mprooftr{50mm}
 % {$\forall r. \denot{\Gamma_1}\;r \impl \exists r'. \restrictTo{r}{X} \sqsubseteq r' \land \denot{\Gamma_2}\;r'$ }
@@ -239,97 +239,99 @@ Our type system follows the intuition of bunched implication and refinement type
   \vspace*{-.1in}
 \end{figure}
 
-Similar to other refinement type systems, our type system depends on the well-formedness relations shown in
+\paragraph{Well-formedness} Similar to other refinement type systems, our type system depends on the well-formedness relations shown in
 \autoref{fig:auxiliary-rules}. The well-formedness
-of types ($\Sigma \wfvdash \tau$) and type contexts ($\Sigma \wfvdash \Gamma$) mostly requires that type qualifiers are well-typed in the basic type system and binding variables in type contexts are unique. We would like to highlight that rule \textsc{WfComma} allows the second context to refer to variables in the first context, while rule \textsc{WfStar} requires that $\Gamma_1$ and $\Gamma_2$ are completely disjointed. For example, within a type context $\Gamma_0 \ctcomma (\Gamma_1 \ctstar \Gamma_2)$, context $\Gamma_0$ is closed, and $\Gamma_1$ and $\Gamma_2$ can only refer to variables in $\Gamma_0$.
+of types ($\Sigma \wfvdash \tau$) and type contexts ($\Sigma \wfvdash \Gamma$) mostly requires type qualifiers to be well-typed in the basic type system and binding variables in type contexts to be unique. We would like to highlight that rule \textsc{WfComma} allows the second context to refer to variables in the first context, while rule \textsc{WfStar} requires that $\Gamma_1$ and $\Gamma_2$ are completely disjointed. For example, within a type context $\Gamma_0 \ctcomma (\Gamma_1 \ctstar \Gamma_2)$, context $\Gamma_0$ is closed, and $\Gamma_1$ and $\Gamma_2$ can only refer to variables in $\Gamma_0$.
 
 
 \begin{figure}[h!]
   {\small
   {\normalsize \begin{flalign*}
-    &\text{\textbf{Subtyping rules}} && \fbox{$\Gamma \ctvdash \tau \subty \tau$ \quad $\Gamma \ctsubseteq{X} \Gamma$ }
-    \\&\text{\textbf{Typing rules}} && \fbox{$\Gamma \ctvdash e : \tau$}
+    &\text{\textbf{Subtyping rules}} && \fbox{$\Gamma \vdash \tau \subty \tau$ \quad $\Gamma \ctsubseteq{X} \Gamma$ }
+    \\&\text{\textbf{Typing rules}} && \fbox{$\Gamma \vdash e : \tau$}
   \end{flalign*}}
   \mprooftr{40mm}
-  {$\Gamma \ctvdash e_1 : \tau_1 $ \quad $\Gamma \ctcomma x{:}\tau_1 \ctvdash e_2 : \tau_2$}
+  {$\Gamma \vdash e_1 : \tau_1 $ \quad $\Gamma \ctcomma x{:}\tau_1 \vdash e_2 : \tau_2$}
   {T-Let}
-  {$\Gamma \ctvdash \zlet{x}{e_1}{e_2} : \tau_2$}
+  {$\Gamma \vdash \zlet{x}{e_1}{e_2} : \tau_2$}
   \quad
   \mprooftr{40mm}
-  {$\Gamma_1 \ctvdash e_1 : \tau_1 $ \quad $\Gamma_2 \ctstar x{:}\tau_1 \ctvdash e_2 : \tau_2$}
+  {$\Gamma_1 \vdash e_1 : \tau_1 $ \quad $\Gamma_2 \ctstar x{:}\tau_1 \vdash e_2 : \tau_2$}
   {T-LetD}
-  {$\Gamma_1 \ctstar \Gamma_2 \ctvdash \zlet{x}{e_1}{e_2} : \tau_2$}
+  {$\Gamma_1 \ctstar \Gamma_2 \vdash \zlet{x}{e_1}{e_2} : \tau_2$}
   \\[.8em]
   \mprooftr{42mm}
-  {$\eraserf{\tau_x} = s_x$ \quad $\Gamma \ctcomma x{:}\tau_x \ctvdash e : \tau$}
+  {$\eraserf{\tau_x} = s_x$ \quad $\Gamma \ctcomma x{:}\tau_x \vdash e : \tau$}
   {T-Lam}
-  {$\Gamma \ctvdash \zlam{x}{s_x}{e} : x{:}\tau_x \ctsarr \tau$}
+  {$\Gamma \vdash \zlam{x}{s_x}{e} : x{:}\tau_x \ctsarr \tau$}
   \quad
   \mprooftr{42mm}
-  {$\eraserf{\tau_x} = s_x$ \quad  $\Gamma \ctstar x{:}\tau_x \ctvdash e : \tau$}
+  {$\eraserf{\tau_x} = s_x$ \quad  $\Gamma \ctstar x{:}\tau_x \vdash e : \tau$}
   {T-LamD}
-  {$\Gamma \ctvdash \zlam{x}{s_x}{e} : x{:}\tau_x \ctwand \tau$}
+  {$\Gamma \vdash \zlam{x}{s_x}{e} : x{:}\tau_x \ctwand \tau$}
   \\[.8em]
   \mprooftr{40mm}
-  {$\Gamma \ctvdash v_1 : x{:}\tau_x \ctsarr \tau$ \quad 
-  $\Gamma \ctvdash v_2 : \tau_x$ }
+  {$\Gamma \vdash v_1 : x{:}\tau_x \ctsarr \tau$ \quad 
+  $\Gamma \vdash v_2 : \tau_x$ }
   {T-AppFun}
-  {$\Gamma \ctvdash v_1\;v_2 : \tau[x \mapsto v_2]$}
+  {$\Gamma \vdash v_1\;v_2 : \tau[x \mapsto v_2]$}
   \quad
   \mprooftr{46mm}
-  {$\Gamma_1 \ctvdash v_1 : x{:}\tau_x \ctwand \tau$ \quad 
-  $\Gamma_2 \ctvdash v_2 : \tau_x$  }
+  {$\Gamma_1 \vdash v_1 : x{:}\tau_x \ctwand \tau$ \quad 
+  $\Gamma_2 \vdash v_2 : \tau_x$  }
   {T-AppFunD}
-  {$\Gamma_1 \ctstar \Gamma_2 \ctvdash v_1\;v_2 : \tau[x \mapsto v_2]$}
+  {$\Gamma_1 \ctstar \Gamma_2 \vdash v_1\;v_2 : \tau[x \mapsto v_2]$}
   \\[.8em]  
   \mprooftr{30mm}
-  {$\Gamma \ctvdash e : \tau_1$ \quad $\Gamma \ctvdash \tau_1 \subty \tau_2$}
+  {$\Gamma \vdash e : \tau_1$ \quad $\Gamma \vdash \tau_1 \subty \tau_2$}
   {T-Sub}
-  {$\Gamma \ctvdash e : \tau_2$}
+  {$\Gamma \vdash e : \tau_2$}
   \quad
   \mprooftr{40mm}
-  {$\Gamma_2 \ctvdash e : \tau$ \quad $\Gamma_1 \ctsubseteq{\Code{FV}(e) \cup \Code{FV}(\tau)} \Gamma_2$}
+  {$\Gamma_2 \vdash e : \tau$ \quad $\Gamma_1 \ctsubseteq{\Code{FV}(e) \cup \Code{FV}(\tau)} \Gamma_2$}
   {T-CtxSub}
-  {$\Gamma_1 \ctvdash e : \tau$}
+  {$\Gamma_1 \vdash e : \tau$}
   \quad
   \mprooftr{14mm}
   {$ $}
   {T-Var}
-  {$x{:}\tau \ctvdash x : \tau$}
+  {$x{:}\tau \vdash x : \tau$}
   \\[.8em]
   \mprooftr{43mm}
   {$ \emptyset \basicvdash c : b $}
   {T-Const}
-  {$\emptyset \ctvdash c : \ort{b}{\vnu = c} \ctinter \urt{b}{\vnu = c}$}
+  {$\emptyset \vdash c : \ort{b}{\vnu = c} \ctinter \urt{b}{\vnu = c}$}
   \quad
   \mprooftr{54mm}
-  {$\Gamma \ctcomma x{:}\tau_x \ctcomma f{:}(x{:}\ort{b}{\phi \land \vnu \prec x} \ctsarr \tau) \ctvdash e : \tau$}
+  {$\Gamma \ctcomma x{:}\tau_x \ctcomma f{:}(x{:}\ort{b}{\phi \land \vnu \prec x} \ctsarr \tau) \vdash e : \tau$}
   {T-Fix}
-  {$\Gamma \ctvdash \zzfix{f}{x}{e} : x{:}\ort{b}{\phi} \ctsarr \tau$}
+  {$\Gamma \vdash \zzfix{f}{x}{e} : x{:}\ort{b}{\phi} \ctsarr \tau$}
   \\[.8em]
   \mprooftr{34mm}
   {$\Code{Ty}(\primop) = \overline{x_i{:}\tau_i}\ctsarr \tau_y$ \quad 
-    $\forall i. \Gamma \ctvdash v_i : \tau_i$ }
+    $\forall i. \Gamma \vdash v_i : \tau_i$ }
   {T-AppOp}
-  {$\Gamma \ctvdash \primop\;\overline{v_i} : \tau[\overline{x_i \mapsto v_i}]$}
+  {$\Gamma \vdash \primop\;\overline{v_i} : \tau[\overline{x_i \mapsto v_i}]$}
   \quad
   \mprooftr{64mm}
-  {$\forall i. \Gamma_i \overline{\ctcomma y{:}\tau_y} \ctvdash d_i(\overline{y}) : \ort{b}{\vnu = v}$ and $\Gamma_i\overline{\ctcomma y{:}\tau_y} \ctvdash e_i : \tau_i$ }
+  {$\forall i. \Gamma_i \vdash d_i(\overline{y}) : \ort{b}{\vnu = v} \interty \urt{b}{\vnu = v}$ and $\Gamma_i \vdash e_i : \tau_i$ }
   {T-Match}
-  {$\ctbigoplus \overline{\Gamma_i} \ctvdash \match{v} \overline{d\ \overline{y} \to e}  : \ctbigoplus \overline{\tau_i}$}
+  {$\ctbigoplus \overline{\Gamma_i} \vdash \match{v} \overline{d\ \overline{y} \to e}  : \ctbigoplus \overline{\tau_i}$}
   }
   \caption{Declarative typing rules for the core language.}
   \label{fig:declaritive-typing-rules}
   \vspace*{-.1in}
 \end{figure}
 
-The typing rules are shown in \autoref{fig:declaritive-typing-rules}, where rules for let-expressions, lambda functions, and applications have dependent and disjointed versions, respectively.
+\paragraph{Variables and Constants} The typing rule for variables is standard; a constant is allowed to have the most precise type, which intersects both demonic and angelic types.
+
+\paragraph{Bunched Typing} The typing rules are shown in \autoref{fig:declaritive-typing-rules}, where rules for let-expressions, lambda functions, and applications have dependent and disjointed versions, respectively.
 Unlike standard bunched typing, the dependent version does not require an explicit additive conjunction in the type context, as shown below:
 \begin{align*}
 \mprooftr{40mm}
-  {$\Gamma_1 \ctvdash e_1 : \tau_1 $ \quad $\Gamma_2 \ctcomma x{:}\tau_1 \ctvdash e_2 : \tau_2$}
+  {$\Gamma_1 \vdash e_1 : \tau_1 $ \quad $\Gamma_2 \ctcomma x{:}\tau_1 \vdash e_2 : \tau_2$}
   {T-Bunched-Let}
-  {$\Gamma_1, \Gamma_2 \ctvdash \zlet{x}{e_1}{e_2} : \tau_2$}
+  {$\Gamma_1, \Gamma_2 \vdash \zlet{x}{e_1}{e_2} : \tau_2$}
 \qquad
 \mprooftr{26mm}
   {$\Gamma_1 \ctcomma \Gamma_2 \ctcomma \Gamma_2 \vdash e : \tau$}
@@ -356,19 +358,19 @@ which requires using rule \textsc{T-Bunched-Contraction} to ``duplicate'' bindin
 \end{align*}\noindent
 \end{example}
 
-We have subsumption rules for both types (\textsc{T-Sub}) and type contexts (\textsc{T-CtxSub}). The subtyping relation $\Gamma vdash\tau_1 \subty \tau_2$ is the same as in standard refinement types, i.e., inhabitants of $\tau_1$ are also inhabitants of $\tau_2$ under context $\Gamma$. The context-subtyping relation $\Gamma_1 \ctsubseteq{X} \Gamma_2$ follows the intuition in previous examples, where we restrict comparison to a set of binding variables $X$. Intuitively, we have
+\paragraph{Subtyping} We have subsumption rules for both types (\textsc{T-Sub}) and type contexts (\textsc{T-CtxSub}) according to the \emph{semantic subtyping} relation. The type subtyping relation $\Gamma \vdash\tau_1 \subty \tau_2$ is standard, i.e., inhabitants of the denotation of $\tau_1$ are also inhabitants of the denotation of $\tau_2$ under the denotation of context $\Gamma$. The context subtyping relation $\Gamma_1 \ctsubseteq{X} \Gamma_2$ follows the intuition in previous examples, where we restrict comparison to a set of binding variables $X$. Intuitively, we have
 \begin{align*}
   x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\urt{\Nat}{\top} \ctsubseteq{X} y{:}\urt{\Nat}{\top} \ctcomma z{:}\urt{\Nat}{\top} 
 \end{align*}
-We will introduce details of semantics of these subtyping relations in the metatheory (\autoref{sec:meta}).
 Context subsumption rule \textsc{T-CtxSub} only requires the context-subtyping relation over free variables of the term and type, which enables rich substructural relations.
+We will introduce details of semantics of these subtyping relations in the metatheory (\autoref{sec:meta}).
 
 \begin{example}[Substructural rules] We can derive the following substructural rules from \textsc{T-CtxSub}:
   \begin{align*}
     \mprooftr{25mm}
       {$\Gamma_2 : e : \tau$}
       {T-Frame}
-      {$\Gamma_1 \ctstar \Gamma_2 \ctvdash e : \tau$}
+      {$\Gamma_1 \ctstar \Gamma_2 \vdash e : \tau$}
     \quad
     \mprooftr{26mm}
       {$\Gamma_2 \vdash e : \tau$}
@@ -378,21 +380,21 @@ Context subsumption rule \textsc{T-CtxSub} only requires the context-subtyping r
     \mprooftr{25mm}
       {$\Gamma_2 \ctstar \Gamma_1 : e : \tau$}
       {T-Exchange}
-      {$\Gamma_1 \ctstar \Gamma_2 \ctvdash e : \tau$}
+      {$\Gamma_1 \ctstar \Gamma_2 \vdash e : \tau$}
     \end{align*}\noindent 
 The variable-set constraint in context subtyping relation is important.
-For example, framing rule \textsc{T-Frame} actually requires that $\Gamma_1 \ctstar \Gamma_2 \ctsubseteq{\Code{FV}(e) \cup \Code{FV}(\tau)} \Gamma_2$ holds, which is silently forced by $\Gamma_2 \ctvdash e : \tau$, requiring that the domain of $\Gamma_2$ is a subset of $\Code{FV}(e) \cup \Code{FV}(\tau)$.
+For example, framing rule \textsc{T-Frame} actually requires that $\Gamma_1 \ctstar \Gamma_2 \ctsubseteq{\Code{FV}(e) \cup \Code{FV}(\tau)} \Gamma_2$ holds, which is silently forced by $\Gamma_2 \vdash e : \tau$, requiring that the domain of $\Gamma_2$ is a subset of $\Code{FV}(e) \cup \Code{FV}(\tau)$.
 \end{example}
 
-The typing rule for variables is standard; a constant is allowed to have the most precise type, which intersects both demonic and angelic types. As in standard refinement type systems, we require all well-typed terms to be total. Thus, rule \textsc{T-Fix} forces its first argument to have only base type and to always decrease according to some well-founded relation $\prec$. This decreasing constraint means the first parameter type cannot have angelic modality; otherwise, argument of recursive call $v_{\Code{arg}}$ is required to have the following type:
+\paragraph{Fixpoint Functions} As in standard refinement type systems, we require all well-typed terms to be total. Thus, rule \textsc{T-Fix} forces its first argument to have only base type and to always decrease according to some well-founded relation $\prec$. This decreasing constraint means the first parameter type cannot have angelic modality; otherwise, the argument of recursive call $v_{\Code{arg}}$ is required to have the following type:
 \begin{align*}
   x{:}\urt{b}{\phi} \vdash v_{\Code{arg}} : \urt{b}{\phi} \interty \ort{b}{\vnu \prec x}
 \end{align*}\noindent
 where type $\urt{b}{\phi}$ requires $v_{\Code{arg}}$ to reach all values that $x$ can reach; however, type $\ort{b}{\vnu \prec x}$ disallows $v_{\Code{arg}}$ from reaching the value of $x$. Such an argument does not exist, which means recursive calls can never happen when parameter type is in angelic modality. Moreover, parameter type cannot be a disjointed arrow type, i.e.,
 \begin{align*}
-  \Gamma \ctcomma x{:}\tau_x \ctcomma f{:}(x{:}\ort{b}{\phi \land \vnu \prec x} \ctwand \tau) \ctvdash e : \tau \quad \judgfail
+  \Gamma \ctcomma x{:}\tau_x \ctcomma f{:}(x{:}\ort{b}{\phi \land \vnu \prec x} \ctwand \tau) \vdash e : \tau \quad \judgfail
 \end{align*}\noindent
-The parameter type of $f$ requires variable $x$, which makes the disjointed requirement impossible, where the type required by well-founded induction is indeed a dependent relation. Although \textsc{T-Fix} requires a special format for function type, subsumption rule \textsc{T-Sub} still allows a recursive function to be type-checked against arbitrary function types as long as subtyping relation holds.
+The parameter type of $f$ requires variable $x$, which makes the disjointed requirement impossible, where the type required by well-founded induction is indeed a dependent relation. Although \textsc{T-Fix} requires a special format for function type, subsumption rule \textsc{T-Sub} still allows a recursive function to be type-checked against arbitrary function types as long as the subtyping relation holds.
 
 \begin{example}[Fixpoint Function] The following fixpoint function defines natural number subtraction discussed in \autoref{sec:intro}.
 \begin{align*}
@@ -405,32 +407,42 @@ With a stronger function type that enables type checking with rule \textsc{T-Fix
 \end{align*}\noindent
 \end{example}
 
-The last two rules are about data constructors and primitive operators. Rule \textsc{T-AppOp} is similar to the application rule but relies on an auxiliary function $\Code{Ty}$ to assign types to primitive operators and datatype constructors in our core language. We require these primitive types to be precise; for example:
+\paragraph{Datatypes and pattern matching} The last two rules are about data constructors and primitive operators. Rule \textsc{T-AppOp} is similar to the application rule but relies on an auxiliary function $\Code{Ty}$ to assign types to primitive operators and datatype constructors in our core language. We require these primitive types to be precise as in \textsc{T-Const}; for example:
 \begin{align*}
   \Code{Ty}(\Code{O}) &= \ort{\Nat}{\vnu = 0} \interty \urt{\Nat}{\vnu = 0}
   \\\Code{Ty}(\Code{S}) &= n{:}\ort{\Nat}{\top} \ctsarr \ort{\Nat}{\vnu = n+1} \interty \urt{\Nat}{\vnu = n + 1}
   \\\Code{Ty}(+) &= x{:}\ort{\Nat}{\top} \ctsarr y{:}\ort{\Nat}{\top} \ctsarr \ort{\Nat}{\vnu = x+y} \interty \urt{\Nat}{\vnu = x + y}
 \end{align*}\noindent
-Note that parameter types are demonic and dependent, while return type is an intersection of demonic and angelic types. With these precise primitive types, rule \textsc{T-AppOp} can forward-infer constraints of operator application results. On the other hand, rule \textsc{T-Match} can backward-infer parameter constraints from results of data constructor applications (i.e., $d_i(\overline{y}) : \ort{b}{\vnu = v}$). As discussed previously, rule \textsc{T-Match} requires type context to be divided into a sum of contexts that align with control flows, and then sum of result types across all control flows becomes result type of the whole pattern-matching expression.
+With these precise primitive types, rule \textsc{T-AppOp} can forward-infer constraints of operator application results. As discussed previously, rule \textsc{T-Match} requires type context to be divided into a sum of contexts that align with \emph{reachable} control flows, and then the sum of corresponding result types becomes the result type of the whole pattern-matching expression. The reachability condition is guaranteed by $\Gamma_i$ making datatype $d_i(\overline{y})$ have a precise type equal to the matched value $v$, which requires the types of variables $\overline{y}$ to have correct precise types for further type-checking of control-flow branches.
 
 \begin{example}[Pattern matching expression] Let's revisit the previous example where we unfold the conditional expression into a pattern-matching expression.
 \begin{align*}
   x{:}\urt{\Nat}{\top} \vdash \zmatchNat{x}{3}{y}{5} : \ort{\Nat}{\vnu < 4} \ctoplus \ort{\Nat}{\top}
 \end{align*}
-where we want to show there exists a natural number for $x$ to make the term reach a value less than $4$. We first divide the type context via subsumption rule \textsc{T-CtxSub}.
+where we want to show there exists a natural number assignment for $x$ that makes the term reach a value less than $4$. We first divide the type context via subsumption rule \textsc{T-CtxSub}.
 \begin{align*}
-  x{:}\urt{\Nat}{\top} \ctsubseteq{\{x\}} x{:}\urt{\Nat}{\vnu = 0} \ctoplus x{:}\urt{\Nat}{\vnu > 0}
+  x{:}\urt{\Nat}{\top} \ctsubseteq{\{x\}} \underbrace{x{:}\urt{\Nat}{\vnu = 0}}_{\Gamma_{\Code{trueBranch}}} \ctoplus \underbrace{x{:}\urt{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}}_{\Gamma_{\Code{falseBranch}}}
 \end{align*}\noindent
-In order to apply rule \textsc{T-Match} to type-check the pattern-matching expression, we need to extend context $x{:}\urt{\Nat}{\vnu > 0}$ into $x{:}\urt{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}$ such that
+which exactly aligns the assumption about context reachability required by rule \textsc{T-Match}:
 \begin{align*}
-  &x{:}\urt{\Nat}{\vnu = 0} \vdash 0 : \ort{\Nat}{\vnu = 0}
-  \\&x{:}\urt{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1} \vdash \Code{S}\;y : \ort{\Nat}{\vnu = x}
+  &\Gamma_{\Code{trueBranch}} \vdash 0 : \ort{\Nat}{\vnu = 0} \interty \urt{\Nat}{\vnu = 0}
+  \\&\Gamma_{\Code{falseBranch}} \vdash \Code{S}\;y : \ort{\Nat}{\vnu = x} \interty \urt{\Nat}{\vnu = x}
 \end{align*}\noindent
 Then, we can have the following derivation:
 \begin{align*}
-  &x{:}\urt{\Nat}{\vnu = 0} \vdash 3 : \ort{\Nat}{\vnu < 4}
-  \\&\underline{x{:}\urt{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1} \vdash 5 : \ort{\Nat}{\top}}
-  \\&x{:}\urt{\Nat}{\vnu = 0} \ctoplus x{:}\urt{\Nat}{\vnu > 0} \vdash 
-  \\&\qquad \zmatchNat{x}{3}{y}{5} : \ort{\Nat}{\vnu < 4} \ctoplus \ort{\Nat}{\top}
+  &\Gamma_{\Code{trueBranch}} \vdash 3 : \ort{\Nat}{\vnu < 4} \interty \urt{\Nat}{\vnu < 4}
+  \\&\underline{\Gamma_{\Code{falseBranch}} \vdash 5 : \ort{\Nat}{\top} \interty \urt{\Nat}{\top}}
+  \\&\Gamma_{\Code{trueBranch}} \ctoplus \Gamma_{\Code{falseBranch}} \vdash  \zmatchNat{x}{3}{y}{5} : \ort{\Nat}{\vnu < 4} \ctoplus \ort{\Nat}{\top}
 \end{align*}\noindent
+On the other hand, the following derivation fails:
+\begin{align*}
+  x{:}\urt{\Nat}{\vnu > 0} \vdash \zmatchNat{x}{3}{y}{5} : \ort{\Nat}{\vnu < 4} \ctoplus \ort{\Nat}{\top} \judgfail
+\end{align*}\noindent
+Since context $x{:}\urt{\Nat}{\vnu > 0}$ can only reach the false branch, it cannot be divided into a sum of two contexts that align with both branches. Alternatively, we can have
+\begin{align*}
+  \\&\Gamma_{\Code{falseBranch}}\vdash 5 : \ort{\Nat}{\vnu > 4}
+  \\&\underline{x{:}\urt{\Nat}{\vnu > 0} \ctsubseteq{\{x\}} \Gamma_{\Code{falseBranch}}}
+  \\&x{:}\urt{\Nat}{\vnu > 0} \vdash \zmatchNat{x}{3}{y}{5} : \ort{\Nat}{\vnu > 4} \quad \judgok
+\end{align*}\noindent
+where we adapt rule \textsc{T-Match} with a sum of a single type.
 \end{example}
