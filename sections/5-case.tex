@@ -5,63 +5,100 @@
 
 \begin{figure}[h!]
 \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
-let sized_list_gen (s: nat) (nat_gen: unit -> nat) : list nat =
-  match s with
-  | 0 -> []
-  | S s' ->
-    let x = nat_gen () in
-    let l = siz_list_gen s' nat_gen in
-    [] ?$\oplus$? (x :: l)
+let rec bst_gen (r: nat) (lo: nat) (range: nat -> nat -> nat): nat tree =
+  if r <= 0 then Leaf
+  else Leaf ?$\oplus$?
+    let r' = range (1, r) in
+    let left = bst_gen (r' - 1) lo range in
+    let right = bst_gen (r - r') (lo + r') range in
+    Node x left right
+
+val bst_gen: ?$\Code{r}{:}\ort{\Nat}{\top} \ctsarr \Code{lo}{:}\ort{\Nat}{\top} \ctsarr$?
+?$\Code{range}{:}(x{:}\ort{\Nat}{\top} \ctsarr y{:}\ort{\Nat}{x + 1 < \vnu} \ctsarr \urt{\Nat}{x < \vnu < y}) \ctwand$?
+?$\urt{\Tree[\Nat]}{\I{bst}(\vnu) \land \forall x. \I{mem}(\vnu, x) \iff (\Code{lo} + 1 \leq x \leq \Code{lo + r}) }$?
 \end{minted}
 \end{figure}
 
-\begin{align*}
-  &\emptyset \vdash \Code{sized\_list\_gen} : 
-  \\&\qquad \Code{s}{:}\ort{\Nat}{\top} \ctwand \Code{nat\_gen}(\ort{\Unit}{\top}\ctsarr\urt{\Nat}{\top}) \ctwand \urt{\List[\Nat]}{\I{size}(\vnu) \leq s}
-\end{align*}\noindent
-
-\subsection{Incorrectness style Reachability}
+\subsection{Reverse Reachability}
 
 \begin{figure}[h!]
     \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
-    let reverse (l: list nat) : list nat =
-      match l with
-      | [] -> []
-      | x :: xs -> reverse xs ++ [x]
+let rec reverse (l: list nat) : list nat =
+    match l with
+    | [] -> []
+    | x :: xs -> reverse xs ++ [x]
+
+val reverse : ?$\Code{l}{:}\ort{\List[\Nat]}{\top} \ctsarr \urt{\List[\Nat]}{\I{rev}(\vnu,  l)}$?
+val reverse : ?$\Code{l}{:}\urt{\List[\Nat]}{\I{sortedIncr}(\vnu)} \ctsarr \urt{\List[\Nat]}{\I{sortedDecr}(\vnu)}$?
     \end{minted}
 \end{figure}
 
-\begin{align*}
-    &\emptyset \vdash \Code{reverse} :  \Code{l}{:}\urt{\List[\Nat]}{\top} \ctwand \urt{\List[\Nat]}{\top}
-  \end{align*}\noindent
 
 \subsection{Disprove Reasoning}
 
+
 \begin{figure}[h!]
-    \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
-    let rec deleteElem (l: list nat) (x: nat) : nat =
-        match l with
-        | [] -> []
-        | y :: ys -> if x == y then ys else y :: deleteElem ys x
-    \end{minted}
+    \centering
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+    let rec merge (l1: elem list) (l2: elem list) : elem list =
+        match l1, l2 with
+        | l1, [] -> l1
+        | [], l2 -> l2
+        | h1 :: t1, h2 :: t2 ->
+            let t = merge t1 t2 in (* t contains elements in t1 *)
+            if h1 < h2 then h1 :: h2 :: t (* h2 may be greater than elements in t1 *)
+            else if h1 > h2 then h2 :: h1 :: t
+            else h1 :: t
+
+val merge : ?$\Code{l1}{:}\ort{\List[\Nat]}{\top} \ctsarr \Code{l2}{:}\urt{\List[\Nat]}{\top} \ctwand \Code{l2}{:}\ort{\List[\Nat]}{\neg \I{sortedIncr}(\vnu)} \ctoplus \ort{\List[\Nat]}{\I{sortedIncr}(\vnu)}$?
+val merge : ?$\Code{l1}{:}\urt{\List[\Nat]}{\top} \ctwand \Code{l2}{:}\urt{\List[\Nat]}{\top} \ctwand \Code{l2}{:}\ort{\List[\Nat]}{\neg \I{sortedIncr}(\vnu)} \ctoplus \ort{\List[\Nat]}{\top}$?
+val merge : ?$\Code{l1}{:}\ort{\List[\Nat]}{\top} \ctsarr \Code{l2}{:}\ort{\List[\Nat]}{\top} \ctsarr \Code{l2}{:}\ort{\List[\Nat]}{\I{sortedIncr}(\vnu)}$? (* disprove *)
+\end{minted}
+\caption{A function that merges two sorted lists. If either of
+the input lists are empty, \Code{merge} returns the other (lines
+$3-4$). Otherwise, the function merges the tails of the two inputs and appends the two top elements ahead of the merged result. }
+\label{fig:merge}
 \end{figure}
 
-\begin{align*}
-    &\emptyset \vdash \Code{deleteElem} : \Code{l}{:}\ort{\List[\Nat]}{\top} \ctsarr \Code{x}{:}\ort{\Nat}{\top} \ctsarr \ort{\List[\Nat]}{\neg\I{mem}(\Code{l}, x)} \quad \judgfail
-    \\&\emptyset \vdash \Code{deleteElem} : 
-    \\&\qquad \Code{l}{:}\urt{\List[\Nat]}{\top} \ctwand \Code{x}{:}\urt{\Nat}{\top} \ctwand \ort{\List[\Nat]}{\I{mem}(\Code{l}, x)}
-    \\&\qquad \Code{l}{:}\urt{\List[\Nat]}{\top} \ctwand \Code{x}{:}\ort{\Nat}{\top} \ctwand \ort{\List[\Nat]}{\I{mem}(\Code{l}, x)}
-\end{align*}\noindent
+% \subsection{Compare with Logics}
+
+% \begin{figure}[h!]
+% \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+% let f (x: nat) (y: nat) : nat =
+%   if even x 
+%   then (if odd y then 42 else 0)
+%   else 0
+
+% val f : ?$\Code{x}{:}\urt{\Nat}{\top} \ctwand \Code{y}{:}\urt{\Nat}{\top} \ctwand \urt{\Nat}{\vnu = 42}$?
+% val f : ?$\Code{x}{:}\urt{\Nat}{\top} \ctwand \Code{y}{:}\urt{\Nat}{\top} \ctwand \urt{\Nat}{\vnu = 42}$?
+% \end{minted}
+% \end{figure}
+
+% \begin{figure}[h!]
+%     \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+%     let rec deleteElem (l: list nat) (x: nat) : nat =
+%         match l with
+%         | [] -> []
+%         | y :: ys -> if x == y then ys else y :: deleteElem ys x
+%     \end{minted}
+% \end{figure}
+
+% \begin{align*}
+%     &\emptyset \vdash \Code{deleteElem} : \Code{l}{:}\ort{\List[\Nat]}{\top} \ctsarr \Code{x}{:}\ort{\Nat}{\top} \ctsarr \ort{\List[\Nat]}{\neg\I{mem}(\Code{l}, x)} \quad \judgfail
+%     \\&\emptyset \vdash \Code{deleteElem} : 
+%     \\&\qquad \Code{l}{:}\urt{\List[\Nat]}{\top} \ctwand \Code{x}{:}\urt{\Nat}{\top} \ctwand \ort{\List[\Nat]}{\I{mem}(\Code{l}, x)}
+%     \\&\qquad \Code{l}{:}\urt{\List[\Nat]}{\top} \ctwand \Code{x}{:}\ort{\Nat}{\top} \ctwand \ort{\List[\Nat]}{\I{mem}(\Code{l}, x)}
+% \end{align*}\noindent
 
 
-\begin{corollary}[Simulate different reasoning styles] The following facts hold:
-    \begin{enumerate}
-      \item $\emptyset \ctvdash e : \ort{b}{\phi}$ implies that $\forall v. \mstep{e}{v} \impl \phi[\vnu \mapsto v]$.
-      \item $\emptyset \ctvdash e : \urt{b}{\phi}$ implies that $\forall v. \phi[\vnu \mapsto v] \impl \mstep{e}{v}$.
-      \item Refinement type check: $\emptyset \ctvdash v_f :  x{:}\ort{b_x}{\phi_x} \ctsarr \ort{b}{\phi}$ implies that $\forall v_x\;v. \phi_x[\vnu \mapsto v_x] \land \mstep{v_f\;v_x}{v} \impl \phi[\vnu \mapsto v]$.
-      \item Coverage type check: $\emptyset \ctvdash v_f :  x{:}\ort{b_x}{\phi_x} \ctsarr \urt{b}{\phi}$ implies that $\forall v_x\;v. \phi_x[\vnu \mapsto v_x] \land \phi[\vnu \mapsto v]  \impl \mstep{v_f\;v_x}{v} $.
-      \item Incorrectness type check: $\emptyset \ctvdash v_f : \urt{b_x}{\phi_x} \ctsarr \urt{b}{\phi}$ implies that \\ $\forall v. \phi[\vnu \mapsto v] \impl \exists v_x. \phi_x[\vnu \mapsto v_x] \land  \mstep{v_f\;v_x}{v} $.
-      \item Sufficient incorrectness: $\emptyset \ctvdash v_f : \ort{b_x}{\phi_x} \ctsarr \ort{b}{\phi} \ctoplus b$ implies that \\ $\forall v_x. \phi_x[\vnu \mapsto v_x] \impl \exists v. \phi[\vnu \mapsto v] \land \mstep{v_f\;v_x}{v} $.
-      \item Existential type check: $\emptyset \ctvdash v_f : \urt{b_x}{\phi_x} \ctsarr \ort{b}{\phi}\ctoplus b$ implies that \\ $\exists v_x\;v. \phi_x[\vnu \mapsto v_x] \land \phi[\vnu \mapsto v] \land \mstep{v_f\;v_x}{v} $.
-    \end{enumerate}
-  \end{corollary}
+% \begin{corollary}[Simulate different reasoning styles] The following facts hold:
+%     \begin{enumerate}
+%       \item $\emptyset \ctvdash e : \ort{b}{\phi}$ implies that $\forall v. \mstep{e}{v} \impl \phi[\vnu \mapsto v]$.
+%       \item $\emptyset \ctvdash e : \urt{b}{\phi}$ implies that $\forall v. \phi[\vnu \mapsto v] \impl \mstep{e}{v}$.
+%       \item Refinement type check: $\emptyset \ctvdash v_f :  x{:}\ort{b_x}{\phi_x} \ctsarr \ort{b}{\phi}$ implies that $\forall v_x\;v. \phi_x[\vnu \mapsto v_x] \land \mstep{v_f\;v_x}{v} \impl \phi[\vnu \mapsto v]$.
+%       \item Coverage type check: $\emptyset \ctvdash v_f :  x{:}\ort{b_x}{\phi_x} \ctsarr \urt{b}{\phi}$ implies that $\forall v_x\;v. \phi_x[\vnu \mapsto v_x] \land \phi[\vnu \mapsto v]  \impl \mstep{v_f\;v_x}{v} $.
+%       \item Incorrectness type check: $\emptyset \ctvdash v_f : \urt{b_x}{\phi_x} \ctsarr \urt{b}{\phi}$ implies that \\ $\forall v. \phi[\vnu \mapsto v] \impl \exists v_x. \phi_x[\vnu \mapsto v_x] \land  \mstep{v_f\;v_x}{v} $.
+%       \item Sufficient incorrectness: $\emptyset \ctvdash v_f : \ort{b_x}{\phi_x} \ctsarr \ort{b}{\phi} \ctoplus b$ implies that \\ $\forall v_x. \phi_x[\vnu \mapsto v_x] \impl \exists v. \phi[\vnu \mapsto v] \land \mstep{v_f\;v_x}{v} $.
+%       \item Existential type check: $\emptyset \ctvdash v_f : \urt{b_x}{\phi_x} \ctsarr \ort{b}{\phi}\ctoplus b$ implies that \\ $\exists v_x\;v. \phi_x[\vnu \mapsto v_x] \land \phi[\vnu \mapsto v] \land \mstep{v_f\;v_x}{v} $.
+%     \end{enumerate}
+%   \end{corollary}
