@@ -27,16 +27,16 @@ consistent with $\Gamma$.
 Reachability reasoning~\cite{ReverseHoareLogic, OHP19, ZDS23} has
 typically been used to prove claims about ``incorrectness'' properties
 of programs, i.e., the existence of witnesses of buggy program
-behavior that can avoid overwhelming false positives in bug
-detection. There have been relatively few forms of must-style
+behavior that can avoid overwhelming false positives in bug detection.
+There have been relatively few instances that apply this style of
 reasoning in type-based verification, however. Recent refinement type
 systems~\cite{RefinementTypeSymbolicExecution,RefinementTypeRefutations}
 instantiate must-style reasoning to refute type specifications by
-searching for concrete counterexamples.  Some must-style type systems
-focus on specific reachability properties: \emph{coverage
-  types}~\cite{CoverageType} ensures that all desirable test inputs
-will be produced by a test input generator, while \citet{Ill-types}
-guarantee that all ill-typed programs will definitely get stuck.
+searching for concrete counterexamples.  Other type systems focus on
+specific reachability properties: for example, \emph{coverage
+  types}~\cite{CoverageType} ensure that all desirable test inputs
+will be produced by a test input generator, while~\citet{Ill-types}
+guarantees that all ill-typed programs will definitely get stuck.
 
 % Existing approaches, however, typically fix on one style of reasoning
 % or the other and are not equipped to simultaneously consider both
@@ -66,35 +66,38 @@ guarantee that all ill-typed programs will definitely get stuck.
 %       implementation is both \emph{sound} and \emph{complete} with
 %       respect to its specification.
 
-Existing approaches, however, typically fix on one style of reasoning
+Moreover, existing approaches typically fix on one style of reasoning
 or the other and are not equipped to simultaneously consider both
 safety and reachability properties together, limiting their ability to
-address useful verification tasks.  For example, consider a
+address useful verification tasks.  As a simple example, consider a
 specification for subtraction over natural numbers
-($\Code{-}_{\Code{nat}}$) that types argument $x$ and $y$ as positive integers
-and asserts that the result is a positive integer less than or equal to $x$:
+($\Code{-}_{\Code{nat}}$) that types argument $x$ and $y$ as non-negative
+integers and asserts that the result is a non-negative integer less than
+or equal to $x$:
       \[x : \{\Code{int}\, |\ 0 \leq \nu\}, y : \Code{\{\Code{int}\, |\, 0 \leq \nu \}}
       \vdash x\;\Code{-}_{\Code{nat}}\;y : \{\Code{int}\, |\, 0 \leq
       \nu \leq x \}\]
 \noindent A standard implementation is $\Code{-}_{\Code{nat}} \doteq
-\lambda x.\lambda y. \zif{x \leq y}{0}{x - y}$.  Its type has both a
-safety component -- the function $\Code{-}_{\Code{nat}}$ must produce
-a result in the range $[0,x]$; and a reachability component -- every
-integer in $[0,x]$ can be produced by instantiating $y$ appropriately.
-By considering just safety, however, we could verify the former but
-would be unable to guarantee reachability.  For example, an
-alternative (incorrect) implementation that ignores its inputs and
-simply returns the constant $1$ would be vacuously safe, but would not
-satisfy reachability.  Conversely, by viewing this specification from
-a reachability lens, we could verify the latter but would be unable to
-guarantee that the operation is actually safe.  For example, an
-alternative (incorrect) implementation that ignores its inputs and
-simply returns the output of a random number generator satisfies the
-desired reachability requirement since it can potentially return every
-value in $[0, x]$, but is unsafe since it may also return values
-outside this range.  A unified treatment would simultaneously
-establish that the standard implementation is both \emph{sound} and
-\emph{complete} with respect to its type specification.
+\lambda x.\lambda y. \zif{x \leq y}{0}{x - y}$.  Its type has both (a)
+a safety component -- the function $\Code{-}_{\Code{nat}}$ must
+produce a result in the range $[0,x]$; and (b) a reachability
+component -- every integer in $[0,x]$ can be produced by instantiating
+$y$ appropriately.  By considering just safety, however, we could
+verify the former but would be unable to guarantee reachability.  For
+example, an alternative (incorrect) implementation that ignores its
+inputs and simply returns the constant $1$ would be vacuously safe,
+but would not capture the desired reachability property that every natural number
+in the range $[0,$x$]$ can be expressed as the difference of two other numbers.  Conversely,
+by viewing this specification from a reachability lens, we could
+verify (b) but would be unable to guarantee that the operation is
+actually safe.  For example, an alternative (incorrect) implementation
+that ignores its inputs and simply returns the output of a random
+number generator satisfies our reachability requirement since it can
+potentially return every value in $[0, x]$, but is clearly unsafe
+since it may also return values outside this range.  A unified
+treatment would simultaneously establish that the standard
+implementation is both \emph{sound} and \emph{complete} with respect
+to its type specification.
 
 \newcommand{\natminus}{\ensuremath{-_{\Code{nat}}}}
 
