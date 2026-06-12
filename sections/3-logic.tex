@@ -420,17 +420,17 @@ Denotation of demonic and angelic types is directly encoded into our logic, wher
   \end{align*}\noindent
 We rewrite the fresh variable $\vnu_1$ and $\vnu_2$ as $x$ and $y$ respectively, which can simplify the formula.
 \begin{align*}
-=\;& (\chtrue \chimpl \demonic \Code{Atom}(x > 0)) \chimpl (\chtrue \chimpl \angelic \Code{Atom}(x \geq 0))
+=\;& (\chtrue \chimpl \demonic \Code{Atom}(x > 0)) \chimpl (\chtrue \chimpl \angelic \Code{Atom}(y \geq 0))
 \chwand (\denot{\mstep{e\;x\;y}{\vnu_3}} \chimpl \forallM{x}\angelic \Code{Atom}(\vnu_3 > x))
-\\=\;& \demonic \Code{Atom}(x > 0) \chimpl \angelic \Code{Atom}(x \geq 0)
+\\=\;& \demonic \Code{Atom}(x > 0) \chimpl \angelic \Code{Atom}(y \geq 0)
 \chwand (\denot{\mstep{e\;x\;y}{\vnu_3}} \chimpl \forallM{x}\angelic \Code{Atom}(\vnu_3 > x))
 \end{align*}\noindent
 Then the term $\zzlam{x}{\zzlam{y}{x + y}}$ can have this type under empty context, which requires that
 \begin{align*}
-  \demonic \Code{Atom}(x > 0) \chstar \angelic \Code{Atom}(x \geq 0) \chland \denot{\mstep{x+y}{\vnu_3}}
+  \demonic \Code{Atom}(x > 0) \chstar \angelic \Code{Atom}(y \geq 0) \chland \denot{\mstep{x+y}{\vnu_3}}
   \models \forallM{x}\angelic \Code{Atom}(\vnu_3 > x)
 \end{align*}\noindent
-This formula is correct, since whatever which number $\vnu_3$ that required to reach by the right hand side and what demonic assignment $x$ is, the context can angelic assign $y$ to $\vnu_3 - x$ to make $x + y$ reach $\vnu_3$. Moreover, since $\vnu_3 > x$, then the value of $y$ (i.e., $\vnu_3 - x$) must be non-negative which is allowed by $\angelic \Code{Atom}(x \geq 0)$. 
+This formula is correct, since whatever which number $\vnu_3$ that required to reach by the right hand side and what demonic assignment $x$ is, the context can angelic assign $y$ to $\vnu_3 - x$ to make $x + y$ reach $\vnu_3$. Moreover, since $\vnu_3 > x$, then the value of $y$ (i.e., $\vnu_3 - x$) must be non-negative which is allowed by $\angelic \Code{Atom}(y \geq 0)$. 
 \end{example}
 
 
