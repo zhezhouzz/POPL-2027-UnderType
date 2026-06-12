@@ -549,8 +549,8 @@ $\Gamma_2$ can only refer to variables in $\Gamma_0$.
 \paragraph{Variables and Constants} The typing rule for variables is standard;
 a constant is allowed to have the most precise (singleton) type, which
 has the same interpretation in both a demonic as well as angelic
-setting.  In other words, the singleton type $\{\nu: b \mid \nu = c\}
-\ctinter [\nu: b \mid \nu = c]$ coincides in both modalities because
+setting.  In other words, the singleton type $\ort{b}{\vnu = c}
+\ctinter \urt{b}{\vnu = c}$ coincides in both modalities because
 there is only one possible value, so the safety and reachability
 constraints are identical.
 
@@ -609,7 +609,7 @@ intuition in previous examples, where we restrict comparison to a set
 of variables $X$.  For example,
 \begin{align*}
   x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\urt{\Nat}{\top}
-  \ctsubseteq{X} y{:}\urt{\Nat}{\top} \ctcomma z{:}\urt{\Nat}{\top}
+  \ctsubseteq{\{y\}} y{:}\urt{\Nat}{\top} \ctcomma z{:}\urt{\Nat}{\top}
 \end{align*}
 Rule \textsc{T-CtxSub} only requires the context-subtyping relation
 to hold over free variables of the term and type. Further details are
@@ -721,7 +721,7 @@ On the other hand, the following derivation fails:
 \end{align*}\noindent
 Since context $x{:}\urt{\Nat}{\vnu > 0}$ can only reach the false branch, it cannot be divided into a sum of two contexts that align with both branches. Alternatively, we can have
 \begin{align*}
-  \\&\Gamma_{\Code{falseBranch}}\vdash 5 : \ort{\Nat}{\vnu > 4}
+  &\Gamma_{\Code{falseBranch}}\vdash 5 : \ort{\Nat}{\vnu > 4}
   \\&\underline{x{:}\urt{\Nat}{\vnu > 0} \ctsubseteq{\{x\}} \Gamma_{\Code{falseBranch}}}
   \\&x{:}\urt{\Nat}{\vnu > 0} \vdash \zmatchNat{x}{3}{y}{5} : \ort{\Nat}{\vnu > 4} \quad \judgok
 \end{align*}\noindent

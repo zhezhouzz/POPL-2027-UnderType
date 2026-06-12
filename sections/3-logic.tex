@@ -7,7 +7,7 @@ We keep the key intuition that the ``capability to make demonic/angelic decision
 
 \subsection{Store and Contextual Capabilities}
 
-As discussed in \autoref{sec:typing}, an environment $\mathcal{E}(e)$ can provide multiple assignments for free variables in $e$, which enable potential demonic or angelic decisions. For example, environment $\zlet{x}{\Code{positive\_gen}()}{\boxed{x + 1}}$ can provide assignments for $x$ for term $x + 1$. Then, this environment can angelically assign $x$ to be $3$ in reachability verification $\vdash x + 1 : \urt{\Nat}{\vnu = 4}$, or demonically assign $x$ with all positive numbers in safety verification $\vdash x + 1 : \ort{\Nat}{\vnu > 0}$. In general, environment can be treated as angelic or demonic since it has the ``capability'' to assign variables with different values. On the other hand, if an environment has a singleton capability, angelic and demonic interpretations collapse into the same interpretation. Following this idea, we define this capability as a non-empty set of stores that provides assignments for variables.
+As discussed in \autoref{sec:context-typing}, an environment $\mathcal{E}(e)$ can provide multiple assignments for free variables in $e$, which enable potential demonic or angelic decisions. For example, environment $\zlet{x}{\Code{positive\_gen}()}{\boxed{x + 1}}$ can provide assignments for $x$ for term $x + 1$. Then, this environment can angelically assign $x$ to be $3$ in reachability verification $\vdash x + 1 : \urt{\Nat}{\vnu = 4}$, or demonically assign $x$ with all positive numbers in safety verification $\vdash x + 1 : \ort{\Nat}{\vnu > 0}$. In general, environment can be treated as angelic or demonic since it has the ``capability'' to assign variables with different values. On the other hand, if an environment has a singleton capability, angelic and demonic interpretations collapse into the same interpretation. Following this idea, we define this capability as a non-empty set of stores that provides assignments for variables.
 
 \begin{definition}[Store]\label{def:store} Assume $\Var$ and $\Val$ are the variable and value domains, respectively. A store $\sigma$ is a partial map from variables to values, i.e., $\Var \rightharpoonup \Val$. We write $[\overline{x_i \mapsto v_i}]$ as a literal store; we write $\sigma(x)$ for the value of variable $x$ in store $\sigma$.
 We define the following standard operations on stores:
@@ -67,10 +67,6 @@ where $r_x$ is consistent with the first demonic context since all assignments o
 \end{align*}\noindent
 The first judgement fails since the result set of $x$ is $\{0, 1\}$, which is not less than $1$, while the second judgement holds since it covers all natural numbers less than $2$.
 \end{example}
-
-
-  
-
 
 \subsection{Contextual Capabilities Algebra and Context logic}
 
@@ -236,7 +232,7 @@ We still write $p \models q$ iff for all $r \in \Res$, $r \models p$ implies $r 
 
 The context logic is a bunched implication logic based on our contextual capabilities algebra. Most logic operators are standard; the rest of this subsection focuses on atomic proposition ($\Code{Atom}$), demonic ($\;\demonic$) and angelic ($\;\angelic$) modalities, sum operator ($\choplus$), as well as reference modality ($\forallM{x}$) that helps express semantics of dependent refinement type system.
 
-\paragraph{Atomic Propositions} The atomic proposition $\Code{Atom}(\phi)$ in our logic is lifted from a standard proposition $\phi$ (e.g., the type qualifier defined in \autoref{sec:typing}). For any proposition $\phi$ that is closed under a store, we lift it into a resource that \emph{exactly} contains all stores that satisfy $\phi$. As mentioned before, our logic should be neutral (i.e., not overapproximation or underapproximation) to support demonic and angelic modalities as first-class citizens.
+\paragraph{Atomic Propositions} The atomic proposition $\Code{Atom}(\phi)$ in our logic is lifted from a standard proposition $\phi$ (e.g., the type qualifier defined in \autoref{sec:context-typing}). For any proposition $\phi$ that is closed under a store, we lift it into a resource that \emph{exactly} contains all stores that satisfy $\phi$. As mentioned before, our logic should be neutral (i.e., not overapproximation or underapproximation) to support demonic and angelic modalities as first-class citizens.
 
 \paragraph{Demonic and Angelic Modality} In order to enable arbitrary combinations of safety and reachability reasoning, we introduce demonic modality $\demonic$ and angelic modality $\angelic$ as operators in our context logic. Similar to previous works~\cite{OHP19}, the demonic modality takes an overapproximation of the capability (upper bound), while the angelic modality takes an underapproximation of the capability (lower bound).
 
@@ -287,13 +283,18 @@ The context logic is a bunched implication logic based on our contextual capabil
 
 \paragraph{Sum operator} The $P \choplus Q$ operation is defined as the sum operation on capabilities, which can be interpreted as ``if the capability is divided into two parts, one part satisfies $P$ and the other part satisfies $Q$.'' 
 
-\begin{example}[Sum operator] The examples in \autoref{sec:typing} allow us to divide current type context $x{:}\urt{\Nat}{\top}$ to fit condition expression $x == 0$ of the program, which requires:
+\begin{example}[Sum operator] The examples in \autoref{sec:context-typing} allow us to divide current type context $x{:}\urt{\Nat}{\top}$ to fit condition expression $x == 0$ of the program, which requires:
 \begin{align*}
   &\{[x\mapsto 0], [x\mapsto 1], ... \} = \{[x\mapsto 0]\} + \{[x\mapsto 1], ... \}
   \\&\{[x\mapsto 0]\} \models \angelic \Code{Atom}(x = 0) \judgok
   \\&\underline{\{[x\mapsto 1], ... \} \models \angelic \Code{Atom}(x > 0) \judgok}
   \\&\{[x\mapsto 0], [x\mapsto 1], ... \} \models \angelic \Code{Atom}(x = 0) \choplus \angelic \Code{Atom}(x > 0) \judgok
 \end{align*}\noindent
+Note that our well-formed capability (i.e., $\Res$) is nonempty set by definition, which avoids the vacously proof in reachability verification. Otherwise, consider the control flow example in \autoref{sec:context-typing}:
+\begin{align*}
+  \denot{x{:}\urt{\Nat}{\vnu > 0}} \ctsubseteq{\{x\}} \denot{x{:}\ort{\Nat}{\bot} \ctoplus x{:}\urt{\Nat}{\vnu > 0}}  \quad \text{(without nonemptyness constraint)}
+\end{align*}\noindent
+where $x{:}\ort{\Nat}{\bot}$ is a type context that can be satisified by a empty capability (i.e., emptyset of stores). This ill sum context means that one typecheck an unreachable control flow with a bottom type (e.g., $x{:}\urt{\Nat}{\vnu > 0}$) where any return type is then allowed.
 \end{example}
 
 \paragraph{Variable dependency} Although a neutral atomic proposition allows us to lift demonic and angelic modalities as first-class citizens, it creates additional difficulty in expressing variable dependency. Consider a program $\zlet{y}{x + 1}{...}$ where $y$ always has assignment $x + 1$. If we directly encode this relation as a logical formula, we have:
@@ -330,7 +331,7 @@ The notation $\forallM{\overline{x_i}} P$ is shorthand for
 
 The intuition of reference operator $\forallM{x}{P}$ is quite simple: we first select all allowed assignments of $x$ in the current capability (i.e., $v_x$), and then check $P$ under the corresponding fiber. Importantly, we substitute variable $x$ with concrete assignment $v_x$ in logical formula $P$ so that pure qualifiers (e.g., from $y = x + 1$ to $y = v_x + 1$) do not need to consider all possible assignments of $x$.
 
-\begin{example}[Variable Reference] With the help of the reference operator, we can express variable dependency across clauses with arbitrary approximation modality. Consider the following logic formula, which is the type denotation of an angelic type with a referred variable $x$:
+\begin{example}[Variable Reference] With the help of the reference operator, we can express variable dependency across clauses. Consider the following logic formula, which is the type denotation of an angelic type with a referred variable $x$:
 \begin{align*}
   \denot{y{:}\urt{\Nat}{0 \leq \vnu < x}} = \forallM{x} \angelic (0 \leq y < x)
 \end{align*}\noindent
@@ -366,9 +367,9 @@ where both $x$ and $y$ have angelic interpretation while $y$ is dependent on $x$
 
 \subsection{Type Denotation}
 
-Following the intuition introduced in the previous subsection, we provide a formal definition of type denotation. We define $\denot{\tau}: \Code{BasicTypeContext} \sarr \Code{Term} \sarr \Code{Formula}$, where $r \models \denot{\tau}\;\Sigma\;e$ means that $e$ is an inhabitant of type $\tau$ under capability $r$. Like other refinement type systems (e.g., Liquid Types), we also require terms to be total (no divergence) and well-typed in basic type system $\Sigma$. All of these side conditions are encoded in our logic:
+Following the intuition introduced in the previous subsection, we provide a formal definition of type denotation. We define $\denot{\tau}_\Sigma: \Code{Term} \sarr \Code{Formula}$ under a basic type context $\Sigma$, where $r \models \denot{\tau}_\Sigma\;e$ means that $e$ is an inhabitant of type $\tau$ under capability $r$. Like other refinement type systems (e.g., Liquid Types), we also require terms to be total (no divergence) and well-typed in basic type system $\Sigma$. All of these side conditions are encoded in our logic:
 \begin{align*}
-  P_{\Code{guard}} \doteq \forallM{\Dom{\Sigma}} \Code{Atom}(\Code{Total}(e) \land \Sigma \basicvdash e : \eraserf{\tau} \land \Sigma \basicvdash \tau)
+  P_{\Code{guard}} \doteq \forallM{\Dom{\Sigma}} \Code{Atom}(\Code{Total}(e) \land \Sigma \basicvdash e : \eraserf{\tau} \land \Sigma \wfvdash \tau)
 \end{align*}\noindent
 Note that we put variable reference $\forallM{\Dom{\Sigma}}$ before the atomic proposition; otherwise, $\Code{Atom}(x{:}\Nat \basicvdash x : \Nat)$ will require capability to contain all possible assignments of $x$ (i.e., all natural numbers), which makes this basic type judgement hold. In the following definition of type denotation, all cases contain this guard, which is omitted for brevity.
 
@@ -385,35 +386,37 @@ This denotation requires a resource that is single-valued at $x$ to model $\Code
 
 \begin{definition}[Type Denotation] The type denotation is defined as follows:
 \begin{align*}
-  \denot{\ort{b}{\phi}}\;\Sigma\;e &\doteq \denot{\mstep{e}{\vnu}}_\Sigma \chimpl \forallM{\Code{FV}(\ort{b}{\phi})}\, \demonic \phi \quad \text{($\vnu$ is a fresh variable)}
-  \\\denot{\urt{b}{\phi}}\;\Sigma\;e &\doteq \denot{\mstep{e}{\vnu}}_\Sigma \chimpl \forallM{\Code{FV}(\urt{b}{\phi})}\, \angelic \phi \quad \text{($\vnu$ is a fresh variable)}
-  \\\denot{x{:}\tau_x \ctsarr \tau}\; \Sigma\;e &\doteq \denot{\tau_x}\;\Sigma\;x \chimpl \denot{\tau}\;(\Sigma,x{:}\eraserf{\tau_x})\;(e\;x) \quad \text{($x$ is a fresh variable)}
-  \\\denot{x{:}\tau_x \ctwand \tau}\; \Sigma\;x &\doteq \denot{\tau_x}\;\Sigma\;x \chwand \denot{\tau}\;(\Sigma,x{:}\eraserf{\tau_x})\;(e\;x) \quad \text{($x$ is a fresh variable)}
-  \\\denot{\tau_1 \ctinter \tau_2}\;\Sigma\; e &\doteq \denot{\tau_1}\;\Sigma\; e \chland \denot{\tau_2}\;\Sigma\; e
-  \\\denot{\tau_1 \ctunion \tau_2}\;\Sigma\; e &\doteq \denot{\tau_1}\;\Sigma\; e \chlor \denot{\tau_2}\;\Sigma\; e
-  \\\denot{\tau_1 \ctoplus \tau_2}\;\Sigma\; e &\doteq \denot{\tau_1}\;\Sigma\; e \choplus \denot{\tau_2}\;\Sigma\; e
+  \denot{\ort{b}{\phi}}_\Sigma\;e &\doteq \denot{\mstep{e}{\vnu}}_\Sigma \chimpl \forallM{\Code{FV}(\ort{b}{\phi})}\, \demonic \phi \quad \text{($\vnu$ is a fresh variable)}
+  \\\denot{\urt{b}{\phi}}_\Sigma\;e &\doteq \denot{\mstep{e}{\vnu}}_\Sigma \chimpl \forallM{\Code{FV}(\urt{b}{\phi})}\, \angelic \phi \quad \text{($\vnu$ is a fresh variable)}
+  \\\denot{x{:}\tau_x \ctsarr \tau}_\Sigma\;e &\doteq \denot{\tau_x}_\Sigma\;x \chimpl \denot{\tau}_{\Sigma,x{:}\eraserf{\tau_x}}\;(e\;x) \quad \text{($x$ is a fresh variable)}
+  \\\denot{x{:}\tau_x \ctwand \tau}_\Sigma\;x &\doteq \denot{\tau_x}_\Sigma\;x \chwand \denot{\tau}_{\Sigma,x{:}\eraserf{\tau_x}}\;(e\;x) \quad \text{($x$ is a fresh variable)}
+  \\\denot{\tau_1 \ctinter \tau_2}_\Sigma\; e &\doteq \denot{\tau_1}_\Sigma\; e \chland \denot{\tau_2}_\Sigma\; e
+  \\\denot{\tau_1 \ctunion \tau_2}_\Sigma\; e &\doteq \denot{\tau_1}_\Sigma\; e \chlor \denot{\tau_2}_\Sigma\; e
+  \\\denot{\tau_1 \ctoplus \tau_2}_\Sigma\; e &\doteq \denot{\tau_1}_\Sigma\; e \choplus \denot{\tau_2}_\Sigma\; e
   % \\\denot{\tau_1 \ctoplus \tau_2}\; e &\doteq \forall x. \denot{e}_x \chimpl \denot{\tau_1}\;x \choplus \denot{\tau_2}\;x
   % \\\denot{\ctpers \tau}\; e &\doteq \chpers (\denot{\tau}\;e)
 \end{align*}\noindent
-Denotation of demonic and angelic types is directly encoded into our logic, where we still use reference operator to make type qualifiers aware of referred variables (i.e., $\Code{FV}(\ort{b}{\phi})$ and $\Code{FV}(\urt{b}{\phi})$). Intuitively, it means that ``if we store result of $e$ at fresh variable $\vnu$, then denotation of type qualifier holds with corresponding approximation modality.'' Function type denotation is also standard: we assume parameter $x$ stores values consistent with parameter type $\tau_x$, then function application $e\;x$ is an inhabitant of return type $\tau$. We do not need substitution, since all variable-reference relations are encoded in the logic formula.
+Denotation of demonic and angelic types is directly encoded into our logic, where we still use reference operator to make type qualifiers aware of referred variables (i.e., $\Code{FV}(\ort{b}{\phi})$ and $\Code{FV}(\urt{b}{\phi})$). Intuitively, it means that ``if we store result of $e$ at fresh variable $\vnu$, then denotation of type qualifier holds with corresponding angelic or demonic modality.'' Function type denotation is also standard: we assume parameter $x$ stores values consistent with parameter type $\tau_x$, then function application $e\;x$ is an inhabitant of return type $\tau$. We do not need substitution, since all variable-reference relations are encoded in the logic formula.
 \end{definition}
 
 \begin{definition}{Type context denotation}
-  We define $\denot{\Gamma}: \Code{BasicTypeContext} \sarr \Code{Formula}$: 
+  We define $\denot{\Gamma}_\Sigma: \Code{Formula}$: 
   \begin{align*}
-    \denot{\emptyset}\;\Sigma &\doteq \{\textbf{1}\}
-    \\\denot{x{:}\tau}\;\Sigma &\doteq \denot{\tau}\;\Sigma\;x
-    \\\denot{\Gamma_1 \ctcomma \Gamma_2}\;\Sigma &\doteq \denot{\Gamma_1}\;\Sigma \chland \denot{\Gamma_2}\;(\Sigma, \eraserf{\Gamma_1})
-    \\\denot{\Gamma_1 \ctstar \Gamma_2}\;\Sigma &\doteq \denot{\Gamma_1}\;\Sigma \chstar \denot{\Gamma_2}\;\Sigma
-    \\\denot{\Gamma_1 \ctoplus \Gamma_2}\;\Sigma &\doteq \denot{\Gamma_1}\;\Sigma \choplus \denot{\Gamma_2}\;\Sigma
+    \denot{\emptyset}_\Sigma &\doteq \chtrue
+    \\\denot{x{:}\tau}_\Sigma &\doteq \denot{\tau}_\Sigma\;x
+    \\\denot{\Gamma_1 \ctcomma \Gamma_2}_\Sigma &\doteq \denot{\Gamma_1}_\Sigma \chland \denot{\Gamma_2}_{(\Sigma, \eraserf{\Gamma_1})}
+    \\\denot{\Gamma_1 \ctstar \Gamma_2}_\Sigma &\doteq \denot{\Gamma_1}_\Sigma \chstar \denot{\Gamma_2}_\Sigma
+    \\\denot{\Gamma_1 \ctoplus \Gamma_2}_\Sigma &\doteq \denot{\Gamma_1}_\Sigma \choplus \denot{\Gamma_2}_\Sigma
   \end{align*}\noindent
 \end{definition}
 
+We will omit the basic type context $\Sigma$ when it is clear from the context.
+
 \begin{example}[Type Denotation] Consider the following type denotation:
   \begin{align*}
-    &\denot{x{:}\urt{\Nat}{\vnu > 0}\ctsarr y{:}\urt{\Nat}{\vnu \geq 0} \ctwand \urt{\Nat}{\vnu > x}}\;\emptyset\;e
-\\=\;& \denot{\urt{\Nat}{\vnu > 0}} \emptyset\;x \chimpl \denot{y{:}\urt{\Nat}{\vnu \geq 0} \ctwand \urt{\Nat}{\vnu > x}}\;(x{:}\Nat)\;(e\;x)
-\\=\;& \denot{\urt{\Nat}{\vnu > 0}} \emptyset\;x \chimpl \denot{\urt{\Nat}{\vnu \geq 0}}\;(x{:}\Nat)\;y \chwand \denot{\urt{\Nat}{\vnu > x}}\;(x{:}\Nat,y{:}\Nat)\;(e\;x\;y)
+    &\denot{x{:}\urt{\Nat}{\vnu > 0}\ctsarr y{:}\urt{\Nat}{\vnu \geq 0} \ctwand \urt{\Nat}{\vnu > x}}\;e
+\\=\;& \denot{\urt{\Nat}{\vnu > 0}}\;x \chimpl \denot{y{:}\urt{\Nat}{\vnu \geq 0} \ctwand \urt{\Nat}{\vnu > x}}\;(e\;x)
+\\=\;& \denot{\urt{\Nat}{\vnu > 0}}\;x \chimpl \denot{\urt{\Nat}{\vnu \geq 0}}\;y \chwand \denot{\urt{\Nat}{\vnu > x}}\;(e\;x\;y)
 \\=\;& (\denot{\mstep{x}{\vnu_1}} \chimpl \demonic \Code{Atom}(\vnu_1 > 0)) \chimpl
 \\&\quad (\denot{\mstep{y}{\vnu_2}} \chimpl \angelic \Code{Atom}(\vnu_2 \geq 0))
   \chwand (\denot{\mstep{e\;x\;y}{\vnu_3}} \chimpl \forallM{x}\angelic \Code{Atom}(\vnu_3 > x))
@@ -434,7 +437,27 @@ This formula is correct, since whatever which number $\vnu_3$ that required to r
 \end{example}
 
 
+\begin{figure}[h!]
+  {\small
+  {\normalsize \begin{flalign*}
+    &\text{\textbf{Semantic subtyping rules}} && \fbox{$\Gamma \vdash \tau \subty \tau$ \quad $\Gamma \ctsubseteq{X} \Gamma$ }
+  \end{flalign*}}
+\mprooftr{48mm}
+{$\forall e. \denot{\Gamma} \models \denot{\tau_1}\;e \chimpl \denot{\tau_2}\;e$}
+{Sub}
+{$\Gamma \vdash \tau_1 <: \tau_2$}
+\quad
+\mprooftr{66mm}
+{$\forall r. r \models \denot{\Gamma_1} \impl \exists r'. \restrictTo{r}{X} = \restrictTo{r'}{X} \land r' \models \denot{\Gamma_2}$ }
+{CtxSub}
+{$\Gamma_1 \ctsubseteq{X} \Gamma_2$}
+	  }
+  \caption{Semantic subtyping relation}
+  \label{fig:semantic-subtyping-relation}
+  \vspace*{-.1in}
+\end{figure}
 
+\paragraph{Semantical subtyping relation} The definition of semantic subtyping relation shown in \autoref{sec:context-typing} shown in \autoref{fig:semantic-subtyping-relation}. The type subtyping reulation are directly encoded into an implication formula in our logic, while the context subtyping relation requires an explicit projection operation $\restrictTo{r}{X} = \restrictTo{r'}{X}$ which indicates the two capabilities are consistent only on the variable set $X$.
 
 \begin{theorem}[Well-formed operator context] Operator context $\Phi$ is well-formed iff for all primitive operators $\primop$ we have:
   {\begin{align*}
@@ -442,11 +465,11 @@ This formula is correct, since whatever which number $\vnu_3$ that required to r
     \end{align*}}\noindent
   \end{theorem}
   
-  \begin{theorem}[Fundamental theorem]$\Gamma \ctvdash e : \tau \text{ implies } \denot{\Gamma} \; \emptyset \chvdash \denot{\tau}\;\eraserf{\Gamma}\;e$
+  \begin{theorem}[Fundamental theorem]$\Gamma \ctvdash e : \tau \text{ implies } \denot{\Gamma}_\emptyset \chvdash \denot{\tau}_{\eraserf{\Gamma}}\;e$
   \end{theorem}
   
   \begin{theorem}[Denotational Soundness]
     \begin{align*}
-      \emptyset \ctvdash e : \tau \text{ implies for any fresh variable $x$, } \{[x\mapsto v] ~|~ \mstep{e}{v}\} \models \denot{\tau}\;\emptyset\; x
+      \emptyset \ctvdash e : \tau \text{ implies for any fresh variable $x$, } \{[x\mapsto v] ~|~ \mstep{e}{v}\} \models \denot{\tau}\; x
     \end{align*}\noindent
   \end{theorem}
