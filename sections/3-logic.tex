@@ -1,16 +1,18 @@
 % !TeX root = ../main.tex
 \section{Metatheory}\label{sec:meta}
 
-In this section, we introduce the contextual capabilities that form a standard Kripke resource algebra. Later on, we define the corresponding context logic, which is a bunched implication based on contextual capabilities.
+In this section, we provide the denotation of types ($\denot{\tau}$) and type context ($\denot{\Gamma}$), as well as the soundness theorem of our type system.
+Building such a metatheory is challenging because it must provide semantics for both demonic and angelic modalities, together with the underlying resource-based interpretation of context.
+We keep the key intuition that the ``capability to make demonic/angelic decisions'' is the resource, and then define a \emph{contextual capability algebra} as a Kripke resource algebra to support the bunched type system. Moreover, we denote our types and type contexts directly into a \emph{context logic} based on bunched implication, where demonic and angelic modalities are first-class operators. This logic is also equipped with the sum operator for sum types, as well as a \emph{reference modality} to handle variable references in dependent refinement types. Finally, the type soundness theorem is encoded as a theorem in the context logic, and we provide a mechanized proof in Rocq.
 
-\subsection{Preliminaries}
+\subsection{Store and Contextual Capabilities}
 
-In a pure functional language, an environment for a term $e$ provides the assignments of free variables in $e$, which can be treated as a partial map from variable domain to value domain.
+As discussed in \autoref{sec:typing}, an environment $\mathcal{E}(e)$ can provide multiple assignments for free variables in $e$, which enable potential demonic or angelic decisions. For example, environment $\zlet{x}{\Code{positive\_gen}()}{\boxed{x + 1}}$ can provide assignments for $x$ for term $x + 1$. Then, this environment can angelically assign $x$ to be $3$ in reachability verification $\vdash x + 1 : \urt{\Nat}{\vnu = 4}$, or demonically assign $x$ with all positive numbers in safety verification $\vdash x + 1 : \ort{\Nat}{\vnu > 0}$. In general, environment can be treated as angelic or demonic since it has the ``capability'' to assign variables with different values. On the other hand, if an environment has a singleton capability, angelic and demonic interpretations collapse into the same interpretation. Following this idea, we define this capability as a non-empty set of stores that provides assignments for variables.
 
-\begin{definition}[Environment]\label{def:environment} Assume the $\Var$ and $\Val$ are the variable and value domains, respectively. An environment $\sigma$ is a partial map from variables to values, i.e., $\Var \rightharpoonup \Val$. We write $[\overline{x_i \mapsto v_i}]$ as a literal environment; we write $\sigma(x)$ for the value of variable $x$ in environment $\sigma$.
-We define the following standard operations on environments:
+\begin{definition}[Store]\label{def:store} Assume $\Var$ and $\Val$ are the variable and value domains, respectively. A store $\sigma$ is a partial map from variables to values, i.e., $\Var \rightharpoonup \Val$. We write $[\overline{x_i \mapsto v_i}]$ as a literal store; we write $\sigma(x)$ for the value of variable $x$ in store $\sigma$.
+We define the following standard operations on stores:
 \begin{itemize}
-  \item \emph{Domain}: We write $\Dom{\sigma}$ for its domain, i.e., the set of variables where the environment is defined.
+  \item \emph{Domain}: We write $\Dom{\sigma}$ for its domain, i.e., the set of variables where the store is defined.
   \item \emph{Compatibility}: Write $\mapCompat{\sigma_1}{\sigma_2}$ when $\sigma_1$ and $\sigma_2$ are
     \emph{compatible}, i.e.\ they agree on the intersection of their domains.
     \[
@@ -18,8 +20,8 @@ We define the following standard operations on environments:
       \doteq
       \forall x \in \Dom{\sigma_1} \cap \Dom{\sigma_2}.\; \sigma_1(x) = \sigma_2(x).
     \]
-  Note that the concatenation of two environments is defined as a map union $\sigma_1 \cup \sigma_2$, which is exchangeable when $\mapCompat{\sigma_1}{\sigma_2}$ holds.
-  \item \emph{Projection}: Fix finite $X \subseteq_{\mathrm{fin}} \Var$ and an environment $\sigma$; we write $\projectTo{\sigma}{X}$ for the projection of $\sigma$ to $\Dom{\sigma} \cap X$, i.e.,
+  Note that the concatenation of two stores is defined as a map union $\sigma_1 \cup \sigma_2$, which is exchangeable when $\mapCompat{\sigma_1}{\sigma_2}$ holds.
+  \item \emph{Projection}: Fix finite $X \subseteq_{\mathrm{fin}} \Var$ and a store $\sigma$; we write $\projectTo{\sigma}{X}$ for the projection of $\sigma$ to $\Dom{\sigma} \cap X$, i.e.,
   \begin{align*}
     \projectTo{\sigma}{X} \doteq \{ [x\mapsto \sigma(x)] \mid x \in \Dom{\sigma} \cap X \}.
   \end{align*}
@@ -27,23 +29,19 @@ We define the following standard operations on environments:
 \end{itemize}
 \end{definition}
 
-The refinement relation $\sqsubseteq$ is important for preserving the semantics of program execution. For example, if a term $e$ can reduce to a value $v$ under environment $\sigma_1$, then it should also be able to reduce to $v$ under any environment $\sigma_2$ where $\sigma_2$ is a refinement of $\sigma_1$.
-
-\subsection{Contextual Capabilities}
-
-As mentioned in \autoref{sec:intro}, a context requires ``capability'' to make angelic or demonic decisions. For example, for a type context ``$x{:}\Unit$'' where $x$ may and must be assigned to a unit value, the angelic and demonic interpretations collapse into the same interpretation. Following this intuition, we define contextual capability as the capability to freely choose from a set of environments.
+The refinement relation $\sqsubseteq$ is important for preserving the semantics of program execution. For example, if a term $e$ can reduce to a value $v$ under store $\sigma_1$, then it should also be able to reduce to $v$ under any store $\sigma_2$ where $\sigma_2$ is a refinement of $\sigma_1$.
 
 \begin{definition}[Contextual capability]\label{def:contextual-capability}
-We define the domain of contextual capability as the power set of environments, i.e., $\mathcal{P}(\Code{Var} \rightharpoonup \Code{Value})$. Moreover, a well-formed contextual capability $r$ should be \emph{non-empty} and \emph{share the same domain}:
+We define the domain of contextual capability as the power set of stores, i.e., $\mathcal{P}(\Code{Var} \rightharpoonup \Code{Value})$. Moreover, a well-formed contextual capability $r$ should be \emph{non-empty} and \emph{share the same domain}:
 \begin{align*}
   \Code{WellFormed}(r) \doteq r \not= \emptyset \text{ and } \forall \sigma\;\sigma' \in r. \Dom{\sigma} = \Dom{\sigma'}
 \end{align*}\noindent
 We write $\Res \doteq \{r ~|~ \Code{WellFormed}(r) \}$ for the domain of all well-formed contextual capabilities.
 In the rest of the paper, we always assume the contextual capability is well-formed.
-This well-formedness also allows us to safely extend the definitions of domain, compatibility, projection, and refinement from environments to contextual capabilities. That is,
+This well-formedness also allows us to safely extend the definitions of domain, compatibility, projection, and refinement from stores to contextual capabilities. That is,
 \begin{itemize}
   \item \emph{Domain}: $\Dom{r} \doteq \Dom{\sigma}$ for arbitrary $\sigma \in r$, since $r$ is non-empty and shares the same domain.
-  \item \emph{Compatibility}: Write $\mapCompat{r_1}{r_2}$ when all environments in $r_1$ are compatible with all environments in $r_2$, i.e.,
+  \item \emph{Compatibility}: Write $\mapCompat{r_1}{r_2}$ when all stores in $r_1$ are compatible with all stores in $r_2$, i.e.,
     \[
       \mapCompat{r_1}{r_2}
       \doteq
@@ -57,19 +55,26 @@ This well-formedness also allows us to safely extend the definitions of domain, 
 \end{itemize}
 \end{definition}
 
-Unlike standard bunched implication and bunched typing, our context types are a refinement (dependent) type system that allows logic qualifiers to refer to bindings in the context. In order to express variable reference, we define a fiber with respect to the projection operation, whose detailed usage will be discussed in \autoref{sec:logic}.
+\begin{example}[Kripke Semantics via Capability]\label{ex-algebraic-semantics} In Kripke semantics, type judgements hold within different worlds, i.e., capabilities.
+We informally interpret capability as denotation of type context, i.e., $r \models \denot{\Gamma}$, then we have the following examples:
+\begin{align*}
+  &r_x \doteq \{[x \mapsto 0],\, [x \mapsto 1]\}
+  \\& r_x \models \denot{x {:} \ort{\Nat}{\vnu < 3}} \quad \judgok \quad r_x \models \denot{x {:} \urt{\Nat}{\vnu < 2}}  \quad \judgok
+\end{align*}\noindent
+where $r_x$ is consistent with the first demonic context since all assignments of $x$ are less than $2$; on the other hand, the second context requires capability to contain $[x\mapsto 1]$ and $[x\mapsto 2]$ to support future angelic decisions. Alternatively, we can informally interpret the denotation of typing judgement $\denot{e: \tau}$ under capability $r$ as ``the result set of $x$ over all stores in capability needs to be consistent with type $\tau$.'' Let $r_x' \doteq \{[x \mapsto 0],\, [x \mapsto 1], [x \mapsto 2]\}$, which means term $x$ can result in set of values $\{0, 1, 2\}$ under this capability. Then, we have
+\begin{align*}
+  r_x \models \denot{x - 1 : \ort{\Nat}{\vnu < 1}} \quad \judgfail \quad r_x \models \denot{x - 1 : \urt{\Nat}{\vnu < 2}}  \quad \judgok
+\end{align*}\noindent
+The first judgement fails since the result set of $x$ is $\{0, 1\}$, which is not less than $1$, while the second judgement holds since it covers all natural numbers less than $2$.
+\end{example}
 
-\begin{definition}[Fibers]\label{def:fibers}
-  For a finite variable set $X \subseteq_{\Code{fin}} \Var$, consider an environment $\sigma \in \projectTo{r}{X}$, which is one result of projection. We write $\fiberOver{r}{\sigma}$ for the corresponding fiber, i.e.,
-  \begin{align*}
-    \fiberOver{r}{\sigma} \doteq \{\, \sigma' \mid \sigma' \in r \text{ and } \projectTo{\sigma'}{\Dom{\sigma}} = \sigma \,\}.
-  \end{align*}\noindent
-  In short, the fiber $\fiberOver{r}{\sigma}$ is a subset of $r$ whose projection to variable set $X$ equals $\sigma$.
-\end{definition}
 
-\subsection{Contextual Capabilities Algebra}
+  
 
-The Contextual Capabilities can be treated as a \emph{resource} that can be composed and decomposed with algebraic operations. In general, contexts can be combined in two ways. One is combining over bound variables, e.g., a type context $x{:}\tau_x$ and a type context $y{:}\tau_y$ can be combined into a type context that contains both $x$ and $y$. On the other hand, contexts can also be combined over control flows; for example, $\Gamma_{\Code{true}}$ and $\Gamma_{\Code{false}}$ are two contexts that align with the two branches of a conditional expression, and then the whole conditional expression can be typed under the combined context. In order to support these two combinations, we define product and sum operations on contextual capabilities.
+
+\subsection{Contextual Capabilities Algebra and Context logic}
+
+Our context logic is a bunched implication logic (BI-logic) based on bunched implication algebra (BI-algebra), which is a partial commutative monoid with a pre-order that satisfies the bifunctoriality property. Moreover, in order to support denotation of sum types $\tau_1 \ctoplus \tau_2$, we also add a sum operation on contextual capabilities.
 
 \begin{definition}[Contextual Capabilities Product]\label{def:contextual-capabilities-product}
   The product of two contextual capabilities $r_1 \times r_2$ is the partial binary operation that produces the pairwise union of two contextual capabilities, i.e.,
@@ -99,8 +104,6 @@ The Contextual Capabilities can be treated as a \emph{resource} that can be comp
 
 Note that these two operations are \emph{partial} binary operations: two resources cannot be multiplied unless they are compatible, and two resources cannot be summed unless they have the same domain.
 
-With the sum and product operations, contextual capabilities form a partial commutative semiring without zero.
-
 \begin{definition}[Contextual Capabilities Algebra]\label{def:contextual-capabilities-algebra}
   The tuple $(\Res,{+},{\times},\mathbf{1})$ forms a \emph{partial commutative semiring without zero} where the carrier set $\Res$ is the domain of all well-formed contextual capabilities, and the unit element $\mathbf{1}$ of product is the singleton capability $\{\emptyset\}$. The following algebraic properties hold:
   \begin{itemize}
@@ -118,7 +121,43 @@ With the sum and product operations, contextual capabilities form a partial comm
   \end{itemize}
 \end{definition}
 
-Following previous works~\cite{BunchedType, ...}, in order to enable Kripke semantics for bunched implication and bunched typing, this semiring needs to be equipped with a partial order for Kripke's Monotonicity, which guarantees the bifunctoriality property. At first glance, the subset relation $\subseteq$ over capabilities is a natural choice for the partial order; however, it cannot work for both angelic and demonic interpretations. If the algebraic semantics of context is based on the subset relation $\subseteq$, it forces the context to do either over- or under-approximation (depending on the direction of $\subseteq$ used in Kripke semantics), instead of being controlled by the demonic or angelic modality over types. Thus, we should use a more neutral relation that does neither over- nor under-approximation, which is exactly the refinement relation $\sqsubseteq$ over capabilities.
+\begin{example}[Capability Disjointness]\label{ex-capability-disjointness} The capability product means these two capabilities are disjoint. Consider the following product capability $r_x \times r_y$:
+\begin{align*}
+  &r_x \doteq \{[x \mapsto 1],\, [x \mapsto 2]\} \quad r_y \doteq \{[y \mapsto 3],\, [y \mapsto 4]\} 
+  \\&r_x \times r_y
+    = \left\{
+      \begin{array}{@{}l@{}}
+        [x \mapsto 1,\, y \mapsto 3],\,
+        [x \mapsto 1,\, y \mapsto 4],\\[\jot]
+        [x \mapsto 2,\, y \mapsto 3],\,
+        [x \mapsto 2,\, y \mapsto 4]
+      \end{array}
+    \right\}.
+\end{align*}\noindent
+As shown in Example~\ref{ex-algebraic-semantics}, we have
+\begin{align*}
+  &r_x \times r_y \models \denot{x : \urt{\Nat}{1 \leq \vnu \leq 2}} \quad \judgok \quad r_x \times r_y \models \denot{y : \urt{\Nat}{3 \leq \vnu \leq 4}} \quad \judgok
+  \\&r_x \times r_y \models \denot{y - x : \urt{\Nat}{1 \leq \vnu \leq 3}} \quad \judgok
+\end{align*}\noindent
+where $y - x$ can cover multiple values since $x$ and $y$ are disjoint. However, consider another capability:
+\begin{align*}
+  &r_{xy} \doteq \{[x \mapsto 1,\, y \mapsto 3],\, [x \mapsto 2,\, y \mapsto 4]\}
+  \\&r_{xy} \models \denot{x : \urt{\Nat}{1 \leq \vnu \leq 2}} \quad \judgok \quad r_{xy} \models \denot{y : \urt{\Nat}{3 \leq \vnu \leq 4}} \quad \judgok
+  \\&r_{xy} \models \denot{y - x : \urt{\Nat}{1 \leq \vnu \leq 3}} \quad \judgfail
+\end{align*}\noindent
+Note that term $y - x$ can only reduce to $2$ under $r_{xy}$, thus the last type judgement does not hold. We can also say $x$ and $y$ are not disjoint in $r_{xy}$, i.e., this capability cannot be represented as a product of two capabilities.
+\end{example}
+
+In order to enable Kripke semantics for bunched implication, this semiring needs to be equipped with a partial order $\leq$ for Kripke's Monotonicity, i.e.,
+\begin{align*}
+  m_1 \leq m_2 \land m_1 \models \denot{e : \tau} \implies m_2 \models \denot{e : \tau}
+\end{align*}\noindent
+where $\denot{e : \tau}$ is the denotation of type judgement (informally). At first glance, the subset relation $\subseteq$ or superset relation $\supseteq$ over capabilities are natural choices for the partial order; however, it cannot work for both angelic and demonic interpretations.
+\begin{align*}
+  &m_1 \leq m_2 \land m_1 \models \denot{x : \ort{\Nat}{\vnu > 0}} \implies m_2 \models \denot{x : \ort{\Nat}{\vnu > 0}} \\
+  &m_1 \leq m_2 \land m_1 \models \denot{x : \urt{\Nat}{\vnu > 0}} \implies m_2 \models \denot{x : \urt{\Nat}{\vnu > 0}}
+\end{align*}\noindent
+As shown above, since angelic and demonic types take underapproximation and overapproximation semantics, the two judgements above cannot hold at the same time whether we define $\leq$ as subset relation or superset relation. The intuition is that Kripke partial order should be neutral, to avoid predefining over- or under-approximation semantics; otherwise we cannot lift angelic and demonic modalities as first-class operators. Thus, our algebra chooses refinement relation $\sqsubseteq$ over capabilities.
 
 \begin{definition}[Bifunctoriality]\label{def:bifunctoriality}
   The refinement relation $\sqsubseteq$ over capabilities satisfies the bifunctoriality property, i.e.,
@@ -128,112 +167,52 @@ Following previous works~\cite{BunchedType, ...}, in order to enable Kripke sema
   \end{align*}
 \end{definition}
 
-Intuitively, the bifunctoriality property means that if two pieces of context have fewer capabilities than others, then their product also has fewer capabilities. As a special case, we always have $r_1 \sqsubseteq r_1 \times r_2$ and $r_2 \sqsubseteq r_1 \times r_2$ when $r_1 \times r_2$ is defined. However, the reverse property does not hold in general. That is, for resources with $r_1 \sqsubseteq r_{12}$ and $r_2 \sqsubseteq r_{12}$, we do not generally expect $r_1 \times r_2 \sqsubseteq r_{12}$.
+\begin{theorem}[BI-algebra]\label{thm:bi-algebra} The semiring $(\Res,{+},{\times},\mathbf{1})$ with partial order $\sqsubseteq$ forms a BI-algebra.
+\end{theorem}
 
-\begin{example}[Bifunctoriality]\label{ex-bifunctoriality}
-Let $r_x \doteq \{\,[x \mapsto 1],\, [x \mapsto 2]\,\}$, so
-$\Dom{r_x} = \{x\}$.
-Let $r_y \doteq \{\,[y \mapsto 3],\, [y \mapsto 4]\,\}$, with $\Dom{r_y} = \{y\}$.
-Then
-\[
-  r_x \times r_y
-  = \left\{
-    \begin{array}{@{}l@{}}
-      [x \mapsto 1,\, y \mapsto 3],\,
-      [x \mapsto 1,\, y \mapsto 4],\\[\jot]
-      [x \mapsto 2,\, y \mapsto 3],\,
-      [x \mapsto 2,\, y \mapsto 4]
-    \end{array}
-  \right\}.
-\]
-It is easy to see that $r_x \sqsubseteq r_x \times r_y$ and $r_y \sqsubseteq r_x \times r_y$.
-Now take
-$r_{xy} \doteq \{\, [x \mapsto 1,\, y \mapsto 3],\, [x \mapsto 2,\, y \mapsto 4]\,\}$.
-We have
-$\projectTo{r_{xy}}{\{x\}} = r_x$ and $\projectTo{r_{xy}}{\{y\}} = r_y$,
-so by the definition of~$\sqsubseteq$,
-$r_x \sqsubseteq r_{xy}$ and $r_y \sqsubseteq r_{xy}$. However, we cannot refine $r_x \times r_y$ to $r_{xy}$, and vice versa. Actually, we have
-\[
-  r_x \times r_y
-  = r_{xy} + \{\, [x \mapsto 1,\, y \mapsto 4],\, [x \mapsto 2,\, y \mapsto 3] \,\},
-\]
-In general, the product is the one that contains more environments among all capabilities that can be refined by the left and right capabilities of the product.
-\end{example}
+% Intuitively, the bifunctoriality property means that if two pieces of context have fewer capabilities than others, then their product also has fewer capabilities. As a special case, we always have $r_1 \sqsubseteq r_1 \times r_2$ and $r_2 \sqsubseteq r_1 \times r_2$ when $r_1 \times r_2$ is defined. However, the reverse property does not hold in general. That is, for resources with $r_1 \sqsubseteq r_{12}$ and $r_2 \sqsubseteq r_{12}$, we do not generally expect $r_1 \times r_2 \sqsubseteq r_{12}$.
 
-\paragraph{Disjointness} The bifunctoriality property of the product operation is the core algebraic semantics that helps us distinguish context dependency. For capability $r_x \times r_y$ in the example above, regardless of which assignment we choose for variable $x$, the capability for variable $y$ is not interfered with. For example, even if a context chooses $x \mapsto 1$, $y$ still has the capability to be assigned to $3$ or $4$.
-On the other hand, although capability $r_{xy}$ can be refined by both $r_x$ and $r_y$, it does not have this disjointness property. For example, if a context chooses $x \mapsto 1$, it actually narrows down the choice to a fixed whole environment $[x \mapsto 1,\, y \mapsto 3]$, which makes $y$ lose the capability to be assigned to $4$.
-
-% \paragraph{Partial order, addition, and multiplication} We always have
-% \begin{align*}
-%   \forall r_1\;r_2 \in \Res. r_1 \sqsubseteq r_1 \times r_2 \quad (\text{when } r_1 \times r_2 \text{ is defined.})
-% \end{align*}
-% that is because we always have $\projectTo{r_1 \times r_2}{\Dom{r_1}} = r_1$. However, the similar property does not hold for addition: when $r_1 + r_2$ is defined we do \emph{not}
-% generally expect the usual monotonicity inequality
-% $r_1 \sqsubseteq r_1 + r_2$.
-% This is unlike incorrectness logic~\cite{OHP19} and outcome
-% logic~\cite{ZDS23,Zil25TOPLAS}, where branching is tightly coupled to
-% the consequence relation.
-% Here, $+$ simply adjoins more substitutions---i.e.\ it records strictly
-% more alternatives---and whether that strengthens or weakens a
-% judgment depends on the approximation mode.
-% Under an overapproximate interpretation, extra alternatives relax universal
-% guarantees (more ways a safety property can fail); under an
-% underapproximate interpretation, they add witnesses for existential or
-% reachability claims.
-% Because the two modes are dual and our modalities can mark formulas
-% with either interpretation, a logic that uniformly enforces Kripke monotonicity
-% should not identify $\sqsubseteq$ with enrichment by~$+$.
-% By contrast, expanding or shrinking the set of tracked variables is
-% orthogonal to over- versus under-approximation: for example, the same
-% resource
-% $\{\,[x \mapsto 0],\, [x \mapsto 1],\, [x \mapsto 2]\,\}$
-% is compatible with an overapproximate interpretation that $x$ may range
-% over~$[0,5]$ and, separately, with an underapproximate interpretation that
-% witnesses for~$x$ lie in~$[1,2]$.
-% Extending every substitution with arbitrary bindings for a fresh
-% variable~$y$ disturbs neither kind of judgment.
+% \begin{example}[Bifunctoriality]\label{ex-bifunctoriality}
+% Let $r_x \doteq \{\,[x \mapsto 1],\, [x \mapsto 2]\,\}$, so
+% $\Dom{r_x} = \{x\}$.
+% Let $r_y \doteq \{\,[y \mapsto 3],\, [y \mapsto 4]\,\}$, with $\Dom{r_y} = \{y\}$.
+% Then
+% \[
+%   r_x \times r_y
+%   = \left\{
+%     \begin{array}{@{}l@{}}
+%       [x \mapsto 1,\, y \mapsto 3],\,
+%       [x \mapsto 1,\, y \mapsto 4],\\[\jot]
+%       [x \mapsto 2,\, y \mapsto 3],\,
+%       [x \mapsto 2,\, y \mapsto 4]
+%     \end{array}
+%   \right\}.
+% \]
+% It is easy to see that $r_x \sqsubseteq r_x \times r_y$ and $r_y \sqsubseteq r_x \times r_y$.
+% Now take
+% $r_{xy} \doteq \{\, [x \mapsto 1,\, y \mapsto 3],\, [x \mapsto 2,\, y \mapsto 4]\,\}$.
+% We have
+% $\projectTo{r_{xy}}{\{x\}} = r_x$ and $\projectTo{r_{xy}}{\{y\}} = r_y$,
+% so by the definition of~$\sqsubseteq$,
+% $r_x \sqsubseteq r_{xy}$ and $r_y \sqsubseteq r_{xy}$. However, we cannot refine $r_x \times r_y$ to $r_{xy}$, and vice versa. Actually, we have
+% \[
+%   r_x \times r_y
+%   = r_{xy} + \{\, [x \mapsto 1,\, y \mapsto 4],\, [x \mapsto 2,\, y \mapsto 3] \,\},
+% \]
+% In general, the product is the one that contains more stores among all capabilities that can be refined by the left and right capabilities of the product.
+% \end{example}
 
 \subsection{Context Logic}
 
-With the help of contextual capabilities algebra, we first define a logic following standard bunched implication semantics that can help distinguish dependent and independent context. We later extend this logic with explicit demonic and angelic modalities.
-
-\paragraph{Atomic Propositions} Our context logic is parameterized by a set of atomic propositions $\mathcal{A}$, where we assume there is a corresponding denotation function $\denot{\mathcal{A}}$ that maps atomic proposition $\mathcal{A}$ to a set of capabilities that is closed under the refinement relation $\sqsubseteq$.
-\begin{align*}
-  \forall r_1\; r_2. r_1 \in \denot{\mathcal{A}} \land r_1 \sqsubseteq r_2 \implies r_2 \in \denot{\mathcal{A}}
-\end{align*}
-We highlight that the choice of atomic propositions is arbitrary. However, in order to provide examples and support further definitions of context types, we consider a fixed atomic proposition domain derived from resource-unaware pure logical formulas.
-
-\begin{definition}[Pure Qualifier] Assume $\phi$ is a pure logical formula with respect to environments, i.e., $\sigma(\phi)$ can be either true or false. Then, we define the capability denotation of $\phi$ as follows:
-\begin{align*}
-  r \in \denot{\phi} \iff \projectTo{r}{\Code{FV}(\phi)} = \{ \sigma ~|~ \Dom{\sigma} = \Code{FV}(\phi) \land \sigma(\phi) \text{ is true} \} 
-\end{align*}
-Intuitively, a capability $r$ is in the denotation of $\phi$ iff it contains all environments that make $\phi$ true, with no missing cases and no junk.
-\end{definition}
-
-\begin{example}[Pure Qualifier]
-  We have the following facts:
+\begin{definition}[Context Logic]\label{def:context-logic} The syntax of context logic is defined as follows:
   \begin{align*}
-    \{ [x\mapsto 1]; [x\mapsto 2] \} &\in \denot{1 \leq x \leq 2}
-    \\\{ [x\mapsto 1; y \mapsto 3]; [x\mapsto 2; y \mapsto 4] \} &\in \denot{1 \leq x \leq 2}
+    P, Q &::= \chtrue ~|~ \chfalse ~|~ P \chland P ~|~ P \chlor P ~|~ P \chimpl P ~|~ P \chstar P ~|~ P \chwand P ~|~ \forall x. P ~|~ \exists x. P ~|~ 
+    \\& \qquad \Code{Atom}(\phi) ~|~ \demonic P ~|~ \angelic P ~|~ P \choplus P ~|~ \forallM{x} P
   \end{align*}\noindent
-  Here we require the capability to contain both environments that make $x$ be $1$ and $2$. Although the capability is allowed to provide information about other variables like $y$, the capability cannot lose any case or include extra cases:
-  \begin{align*}
-    \{ [x\mapsto 1] \} &\not\in \denot{1 \leq x \leq 2}
-    \\\{ [x\mapsto 1]; [x\mapsto 2]; [x\mapsto 3] \} &\not\in \denot{1 \leq x \leq 2}
-  \end{align*}\noindent
-  Intuitively, this enables a neutral description of $\phi$ that involves neither over- nor under-approximation.
-\end{example}
-
-
-\begin{definition}[Basic context logic]\label{def:basic-context-logic} For atomic propositions $\mathcal{A}$, we define the syntax of basic context logic as follows:
-  \begin{align*}
-    P, Q &::= \chtrue ~|~ \chfalse ~|~ \mathcal{A} ~|~ P \chland P ~|~ P \chlor P ~|~ P \chimpl P ~|~ P \chstar P ~|~ P \chwand P ~|~ P \choplus P ~|~ \forall x. P ~|~ \exists x. P
-  \end{align*}
 The forcing semantics of basic context logic is defined as follows:
 \begin{itemize}
 \item $r \models \chtrue$ always;
 \item $r \models \chfalse$ never;
-\item $r \models \mathcal{A}$ iff $r \in \denot{\mathcal{A}}$;
 \item $r \models P \chland Q$ iff $r \models P$ and $r \models Q$;
 \item $r \models P \chlor Q$ iff $r \models P$ or $r \models Q$;
 \item $r \models P \chimpl Q$ iff for all $r'$, if $r \sqsubseteq r'$ and $r' \models P$ then $r' \models Q$;
@@ -241,48 +220,63 @@ The forcing semantics of basic context logic is defined as follows:
   $r_1 \models P$ and $r_2 \models Q$.
 \item $r \models P \chwand Q$ iff $\forall r'.\; \mapCompat{r'}{r}$ and $r' \models P$ implies
   $r' \times r \models Q$.
-\item $r \models P \choplus Q$ iff $\exists r_1\;r_2.\; r_1 + r_2 \sqsubseteq r$ and
-  $r_1 \models P$ and $r_2 \models Q$.
 \item $r \models \forall x.P$ iff $x\notin \Dom{r}$ and $\forall r'. x\in \Dom{r'} \text{ and }r \sqsubseteq r' \text{ implies } r' \models P$.
 \item $r \models \exists x.P$ iff $x\notin \Dom{r}$ and $\exists r'. x\in \Dom{r'} \text{ and }r \sqsubseteq r' \text{ and } r' \models P$.
+\item $r \models \Code{Atom}(\phi)$ iff $\projectTo{r}{\Code{FV}(\phi)} = \{\sigma ~|~ \Dom{\sigma} = \Code{FV}(\phi) \land \sigma(\phi) \text{ is true} \}$;
+\item $r \models \demonic P$ iff $\exists r'.\; r \subseteq r'$ and
+$r' \models P$;
+\item $r \models \angelic P$ iff $\exists r'.\; r' \subseteq r$ and
+$r' \models P$.
+\item $r \models P \choplus Q$ iff $\exists r_1\;r_2.\; r_1 + r_2 \sqsubseteq r$ and
+  $r_1 \models P$ and $r_2 \models Q$.
+\item $r \models \forallM{x}P$ iff $\forall [x\mapsto v_x] \in \projectTo{r}{\{x\}}. \fiberOver{r}{[x\mapsto v_x]} \models P[x\mapsto v_x]$;
 \end{itemize}
 We still write $p \models q$ iff for all $r \in \Res$, $r \models p$ implies $r \models q$.
 \end{definition}
 
-The definition of basic context logic follows standard bunched implication semantics. The additive conjunction ($\chland$) and implication ($\chimpl$) are defined normally, while the multiplicative conjunction ($\chstar$) and implication ($\chwand$) require explicit resource product. The $P \choplus Q$ operation is defined as the sum operation on capabilities, which can be interpreted as ``if the capability is divided into two parts, one part satisfies $P$ and the other part satisfies $Q$.'' The universal and existential quantifiers introduce a fresh variable $x$ that is not in the domain of the capability.
+The context logic is a bunched implication logic based on our contextual capabilities algebra. Most logic operators are standard; the rest of this subsection focuses on atomic proposition ($\Code{Atom}$), demonic ($\;\demonic$) and angelic ($\;\angelic$) modalities, sum operator ($\choplus$), as well as reference modality ($\forallM{x}$) that helps express semantics of dependent refinement type system.
 
-\begin{example}[Basic context logic]\label{ex-basic-context-logic} Consider the capability $r_{xy} \doteq \{[x\mapsto1; y\mapsto3], [x\mapsto2; y\mapsto4]\}$ in Example~\ref{ex-bifunctoriality}, we have:
-  \begin{align*}
-    &r_{xy} \sqsupseteq \{[x\mapsto1], [x\mapsto2]\} \models (1 \leq x \leq 2)
-    && &r_{xy} \sqsupseteq \{[y\mapsto3], [y\mapsto4]\} \models (3 \leq y \leq 4)
-    \\ &r_{xy} \models (1 \leq x \leq 2) \chland (3 \leq y \leq 4)
-    && &r_{xy} \not\models (1 \leq x \leq 2) \chstar (3 \leq y \leq 4)
-  \end{align*}
-The formula $(1 \leq x \leq 2) \chstar (3 \leq y \leq 4)$ cannot hold under resource $r_{xy}$ since the capabilities for $x$ and $y$ are not disjoint, i.e., we cannot decompose $r_{xy}$ as a valid product that makes $(1 \leq x \leq 2)$ and $(3 \leq y \leq 4)$ hold under two capabilities within the product.
-\end{example}
+\paragraph{Atomic Propositions} The atomic proposition $\Code{Atom}(\phi)$ in our logic is lifted from a standard proposition $\phi$ (e.g., the type qualifier defined in \autoref{sec:typing}). For any proposition $\phi$ that is closed under a store, we lift it into a resource that \emph{exactly} contains all stores that satisfy $\phi$. As mentioned before, our logic should be neutral (i.e., not overapproximation or underapproximation) to support demonic and angelic modalities as first-class citizens.
 
 \paragraph{Demonic and Angelic Modality} In order to enable arbitrary combinations of safety and reachability reasoning, we introduce demonic modality $\demonic$ and angelic modality $\angelic$ as operators in our context logic. Similar to previous works~\cite{OHP19}, the demonic modality takes an overapproximation of the capability (upper bound), while the angelic modality takes an underapproximation of the capability (lower bound).
 
-\begin{definition}[Approximation Modality]\label{def:demonic-and-angelic-modality} We extend the basic logic with two modalities: $P ::= \demonic P \mid \angelic P \mid ...$, whose forcing semantics are defined as follows:
-  \begin{itemize}
-    \item $r \models \demonic P$ iff $\exists r'.\; r \subseteq r'$ and
-      $r' \models P$;
-    \item $r \models \angelic P$ iff $\exists r'.\; r' \subseteq r$ and
-      $r' \models P$.
-    \end{itemize}
-\end{definition}
-
-\begin{example}[Safety and Reachability Verification] We still consider capability $r_{xy}$ in Example~\ref{ex-basic-context-logic}; we have:
+\begin{example}[Approximation modality]
+  We have the following facts:
   \begin{align*}
-    &r_{xy} \models (1 \leq x \leq 2)
-    && r_{xy} \not\models \demonic (x = 1)
-    && r_{xy} \models \demonic (0 \leq x \leq 4)
-    \\&r_{xy} \models (1 \leq x \leq 2)
-    && r_{xy} \models \angelic (x = 1)
-    && r_{xy} \not\models \angelic (0 \leq x \leq 4)
-  \end{align*}
-In the first line, $r_{xy}$ is allowed to satisfy qualifiers that are overapproximations of the values it can actually reach. This is safety verification: the assertion $\demonic (x = 1)$ fails since a demonic context with capability $r_{xy}$ can adversarially assign $x$ to be $2$, which is unsafe. On the other hand, assertion $\angelic (x = 1)$ holds since there exists an environment in $r_{xy}$ that makes $x = 1$ hold; assertion $\angelic (0 \leq x \leq 4)$ fails since $x = 0$ is unreachable from $r_{xy}$.
+    &\{ [x\mapsto 1]; [x\mapsto 2] \} \models \Code{Atom}(1 \leq x \leq 2)\judgok
+    &\{ [x\mapsto 1; y \mapsto 3]; [x\mapsto 2; y \mapsto 4] \} \in \Code{Atom}(1 \leq x \leq 2)\judgok
+  \end{align*}\noindent
+  Here we require the capability exactly has stores that make $x$ be $1$ and $2$. Although the capability is allowed to provide information about other variables like $y$, the capability cannot lose any case or include extra cases:
+  \begin{align*}
+    &\{ [x\mapsto 1] \} \models \Code{Atom}(1 \leq x \leq 2)\judgfail
+   &\{ [x\mapsto 1]; [x\mapsto 2]; [x\mapsto 3] \} \models \Code{Atom}(1 \leq x \leq 2)\judgfail
+  \end{align*}\noindent
+  On the other hand, the demonic and angelic modality can enable the approximation.
+  \begin{align*}
+    &\{ [x\mapsto 1] \} \models \demonic \Code{Atom}(1 \leq x \leq 2)\judgok
+   &\{ [x\mapsto 1]; [x\mapsto 2]; [x\mapsto 3] \} \models \angelic \Code{Atom}(1 \leq x \leq 2)\judgok
+  \end{align*}\noindent
+  where these two formulas are the denotation of types $\ort{\Nat}{1 \leq x \leq 2}$ and $\urt{\Nat}{1 \leq x \leq 2}$.
+  We also have the following facts for the two capabilities in Example~\ref{ex-capability-disjointness}: 
+  \begin{align*}
+    &r_x \times r_y \models (\angelic \Code{Atom}(1 \leq x \leq 2)) \chstar (\angelic \Code{Atom}(3 \leq y \leq 4))  \quad \judgok
+   \\&r_{xy} \models (\angelic \Code{Atom}(1 \leq x \leq 2)) \chland (\angelic \Code{Atom}(3 \leq y \leq 4))  \quad \judgok
+  \end{align*}\noindent 
+  The $r_x \times r_y$ can model the second formula; however, $r_{xy}$ cannot model the first formula that requires disjointness.
 \end{example}
+
+
+% \begin{example}[Safety and Reachability Verification] We still consider capability $r_{xy}$ in Example~\ref{ex-basic-context-logic}; we have:
+%   \begin{align*}
+%     &r_{xy} \models (1 \leq x \leq 2)
+%     && r_{xy} \not\models \demonic (x = 1)
+%     && r_{xy} \models \demonic (0 \leq x \leq 4)
+%     \\&r_{xy} \models (1 \leq x \leq 2)
+%     && r_{xy} \models \angelic (x = 1)
+%     && r_{xy} \not\models \angelic (0 \leq x \leq 4)
+%   \end{align*}
+% In the first line, $r_{xy}$ is allowed to satisfy qualifiers that are overapproximations of the values it can actually reach. This is safety verification: the assertion $\demonic (x = 1)$ fails since a demonic context with capability $r_{xy}$ can adversarially assign $x$ to be $2$, which is unsafe. On the other hand, assertion $\angelic (x = 1)$ holds since there exists an store in $r_{xy}$ that makes $x = 1$ hold; assertion $\angelic (0 \leq x \leq 4)$ fails since $x = 0$ is unreachable from $r_{xy}$.
+% \end{example}
 
 % Reader may be curious about why standard refinement type system doesn't consider the disjointness over context peices. In fact, the $P \chland Q$ and $P \chstar Q$ is collapsed into the same meaning when both $P$ and $Q$ are demonic formula. For example
 % \begin{align*}
@@ -291,19 +285,40 @@ In the first line, $r_{xy}$ is allowed to satisfy qualifiers that are overapprox
 % \end{align*}\noindent
 % Actually, the demonic modalit takes overapproximation semantics, which leads 
 
-\paragraph{Variable dependency} Although a neutral pure qualifier allows us to lift the demonic (overapproximation) and angelic (underapproximation) interpretations of atomic predicates as first-class modalities in logic operators, it creates additional difficulty in expressing variable dependency. Consider a program $\zlet{y}{x + 1}{...}$ where $y$ always has assignment $x + 1$. If we directly encode this relation as a logical formula, we have:
+\paragraph{Sum operator} The $P \choplus Q$ operation is defined as the sum operation on capabilities, which can be interpreted as ``if the capability is divided into two parts, one part satisfies $P$ and the other part satisfies $Q$.'' 
+
+\begin{example}[Sum operator] The examples in \autoref{sec:typing} allow us to divide current type context $x{:}\urt{\Nat}{\top}$ to fit condition expression $x == 0$ of the program, which requires:
 \begin{align*}
-  r \in \denot{y = x + 1} \iff \projectTo{r}{\{x, y\}} = \{ [x \mapsto 0; y \mapsto 1], [x \mapsto 1; y \mapsto 2], ... \}
+  &\{[x\mapsto 0], [x\mapsto 1], ... \} = \{[x\mapsto 0]\} + \{[x\mapsto 1], ... \}
+  \\&\{[x\mapsto 0]\} \models \angelic \Code{Atom}(x = 0) \judgok
+  \\&\underline{\{[x\mapsto 1], ... \} \models \angelic \Code{Atom}(x > 0) \judgok}
+  \\&\{[x\mapsto 0], [x\mapsto 1], ... \} \models \angelic \Code{Atom}(x = 0) \choplus \angelic \Code{Atom}(x > 0) \judgok
 \end{align*}\noindent
-The denotation of this pure qualifier is not overapproximated; thus, it requires capability $r$ to contain the case where $x$ is an arbitrary natural number. Then, the following fact does not hold:
+\end{example}
+
+\paragraph{Variable dependency} Although a neutral atomic proposition allows us to lift demonic and angelic modalities as first-class citizens, it creates additional difficulty in expressing variable dependency. Consider a program $\zlet{y}{x + 1}{...}$ where $y$ always has assignment $x + 1$. If we directly encode this relation as a logical formula, we have:
 \begin{align*}
-  (1 \leq x \leq 2) \chland (y = x + 1) \not\equiv (1 \leq x \leq 2 \land y = x + 1) 
+  r \models \Code{Atom}(y = x + 1)  \iff \projectTo{r}{\{x, y\}} = \{ [x \mapsto 0; y \mapsto 1], [x \mapsto 1; y \mapsto 2], ... \}
 \end{align*}\noindent
-Note that the left formula means ``$x$ must be $1$ or $2$ and $y$ must be $x + 1$,'' but it also requires $x$ to reach $0$ since $[x \mapsto 0; y \mapsto 1]$ should be an environment required by pure qualifier $y = x + 1$. In short, the neutral interpretation means that $y = x + 1$ cannot capture the constraint about $x$ from other conjunctive clauses. Adding an explicit demonic modality can simulate the behavior as expected, i.e.,
+Since $\Code{Atom}$ has exact semantics, capability $r$ must contain the case where $x$ is any natural number. Then, the following fact does not hold:
+\begin{align*}
+  \Code{Atom}(1 \leq x \leq 2) \chland \Code{Atom}(y = x + 1) &\not\equiv \Code{Atom}(1 \leq x \leq 2 \land y = x + 1) 
+\end{align*}\noindent
+Actually, the left formula is equivalent to $\chfalse$, since $\Code{Atom}(1 \leq x \leq 2)$ requires ``$x$ must be $1$ or $2$'' while $\Code{Atom}(y = x + 1)$ requires $x$ to range over all natural numbers.
+
+In short, the neutral interpretation of atomic predicate means that $\Code{Atom}(y = x + 1)$ cannot capture the constraint about $x$ from other conjunctive clauses. Adding an explicit demonic modality can simulate the behavior as expected, i.e.,
 \begin{align*}
   \demonic (1 \leq x \leq 2) \chland \demonic (y = x + 1) \equiv \demonic (1 \leq x \leq 2 \land y = x + 1) 
 \end{align*}\noindent
 However, it does not work for angelic modality. Intuitively, we should tell pure qualifier $y = x + 1$ that $x$ should depend on the actual capability of $x$ (e.g., $x$ is $1$ or $2$), which can be defined by an explicit operator in our logic.
+
+\begin{definition}[Fibers]\label{def:fibers}
+  For a finite variable set $X \subseteq_{\Code{fin}} \Var$, consider a store $\sigma \in \projectTo{r}{X}$, which is one result of projection. We write $\fiberOver{r}{\sigma}$ for the corresponding fiber, i.e.,
+  \begin{align*}
+    \fiberOver{r}{\sigma} \doteq \{\, \sigma' \mid \sigma' \in r \text{ and } \projectTo{\sigma'}{\Dom{\sigma}} = \sigma \,\}.
+  \end{align*}\noindent
+  In short, the fiber $\fiberOver{r}{\sigma}$ is a subset of $r$ whose projection to variable set $X$ equals $\sigma$.
+\end{definition}
 
 \begin{definition}[Reference Operator]\label{def:context-logic-reference-operator} We define a reference operator $\forallM{x}{P}$, which means $x$ is a referred variable on the current capability, i.e.,
   \begin{itemize}
@@ -315,80 +330,123 @@ The notation $\forallM{\overline{x_i}} P$ is shorthand for
 
 The intuition of reference operator $\forallM{x}{P}$ is quite simple: we first select all allowed assignments of $x$ in the current capability (i.e., $v_x$), and then check $P$ under the corresponding fiber. Importantly, we substitute variable $x$ with concrete assignment $v_x$ in logical formula $P$ so that pure qualifiers (e.g., from $y = x + 1$ to $y = v_x + 1$) do not need to consider all possible assignments of $x$.
 
-\begin{example}[Variable Reference] With the help of the reference operator, we can express variable dependency across clauses with arbitrary approximation modality. Consider the following logic formula, which is an angelic formula with variable reference:
+\begin{example}[Variable Reference] With the help of the reference operator, we can express variable dependency across clauses with arbitrary approximation modality. Consider the following logic formula, which is the type denotation of an angelic type with a referred variable $x$:
 \begin{align*}
-  \forallM{x} \angelic (0 \leq y < x) 
+  \denot{y{:}\urt{\Nat}{0 \leq \vnu < x}} = \forallM{x} \angelic (0 \leq y < x)
 \end{align*}\noindent
-where variable $x$ is a referred variable and $y$ needs to reach all values in the range $[0, x)$. The following three capabilities can model the formula:
+It means that the variable $y$ must reach all values in the range $[0, x)$ whatever $x$ is, then we have:
   \begin{align*}
-    r_1 \doteq &\{[x \mapsto 1; y \mapsto 0]\}\\
-    r_2 \doteq &\{[x \mapsto 2; y \mapsto 0]; [x \mapsto 2; y \mapsto 1] \}\\
-    r_3 \doteq &\{[x \mapsto 3; y \mapsto 0]; [x \mapsto 3; y \mapsto 1]; [x \mapsto 3; y \mapsto 2]; \}
+    &r_1 \doteq \{[x \mapsto 1; y \mapsto 0]\} \quad r_2 \doteq \{[x \mapsto 2; y \mapsto 0]; [x \mapsto 2; y \mapsto 1] \}\\
+    &r_1 \models \forallM{x} \angelic (0 \leq y < x) \judgok \quad r_1 \models \forallM{x} \angelic (0 \leq y < x)\judgok   \quad r_1 + r_2 \models \forallM{x} \angelic (0 \leq y < x)  \judgok 
   \end{align*}
-Moreover, any sum of these capabilities (e.g., $r_1 + r_2 + r_3$) can also model this formula. Furthermore, the following formula
+Furthermore, we have
 \begin{align*}
+  \denot{x{:}\urt{\Nat}{1 \leq \vnu \leq 2} \ctcomma y{:}\urt{\Nat}{0 \leq \vnu < x}} =
   \angelic (1 \leq x \leq 2) \chland \forallM{x} \angelic (0 \leq y < x) 
 \end{align*}\noindent
-is a logical representation of dependent type context $x{:}\urt{\Nat}{1 \leq x \leq 2} \ctcomma y{:}\urt{\Nat}{0 \leq y < x}$ where both $x$ and $y$ have angelic interpretation while $y$ is dependent on $x$. Resources $r_1 + r_2$ and $r_1 + r_2 + r_3$ can model this formula.
+where both $x$ and $y$ have angelic interpretation while $y$ is dependent on $x$. Note that in dependent type system, $\Gamma_1 \ctcomma \Gamma_2$ is not exchangeable since only $\Gamma_2$ can refer to bindings in $\Gamma_1$; however, logical conjunction $\chland$ does not have this restriction. This dependency in refinement type system is encoded into reference operator $\forallM{x}$, which makes $\forallM{x} \angelic (0 \leq y < x) \chland \angelic (1 \leq x \leq 2)$ also a valid denotation.
 \end{example}
 
-\begin{example}[Simulating Hoare-logic and Incorrectness-logic] With the help of demonic and angelic modalities, we can simulate Hoare-logic-style safety verification and Incorrectness-style reachability verification~\cite{OHP19}. Consider a command $\Code{y := x + 1}$ that reads the value of $\Code{x}$ and assigns $\Code{y}$ as $\Code{x} + 1$, which can be expressed as a logical formula $\forallM{x} (y = x + 1)$. Then a Hoare triple $\{x > 0\}\;\Code{y := x + 1}\;\{y > 0\}$ says ``if $x$ is greater than $0$, then after executing $\Code{y := x + 1}$, $y$ is greater than $0$'' and can be expressed as:
-  \begin{align*}
-    \demonic (x > 0) \models \forallM{x} (y = x + 1) \chimpl \demonic (y > 0)
-  \end{align*}\noindent
-where the semantics of the command is encoded as a precise formula, while pre- and post-conditions are encoded as demonic formulas.
-On the other hand, an Incorrectness triple $[x > 0]\;\Code{y := x + 1}\;[y > 2]$ says ``for all $y$ that is greater than $2$, there exists an $x$ that is greater than $0$ and $x + 1$ can reach such $y$'' can be expressed as:
-  \begin{align*}
-    \angelic (x > 0) \models \forallM{x} (y = x + 1) \chimpl \angelic (y > 2)
-  \end{align*}\noindent
-\end{example}
+% \begin{example}[Simulating Hoare-logic and Incorrectness-logic] With the help of demonic and angelic modalities, we can simulate Hoare-logic-style safety verification and Incorrectness-style reachability verification~\cite{OHP19}. Consider a command $\Code{y := x + 1}$ that reads the value of $\Code{x}$ and assigns $\Code{y}$ as $\Code{x} + 1$, which can be expressed as a logical formula $\forallM{x} (y = x + 1)$. Then a Hoare triple $\{x > 0\}\;\Code{y := x + 1}\;\{y > 0\}$ says ``if $x$ is greater than $0$, then after executing $\Code{y := x + 1}$, $y$ is greater than $0$'' and can be expressed as:
+%   \begin{align*}
+%     \demonic (x > 0) \models \forallM{x} (y = x + 1) \chimpl \demonic (y > 0)
+%   \end{align*}\noindent
+% where the semantics of the command is encoded as a precise formula, while pre- and post-conditions are encoded as demonic formulas.
+% On the other hand, an Incorrectness triple $[x > 0]\;\Code{y := x + 1}\;[y > 2]$ says ``for all $y$ that is greater than $2$, there exists an $x$ that is greater than $0$ and $x + 1$ can reach such $y$'' can be expressed as:
+%   \begin{align*}
+%     \angelic (x > 0) \models \forallM{x} (y = x + 1) \chimpl \angelic (y > 2)
+%   \end{align*}\noindent
+% \end{example}
 
 \begin{theorem}[Kripke's Monotonicity] 
   \begin{align*}
-    r \sqsubseteq r' \text{ implies } r \models P \text{ implies } r' \models P
+    r \sqsubseteq r' \text{ and } r \models P \text{ implies } r' \models P
   \end{align*}\noindent
 \end{theorem}
 
-\subsection{Denotational semantics}
+\subsection{Type Denotation}
 
-\begin{definition}[Totality under a context resource]\label{def:total-under-resource}
-For $r \in \Res$ and $e$ with $\FV(e) \subseteq \Dom{r}$, lift $\Code{Total}(e)$ to context logic by:
-\[
-  r \models \denot{\Code{Total}(e) \land \eraserf{\Gamma}\basicvdash e : \eraserf{\tau} } \;\iff\;
-  \forall \sigma \in r.\; \exists v.\; \mstep{\sigma(e)}{v},
-\]
+Following the intuition introduced in the previous subsection, we provide a formal definition of type denotation. We define $\denot{\tau}: \Code{BasicTypeContext} \sarr \Code{Term} \sarr \Code{Formula}$, where $r \models \denot{\tau}\;\Sigma\;e$ means that $e$ is an inhabitant of type $\tau$ under capability $r$. Like other refinement type systems (e.g., Liquid Types), we also require terms to be total (no divergence) and well-typed in basic type system $\Sigma$. All of these side conditions are encoded in our logic:
+\begin{align*}
+  P_{\Code{guard}} \doteq \forallM{\Dom{\Sigma}} \Code{Atom}(\Code{Total}(e) \land \Sigma \basicvdash e : \eraserf{\tau} \land \Sigma \basicvdash \tau)
+\end{align*}\noindent
+Note that we put variable reference $\forallM{\Dom{\Sigma}}$ before the atomic proposition; otherwise, $\Code{Atom}(x{:}\Nat \basicvdash x : \Nat)$ will require capability to contain all possible assignments of $x$ (i.e., all natural numbers), which makes this basic type judgement hold. In the following definition of type denotation, all cases contain this guard, which is omitted for brevity.
+
+\begin{definition}[Term Denotation] The denotation of term $e$ is based on its operational semantics, where a fresh variable $x$ stores all values that $e$ can reduce to under all stores in current capability.
+  \begin{align*}
+    \denot{\mstep{e}{x}}_\Sigma &\doteq \forallM{\Dom{\Sigma}} \Code{Atom}(\mstep{e}{x})
+  \end{align*}\noindent
+This denotation has the same reason to have a prefix reference modality. It is important to ensure the referred variable cannot contain fresh variable $x$, especially for a nondeterministic language where $e$ may reduce to multiple values. For example, for a boolean generator function $\Code{boolGen()}$ under empty context, a wrong denotation would be:
+\begin{align*}
+  \forallM{x} \Code{Atom}(\mstep{\Code{boolGen()}}{x})
+\end{align*}\noindent
+This denotation requires a resource that is single-valued at $x$ to model $\Code{Atom}(\mstep{\Code{boolGen()}}{x})$, which has exact semantics, and this is impossible.
 \end{definition}
 
+\begin{definition}[Type Denotation] The type denotation is defined as follows:
 \begin{align*}
-  \denot{e}_x &\doteq \forallM{\Code{FV}(e)} \Code{Atom}(\mstep{e}{x})
-  \\\denot{\ort{b}{\phi}}\;e &\doteq \denot{e}_\vnu \chimpl \forallM{\Code{FV}(\ort{b}{\phi})}\,\subExt \phi \quad \text{($\vnu$ is a fresh variable)}
-  \\\denot{\urt{b}{\phi}}\;e &\doteq \denot{e}_\vnu \chimpl \forallM{\Code{FV}(\urt{b}{\phi})}\,\supExt \phi \quad \text{($\vnu$ is a fresh variable)}
-  \\\denot{x{:}\tau_x \ctsarr \tau}\; e &\doteq \denot{\tau_x}\;x \chimpl \denot{\tau}\;(e\;x) \quad \text{($x$ is a fresh variable)}
-  \\\denot{x{:}\tau_x \ctwand \tau}\; x &\doteq \denot{\tau_x}\;x \chwand \denot{\tau}\;(e\;x) \quad \text{($x$ is a fresh variable)}
-  \\\denot{\tau_1 \ctoplus \tau_2}\; e &\doteq \denot{\tau_1}\;e \choplus \denot{\tau_2}\;e
-  \\\denot{\tau_1 \ctinter \tau_2}\; e &\doteq \denot{\tau_1}\;e \chland \denot{\tau_2}\;e
-  \\\denot{\tau_1 \ctunion \tau_2}\; e &\doteq \denot{\tau_1}\;e \chlor \denot{\tau_2}\;e
-  \\\denot{\emptyset} &\doteq \Code{Atom}(\textbf{1})
-  \\\denot{x{:}\tau} &\doteq \denot{\tau}\;x
-  \\\denot{\Gamma_1 \ctcomma \Gamma_2} &\doteq \denot{\Gamma_1} \chland \denot{\Gamma_2}
-  \\\denot{\Gamma_1 \ctstar \Gamma_2} &\doteq \denot{\Gamma_1} \chstar \denot{\Gamma_2}
-  \\\denot{\Gamma_1 \ctoplus \Gamma_2} &\doteq \denot{\Gamma_1} \choplus \denot{\Gamma_2}
+  \denot{\ort{b}{\phi}}\;\Sigma\;e &\doteq \denot{\mstep{e}{\vnu}}_\Sigma \chimpl \forallM{\Code{FV}(\ort{b}{\phi})}\, \demonic \phi \quad \text{($\vnu$ is a fresh variable)}
+  \\\denot{\urt{b}{\phi}}\;\Sigma\;e &\doteq \denot{\mstep{e}{\vnu}}_\Sigma \chimpl \forallM{\Code{FV}(\urt{b}{\phi})}\, \angelic \phi \quad \text{($\vnu$ is a fresh variable)}
+  \\\denot{x{:}\tau_x \ctsarr \tau}\; \Sigma\;e &\doteq \denot{\tau_x}\;\Sigma\;x \chimpl \denot{\tau}\;(\Sigma,x{:}\eraserf{\tau_x})\;(e\;x) \quad \text{($x$ is a fresh variable)}
+  \\\denot{x{:}\tau_x \ctwand \tau}\; \Sigma\;x &\doteq \denot{\tau_x}\;\Sigma\;x \chwand \denot{\tau}\;(\Sigma,x{:}\eraserf{\tau_x})\;(e\;x) \quad \text{($x$ is a fresh variable)}
+  \\\denot{\tau_1 \ctinter \tau_2}\;\Sigma\; e &\doteq \denot{\tau_1}\;\Sigma\; e \chland \denot{\tau_2}\;\Sigma\; e
+  \\\denot{\tau_1 \ctunion \tau_2}\;\Sigma\; e &\doteq \denot{\tau_1}\;\Sigma\; e \chlor \denot{\tau_2}\;\Sigma\; e
+  \\\denot{\tau_1 \ctoplus \tau_2}\;\Sigma\; e &\doteq \denot{\tau_1}\;\Sigma\; e \choplus \denot{\tau_2}\;\Sigma\; e
+  % \\\denot{\tau_1 \ctoplus \tau_2}\; e &\doteq \forall x. \denot{e}_x \chimpl \denot{\tau_1}\;x \choplus \denot{\tau_2}\;x
+  % \\\denot{\ctpers \tau}\; e &\doteq \chpers (\denot{\tau}\;e)
 \end{align*}\noindent
+Denotation of demonic and angelic types is directly encoded into our logic, where we still use reference operator to make type qualifiers aware of referred variables (i.e., $\Code{FV}(\ort{b}{\phi})$ and $\Code{FV}(\urt{b}{\phi})$). Intuitively, it means that ``if we store result of $e$ at fresh variable $\vnu$, then denotation of type qualifier holds with corresponding approximation modality.'' Function type denotation is also standard: we assume parameter $x$ stores values consistent with parameter type $\tau_x$, then function application $e\;x$ is an inhabitant of return type $\tau$. We do not need substitution, since all variable-reference relations are encoded in the logic formula.
+\end{definition}
 
-\begin{theorem}[Well-formed operator context] The operator context $\Phi$ is well-formed iff for all primtive operator $\primop$ we have:
+\begin{definition}{Type context denotation}
+  We define $\denot{\Gamma}: \Code{BasicTypeContext} \sarr \Code{Formula}$: 
+  \begin{align*}
+    \denot{\emptyset}\;\Sigma &\doteq \{\textbf{1}\}
+    \\\denot{x{:}\tau}\;\Sigma &\doteq \denot{\tau}\;\Sigma\;x
+    \\\denot{\Gamma_1 \ctcomma \Gamma_2}\;\Sigma &\doteq \denot{\Gamma_1}\;\Sigma \chland \denot{\Gamma_2}\;(\Sigma, \eraserf{\Gamma_1})
+    \\\denot{\Gamma_1 \ctstar \Gamma_2}\;\Sigma &\doteq \denot{\Gamma_1}\;\Sigma \chstar \denot{\Gamma_2}\;\Sigma
+    \\\denot{\Gamma_1 \ctoplus \Gamma_2}\;\Sigma &\doteq \denot{\Gamma_1}\;\Sigma \choplus \denot{\Gamma_2}\;\Sigma
+  \end{align*}\noindent
+\end{definition}
+
+\begin{example}[Type Denotation] Consider the following type denotation:
+  \begin{align*}
+    &\denot{x{:}\urt{\Nat}{\vnu > 0}\ctsarr y{:}\urt{\Nat}{\vnu \geq 0} \ctwand \urt{\Nat}{\vnu > x}}\;\emptyset\;e
+\\=\;& \denot{\urt{\Nat}{\vnu > 0}} \emptyset\;x \chimpl \denot{y{:}\urt{\Nat}{\vnu \geq 0} \ctwand \urt{\Nat}{\vnu > x}}\;(x{:}\Nat)\;(e\;x)
+\\=\;& \denot{\urt{\Nat}{\vnu > 0}} \emptyset\;x \chimpl \denot{\urt{\Nat}{\vnu \geq 0}}\;(x{:}\Nat)\;y \chwand \denot{\urt{\Nat}{\vnu > x}}\;(x{:}\Nat,y{:}\Nat)\;(e\;x\;y)
+\\=\;& (\denot{\mstep{x}{\vnu_1}} \chimpl \demonic \Code{Atom}(\vnu_1 > 0)) \chimpl
+\\&\quad (\denot{\mstep{y}{\vnu_2}} \chimpl \angelic \Code{Atom}(\vnu_2 \geq 0))
+  \chwand (\denot{\mstep{e\;x\;y}{\vnu_3}} \chimpl \forallM{x}\angelic \Code{Atom}(\vnu_3 > x))
+  \end{align*}\noindent
+We rewrite the fresh variable $\vnu_1$ and $\vnu_2$ as $x$ and $y$ respectively, which can simplify the formula.
+\begin{align*}
+=\;& (\chtrue \chimpl \demonic \Code{Atom}(x > 0)) \chimpl (\chtrue \chimpl \angelic \Code{Atom}(y \geq 0))
+\chwand (\denot{\mstep{e\;x\;y}{\vnu_3}} \chimpl \forallM{x}\angelic \Code{Atom}(\vnu_3 > x))
+\\=\;& \demonic \Code{Atom}(x > 0) \chimpl \angelic \Code{Atom}(y \geq 0)
+\chwand (\denot{\mstep{e\;x\;y}{\vnu_3}} \chimpl \forallM{x}\angelic \Code{Atom}(\vnu_3 > x))
+\end{align*}\noindent
+Then the term $\zzlam{x}{\zzlam{y}{x + y}}$ can have this type under empty context, which requires that
+\begin{align*}
+  \demonic \Code{Atom}(x > 0) \chstar \angelic \Code{Atom}(y \geq 0) \chland \denot{\mstep{x+y}{\vnu_3}}
+  \models \forallM{x}\angelic \Code{Atom}(\vnu_3 > x)
+\end{align*}\noindent
+This formula is correct, since whatever which number $\vnu_3$ that required to reach by the right hand side and what demonic assignment $x$ is, the context can angelic assign $y$ to $\vnu_3 - x$ to make $x + y$ reach $\vnu_3$. Moreover, since $\vnu_3 > x$, then the value of $y$ (i.e., $\vnu_3 - x$) must be non-negative which is allowed by $\angelic \Code{Atom}(y \geq 0)$. 
+\end{example}
+
+
+
+
+\begin{theorem}[Well-formed operator context] Operator context $\Phi$ is well-formed iff for all primitive operators $\primop$ we have:
   {\begin{align*}
       &\Phi(\primop) = \overline{x{:}\ort{b_x}{\phi_x}}\ctsarr \ort{b}{\phi} \ctinter \urt{b}{\phi} \text{ and } \models \denot{\overline{x{:}\ort{b_x}{\phi_x}}} \chiff \denot{\ort{b}{\phi} \ctinter \urt{b}{\phi}}\; (\primop\;\overline{x})
     \end{align*}}\noindent
   \end{theorem}
   
-  \begin{theorem}[Fundamental theorem]
-    \begin{align*}
-      \Gamma \ctvdash e : \tau \text{ implies } \denot{\Gamma} \chvdash \denot{\tau}\;e
-    \end{align*}\noindent
+  \begin{theorem}[Fundamental theorem]$\Gamma \ctvdash e : \tau \text{ implies } \denot{\Gamma} \; \emptyset \chvdash \denot{\tau}\;\eraserf{\Gamma}\;e$
   \end{theorem}
   
   \begin{theorem}[Denotational Soundness]
     \begin{align*}
-      \emptyset \ctvdash e : \tau \text{ implies } \forall x. \{[x\mapsto v] ~|~ \mstep{e}{v}\} \models \denot{\tau}\; x
+      \emptyset \ctvdash e : \tau \text{ implies for any fresh variable $x$, } \{[x\mapsto v] ~|~ \mstep{e}{v}\} \models \denot{\tau}\;\emptyset\; x
     \end{align*}\noindent
   \end{theorem}
