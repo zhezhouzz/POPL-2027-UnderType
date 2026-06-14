@@ -1,9 +1,4 @@
 \section{Context Types}\label{sec:context-typing}
-
-\newcommand{\Envir}{\mathcal{E}}
-\newcommand{\EnvirDep}{\Envir_{\Code{dep}}}
-\newcommand{\EnvirDisj}{\Envir_{\Code{disj}}}
-
 % In this section, we introduce the core language and the context type system for it.
 
 \subsection{Core Language}
@@ -28,10 +23,11 @@
 \paragraph{Terms, basic types, and basic type contexts} In order to concretize the context type system,
 we introduce a core language (\langname{}) for terms whose syntax is
 given in \autoref{fig:core-lang-syntax}.  The language is a standard
-call-by-value lambda calculus with pattern-matching, inductive
+call-by-value lambda calculus with pattern-matching (conditional expression is a syntax sugar of pattern matching), inductive
 datatypes, and recursive functions.  Expressions are written in
 monadic normal form (MNF)~\cite{JO94}, a variant of A-Normal Form
-(ANF)~\cite{FSDF93} that allows nested let-bindings. We also equip the
+(ANF)~\cite{FSDF93} that allows nested let-bindings. 
+We also equip the
 language with basic types (i.e., $s$) consisting of base types ($b$)
 and function types (i.e., $s\sarr s$). Bound variables in
 \textbf{let}-expressions and function abstractions are explicitly
