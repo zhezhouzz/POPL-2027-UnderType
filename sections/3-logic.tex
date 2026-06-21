@@ -191,23 +191,24 @@ $P$; this models an overapproximation since $r'$ extends $r$ with
 additional environments.  Dually, the angelic modality $\angelic P$ holds at
 $r$ if some lower bound $r' \sqsubseteq r$ satisfies $P$;
 this models an underapproximation since $r'$ witnesses a specific
-subset of the environments in $r$. We would like to highlight that the refinement relation $\sqsubseteq$ can also used to extends the entailment of demonic and angelic modalities. Consider the following example:
+subset of the environments in $r$. 
+We would like to highlight that the refinement relation $\sqsubseteq$ can also be used to extend the entailment of demonic and angelic modalities. Consider the following example:
 \begin{align*}
 \begin{array}{c @{\hspace{1.5em}} c @{\hspace{1.5em}} c}
-  {\{[x \mapsto 1], [x \mapsto 2]\}} & \sqsubseteq & {r' \doteq \{[x \mapsto 1; y \mapsto 2], [x \mapsto 2; y \mapsto 7]\}} \\[0.6em]
+  {\{[x \mapsto 1], [x \mapsto 2]\}} & \sqsubseteq & {\boxed{r' \doteq \{[x \mapsto 1; y \mapsto 2], [x \mapsto 2; y \mapsto 7]\}}} \\[0.6em]
   \vsubseteq & & \vsubseteq \\[0.6em]
-  {r \doteq \{[x \mapsto 1]\}} & \sqsubseteq & {\{[x \mapsto 1; y \mapsto 2]\}}
+  {\boxed{r \doteq \{[x \mapsto 1]\}}} & \sqsubseteq & {\{[x \mapsto 1; y \mapsto 2]\}}
 \end{array}
 \end{align*}\noindent
-For some angelic formula $\angelic P$, if we have $r \models \angelic P$, then we also have $r' \models \angelic P$. We have simluar result for demonic formula $\demonic P$ (i.e., $r \models \demonic P$ implies $r' \models \demonic P$) with in the following example:
+For any angelic formula $\angelic P$, if we have $r \models \angelic P$, then we also have $r' \models \angelic P$. We have a similar result for the demonic formula $\demonic P$ (i.e., $r \models \demonic P$ implies $r' \models \demonic P$) as illustrated in the following example:
 \begin{align*}
 \begin{array}{c @{\hspace{1.5em}} c @{\hspace{1.5em}} c}
-  {\{[x \mapsto 1]\}} & \sqsubseteq & {r' \doteq \{[x \mapsto 1; y \mapsto 2]\}} \\[0.6em]
+  {\{[x \mapsto 1]\}} & \sqsubseteq & {\boxed{r' \doteq \{[x \mapsto 1; y \mapsto 2]\}}} \\[0.6em]
   \vsupseteq & & \vsupseteq \\[0.6em]
-  {r \doteq \{[x \mapsto 1], [x \mapsto 2]\}} & \sqsubseteq & {\{[x \mapsto 1; y \mapsto 2], [x \mapsto 2; y \mapsto 7]\}}
+  {\boxed{r \doteq \{[x \mapsto 1], [x \mapsto 2]\}}} & \sqsubseteq & {\{[x \mapsto 1; y \mapsto 2], [x \mapsto 2; y \mapsto 7]\}}
 \end{array}
 \end{align*}\noindent
-Note that the subset relation is reversed however the refinement relation is not.
+Note that the subset relation is reversed; however, the refinement relation is not.
 
 
 \begin{example}[Approximation Modalities]\label{ex-approximation-modalities}
