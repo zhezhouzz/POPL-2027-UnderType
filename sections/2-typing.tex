@@ -697,9 +697,10 @@ With these precise primitive types, rule \textsc{T-AppOp} can forward-infer cons
 where we want to show that the angelic context $x{:}\urt{\Nat}{\top}$ can be split so that
 the true branch is reachable and types with $\ort{\Nat}{\vnu < 4}$.  We first divide the
 type context via subsumption rule \textsc{T-CtxSub}.
-\begin{align*}
-  x{:}\urt{\Nat}{\top} \ctsubseteq{\{x\}} \underbrace{x{:}\urt{\Nat}{\vnu = 0}}_{\Gamma_{\Code{trueBranch}}} \ctoplus \underbrace{x{:}\urt{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}}_{\Gamma_{\Code{falseBranch}}}
-\end{align*}\noindent
+{\small\begin{align*}
+  &x{:}\urt{\Nat}{\top} \ctsubseteq{\{x\}} 
+  \\&\quad \underbrace{x{:}\ort{\Nat}{\vnu = 0}\interty \urt{\Nat}{\vnu = 0}}_{\Gamma_{\Code{trueBranch}}} \ctoplus \underbrace{x{:}\ort{\Nat}{\vnu > 0}\interty \urt{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}}_{\Gamma_{\Code{falseBranch}}}
+\end{align*}}\noindent
 which exactly aligns the assumption about context reachability required by rule \textsc{T-Match}:
 \begin{align*}
   &\Gamma_{\Code{trueBranch}} \vdash 0 : \ort{\Nat}{\vnu = 0} \interty \urt{\Nat}{\vnu = 0}
@@ -707,19 +708,21 @@ which exactly aligns the assumption about context reachability required by rule 
 \end{align*}\noindent
 We then have the following derivation:
 \begin{align*}
-  &\Gamma_{\Code{trueBranch}} \vdash 3 : \ort{\Nat}{\vnu < 4} \interty \urt{\Nat}{\vnu < 4}
-  \\&\underline{\Gamma_{\Code{falseBranch}} \vdash 5 : \ort{\Nat}{\top} \interty \urt{\Nat}{\top}}
+  &\Gamma_{\Code{trueBranch}} \vdash 3 : \ort{\Nat}{\vnu < 4}
+  \\&\underline{\Gamma_{\Code{falseBranch}} \vdash 5 : \ort{\Nat}{\top}}
   \\&\Gamma_{\Code{trueBranch}} \ctoplus \Gamma_{\Code{falseBranch}} \vdash  \zmatchNat{x}{3}{y}{5} : \ort{\Nat}{\vnu < 4} \ctoplus \ort{\Nat}{\top}
 \end{align*}\noindent
 On the other hand, the following derivation fails:
 \begin{align*}
   x{:}\urt{\Nat}{\vnu > 0} \vdash \zmatchNat{x}{3}{y}{5} : \ort{\Nat}{\vnu < 4} \ctoplus \ort{\Nat}{\top} \judgfail
 \end{align*}\noindent
-Since context $x{:}\urt{\Nat}{\vnu > 0}$ can only reach the false branch, it cannot be divided into a sum of two contexts that align with both branches. Alternatively, we can have
+Because context $x{:}\urt{\Nat}{\vnu > 0}$ admits an environment $\Envir(e) \doteq \zlet{x}{\Code{positive\_gen}()}{e}$ under which execution always follows the false branch, it cannot be decomposed into a sum of two contexts that separately witness the true and false branches.
+Alternatively, we also enable standard refinement type judgement with unreachable control flows:
 \begin{align*}
-  &\Gamma_{\Code{falseBranch}}\vdash 5 : \ort{\Nat}{\vnu > 4}
-  \\&\underline{x{:}\urt{\Nat}{\vnu > 0} \ctsubseteq{\{x\}} \Gamma_{\Code{falseBranch}}}
-  \\&x{:}\urt{\Nat}{\vnu > 0} \vdash \zmatchNat{x}{3}{y}{5} : \ort{\Nat}{\vnu > 4} \quad \judgok
+  &x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}\vdash 5 : \ort{\Nat}{\vnu > 4}
+  \\&x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}\vdash \Code{S}\;y : \ort{\Nat}{\vnu = x} \interty \urt{\Nat}{\vnu = x}
+  \\&\underline{x{:}\ort{\Nat}{\vnu > 0} \ctsubseteq{\{x\}} x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}}
+  \\&x{:}\ort{\Nat}{\vnu > 0} \vdash \zmatchNat{x}{3}{y}{5} : \ort{\Nat}{\vnu > 4} \quad \judgok
 \end{align*}\noindent
 where we adapt rule \textsc{T-Match} with a sum of a single type.
 \end{example}
