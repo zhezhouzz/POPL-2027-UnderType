@@ -1,109 +1,349 @@
-\section{Nondeterministic extension}\label{sec:extension}
+\section{Supporting Nondeterministism}\label{sec:extension}
 
-In this section, we extend our core language to support nondeterminism, i.e., allowing a term $e$ to reduce to multiple different values. Concretely, we additionally allow the following primitive nondeterminism operators in our core language:
+The core language of Section~\ref{sec:context-typing} is
+deterministic: every term reduces to at most one value under any
+environment.  This section extends the language with
+\emph{nondeterminism}, expressed in terms of primitive generators that
+can produce multiple values across different executions, and
+identifies the adjustments required to the type denotation.
+Concretely, our language now supports generators over primitive types:
 \begin{align*}
-  \primop ::= \quad & ... ~|~ \Code{bool\_gen()} ~|~ \Code{nat\_gen()} ~|~ ...
-\end{align*}\noindent
-Then, the nondeterministic choice operator $e_1 \oplus e_2$ can be expressed as $\zif{\Code{bool\_gen()}}{e_1}{e_2}$.
-With this extension, our core language can represent an ``impure external environment,'' such as $\Envir_x(e) \doteq \zlet{x}{\Code{nat\_gen()}}{\boxed{e}}$. Nondeterminism means that a program can produce new ``capability of angelic context'' (e.g., $x$ in environment $\Envir_x$). Moreover, a primitive random operator can duplicate the corresponding capability across arbitrary invocations. Similar to existing bunched implication logics~\cite{Iris}, we extend our logic and type system with a \emph{persistency modality} $\ctpers$ to express this semantics. On the other hand, nondeterminism breaks the single-valued assumption of our core language, which requires some careful adjustments to our type denotation.
+  \primop ::= \quad & \ldots ~|~ \Code{bool\_gen()} ~|~
+  \Code{nat\_gen()} ~|~ \ldots
+\end{align*}
+The nondeterministic choice $e_1 \oplus e_2$ is then expressible as
+$\zif{\Code{bool\_gen()}}{e_1}{e_2}$.  These generators serve as the
+``impure external environments'' introduced informally in
+Section~\ref{sec:context-typing}: the environment $\Envir_x(e) \doteq
+\zlet{x}{\Code{nat\_gen()}}{e}$ is now a first-class term that
+introduces a nondeterministic binding for $x$ whose capability is
+\emph{independent} of the surrounding context at each invocation.
 
-\subsection{Persistency}
+Nondeterminism raises two technical challenges.  First, nondeterministic
+generators can be invoked multiple times, producing independent
+capabilities at each call; the type system must account for this
+\emph{resource duplication}.  Second, nondeterminism breaks the
+single-valued assumption underlying our type denotation, requiring a
+generalization of the denotation of function and sum types.
+% (\S\ref{subsec:nondet-denotation}).  We conclude with case studies
+% (\S\ref{subsec:case-studies}) demonstrating the expressiveness of the
+% resulting system.
 
-As discussed in \autoref{sec:intro}, our type system naturally assumes that the result of a function is dependent on its parameter; however, this does not work for a nondeterministic term. Consider the following example:
-\begin{align*}
-  &x{:}\urt{\Nat}{\top} \vdash \zzlam{z}{\Code{nat\_gen()}} : z{:}\urt{\Nat}{\vnu = x} \ctsarr \urt{\Nat}{\top}
-  \\&\underline{\Gamma \ctcomma x{:}\urt{\Nat}{\top} \ctcomma y{:}\urt{\Nat}{\top} \vdash e : \tau}
-  \\&\Gamma \ctcomma x{:}\urt{\Nat}{\top} \vdash \zlet{y}{\zzlam{z}{\Code{nat\_gen()}}\;x}{e} : \tau
-\end{align*}\noindent
-Note that the result of function application ($y$) is, by default, dependent on its argument ($x$) within the type context of body expression ($e$), even when parameter $x$ is not used in the function. Changing the function type to a disjointed function type, i.e., $z{:}\urt{\Nat}{\vnu = x} \ctwand \urt{\Nat}{\top}$, does not help. The disjointed function type $z{:}\urt{\Nat}{\vnu = x} \ctwand ...$ means that $z$ is disjointed from the context, rather than making the function result disjointed; also, the parameter type indeed depends on $x$ in the context. Ideally, we want a type like
-\begin{align*}
-  \underbrace{z{:}\urt{\Nat}{\vnu = x} \ctsarr}_\texttt{The parameter $z$ is dependent.} \underbrace{\urt{\Nat}{\top} \ctwand}_\texttt{The result is disjointed.}
-\end{align*}\noindent
-which can lead to a disjointed type context $\Gamma \ctcomma x{:}\urt{\Nat}{\top} \ctstar y{:}\urt{\Nat}{\top}$ via adjunction.
-However, this type is ill-formed in our bunched typing syntax. Alternatively, we introduce the \emph{persistency modality} $\ctpers$:
-\begin{align*}
-  &x{:}\urt{\Nat}{\top} \vdash \zzlam{z}{\Code{nat\_gen()}} : z{:}\urt{\Nat}{\vnu = x} \ctsarr \ctpers \urt{\Nat}{\top}
-\end{align*}\noindent
-The persistency modality means that a type is not interfered with (i.e., is disjointed) by the whole context, which enables the following semantic typing transformation:
-\begin{align*}
-  &\Gamma \ctcomma x{:}\urt{\Nat}{\top} \ctcomma \ctpers y{:}\urt{\Nat}{\top} \ctsubseteqA \Gamma \ctcomma x{:}\urt{\Nat}{\top} \ctstar \ctpers y{:}\urt{\Nat}{\top}
-  \\&\emptyset \vdash \ctpers \urt{\Nat}{\top} \subty \urt{\Nat}{\top} 
-\end{align*}\noindent
-which solves the previous issue by allowing users to shift between dependent and disjointed conjunction.
+\subsection{Resource Duplication and the Demonic Modality}\label{subsec:duplication}
 
-\paragraph{Persistency modality, duplication, and nondeterminism} Although we use the persistency modality as an ``appending disjointed function type,'' it has a different semantic connection with nondeterminism. In a deterministic language that cannot generate a new \emph{disjointed} angelic context, all bindings with angelic interpretation need to be dependent on the original input context. This is still ensured by the constraint ``result of function is by default dependent on the function itself'':
+In the deterministic core language, every function application produces
+a result whose capability is dependent on the function's capability via
+the default dependent conjunction ($\ctcomma$) in \textsc{T-Let}.  Consider two
+successive calls to a deterministic function $f$:
 \begin{align*}
-  &\underline{f{:}\urt{\Unit}{\top}\ctsarr \urt{\Nat}{\top} \ctcomma  x{:}\urt{\Nat}{\top} \ctcomma y{:}\urt{\Nat}{\top} \vdash e : \tau}
-  \\&f{:}\urt{\Unit}{\top}\ctsarr \urt{\Nat}{\top} \vdash \zlet{x}{f\;()}{\zlet{y}{f\;()}{e}} : \tau
-\end{align*}\noindent
-All results of function $f$ are dependent via the bridge of function $f$.
-On the other hand, our primitive random operator indeed has the ability to duplicate disjointed angelic context, which is then allowed by the persistency modality:
-\begin{align*}
-  &\underline{\Code{nat\_gen}{:}\urt{\Unit}{\top}\ctsarr \ctpers \urt{\Nat}{\top} \ctstar \ctpers x{:}\urt{\Nat}{\top} \ctstar \ctpers y{:}\urt{\Nat}{\top} \vdash e : \tau}
-  \\&\underline{\Code{nat\_gen}{:}\urt{\Unit}{\top}\ctsarr \ctpers \urt{\Nat}{\top} \ctcomma \ctpers x{:}\urt{\Nat}{\top} \ctcomma \ctpers y{:}\urt{\Nat}{\top} \vdash e : \tau}
-  \\&\Code{nat\_gen}{:}\urt{\Unit}{\top}\ctsarr \ctpers \urt{\Nat}{\top} \vdash \zlet{x}{\Code{nat\_gen}\;()}{\zlet{y}{\Code{nat\_gen}\;()}{e}} : \tau
-\end{align*}\noindent
-% In bunched logic, the persistency modality also sometime is treated an substitute of the exponential modality in linear logic that can duplidate linear resource.
+  &\underline{f{:}\urt{\Unit}{\top} \ctsarr \urt{\Nat}{\top}
+    \ctcomma x{:}\urt{\Nat}{\top} \ctcomma y{:}\urt{\Nat}{\top}
+    \vdash e : \tau}
+  \\&f{:}\urt{\Unit}{\top} \ctsarr \urt{\Nat}{\top} \vdash
+    \zlet{x}{f\;()}{\zlet{y}{f\;()}{e}} : \tau
+\end{align*}
+Both $x$ and $y$ are entangled with $f$'s capability: knowing $f$
+constrains both, so their capabilities cannot be treated as
+independent.  This is correct for a deterministic $f$, whose output
+is fully determined by its input.
 
-\paragraph{Denotation of persistency modality} We introduce the standard persistency modality $\chpers P$ in our context logic to express the type denotation of persistency types.
+With a nondeterministic generator like $\Code{nat\_gen()}$, however,
+successive calls produce genuinely independent values.  The key
+observation is that non-deterministic generators like
+$\Code{nat\_gen()}$ must be given a \emph{demonic} parameter type:
 \begin{align*}
-  r \models \chpers P \text{ iff } \forall \sigma \in \projectTo{r}{\Dom{r} \setminus \Code{FV}(P)}. \fiberOver{r}{\sigma} \models P
-\end{align*}\noindent
-which means that persistent property $P$ holds for all corresponding fibers that are not related to $P$ (i.e., $\Dom{r} \setminus \Code{FV}(P)$); equivalently, $P$ is independent from the other variables in the context. Then, the type denotation of persistency type $\chpers \tau$ is simply $ \denot{\tau}_\Sigma\;e \doteq \chpers (\denot{\tau}_\Sigma\;e)$.
+  \Code{nat\_gen} : \ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top}
+\end{align*}
+The demonic parameter type $\ort{\Unit}{\top}$ asserts that the
+generator's result is independent of its argument in a specific sense:
+since $\ort{\Unit}{\top}$ is a safety (overapproximate) type, it
+requires the argument to be consistent with $\top$, i.e., any unit
+value, but places no angelic obligation on it.  Crucially, a demonic
+type in a \emph{negative position} (as a function parameter) behaves
+like a persistent resource in the context algebra: it can be freely
+duplicated across multiple uses without entangling the corresponding
+capabilities.
 
-\begin{example}[Persistency] As discussed above for duplication of disjointness, we should have $P \chland \chpers Q$ equal to $P \chstar \chpers Q$. Consider the following concrete example:
+This follows from a key algebraic property of the context logic: the
+demonic modality $\demonic P$ is persistent by definition, i.e., once
+$\demonic P$ holds, it continues to hold as more environments are
+added to the capability. This means that a demonic capability, once
+established, remains available regardless of what other environments
+are added to the context, which is exactly the duplication behavior
+needed for resource generators.
+
+%% To see
+%% why, recall that $r \models \demonic P$ $\exists r' \supseteq r$
+%% s.t. $r' \models P$.  Now suppose r⊨\demonicPr \models \demonic P
+%% r⊨\demonicP and consider any extension r′′r'' r′′ of rr r in the
+%% set-inclusion sense, i.e., r⊆r′′r \subseteq r'' r⊆r′′. Since r′⊇rr'
+%% \supseteq r r′⊇r and r′′⊇rr'' \supseteq r r′′⊇r, we can take r′∪r′′r'
+%% \cup r'' r′∪r′′ as a witness: it satisfies r′∪r′′⊇r′′r' \cup r''
+%% \supseteq r'' r′∪r′′⊇r′′ and r′∪r′′⊇r′⊨Pr' \cup r'' \supseteq r'
+%% \models P r′∪r′′⊇r′⊨P by monotonicity of PP P under superset
+%% extension. Thus r′′⊨\demonicPr'' \models \demonic P r′′⊨\demonicP,
+%% showing that the demonic modality is preserved under set-inclusion
+%% extension — i.e., 
+
+Concretely, this means that two successive calls to $\Code{nat\_gen()}$
+can be typed with independent capabilities for $x$ and $y$:
 \begin{align*}
-  &r \models \angelic (1 \leq x \leq 2) \chland \chpers \angelic (3 \leq y \leq 4)
-\end{align*}\noindent
-where we assume for simplicity that $r$ can contain only the following stores:
+  &\underline{\Code{nat\_gen}{:}\ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top}
+    \ctstar x{:}\urt{\Nat}{\top} \ctstar y{:}\urt{\Nat}{\top}
+    \vdash e : \tau}
+  \\&\underline{\Code{nat\_gen}{:}\ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top}
+    \ctcomma x{:}\urt{\Nat}{\top} \ctcomma y{:}\urt{\Nat}{\top}
+    \vdash e : \tau}
+  \\&\Code{nat\_gen}{:}\ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top}
+    \vdash \zlet{x}{\Code{nat\_gen}\;()}{\zlet{y}{\Code{nat\_gen}\;()}{e}} : \tau
+\end{align*}
+The key step is the shift from dependent ($\ctcomma$) to disjoint
+($\ctstar$) conjunction in the second-to-first line.  This shift
+follows from the denotational semantics. By
+Definition~\ref{def:context-denotation}, the dependent conjunction
+``$\ctcomma$'' maps to additive conjunction ``$\chland$''
+and the disjoint conjunction ``$\ctstar$'' maps to
+multiplicative conjunction ``$\chstar$''. The shift therefore
+requires showing:
 \begin{align*}
-  \sigma_{13} \doteq [x=1; y=3] \quad \sigma_{14} \doteq [x=1; y=4] \quad \sigma_{23} \doteq [x=2; y=3] \quad \sigma_{24} \doteq [x=2; y=4]
-\end{align*}\noindent
-Then, according to the definition of persistency modality, stores $\sigma_{13}$ and $\sigma_{14}$ must be either both contained in $r$ or both absent from $r$; the same holds for $\sigma_{23}$ and $\sigma_{24}$. According to $\angelic (1 \leq x \leq 2)$, $r$ must contain at least one store assigning $x$ to $1$ and one store assigning $x$ to $2$; thus, all four stores above must be contained in $r$, which is exactly the requirement of disjointness.
+  \denot{\Code{nat\_gen}{:}\ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top}} \chland \denot{x{:}\urt{\Nat}{\top}} \chland \denot{y{:}\urt{\Nat}{\top}} \models\\
+  \denot{\Code{nat\_gen}{:}\ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top}} \chstar \denot{x{:}\urt{\Nat}{\top}} \chstar \denot{y{:}\urt{\Nat}{\top}}
+\end{align*}  
+This holds because the denotation of $\Code{nat\_gen}$'s type is
+guarded by the demonic modality and, as established above, this means
+the capability for $\Code{nat\_gen}$ can be freely separated from
+those of $x$ and $y$ via ``$\chstar$''.
+
+More generally, any function whose parameter type is demonic
+(overapproximate) can be invoked multiple times with independent result
+capabilities, since the demonic parameter type's persistence in negative
+position enables the necessary resource duplication.  Functions with
+angelic parameter types, by contrast, require their argument to cover
+a specific set of values, which entangles successive calls via the
+shared argument capability.
+
+\begin{example}[Coverage Types]\label{ex:coverage}
+  The coverage type system of~\citet{CoverageType} verifies that a
+  test generator produces every desirable input.  Consider the
+  following BST generator:
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}    
+let rec bst_gen (r: nat) (lo: nat)
+                (range: nat -> nat -> nat): nat tree =
+  if r <= 0 then Leaf
+  else Leaf ?$\oplus$?
+    let r' = range (1, r) in
+    let left  = bst_gen (r' - 1) lo range in
+    let right = bst_gen (r - r') (lo + r') range in
+    Node r' left right
+\end{minted}
+  The following specification asserts that for any valid range oracle,
+  \texttt{bst\_gen} produces every BST whose keys fall in $(\Code{lo},
+  \Code{lo}+r]$:
+  \begin{align*}
+    &\Code{val bst\_gen} :
+      r{:}\ort{\Nat}{\top} \ctsarr lo{:}\ort{\Nat}{\top} \ctsarr
+    \\&\quad\quad
+      \Code{range}{:}\underbrace{(x{:}\ort{\Nat}{\top} \ctsarr
+        y{:}\ort{\Nat}{x < \vnu} \ctsarr
+        \urt{\Nat}{x < \vnu < y})}_{\text{demonic parameters; angelic result}}
+      \ctwand
+    \\&\quad\quad
+      \urt{\Nat\;\Code{tree}}{\Code{bst}(\vnu) \land
+        \forall x.\, \Code{mem}(\vnu, x) \iff
+        (\Code{lo}+1 \leq x \leq \Code{lo}+r)}
+  \end{align*}
+  The range oracle has demonic parameter types ($\ort{\Nat}{\top}$ and
+  $\ort{\Nat}{x < \vnu}$) and an angelic result type ($\urt{\Nat}{x <
+    \vnu < y}$).  The demonic parameters mean that successive calls to
+  \texttt{range} with different arguments can be typed with
+  independent result capabilities — the oracle's output at each
+  recursive call is disjoint from its outputs at other calls.  This is
+  precisely the resource duplication property established above: the
+  demonic parameter types make the oracle's capability persistent in
+  negative position, enabling the recursive calls to accumulate
+  independent angelic capabilities for the left and right subtrees.
+  The use of the disjoint function type, $\ctwand$, on the oracle
+  ensures it is disjoint from the size $r$ and lower-bound
+  $\Code{lo}$, so the oracle's choices do not depend on those
+  parameters.  The angelic result type then asserts that every valid
+  BST is reachable by some sequence of oracle choices.
 \end{example}
 
-\section{Type denotation of nondeterminism}
+\subsection{Type Denotation for Nondeterminism}\label{subsec:nondet-denotation}
 
-There is a soundness issue caused by nondeterminism for higher-order functions. Consider the following two functions:
-\begin{align*}
-  &f_1\doteq \zlam{x}{\Unit}{(\true \oplus \false)} \quad f_2\doteq (\zlam{x}{\Unit}{\true}) \oplus (\zlam{x}{\Unit}{\false})
-\end{align*}\noindent
-Both of these functions can have type $\urt{\Unit}{\top}\ctsarr\ctpers\urt{\Bool}{\top}$, since both $f_1\;()$ and $f_2\;()$ can reduce to set of values $\{\true, \false\}$ that is \emph{disjointed from the context}. However, only the first one is a true ``capability producer,'' which captures randomness (i.e., $\oplus$) within its closure, while the second one only has ``one-shot'' randomness. Consider the following higher-order function:
-\begin{align*}
-  &\emptyset \vdash \zzlam{f}{f\;() == f\;()} : f{:}(\urt{\Unit}{\top}\ctsarr\ctpers\urt{\Bool}{\top}) \ctwand \urt{\Bool}{\top}
-\end{align*}\noindent
-where $g$ expects input function $f$ to work like a boolean generator, so that the result covers both $\true$ and $\false$. However, second function $f_2$ cannot satisfy this requirement, since in our call-by-value semantics, input function $f$ is first evaluated into either $\zlam{x}{\Unit}{\true}$ or $\zlam{x}{\Unit}{\false}$, which makes the result of $g$ only $\true$. This example means that denotation of function type is not consistent with semantics of nondeterminism.
+Nondeterminism breaks the single-valued assumption of the deterministic
+language in two ways that require adjustments to the type denotation.
 
-There is also a completeness issue about control flow; consider the following example:
+\paragraph{Function Types}
+In the deterministic setting, a function term $e$ reduces to a unique
+value, and the denotation of a function type can reason about that
+value directly.  With nondeterminism, $e$ can reduce to multiple
+different function values, and different values may behave differently
+when applied.  Consider:
 \begin{align*}
-  &\emptyset \vdash \Code{bool\_gen()}: \ort{\Bool}{\vnu = \true} \ctoplus \ort{\Bool}{\vnu = \false}
-  \\&x{:}\urt{\Bool}{\top} \vdash x: \ort{\Bool}{\vnu = \true} \ctoplus \ort{\Bool}{\vnu = \false}
-\end{align*}\noindent
-Ideally, both of these typing judgements should hold, where the second one just pushes nondeterministic term $\Code{bool\_gen()}$ into the context. However, the first judgement conflicts with our type denotation of sum type:
+  f_1 \doteq \zlam{x}{\Unit}{\true \oplus \false}
+  \qquad
+  f_2 \doteq (\zlam{x}{\Unit}{\true}) \oplus (\zlam{x}{\Unit}{\false})
+\end{align*}
+Both $f_1\;()$ and $f_2\;()$ can reduce to either $\true$ or $\false$.
+However, they behave differently in a higher-order context.  Consider:
 \begin{align*}
-  \denot{\tau_1 \ctoplus \tau_2}_\Sigma\;e \doteq \denot{\tau_1}_\Sigma\;e \ctoplus \denot{\tau_2}_\Sigma\;e
-\end{align*}\noindent
-This type denotation allows us to divide context to align control flow, which enables the second typing judgement to hold; however, it disallows dividing the term itself (e.g., $\Code{bool\_gen()} \equiv \true \oplus \false$). To prove the first judgement, we need to guarantee that:
-\begin{align*}
-  \emptyset \vdash \Code{bool\_gen()}: \ort{\Bool}{\vnu = \true} \quad \text{ and } \quad \emptyset \vdash \Code{bool\_gen()}: \ort{\Bool}{\vnu = \false}
-\end{align*}\noindent
-which is too strong to guarantee. The core issue here is that nondeterministic term itself can now contain control flow, which is not captured by our type denotation.
+  \emptyset \vdash \zzlam{f}{f\;() == f\;()} :
+  f{:}(\ort{\Unit}{\top} \ctsarr \urt{\Bool}{\top}) \ctwand
+  \urt{\Bool}{\top}
+\end{align*}
+This function applies $f$ twice and checks equality.  With $f_1$,
+each call independently produces $\true$ or $\false$, so the result
+covers both.  Under a call-by-value semantics, results in supplying either
+$\zlam{x}{\Unit}{\true}$ or $\zlam{x}{\Unit}{\false}$
+as the argument to $f$; both subsequent calls then return the same
+value, so the result is always $\true$.  The original denotation
+cannot distinguish these two cases, since it does not account for
+which function value $e$ reduces to.
 
-\paragraph{Generalized Type denotation} To solve the above issues, we generalize our type denotation as follows.
+\paragraph{Sum Types}
+A similar issue arises for sum types.  The judgement:
 \begin{align*}
-  \denot{x{:}\tau_x \ctsarr \tau}_\Sigma\;e &\doteq \forall f. \denot{f := e}_\Sigma \chimpl \denot{\tau_x}_\Sigma\;x \chimpl \denot{\tau}_{\Sigma,x{:}\eraserf{\tau_x}}\;(f\;x)
-  \\\denot{x{:}\tau_x \ctwand \tau}_\Sigma\;e &\doteq \forall f. \denot{f := e}_\Sigma \chimpl \denot{\tau_x}_\Sigma\;x \chwand \denot{\tau}_{\Sigma,x{:}\eraserf{\tau_x}}\;(f\;x)
-  \\\denot{\tau_1 \ctoplus \tau_2}_\Sigma\;e &\doteq \forall x. \denot{x := e}_\Sigma \chimpl \denot{\tau_1}_\Sigma\;x \choplus \denot{\tau_2}_\Sigma\;x
-\end{align*}\noindent
-All updated type denotations use the same trick: universally quantified implication $\forall x. \denot{x := e} \chimpl ...$ lifts denotation of term $e$ into type context. Readers can examine that generalized denotation is equivalent to the original one in deterministic language.
-This trick can empower the existing persistency modality and sum operator in logic to handle nondeterminism.
-For the function-type issue, now $f_2$ cannot have the persistency type:
+  \emptyset \vdash \Code{bool\_gen()} :
+  \ort{\Bool}{\vnu = \true} \ctoplus \ort{\Bool}{\vnu = \false}
+\end{align*}
+should hold, since $\Code{bool\_gen()}$ nondeterministically produces
+either $\true$ or $\false$.  However, the original denotation
+$\denot{\tau_1 \ctoplus \tau_2}\;e \doteq \denot{\tau_1}\;e \choplus
+\denot{\tau_2}\;e$ requires the \emph{context} to be split across the
+two branches, not the term itself.  Under the empty context, there is
+no capability to split, so the judgement fails despite being
+semantically valid.
+
+\paragraph{Generalized Denotation}
+Both issues stem from the same root cause: the original denotation
+evaluates $e$ once and reasons about the result, but a
+nondeterministic $e$ can reduce to different values in different
+executions.  The fix is to universally quantify over all possible
+reduction results of $e$, lifting $e$'s nondeterminism into the
+type context:
 \begin{align*}
-  &\denot{\urt{\Unit}{\top}\ctsarr\ctpers\urt{\Bool}{\top}}\;(\zlam{x}{\Unit}{\true}) \oplus (\zlam{x}{\Unit}{\false})
-  \\=& \forall f. \Code{Atom}(f = \zlam{x}{\Unit}{\true} \lor f = \zlam{x}{\Unit}{\false}) \chimpl \chpers \angelic \Code{Atom}(f\;() = \true \lor f\;() = \false) \judgfail
-\end{align*}\noindent
-where persistency modality now requires application results to cover set of values $\{\true, \false\}$, which is even independent from evaluation result of function itself. Thus, a function like $f_2$, whose function body does not capture randomness, cannot be treated as a persistent capability producer. On the other hand, updated denotation of sum type pushes randomness of term $e$ into the context, and now sum operator allows us to divide it as normal context.
+  \denot{x{:}\tau_x \ctsarr \tau}_\Sigma\;e
+    &\doteq \forall f.\; \denot{f \doteq e}_\Sigma \chimpl
+             \denot{\tau_x}_\Sigma\;x \chimpl
+             \denot{\tau}_{\Sigma,x{:}\eraserf{\tau_x}}\;(f\;x)
+  \\\denot{x{:}\tau_x \ctwand \tau}_\Sigma\;e
+    &\doteq \forall f.\; \denot{f \doteq e}_\Sigma \chimpl
+             \denot{\tau_x}_\Sigma\;x \chwand
+             \denot{\tau}_{\Sigma,x{:}\eraserf{\tau_x}}\;(f\;x)
+  \\\denot{\tau_1 \ctoplus \tau_2}_\Sigma\;e
+    &\doteq \forall x.\; \denot{x \doteq e}_\Sigma \chimpl
+             \denot{\tau_1}_\Sigma\;x \choplus \denot{\tau_2}_\Sigma\;x
+\end{align*}
+In each case, a universally quantified fresh variable ($f$ or $x$)
+ranges over all possible reduction results of $e$, and the original
+denotation is applied to that variable.  In the deterministic case,
+$e$ has a unique reduction result and the quantifier is trivially
+eliminated, so the generalized denotation coincides with the original.
+
+For the function-type issue, the generalized denotation correctly
+distinguishes $f_1$ and $f_2$.  The type
+$\ort{\Unit}{\top} \ctsarr \urt{\Bool}{\top}$ now requires that for
+every function value $f$ that $e$ can reduce to, every boolean is
+reachable by applying $f$ to $()$.  Since $f_2$ reduces to a
+\emph{specific} constant function, not every boolean is reachable from
+a single reduction result, so $f_2$ correctly fails to have this type:
 \begin{align*}
-  &\denot{\ort{\Bool}{\vnu = \true} \ctoplus \ort{\Bool}{\vnu = \false}}\;\Code{bool\_gen()}
-  \\=& \forall x. \Code{Atom}(x = \true \lor x = \false) \chimpl \Code{Atom}(\vnu = x) \chimpl \demonic\Code{Atom}(\vnu = \true) \choplus \demonic \Code{Atom}(\vnu = \false) \judgok
-\end{align*}\noindent
+  &\denot{\ort{\Unit}{\top} \ctsarr \urt{\Bool}{\top}}\;
+    (\zlam{x}{\Unit}{\true}) \oplus (\zlam{x}{\Unit}{\false})
+  \\=\;& \forall f.\; \Code{Atom}(f = \zlam{x}{\Unit}{\true} \lor
+          f = \zlam{x}{\Unit}{\false}) \chimpl
+          \angelic\,\Code{Atom}(f\;() = \true \lor f\;() = \false)
+  \quad\judgfail
+\end{align*}
+For the sum-type issue, the generalized denotation lifts
+$\Code{bool\_gen()}$'s nondeterminism into the context via the fresh
+variable $x$, allowing the sum operator to partition it across the
+two branches as usual:
+\begin{align*}
+  &\denot{\ort{\Bool}{\vnu = \true} \ctoplus
+          \ort{\Bool}{\vnu = \false}}\;\Code{bool\_gen()}
+  \\=\;& \forall x.\; \Code{Atom}(x = \true \lor x = \false) \chimpl
+          \demonic\,\Code{Atom}(\vnu = \true) \choplus
+          \demonic\,\Code{Atom}(\vnu = \false)
+  \quad\judgok
+\end{align*}
+
+\subsection{Case Studies}\label{subsec:case-studies}
+
+We illustrate the expressiveness of context types with two further
+case studies beyond the BST generator of Example~\ref{ex:coverage}:
+a reverse reachability property for list reversal, and a disprove
+reasoning task for a merge function.
+
+\subsubsection{Reverse Reachability}\label{subsubsec:reverse}
+
+The standard list reversal function admits two distinct reachability
+specifications:
+\begin{lstlisting}
+let rec reverse (l: list nat) : list nat =
+  match l with
+  | []      -> []
+  | x :: xs -> reverse xs ++ [x]
+\end{lstlisting}
+\begin{align*}
+  &\Code{val reverse} :
+    l{:}\ort{\Nat\;\Code{list}}{\top} \ctsarr
+    \urt{\Nat\;\Code{list}}{\Code{rev}(\vnu, l)}
+  \\&\Code{val reverse} :
+    l{:}\urt{\Nat\;\Code{list}}{\Code{sortedIncr}(\vnu)} \ctsarr
+    \urt{\Nat\;\Code{list}}{\Code{sortedDecr}(\vnu)}
+\end{align*}
+The first uses a demonic input type: for any list $l$,
+\texttt{reverse} produces its reversal.  The second uses an angelic
+input type: when $l$ ranges over all increasingly-sorted lists, the
+output ranges over all decreasingly-sorted lists.  The second
+specification is strictly stronger, demonstrating that context types
+can express reachability properties that depend on the full range of
+the input.
+
+\subsubsection{Disprove Reasoning}\label{subsubsec:disprove}
+
+The following function merges two lists element-by-element:
+\begin{lstlisting}
+let rec merge (l1: elem list) (l2: elem list) : elem list =
+  match l1, l2 with
+  | l1, []          -> l1
+  | [], l2          -> l2
+  | h1::t1, h2::t2 ->
+      let t = merge t1 t2 in
+      if h1 < h2 then h1 :: h2 :: t
+      else if h1 > h2 then h2 :: h1 :: t
+      else h1 :: t
+\end{lstlisting}
+Context types can express both positive reachability specifications
+and \emph{disprove} reasoning — showing that a function cannot always
+produce a sorted output.  The following two specifications hold:
+\begin{align*}
+  &\Code{val merge} :
+    l_1{:}\ort{\Nat\;\Code{list}}{\top} \ctsarr
+    l_2{:}\urt{\Nat\;\Code{list}}{\top} \ctwand
+    (\ort{\Nat\;\Code{list}}{\neg\Code{sortedIncr}(\vnu)}
+      \ctoplus \ort{\Nat\;\Code{list}}{\Code{sortedIncr}(\vnu)})
+  \\&\Code{val merge} :
+    l_1{:}\urt{\Nat\;\Code{list}}{\top} \ctwand
+    l_2{:}\urt{\Nat\;\Code{list}}{\top} \ctwand
+    (\ort{\Nat\;\Code{list}}{\neg\Code{sortedIncr}(\vnu)}
+      \ctoplus \ort{\Nat\;\Code{list}}{\top})
+\end{align*}
+The first says: when $l_2$ ranges over all lists, the output either
+fails to be sorted or is sorted.  The second strengthens this: when
+both inputs range over all lists, the output can fail to be sorted.
+The following specification correctly fails to type-check, confirming
+that \texttt{merge} cannot be specified as always producing a sorted
+output:
+\begin{align*}
+  &\Code{val merge} :
+    l_1{:}\ort{\Nat\;\Code{list}}{\top} \ctsarr
+    l_2{:}\ort{\Nat\;\Code{list}}{\top} \ctsarr
+    \ort{\Nat\;\Code{list}}{\Code{sortedIncr}(\vnu)}
+  \quad\judgfail
+\end{align*}
+This failed judgement serves as a reachability-based witness to the
+function's incorrectness: there exist inputs for which
+\texttt{merge} does not produce a sorted list.

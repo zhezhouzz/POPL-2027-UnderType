@@ -203,7 +203,7 @@ below:
   &\EnvirDep(e) \doteq \zlet{x}{\Code{nat\_gen()}}{\zlet{y}{x}{\boxed{e}}}
   \\&\EnvirDisj(e) \doteq \zlet{x}{\Code{nat\_gen()}}{\zlet{y}{\Code{nat\_gen()}}{\boxed{e}}}
 \end{align*}\noindent
-Here, we consider two concrete environments, $\EnvirDep$ and
+Here, we consider two concrete (reified) environments, $\EnvirDep$ and
 $\EnvirDisj$, where both allow $x$ to reach all possible natural
 numbers.  They differ in that environment $\EnvirDep$ forces $y$
 to be the same as $x$ during the evaluation of $e$, while environment

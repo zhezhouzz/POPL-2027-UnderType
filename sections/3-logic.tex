@@ -24,7 +24,7 @@ available to demonic or angelic choices.  We call such a set a
 
 \begin{definition}[Contextual Capability]\label{def:contextual-capability}
   A \emph{contextual capability} is a non-empty set of environments
-  (partial maps $\Var \rightharpoonup \Val$) that all share the same
+  (partial maps, $\Var \rightharpoonup \Val$) that all share the same
   domain.  We use $r$ to range over contextual capabilities and $\Res$
   as the set of all well-formed contextual capabilities; we assume
   throughout that all capabilities are well-formed.
@@ -82,9 +82,10 @@ We equip $\Res$ with two operations. The \emph{product} $r_1 \times
 r_2$, defined when $r_1 \uparrow r_2$, is the set of all pairwise
 unions $\sigma_1 \cup \sigma_2$ with $\sigma_1 \in r_1$
 and $\sigma_2 \in
-r_2$; it combines capabilities over disjoint variable domains. \ZZ{the varaible domain is allowed to be not disjointed, which is important for resource duplication which will be used in sec 4 and 5. }
+r_2$.
+%% it combines capabilities over disjoint variable domains. \ZZ{the varaible domain is allowed to be not disjointed, which is important for resource duplication which will be used in sec 4 and 5. }
 The
-\emph{sum} $r_1 + r_2$, defined when $\Dom{r_1} = \Dom{r_2}$, is
+\emph{sum} operation, $r_1 + r_2$, defined when $\Dom{r_1} = \Dom{r_2}$, is
 simply $r_1 \cup r_2$; it merges capabilities over the same domain to
 support control-flow reasoning. Together with unit $\mathbf{1} \doteq
 \{\emptyset\}$, the tuple $(\Res, +, \times, \mathbf{1})$
@@ -189,7 +190,7 @@ modalities.
 The demonic modality $\demonic P$ holds at $r$ if there exists an upper bound $r'$ (i.e., $r \subseteq r'$) that satisfies
 $P$; this models an overapproximation since $r'$ extends $r$ with
 additional environments.  Dually, the angelic modality $\angelic P$ holds at
-$r$ if some lower bound $r' \sqsubseteq r$ satisfies $P$;
+$r$ if some lower bound $r' \subseteq r$ satisfies $P$;
 this models an underapproximation since $r'$ witnesses a specific
 subset of the environments in $r$. 
 We would like to highlight that the refinement relation $\sqsubseteq$ can also be used to extend the entailment of demonic and angelic modalities. Consider the following example:
