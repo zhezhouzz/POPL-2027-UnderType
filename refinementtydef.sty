@@ -484,8 +484,6 @@
 % \newcommand{\iffA}{\boldsymbol{\textcolor{DeepGreen}{{\iff}}}}
 \newcommand{\negB}{\boldsymbol{\textcolor{DeepGreen}{\neg}}}
 \newcommand{\landB}{\,\boldsymbol{\textcolor{DeepGreen}{\land}}\,}
-\newcommand{\interty}{\,\boldsymbol{\textcolor{DeepGreen}{\sqcap}}\,}
-\newcommand{\unionty}{\,\boldsymbol{\textcolor{DeepGreen}{\sqcup}}\,}
 % \newcommand{\biginterty}{\boldsymbol{\textcolor{DeepGreen}{\bigsqcap}}}
 \newcommand{\biginterty}{\boldsymbol{\textcolor{DeepGreen}{\bigsqcap}}}
 \newcommand{\bigunionty}{\boldsymbol{\textcolor{DeepGreen}{\bigsqcup}}}
@@ -760,17 +758,33 @@
 % Longer bar than hyphen-minus; tweak \mkern if the star overlaps.
 \newcommand{\wand}{\,\mathrel{\relbar\mkern-8mu*}\,}
 % Same ``small box, larger glyph'' tuning as \ctind (outer shrink + inner upscale).
-\newcommand{\subExt}{\textcolor{magenta}{\scalebox{0.55}{\ensuremath{\boxed{\scalebox{1.62}{\ensuremath{\mathsf{o}}}}}}}}
-
-\newcommand{\supExt}{\textcolor{CobaltBlue}{\scalebox{0.55}{\ensuremath{\boxed{\scalebox{1.62}{\ensuremath{\mathsf{u}}}}}}}}
-\newcommand{\demonic}{\subExt\,}
-\newcommand{\angelic}{\supExt\,}
+% Center the shrunk box on the math axis so it does not sit low in running text.
+\makeatletter
+\newcommand{\ctboxedscale}[2]{%
+  \setbox\@tempboxa\hbox{$\m@th\scalebox{0.55}{\ensuremath{\boxed{\scalebox{1.62}{\ensuremath{#2}}}}}$}%
+  \textcolor{#1}{%
+    \raisebox{\dimexpr\fontdimen22\textfont2-0.5\ht\@tempboxa+0.5\dp\@tempboxa\relax}{%
+      \copy\@tempboxa
+    }%
+  }%
+}
+\makeatother
+\newcommand{\subExt}{\ctboxedscale{magenta}{\mathsf{o}}}
+\newcommand{\supExt}{\ctboxedscale{CobaltBlue}{\mathsf{u}}}
+% Unary modality gap: smaller than \,(3mu); try \mkern1mu if still loose.
+\newcommand{\logicmodsep}{\mkern2mu}
+\newcommand{\logicmodsepShort}{\mkern1mu}
+\newcommand{\demonic}{\subExt\logicmodsepShort}
+\newcommand{\angelic}{\supExt\logicmodsepShort}
 \newcommand{\subExtleq}{\textcolor{magenta}{\,\leq_\mathsf{o}\,}}
 \newcommand{\supExtleq}{\textcolor{CobaltBlue}{\,\leq_\mathsf{u}\,}}
 \newcommand{\subExteq}{\textcolor{magenta}{\,\sim_\mathsf{o}\,}}
 \newcommand{\supExteq}{\textcolor{CobaltBlue}{\,\sim_\mathsf{u}\,}}
 \newcommand{\subExtQ}{\textcolor{magenta}{\,\boxed{/\mathsf{o}}\,}}
 \newcommand{\supExtQ}{\textcolor{CobaltBlue}{\,\boxed{/\mathsf{u}}\,}}
+% Vertical set relations (e.g.\ capability grids in diagrams)
+\newcommand{\vsubseteq}{\rotatebox[origin=c]{90}{$\subseteq$}}
+\newcommand{\vsupseteq}{\rotatebox[origin=c]{90}{$\supseteq$}}
 \newcommand{\qtrue}{\top}
 \newcommand{\qfalse}{\bot}
 \newcommand{\subs}{\sigma}
@@ -797,9 +811,11 @@
 \newcommand{\chpers}{\textcolor{DeepGreen}{\boldsymbol{\Box}}}
 \newcommand{\semistar}{\textcolor{DeepGreen}{\boldsymbol{\mathbin{,\mkern -8mu\ast}}}}
 \newcommand{\chiff}{\textcolor{DeepGreen}{\boldsymbol{\iff}}}
-\newcommand{\chterm}{\textcolor{DeepGreen}{\boldsymbol{\diamond}}}
-\newcommand{\chvdash}{\textcolor{DeepGreen}{\boldsymbol{\,\vdash\,}}}
+\newcommand{\chforall}{\textcolor{DeepGreen}{\boldsymbol{\,\forall\,}}}
+\newcommand{\chexists}{\textcolor{DeepGreen}{\boldsymbol{\,\exists\,}}}
 
+\newcommand{\interty}{\textcolor{CBOrange}{\boldsymbol{\,\sqcap\,}}}
+\newcommand{\unionty}{\textcolor{CBOrange}{\boldsymbol{\,\sqcup\,}}}
 \newcommand{\ctsarr}{\textcolor{CBOrange}{\pmb{\,\shortrightarrow\,}}}
 \newcommand{\ctinter}{\textcolor{CBOrange}{\boldsymbol{\,\sqcap\,}}}
 \newcommand{\ctunion}{\textcolor{CBOrange}{\boldsymbol{\,\sqcup\,}}}
@@ -810,7 +826,7 @@
 \newcommand{\ctpers}{\textcolor{CBOrange}{\boldsymbol{\Box}}}
 % boxed star: outer \scalebox shrinks the box; inner scale ups \ast so the glyph stays readable
 % (approx.\ compensate ast: inner $\approx 1/\text{outer}$, e.g.\ $0.72\times 1.39 \approx 1$.)
-\newcommand{\ctind}{\textcolor{CBOrange}{\scalebox{0.55}{\ensuremath{\boldsymbol{\boxed{\scalebox{1.62}{\ensuremath{\boldsymbol{\ast}}}}}}}}}
+\newcommand{\ctind}{\ctboxedscale{CBOrange}{\boldsymbol{\ast}}}
 \newcommand{\ctistar}{\textcolor{CBOrange}{\boldsymbol{\mathbin{,\mkern -8mu\ast}}}}
 \newcommand{\ctcomma}{\textcolor{CBOrange}{\,\pmb{,}\,}}
 \newcommand{\ctvdashAux}[1]{\,\textcolor{CBOrange}{\vdash_{#1}}\,}

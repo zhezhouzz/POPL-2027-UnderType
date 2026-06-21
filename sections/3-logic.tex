@@ -58,8 +58,8 @@ need the following notion.
   \projectTo{r}{\{x\}}$, the \emph{fiber} of $r$ over $[x \mapsto
   v_x]$ is:
   \[
-    \fiberOver{r}{[x \mapsto v_x]} \doteq \{\, \sigma' \in r \mid
-    \sigma'(x) = v_x \,\}.
+    \fiberOver{r}{[x \mapsto v_x]} \doteq \{\, \sigma \in r \mid
+    \sigma(x) = v_x \,\}.
   \]
   That is, $\fiberOver{r}{[x \mapsto v_x]}$ is the sub-capability of
   $r$ consisting of all environments that assign $x$ to $v_x$.
@@ -82,7 +82,7 @@ We equip $\Res$ with two operations. The \emph{product} $r_1 \times
 r_2$, defined when $r_1 \uparrow r_2$, is the set of all pairwise
 unions $\sigma_1 \cup \sigma_2$ with $\sigma_1 \in r_1$
 and $\sigma_2 \in
-r_2$; it combines capabilities over disjoint variable domains.
+r_2$; it combines capabilities over disjoint variable domains. \ZZ{the varaible domain is allowed to be not disjointed, which is important for resource duplication which will be used in sec 4 and 5. }
 The
 \emph{sum} $r_1 + r_2$, defined when $\Dom{r_1} = \Dom{r_2}$, is
 simply $r_1 \cup r_2$; it merges capabilities over the same domain to
@@ -121,7 +121,7 @@ depend on specific variable bindings in the current capability.
   The syntax of our context logic is:
   \begin{align*}
     P, Q \;::=\; &\chtrue \mid \chfalse \mid P \chland Q \mid P \chlor Q \mid P \chimpl Q \mid P \chstar Q \mid P \chwand Q
-    \\& \mid \forall x.\, P \mid \exists x.\, P \mid \Code{Atom}(\phi)
+    \\& \mid \chforall x.\, P \mid \chexists x.\, P \mid \Code{Atom}(\phi)
     \mid \demonic P \mid \angelic P \mid P \choplus Q \mid \forallM{x} P
   \end{align*}
   The forcing semantics over capabilities $r \in \Res$ is:
@@ -132,11 +132,11 @@ depend on specific variable bindings in the current capability.
   \item $r \models P \chimpl Q$ iff for all $r'$ such that $r \sqsubseteq r'$, $r' \models P$ implies $r' \models Q$;
   \item $r \models P \chstar Q$ iff $\exists r_1, r_2.\; r_1 \times r_2 \sqsubseteq r$,\; $r_1 \models P$,\; $r_2 \models Q$;
   \item $r \models P \chwand Q$ iff $\forall r' \uparrow r$,\; $r' \models P$ implies $r' \times r \models Q$;
-  \item $r \models \forall x.\, P$ iff $x \notin \Dom{r}$ and $\forall r'$ such that $r \sqsubseteq r'$ with $x \in \Dom{r'}$,\; $r' \models P$;
-  \item $r \models \exists x.\, P$ iff $x \notin \Dom{r}$ and $\exists r'$ such that $r \sqsubseteq r'$ with $x \in \Dom{r'}$,\; $r' \models P$;
+  \item $r \models \chforall x.\, P$ iff $x \notin \Dom{r}$ and $\forall r'$ such that $r \sqsubseteq r'$ with $x \in \Dom{r'}$,\; $r' \models P$;
+  \item $r \models \chexists x.\, P$ iff $x \notin \Dom{r}$ and $\exists r'$ such that $r \sqsubseteq r'$ with $x \in \Dom{r'}$,\; $r' \models P$;
   \item $r \models \Code{Atom}(\phi)$ iff $\projectTo{r}{\Code{FV}(\phi)} = \{\,\sigma \mid \Dom{\sigma} = \Code{FV}(\phi) \land \sigma \models \phi\,\}$;
-  \item $r \models \demonic P$ iff $\exists r', r \sqsubseteq r'$ such that $r' \models P$;
-  \item $r \models \angelic P$ iff $\exists r', r' \sqsubseteq r$ such that $r' \models P$;
+  \item $r \models \demonic P$ iff $\exists r', r \subseteq r'$ such that $r' \models P$;
+  \item $r \models \angelic P$ iff $\exists r', r' \subseteq r$ such that $r' \models P$;
   \item $r \models P \choplus Q$ iff $\exists r_1, r_2.\; r_1 + r_2 \sqsubseteq r$,\; $r_1 \models P$,\; $r_2 \models Q$;
   \item $r \models \forallM{x} P$ iff $\forall [x \mapsto v_x] \in \projectTo{r}{\{x\}}.\; \fiberOver{r}{[x \mapsto v_x]} \models P[x \mapsto v_x]$.\footnote{
 We extend the binding operator to sets of variables by iterated
@@ -152,14 +152,14 @@ before evaluating $P$.}
   We write $P \models Q$ iff for all $r \in \Res$, $r \models P$ implies $r \models Q$.
 \end{definition}
 
-The additive connectives ($\chland$, $\chlor$, $\chimpl$, $\forall$,
-$\exists$) are standard.  The multiplicative connectives ($\chstar$,
+The additive connectives ($\chland$, $\chlor$, $\chimpl$, $\chforall$,
+$\chexists$) are standard.  The multiplicative connectives ($\chstar$,
 $\chwand$) follow standard BI-logic semantics using the capability
 product.  We discuss the remaining operators below.
 
 \paragraph{Kripke Monotonicity}
 The implication $P \chimpl Q$ and the first-order quantifiers
-$\forall x.\, P$ and $\exists x.\, P$
+$\chforall x.\, P$ and $\chexists x.\, P$
 use the refinement
 relation $\sqsubseteq$ as the Kripke accessibility relation: truth at
 $r$ requires truth at all $r'$ such that $r \sqsubseteq r'$, i.e., at all extensions
@@ -186,14 +186,29 @@ of approximation direction entirely to the demonic and angelic
 modalities.
 
 \paragraph{Demonic and Angelic Modalities}
-The demonic modality $\demonic P$ holds at $r$ if $r$ can be
-\emph{extended} to some $r'$ (i.e., $r \sqsubseteq r'$) that satisfies
+The demonic modality $\demonic P$ holds at $r$ if there exists an upper bound $r'$ (i.e., $r \subseteq r'$) that satisfies
 $P$; this models an overapproximation since $r'$ extends $r$ with
-additional variable bindings, it may place fewer constraints on the
-existing bindings.  Dually, the angelic modality $\angelic P$ holds at
-$r$ if some \emph{sub-capability} $r' \sqsubseteq r$ satisfies $P$;
+additional environments.  Dually, the angelic modality $\angelic P$ holds at
+$r$ if some lower bound $r' \sqsubseteq r$ satisfies $P$;
 this models an underapproximation since $r'$ witnesses a specific
-subset of the environments in $r$.
+subset of the environments in $r$. We would like to highlight that the refinement relation $\sqsubseteq$ can also used to extends the entailment of demonic and angelic modalities. Consider the following example:
+\begin{align*}
+\begin{array}{c @{\hspace{1.5em}} c @{\hspace{1.5em}} c}
+  {\{[x \mapsto 1], [x \mapsto 2]\}} & \sqsubseteq & {r' \doteq \{[x \mapsto 1; y \mapsto 2], [x \mapsto 2; y \mapsto 7]\}} \\[0.6em]
+  \vsubseteq & & \vsubseteq \\[0.6em]
+  {r \doteq \{[x \mapsto 1]\}} & \sqsubseteq & {\{[x \mapsto 1; y \mapsto 2]\}}
+\end{array}
+\end{align*}\noindent
+For some angelic formula $\angelic P$, if we have $r \models \angelic P$, then we also have $r' \models \angelic P$. We have simluar result for demonic formula $\demonic P$ (i.e., $r \models \demonic P$ implies $r' \models \demonic P$) with in the following example:
+\begin{align*}
+\begin{array}{c @{\hspace{1.5em}} c @{\hspace{1.5em}} c}
+  {\{[x \mapsto 1]\}} & \sqsubseteq & {r' \doteq \{[x \mapsto 1; y \mapsto 2]\}} \\[0.6em]
+  \vsupseteq & & \vsupseteq \\[0.6em]
+  {r \doteq \{[x \mapsto 1], [x \mapsto 2]\}} & \sqsubseteq & {\{[x \mapsto 1; y \mapsto 2], [x \mapsto 2; y \mapsto 7]\}}
+\end{array}
+\end{align*}\noindent
+Note that the subset relation is reversed however the refinement relation is not.
+
 
 \begin{example}[Approximation Modalities]\label{ex-approximation-modalities}
   Let $r_x = \{[x \mapsto 1], [x \mapsto 2]\}$.  The following hold:
@@ -204,17 +219,16 @@ subset of the environments in $r$.
     &&r_x \models \angelic\,\Code{Atom}(0 \leq x \leq 4) \;\judgfail
   \end{align*}
   The demonic assertion $\demonic\,\Code{Atom}(x = 1)$ fails because
-  no extension of $r_x$ satisfies $\Code{Atom}(x = 1)$ exactly (since
-  $r_x$ already contains $[x \mapsto 2]$, any extension violates
+  no superset of $r_x$ satisfies $\Code{Atom}(x = 1)$ exactly (since
+  $r_x$ already contains $[x \mapsto 2]$, any superset violates
   exactness).  The angelic assertion $\angelic\,\Code{Atom}(0 \leq x
-  \leq 4)$ fails because no sub-capability of $r_x$ satisfies
+  \leq 4)$ fails because no subset of $r_x$ satisfies
   $\Code{Atom}(0 \leq x \leq 4)$ exactly (that would require
   environments for $x = 0, 3, 4$ which $r_x$ does not contain).
 
   Let $r_y \doteq \{[y \mapsto 3], [y \mapsto 4]\}$ and
       $r_{xy} \doteq \{[x \mapsto 1, y \mapsto 3], [x \mapsto 2, y \mapsto 4]\}$.
   Then:
-
 \begin{align*}
 &r_x \times r_y \models (\angelic\,\Code{Atom}(1 \leq x \leq 2)) \chstar (\angelic\,\Code{Atom}(3 \leq y \leq 4)) \;\judgok \\
 &r_{xy} \models (\angelic\,\Code{Atom}(1 \leq x \leq 2)) \chland (\angelic\,\Code{Atom}(3 \leq y \leq 4)) \;\judgok \\
@@ -324,7 +338,7 @@ Demonic and angelic type denotations follow directly from the
 corresponding modalities: the result of evaluating $e$ bound to
 fresh variable $\vnu$, must satisfy $\phi$ under either the demonic or
 angelic interpretation, with the binding operator fixing the bindings
-of the free variables of $\phi$ before applying the modality.  The
+of the free variables of $\phi$ (besides $\vnu$) before applying the modality.  The
 function type denotations internalize the adjunction between function
 types and context combinators: $\ctsarr$ uses additive implication
 (the parameter binding is entangled with the closure context), while
@@ -332,13 +346,18 @@ $\ctwand$ uses multiplicative implication (the parameter binding is
 disjoint from the closure context).
 
 \begin{definition}[Type Context Denotation]\label{def:context-denotation}
-  \begin{align*}
-    \denot{\emptyset}_\Sigma &\doteq \chtrue
-    \\\denot{x{:}\tau}_\Sigma &\doteq \denot{\tau}_\Sigma\;x
-    \\\denot{\Gamma_1 \ctcomma \Gamma_2}_\Sigma &\doteq \denot{\Gamma_1}_\Sigma \chland \denot{\Gamma_2}_{(\Sigma,\,\eraserf{\Gamma_1})}
-    \\\denot{\Gamma_1 \ctstar \Gamma_2}_\Sigma &\doteq \denot{\Gamma_1}_\Sigma \chstar \denot{\Gamma_2}_\Sigma
-    \\\denot{\Gamma_1 \ctoplus \Gamma_2}_\Sigma &\doteq \denot{\Gamma_1}_\Sigma \choplus \denot{\Gamma_2}_\Sigma
-  \end{align*}
+  \[
+  \begin{aligned}
+    \denot{\emptyset}_\Sigma &\doteq \chtrue \\
+    \denot{x{:}\tau}_\Sigma &\doteq \denot{\tau}_\Sigma\;x
+  \end{aligned}
+  \qquad
+  \begin{aligned}
+    \denot{\Gamma_1 \ctcomma \Gamma_2}_\Sigma &\doteq \denot{\Gamma_1}_\Sigma \chland \denot{\Gamma_2}_{(\Sigma,\,\eraserf{\Gamma_1})} \\
+    \denot{\Gamma_1 \ctstar \Gamma_2}_\Sigma &\doteq \denot{\Gamma_1}_\Sigma \chstar \denot{\Gamma_2}_\Sigma \\
+    \denot{\Gamma_1 \ctoplus \Gamma_2}_\Sigma &\doteq \denot{\Gamma_1}_\Sigma \choplus \denot{\Gamma_2}_\Sigma
+  \end{aligned}
+  \]
 \end{definition}
 
 The dependent conjunction ``$\ctcomma$'' maps to additive conjunction
@@ -350,11 +369,11 @@ independent.
 
 The semantic subtyping relations used in rules T-Sub and T-CtxSub are:
 \begin{figure}[h]
-  {\small
+  {
   \begin{flalign*}
     &\text{\textbf{Semantic subtyping}} && \fbox{$\Gamma \vdash \tau \subty \tau$ \quad $\Gamma \ctsubseteq{X} \Gamma$}
   \end{flalign*}
-  \mprooftr{48mm}
+  \mprooftr{42mm}
   {$\forall e.\; \denot{\Gamma} \models \denot{\tau_1}\;e \chimpl \denot{\tau_2}\;e$}
   {Sub}
   {$\Gamma \vdash \tau_1 <: \tau_2$}
@@ -380,11 +399,11 @@ We conclude with the core soundness results.
 \begin{theorem}[Well-Formed Operator Context]\label{thm:well-formed-operator}
   Operator context $\Phi$ is well-formed iff for all primitive
   operators $\primop$:
-  \begin{align*}
+  {\small\begin{align*}
     \Phi(\primop) = \overline{x{:}\ort{b_x}{\phi_x}} \ctsarr \ort{b}{\phi} \ctinter \urt{b}{\phi}
     \quad\text{and}\quad
     \models \denot{\overline{x{:}\ort{b_x}{\phi_x}}} \chiff \denot{\ort{b}{\phi} \ctinter \urt{b}{\phi}}\;(\primop\;\overline{x}).
-  \end{align*}
+  \end{align*}}
 \end{theorem}
 
 \begin{theorem}[Fundamental Theorem]\label{thm:fundamental}
