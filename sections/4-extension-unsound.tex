@@ -1,0 +1,109 @@
+\section{Nondeterministic extension (unsound)}\label{sec:extension}
+
+In this section, we extend our core language to support nondeterminism, i.e., allowing a term $e$ to reduce to multiple different values. Concretely, we additionally allow the following primitive nondeterminism operators in our core language:
+\begin{align*}
+  \primop ::= \quad & ... ~|~ \Code{bool\_gen()} ~|~ \Code{nat\_gen()} ~|~ ...
+\end{align*}\noindent
+Then, the nondeterministic choice operator $e_1 \oplus e_2$ can be expressed as $\zif{\Code{bool\_gen()}}{e_1}{e_2}$.
+With this extension, our core language can represent an ``impure external environment,'' such as $\Envir_x(e) \doteq \zlet{x}{\Code{nat\_gen()}}{\boxed{e}}$. Nondeterminism means that a program can produce new ``capability of angelic context'' (e.g., $x$ in environment $\Envir_x$). Moreover, a primitive random operator can duplicate the corresponding capability across arbitrary invocations. Similar to existing bunched implication logics~\cite{Iris}, we extend our logic and type system with a \emph{persistency modality} $\ctpers$ to express this semantics. On the other hand, nondeterminism breaks the single-valued assumption of our core language, which requires some careful adjustments to our type denotation.
+
+\subsection{Persistency}
+
+As discussed in \autoref{sec:intro}, our type system naturally assumes that the result of a function is dependent on its parameter; however, this does not work for a nondeterministic term. Consider the following example:
+\begin{align*}
+  &x{:}\urt{\Nat}{\top} \vdash \zzlam{z}{\Code{nat\_gen()}} : z{:}\urt{\Nat}{\vnu = x} \ctsarr \urt{\Nat}{\top}
+  \\&\underline{\Gamma \ctcomma x{:}\urt{\Nat}{\top} \ctcomma y{:}\urt{\Nat}{\top} \vdash e : \tau}
+  \\&\Gamma \ctcomma x{:}\urt{\Nat}{\top} \vdash \zlet{y}{\zzlam{z}{\Code{nat\_gen()}}\;x}{e} : \tau
+\end{align*}\noindent
+Note that the result of function application ($y$) is, by default, dependent on its argument ($x$) within the type context of body expression ($e$), even when parameter $x$ is not used in the function. Changing the function type to a disjointed function type, i.e., $z{:}\urt{\Nat}{\vnu = x} \ctwand \urt{\Nat}{\top}$, does not help. The disjointed function type $z{:}\urt{\Nat}{\vnu = x} \ctwand ...$ means that $z$ is disjointed from the context, rather than making the function result disjointed; also, the parameter type indeed depends on $x$ in the context. Ideally, we want a type like
+\begin{align*}
+  \underbrace{z{:}\urt{\Nat}{\vnu = x} \ctsarr}_\texttt{The parameter $z$ is dependent.} \underbrace{\urt{\Nat}{\top} \ctwand}_\texttt{The result is disjointed.}
+\end{align*}\noindent
+which can lead to a disjointed type context $\Gamma \ctcomma x{:}\urt{\Nat}{\top} \ctstar y{:}\urt{\Nat}{\top}$ via adjunction.
+However, this type is ill-formed in our bunched typing syntax. Alternatively, we introduce the \emph{persistency modality} $\ctpers$:
+\begin{align*}
+  &x{:}\urt{\Nat}{\top} \vdash \zzlam{z}{\Code{nat\_gen()}} : z{:}\urt{\Nat}{\vnu = x} \ctsarr \ctpers \urt{\Nat}{\top}
+\end{align*}\noindent
+The persistency modality means that a type is not interfered with (i.e., is disjointed) by the whole context, which enables the following semantic typing transformation:
+\begin{align*}
+  &\Gamma \ctcomma x{:}\urt{\Nat}{\top} \ctcomma \ctpers y{:}\urt{\Nat}{\top} \ctsubseteqA \Gamma \ctcomma x{:}\urt{\Nat}{\top} \ctstar \ctpers y{:}\urt{\Nat}{\top}
+  \\&\emptyset \vdash \ctpers \urt{\Nat}{\top} \subty \urt{\Nat}{\top} 
+\end{align*}\noindent
+which solves the previous issue by allowing users to shift between dependent and disjointed conjunction.
+
+\paragraph{Persistency modality, duplication, and nondeterminism} Although we use the persistency modality as an ``appending disjointed function type,'' it has a different semantic connection with nondeterminism. In a deterministic language that cannot generate a new \emph{disjointed} angelic context, all bindings with angelic interpretation need to be dependent on the original input context. This is still ensured by the constraint ``result of function is by default dependent on the function itself'':
+\begin{align*}
+  &\underline{f{:}\urt{\Unit}{\top}\ctsarr \urt{\Nat}{\top} \ctcomma  x{:}\urt{\Nat}{\top} \ctcomma y{:}\urt{\Nat}{\top} \vdash e : \tau}
+  \\&f{:}\urt{\Unit}{\top}\ctsarr \urt{\Nat}{\top} \vdash \zlet{x}{f\;()}{\zlet{y}{f\;()}{e}} : \tau
+\end{align*}\noindent
+All results of function $f$ are dependent via the bridge of function $f$.
+On the other hand, our primitive random operator indeed has the ability to duplicate disjointed angelic context, which is then allowed by the persistency modality:
+\begin{align*}
+  &\underline{\Code{nat\_gen}{:}\urt{\Unit}{\top}\ctsarr \ctpers \urt{\Nat}{\top} \ctstar \ctpers x{:}\urt{\Nat}{\top} \ctstar \ctpers y{:}\urt{\Nat}{\top} \vdash e : \tau}
+  \\&\underline{\Code{nat\_gen}{:}\urt{\Unit}{\top}\ctsarr \ctpers \urt{\Nat}{\top} \ctcomma \ctpers x{:}\urt{\Nat}{\top} \ctcomma \ctpers y{:}\urt{\Nat}{\top} \vdash e : \tau}
+  \\&\Code{nat\_gen}{:}\urt{\Unit}{\top}\ctsarr \ctpers \urt{\Nat}{\top} \vdash \zlet{x}{\Code{nat\_gen}\;()}{\zlet{y}{\Code{nat\_gen}\;()}{e}} : \tau
+\end{align*}\noindent
+% In bunched logic, the persistency modality also sometime is treated an substitute of the exponential modality in linear logic that can duplidate linear resource.
+
+\paragraph{Denotation of persistency modality} We introduce the standard persistency modality $\chpers P$ in our context logic to express the type denotation of persistency types.
+\begin{align*}
+  r \models \chpers P \text{ iff } \forall \sigma \in \projectTo{r}{\Dom{r} \setminus \Code{FV}(P)}. \fiberOver{r}{\sigma} \models P
+\end{align*}\noindent
+which means that persistent property $P$ holds for all corresponding fibers that are not related to $P$ (i.e., $\Dom{r} \setminus \Code{FV}(P)$); equivalently, $P$ is independent from the other variables in the context. Then, the type denotation of persistency type $\chpers \tau$ is simply $ \denot{\tau}_\Sigma\;e \doteq \chpers (\denot{\tau}_\Sigma\;e)$.
+
+\begin{example}[Persistency] As discussed above for duplication of disjointness, we should have $P \chland \chpers Q$ equal to $P \chstar \chpers Q$. Consider the following concrete example:
+\begin{align*}
+  &r \models \angelic (1 \leq x \leq 2) \chland \chpers \angelic (3 \leq y \leq 4)
+\end{align*}\noindent
+where we assume for simplicity that $r$ can contain only the following stores:
+\begin{align*}
+  \sigma_{13} \doteq [x=1; y=3] \quad \sigma_{14} \doteq [x=1; y=4] \quad \sigma_{23} \doteq [x=2; y=3] \quad \sigma_{24} \doteq [x=2; y=4]
+\end{align*}\noindent
+Then, according to the definition of persistency modality, stores $\sigma_{13}$ and $\sigma_{14}$ must be either both contained in $r$ or both absent from $r$; the same holds for $\sigma_{23}$ and $\sigma_{24}$. According to $\angelic (1 \leq x \leq 2)$, $r$ must contain at least one store assigning $x$ to $1$ and one store assigning $x$ to $2$; thus, all four stores above must be contained in $r$, which is exactly the requirement of disjointness.
+\end{example}
+
+\section{Type denotation of nondeterminism}
+
+There is a soundness issue caused by nondeterminism for higher-order functions. Consider the following two functions:
+\begin{align*}
+  &f_1\doteq \zlam{x}{\Unit}{(\true \oplus \false)} \quad f_2\doteq (\zlam{x}{\Unit}{\true}) \oplus (\zlam{x}{\Unit}{\false})
+\end{align*}\noindent
+Both of these functions can have type $\urt{\Unit}{\top}\ctsarr\ctpers\urt{\Bool}{\top}$, since both $f_1\;()$ and $f_2\;()$ can reduce to set of values $\{\true, \false\}$ that is \emph{disjointed from the context}. However, only the first one is a true ``capability producer,'' which captures randomness (i.e., $\oplus$) within its closure, while the second one only has ``one-shot'' randomness. Consider the following higher-order function:
+\begin{align*}
+  &\emptyset \vdash \zzlam{f}{f\;() == f\;()} : f{:}(\urt{\Unit}{\top}\ctsarr\ctpers\urt{\Bool}{\top}) \ctwand \urt{\Bool}{\top}
+\end{align*}\noindent
+where $g$ expects input function $f$ to work like a boolean generator, so that the result covers both $\true$ and $\false$. However, second function $f_2$ cannot satisfy this requirement, since in our call-by-value semantics, input function $f$ is first evaluated into either $\zlam{x}{\Unit}{\true}$ or $\zlam{x}{\Unit}{\false}$, which makes the result of $g$ only $\true$. This example means that denotation of function type is not consistent with semantics of nondeterminism.
+
+There is also a completeness issue about control flow; consider the following example:
+\begin{align*}
+  &\emptyset \vdash \Code{bool\_gen()}: \ort{\Bool}{\vnu = \true} \ctoplus \ort{\Bool}{\vnu = \false}
+  \\&x{:}\urt{\Bool}{\top} \vdash x: \ort{\Bool}{\vnu = \true} \ctoplus \ort{\Bool}{\vnu = \false}
+\end{align*}\noindent
+Ideally, both of these typing judgements should hold, where the second one just pushes nondeterministic term $\Code{bool\_gen()}$ into the context. However, the first judgement conflicts with our type denotation of sum type:
+\begin{align*}
+  \denot{\tau_1 \ctoplus \tau_2}_\Sigma\;e \doteq \denot{\tau_1}_\Sigma\;e \ctoplus \denot{\tau_2}_\Sigma\;e
+\end{align*}\noindent
+This type denotation allows us to divide context to align control flow, which enables the second typing judgement to hold; however, it disallows dividing the term itself (e.g., $\Code{bool\_gen()} \equiv \true \oplus \false$). To prove the first judgement, we need to guarantee that:
+\begin{align*}
+  \emptyset \vdash \Code{bool\_gen()}: \ort{\Bool}{\vnu = \true} \quad \text{ and } \quad \emptyset \vdash \Code{bool\_gen()}: \ort{\Bool}{\vnu = \false}
+\end{align*}\noindent
+which is too strong to guarantee. The core issue here is that nondeterministic term itself can now contain control flow, which is not captured by our type denotation.
+
+\paragraph{Generalized Type denotation} To solve the above issues, we generalize our type denotation as follows.
+\begin{align*}
+  \denot{x{:}\tau_x \ctsarr \tau}_\Sigma\;e &\doteq \forall f. \denot{f := e}_\Sigma \chimpl \denot{\tau_x}_\Sigma\;x \chimpl \denot{\tau}_{\Sigma,x{:}\eraserf{\tau_x}}\;(f\;x)
+  \\\denot{x{:}\tau_x \ctwand \tau}_\Sigma\;e &\doteq \forall f. \denot{f := e}_\Sigma \chimpl \denot{\tau_x}_\Sigma\;x \chwand \denot{\tau}_{\Sigma,x{:}\eraserf{\tau_x}}\;(f\;x)
+  \\\denot{\tau_1 \ctoplus \tau_2}_\Sigma\;e &\doteq \forall x. \denot{x := e}_\Sigma \chimpl \denot{\tau_1}_\Sigma\;x \choplus \denot{\tau_2}_\Sigma\;x
+\end{align*}\noindent
+All updated type denotations use the same trick: universally quantified implication $\forall x. \denot{x := e} \chimpl ...$ lifts denotation of term $e$ into type context. Readers can examine that generalized denotation is equivalent to the original one in deterministic language.
+This trick can empower the existing persistency modality and sum operator in logic to handle nondeterminism.
+For the function-type issue, now $f_2$ cannot have the persistency type:
+\begin{align*}
+  &\denot{\urt{\Unit}{\top}\ctsarr\ctpers\urt{\Bool}{\top}}\;(\zlam{x}{\Unit}{\true}) \oplus (\zlam{x}{\Unit}{\false})
+  \\=& \forall f. \Code{Atom}(f = \zlam{x}{\Unit}{\true} \lor f = \zlam{x}{\Unit}{\false}) \chimpl \chpers \angelic \Code{Atom}(f\;() = \true \lor f\;() = \false) \judgfail
+\end{align*}\noindent
+where persistency modality now requires application results to cover set of values $\{\true, \false\}$, which is even independent from evaluation result of function itself. Thus, a function like $f_2$, whose function body does not capture randomness, cannot be treated as a persistent capability producer. On the other hand, updated denotation of sum type pushes randomness of term $e$ into the context, and now sum operator allows us to divide it as normal context.
+\begin{align*}
+  &\denot{\ort{\Bool}{\vnu = \true} \ctoplus \ort{\Bool}{\vnu = \false}}\;\Code{bool\_gen()}
+  \\=& \forall x. \Code{Atom}(x = \true \lor x = \false) \chimpl \Code{Atom}(\vnu = x) \chimpl \demonic\Code{Atom}(\vnu = \true) \choplus \demonic \Code{Atom}(\vnu = \false) \judgok
+\end{align*}\noindent
