@@ -1,4 +1,4 @@
-\section{Supporting Nondeterministism}\label{sec:extension}
+\section{Supporting Nondeterminism}\label{sec:extension}
 
 The core language of Section~\ref{sec:context-typing} is
 deterministic: every term reduces to at most one value under any
@@ -29,98 +29,159 @@ generalization of the denotation of function and sum types.
 % (\S\ref{subsec:case-studies}) demonstrating the expressiveness of the
 % resulting system.
 
-\subsection{Resource Duplication and the Demonic Modality}\label{subsec:duplication}
+\subsection{Resource Duplication and Persistence}\label{subsec:duplication}
 
-In the deterministic core language, every function application produces
-a result whose capability is dependent on the function's capability via
-the default dependent conjunction ($\ctcomma$) in \textsc{T-Let}.  Consider two
-successive calls to a deterministic function $f$:
+In the deterministic core language, disjoint capabilities are \emph{external only}:
+evaluation does not introduce new capabilities.
+For example, the only inhabitant of $\ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top}$ should be function that returns the captured angelic binding $z$:
 \begin{align*}
-  &\underline{f{:}\urt{\Unit}{\top} \ctsarr \urt{\Nat}{\top}
-    \ctcomma x{:}\urt{\Nat}{\top} \ctcomma y{:}\urt{\Nat}{\top}
-    \vdash e : \tau}
-  \\&f{:}\urt{\Unit}{\top} \ctsarr \urt{\Nat}{\top} \vdash
-    \zlet{x}{f\;()}{\zlet{y}{f\;()}{e}} : \tau
-\end{align*}
-Both $x$ and $y$ are entangled with $f$'s capability: knowing $f$
-constrains both, so their capabilities cannot be treated as
-independent.  This is correct for a deterministic $f$, whose output
-is fully determined by its input.
+  z{:}\urt{\Unit}{\top} \vdash \zzlam{x}{z} : \ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top}
+\end{align*}\noindent
+Two successive calls to $\zzlam{x}{z}$ must therefore yield dependent results even with disjoint arguments:
+\begin{align*}
+  z{:}\urt{\Unit}{\top} \vdash \zlet{f}{\zzlam{x}{z}}{\zlet{y_1}{f\;()}{\zlet{y_2}{f\;()}{e}}} : \tau
+\end{align*}\noindent
+This is guaranteed by our bunched typing rules \textsc{T-Let} and \textsc{T-LetD}, which enforce the ``dependent xor consumed'' policy, where the rule \textsc{T-Let} allows the function $f$ to be used in both the binding expression and the body of a \Code{let}-expression, but the application results can only be dependent.
+\begin{align*}
+  &\underline{\Gamma \ctcomma (z{:}\urt{\Unit}{\top} \ctcomma f{:}\ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top}) \ctcomma y_1{:}\urt{\Nat}{\top} \vdash \zlet{y_2}{f\;()}{e} : \tau} \tag{\textsc{T-Let}}
+  \\&\Gamma \ctcomma (z{:}\urt{\Unit}{\top} \ctcomma f{:}\ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top}) \vdash \zlet{y_1}{f\;()}{\zlet{y_2}{f\;()}{e}} : \tau
+\end{align*}\noindent
+On the other hand, the rule \textsc{T-LetD} allows producing disjoint results but disallows using the function $f$ in the body of a \Code{let}-expression. As shown below, the binding $f$ is consumed from the type context, so the second application cannot be typed.
+\begin{align*}
+  &\underline{\Gamma \ctstar y_1{:}\urt{\Nat}{\top} \vdash \zlet{y_2}{f\;()}{e} : \tau \quad \judgfail}  \tag{\textsc{T-LetD}}
+  \\&\Gamma \ctstar (z{:}\urt{\Unit}{\top} \ctcomma f{:}\ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top}) \vdash \zlet{y_1}{f\;()}{\zlet{y_2}{f\;()}{e}} : \tau
+\end{align*}\noindent
 
 With a nondeterministic generator like $\Code{nat\_gen()}$, however,
-successive calls produce genuinely independent values.  The key
-observation is that non-deterministic generators like
-$\Code{nat\_gen()}$ must be given a \emph{demonic} parameter type:
+successive calls produce genuinely independent values. 
+The key
+observation is that nondeterministic generators like
+$\Code{nat\_gen()}$ must be given a \emph{persistent} type:
 \begin{align*}
-  \Code{nat\_gen} : \ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top}
+  \Code{nat\_gen} : \ctpers (\ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top})
 \end{align*}
-The demonic parameter type $\ort{\Unit}{\top}$ asserts that the
-generator's result is independent of its argument in a specific sense:
-since $\ort{\Unit}{\top}$ is a safety (overapproximate) type, it
-requires the argument to be consistent with $\top$, i.e., any unit
-value, but places no angelic obligation on it.  Crucially, a demonic
-type in a \emph{negative position} (as a function parameter) behaves
-like a persistent resource in the context algebra: it can be freely
-duplicated across multiple uses without entangling the corresponding
+Persistence allows a binding in the type context to be duplicated, i.e.,
+\begin{align*}
+  x{:}\ctpers \tau \; \ctsubseteq{\{x\}} \; x{:}\ctpers \tau \ctstar x{:}\ctpers \tau 
+\end{align*}\noindent
+With the help of the rule \textsc{T-LetD}, the resource can be freely duplicated across multiple function applications without entangling the corresponding
 capabilities.
 
-This follows from a key algebraic property of the context logic: the
-demonic modality $\demonic P$ is persistent by definition, i.e., once
-$\demonic P$ holds, it continues to hold as more environments are
-added to the capability. This means that a demonic capability, once
-established, remains available regardless of what other environments
-are added to the context, which is exactly the duplication behavior
-needed for resource generators.
+\paragraph{Duplicable resource and persistent modality} As in other BI-logics that support the persistent modality~\cite{Iris}, the persistent modality is defined based on the \emph{duplicable} resource with respect to the product operation in the BI-algebra. The duplicable resource is idempotent with respect to the product operation, i.e., $r \times r = r$, which allows us to duplicate the generator types in the type context.
+In our setting, $r \times r = r$ happens only when $r$ is a \emph{singleton} capability that contains only one environment. Following this idea, we can define the persistent modality in our context logic, which means a formula does not rely on the different choices provided by the capability, i.e., the capability is singleton.
 
-%% To see
-%% why, recall that $r \models \demonic P$ $\exists r' \supseteq r$
-%% s.t. $r' \models P$.  Now suppose r⊨\demonicPr \models \demonic P
-%% r⊨\demonicP and consider any extension r′′r'' r′′ of rr r in the
-%% set-inclusion sense, i.e., r⊆r′′r \subseteq r'' r⊆r′′. Since r′⊇rr'
-%% \supseteq r r′⊇r and r′′⊇rr'' \supseteq r r′′⊇r, we can take r′∪r′′r'
-%% \cup r'' r′∪r′′ as a witness: it satisfies r′∪r′′⊇r′′r' \cup r''
-%% \supseteq r'' r′∪r′′⊇r′′ and r′∪r′′⊇r′⊨Pr' \cup r'' \supseteq r'
-%% \models P r′∪r′′⊇r′⊨P by monotonicity of PP P under superset
-%% extension. Thus r′′⊨\demonicPr'' \models \demonic P r′′⊨\demonicP,
-%% showing that the demonic modality is preserved under set-inclusion
-%% extension — i.e., 
+\begin{definition}[Persistent modality] We introduce the standard persistence modality $\chpers P$ in our context logic such that:
+  \begin{align*}
+    r \models \chpers P \text{ iff } \exists \sigma. \{\sigma\} \sqsubseteq r \land \{\sigma\} \models P
+  \end{align*}\noindent
+  Note that we do not require $r$ to be singleton over its entire variable domain, which would violate Kripke monotonicity: if a capability $r$ is singleton, then for $r'$ such that $r' \sqsubseteq r$, $r'$ is not always singleton. Alternatively, we choose a more general form where $\{\sigma\}$ should be $\projectTo{r}{\Code{FV}(P)}$, which at least contains all variables needed by $P$.
+\end{definition}
 
-Concretely, this means that two successive calls to $\Code{nat\_gen()}$
-can be typed with independent capabilities for $x$ and $y$:
+\paragraph{Persistent type} Formally, a persistent type $\Gamma \vdash e : \ctpers \tau$ indicates that the typing of $e$ does not rely on the capability from either the bindings in type context $\Gamma$ or \emph{the reduction of the term $e$}. Consider the following three functions:
 \begin{align*}
-  &\underline{\Code{nat\_gen}{:}\ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top}
-    \ctstar x{:}\urt{\Nat}{\top} \ctstar y{:}\urt{\Nat}{\top}
-    \vdash e : \tau}
-  \\&\underline{\Code{nat\_gen}{:}\ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top}
-    \ctcomma x{:}\urt{\Nat}{\top} \ctcomma y{:}\urt{\Nat}{\top}
-    \vdash e : \tau}
-  \\&\Code{nat\_gen}{:}\ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top}
-    \vdash \zlet{x}{\Code{nat\_gen}\;()}{\zlet{y}{\Code{nat\_gen}\;()}{e}} : \tau
+  &z{:}\urt{\Unit}{\top} \vdash \zzlam{x}{z} : \ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top}
+  \\&\emptyset \vdash \zzlam{x}{\Code{nat\_gen()}} : \ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top}
+  \\&\emptyset \vdash \zzlam{x}{0} \oplus \zzlam{x}{\Code{positive\_gen()}} : \ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top}
+\end{align*}\noindent
+All of them can have the normal function types, while only the second one can be persistent. The first one is obviously not persistent since it depends on the binding $z$ in the type context, while the third one is also not persistent since its reachability guarantee is \emph{dependent on the reduction of the term}. The following type judgement fails in our call-by-value semantics:
+\begin{align*}
+  \emptyset \vdash \zlet{f}{\zzlam{x}{0} \oplus \zzlam{x}{\Code{positive\_gen()}}}{\zif{f\;() = 0}{f\;()}{0}} : \urt{\Nat}{\top} \quad \judgfail
+\end{align*}\noindent
+This term can only reach the value $0$ since $f\;()$ can either reduce to $0$ or to any positive number. In other words, the two applications of $f$ are indeed dependent, and $f$ is not persistent.
+
+\begin{definition}[Persistent type] The type denotation of a persistent type $\ctpers \tau$ is defined as:
+  \begin{align*}
+    \denot{\ctpers \tau}_\Sigma\;e \doteq \forall x.\denot{\mstep{e}{x}} \chimpl \chpers (\denot{\tau}_{\Sigma,x{:}\eraserf{\tau}}\;x) \quad (\text{fresh $x$})
+  \end{align*}\noindent 
+Note that defining the type denotation as $\chpers (\denot{\tau}_{\Sigma}\;e)$ would also allow wrong inhabitants such as $\zzlam{x}{0} \oplus \zzlam{x}{\Code{positive\_gen()}}$. To ensure that $e$ is also single-valued, we introduce a universally quantified fresh variable $x$ that ranges over all possible reduction results of $e$; the persistent modality then ensures only that $x$ is single-valued.
+\end{definition}
+
+\subsection{Type Denotation for Nondeterminism}\label{subsec:nondet-denotation}
+
+Nondeterminism breaks the single-valued assumption of the deterministic
+language in two ways that require adjustments to the type denotation.
+
+\paragraph{Function Types} The current rules for let binding are inconsistent with the type denotation in the nondeterministic setting. Consider the following judgement:
+\begin{align*}
+  \emptyset \vdash \zlet{x}{\Code{bool\_gen()}}{\zlam{y}{\Bool}{y = x}} : y{:}\urt{\Bool}{\top} \ctsarr \urt{\Bool}{\top}
+\end{align*}\noindent
+The current type denotation assumes that the parameter type $y$ cannot depend on the choice of $x$, which is hidden inside the generator invocation within the term; thus this function should return all boolean values. However, the let-expression rule (e.g., \textsc{T-Let}) exposes the hidden capability within the nondeterministic term:
+\begin{align*}
+  x{:}\urt{\Bool}{\top} \vdash \zlam{y}{\Bool}{y = x} : y{:}\urt{\Bool}{\top} \ctsarr \urt{\Bool}{\top}
+\end{align*}\noindent
+where $y$ can be chosen equal to $x$, so the function can only return $\true$.
+The issue here is that a nondeterministic term exposes more capabilities into the environment during evaluation, which is not accounted for by the current type denotation.
+
+\paragraph{Sum Types}
+A similar issue arises for sum types.  The judgement:
+\begin{align*}
+  \emptyset \vdash \Code{bool\_gen()} :
+  \ort{\Bool}{\vnu = \true} \ctoplus \ort{\Bool}{\vnu = \false}
 \end{align*}
-The key step is the shift from dependent ($\ctcomma$) to disjoint
-($\ctstar$) conjunction in the second-to-first line.  This shift
-follows from the denotational semantics. By
-Definition~\ref{def:context-denotation}, the dependent conjunction
-``$\ctcomma$'' maps to additive conjunction ``$\chland$''
-and the disjoint conjunction ``$\ctstar$'' maps to
-multiplicative conjunction ``$\chstar$''. The shift therefore
-requires showing:
-\begin{align*}
-  \denot{\Code{nat\_gen}{:}\ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top}} \chland \denot{x{:}\urt{\Nat}{\top}} \chland \denot{y{:}\urt{\Nat}{\top}} \models\\
-  \denot{\Code{nat\_gen}{:}\ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top}} \chstar \denot{x{:}\urt{\Nat}{\top}} \chstar \denot{y{:}\urt{\Nat}{\top}}
-\end{align*}  
-This holds because the denotation of $\Code{nat\_gen}$'s type is
-guarded by the demonic modality and, as established above, this means
-the capability for $\Code{nat\_gen}$ can be freely separated from
-those of $x$ and $y$ via ``$\chstar$''.
+should hold, since $\Code{bool\_gen()}$ nondeterministically produces
+either $\true$ or $\false$.  However, the original denotation
+$\denot{\tau_1 \ctoplus \tau_2}\;e \doteq \denot{\tau_1}\;e \choplus
+\denot{\tau_2}\;e$ requires the \emph{context} to be split across the
+two branches, not the term itself.  Under the empty context, there is
+no capability to split, so the judgement fails despite being
+semantically valid.
 
-More generally, any function whose parameter type is demonic
-(overapproximate) can be invoked multiple times with independent result
-capabilities, since the demonic parameter type's persistence in negative
-position enables the necessary resource duplication.  Functions with
-angelic parameter types, by contrast, require their argument to cover
-a specific set of values, which entangles successive calls via the
-shared argument capability.
+\paragraph{Generalized Denotation}
+Both issues stem from the same root cause: the original denotation
+evaluates $e$ once and reasons about the result, but a
+nondeterministic $e$ can reduce to different values in different
+executions.  The fix is to universally quantify over all possible
+reduction results of $e$, lifting $e$'s nondeterminism into the
+type context:
+\begin{align*}
+  \denot{x{:}\tau_x \ctsarr \tau}_\Sigma\;e
+    &\doteq \forall f.\; \denot{f \doteq e}_\Sigma \chimpl
+             \denot{\tau_x}_\Sigma\;x \chimpl
+             \denot{\tau}_{\Sigma,f{:}\eraserf{\tau_x \ctsarr \tau}, x{:}\eraserf{\tau_x}}\;(f\;x)
+  \\\denot{x{:}\tau_x \ctwand \tau}_\Sigma\;e
+    &\doteq \forall f.\; \denot{f \doteq e}_\Sigma \chimpl
+             \denot{\tau_x}_\Sigma\;x \chwand
+             \denot{\tau}_{\Sigma,f{:}\eraserf{\tau_x\ctwand \tau}, x{:}\eraserf{\tau_x}}\;(f\;x)
+  \\\denot{\tau_1 \ctoplus \tau_2}_\Sigma\;e
+    &\doteq \forall x.\; \denot{x \doteq e}_\Sigma \chimpl
+             \denot{\tau_1}_{\Sigma,x{:}\eraserf{\tau_1}}\;x \choplus \denot{\tau_2}_{\Sigma,x{:}\eraserf{\tau_2}}\;x
+\end{align*}
+In each case, a universally quantified fresh variable ($f$ or $x$)
+ranges over all possible reduction results of $e$, and the original
+denotation is applied to that variable.  In the deterministic case,
+$e$ has a unique reduction result and the quantifier is trivially
+eliminated, so the generalized denotation coincides with the original.
+
+For the function-type issue, the generalized denotation successfully captures the newly produced capabilities induced by the nondeterministic term. Thus the previous function-type judgement fails under the generalized denotation:
+\begin{align*}
+  &\denot{y{:}\urt{\Bool}{\top} \ctsarr \urt{\Bool}{\top}}\;
+    (\zlet{x}{\Code{bool\_gen()}}{\zlam{y}{\Bool}{y = x}})
+  \\=\;& \forall f.\; \Code{Atom}(f = (\zlam{y}{\Bool}{y = \true}) \lor
+          f = (\zlam{y}{\Bool}{y = \false})) \chimpl
+          \\& \quad \forall y. \Code{Atom}(y = \true \lor y = \false) \chimpl  \angelic\,\Code{Atom}(f\;y = \true \lor f\;y = \false)
+  \quad\judgfail
+\end{align*}
+For the sum-type issue, the generalized denotation lifts
+$\Code{bool\_gen()}$'s nondeterminism into the context via the fresh
+variable $x$, allowing the sum operator to partition it across the
+two branches as usual:
+\begin{align*}
+  &\denot{\ort{\Bool}{\vnu = \true} \ctoplus
+          \ort{\Bool}{\vnu = \false}}\;\Code{bool\_gen()}
+  \\=\;& \forall x.\; \Code{Atom}(x = \true \lor x = \false) \chimpl
+          \demonic\,\Code{Atom}(\vnu = \true) \choplus
+          \demonic\,\Code{Atom}(\vnu = \false)
+  \quad\judgok
+\end{align*}
+
+\subsection{Case Studies}\label{subsec:case-studies}
+
+We illustrate the expressiveness of context types with two further
+case studies beyond the BST generator of Example~\ref{ex:coverage}:
+a reverse reachability property for list reversal, and a disprove
+reasoning task for a merge function.
+
+\subsubsection{Coverage type}\label{subsubsec:coverage}
 
 \begin{example}[Coverage Types]\label{ex:coverage}
   The coverage type system of~\citet{CoverageType} verifies that a
@@ -168,113 +229,6 @@ let rec bst_gen (r: nat) (lo: nat)
   parameters.  The angelic result type then asserts that every valid
   BST is reachable by some sequence of oracle choices.
 \end{example}
-
-\subsection{Type Denotation for Nondeterminism}\label{subsec:nondet-denotation}
-
-Nondeterminism breaks the single-valued assumption of the deterministic
-language in two ways that require adjustments to the type denotation.
-
-\paragraph{Function Types}
-In the deterministic setting, a function term $e$ reduces to a unique
-value, and the denotation of a function type can reason about that
-value directly.  With nondeterminism, $e$ can reduce to multiple
-different function values, and different values may behave differently
-when applied.  Consider:
-\begin{align*}
-  f_1 \doteq \zlam{x}{\Unit}{\true \oplus \false}
-  \qquad
-  f_2 \doteq (\zlam{x}{\Unit}{\true}) \oplus (\zlam{x}{\Unit}{\false})
-\end{align*}
-Both $f_1\;()$ and $f_2\;()$ can reduce to either $\true$ or $\false$.
-However, they behave differently in a higher-order context.  Consider:
-\begin{align*}
-  \emptyset \vdash \zzlam{f}{f\;() == f\;()} :
-  f{:}(\ort{\Unit}{\top} \ctsarr \urt{\Bool}{\top}) \ctwand
-  \urt{\Bool}{\top}
-\end{align*}
-This function applies $f$ twice and checks equality.  With $f_1$,
-each call independently produces $\true$ or $\false$, so the result
-covers both.  Under a call-by-value semantics, results in supplying either
-$\zlam{x}{\Unit}{\true}$ or $\zlam{x}{\Unit}{\false}$
-as the argument to $f$; both subsequent calls then return the same
-value, so the result is always $\true$.  The original denotation
-cannot distinguish these two cases, since it does not account for
-which function value $e$ reduces to.
-
-\paragraph{Sum Types}
-A similar issue arises for sum types.  The judgement:
-\begin{align*}
-  \emptyset \vdash \Code{bool\_gen()} :
-  \ort{\Bool}{\vnu = \true} \ctoplus \ort{\Bool}{\vnu = \false}
-\end{align*}
-should hold, since $\Code{bool\_gen()}$ nondeterministically produces
-either $\true$ or $\false$.  However, the original denotation
-$\denot{\tau_1 \ctoplus \tau_2}\;e \doteq \denot{\tau_1}\;e \choplus
-\denot{\tau_2}\;e$ requires the \emph{context} to be split across the
-two branches, not the term itself.  Under the empty context, there is
-no capability to split, so the judgement fails despite being
-semantically valid.
-
-\paragraph{Generalized Denotation}
-Both issues stem from the same root cause: the original denotation
-evaluates $e$ once and reasons about the result, but a
-nondeterministic $e$ can reduce to different values in different
-executions.  The fix is to universally quantify over all possible
-reduction results of $e$, lifting $e$'s nondeterminism into the
-type context:
-\begin{align*}
-  \denot{x{:}\tau_x \ctsarr \tau}_\Sigma\;e
-    &\doteq \forall f.\; \denot{f \doteq e}_\Sigma \chimpl
-             \denot{\tau_x}_\Sigma\;x \chimpl
-             \denot{\tau}_{\Sigma,x{:}\eraserf{\tau_x}}\;(f\;x)
-  \\\denot{x{:}\tau_x \ctwand \tau}_\Sigma\;e
-    &\doteq \forall f.\; \denot{f \doteq e}_\Sigma \chimpl
-             \denot{\tau_x}_\Sigma\;x \chwand
-             \denot{\tau}_{\Sigma,x{:}\eraserf{\tau_x}}\;(f\;x)
-  \\\denot{\tau_1 \ctoplus \tau_2}_\Sigma\;e
-    &\doteq \forall x.\; \denot{x \doteq e}_\Sigma \chimpl
-             \denot{\tau_1}_\Sigma\;x \choplus \denot{\tau_2}_\Sigma\;x
-\end{align*}
-In each case, a universally quantified fresh variable ($f$ or $x$)
-ranges over all possible reduction results of $e$, and the original
-denotation is applied to that variable.  In the deterministic case,
-$e$ has a unique reduction result and the quantifier is trivially
-eliminated, so the generalized denotation coincides with the original.
-
-For the function-type issue, the generalized denotation correctly
-distinguishes $f_1$ and $f_2$.  The type
-$\ort{\Unit}{\top} \ctsarr \urt{\Bool}{\top}$ now requires that for
-every function value $f$ that $e$ can reduce to, every boolean is
-reachable by applying $f$ to $()$.  Since $f_2$ reduces to a
-\emph{specific} constant function, not every boolean is reachable from
-a single reduction result, so $f_2$ correctly fails to have this type:
-\begin{align*}
-  &\denot{\ort{\Unit}{\top} \ctsarr \urt{\Bool}{\top}}\;
-    (\zlam{x}{\Unit}{\true}) \oplus (\zlam{x}{\Unit}{\false})
-  \\=\;& \forall f.\; \Code{Atom}(f = \zlam{x}{\Unit}{\true} \lor
-          f = \zlam{x}{\Unit}{\false}) \chimpl
-          \angelic\,\Code{Atom}(f\;() = \true \lor f\;() = \false)
-  \quad\judgfail
-\end{align*}
-For the sum-type issue, the generalized denotation lifts
-$\Code{bool\_gen()}$'s nondeterminism into the context via the fresh
-variable $x$, allowing the sum operator to partition it across the
-two branches as usual:
-\begin{align*}
-  &\denot{\ort{\Bool}{\vnu = \true} \ctoplus
-          \ort{\Bool}{\vnu = \false}}\;\Code{bool\_gen()}
-  \\=\;& \forall x.\; \Code{Atom}(x = \true \lor x = \false) \chimpl
-          \demonic\,\Code{Atom}(\vnu = \true) \choplus
-          \demonic\,\Code{Atom}(\vnu = \false)
-  \quad\judgok
-\end{align*}
-
-\subsection{Case Studies}\label{subsec:case-studies}
-
-We illustrate the expressiveness of context types with two further
-case studies beyond the BST generator of Example~\ref{ex:coverage}:
-a reverse reachability property for list reversal, and a disprove
-reasoning task for a merge function.
 
 \subsubsection{Reverse Reachability}\label{subsubsec:reverse}
 
