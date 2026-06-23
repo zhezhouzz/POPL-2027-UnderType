@@ -90,12 +90,25 @@ All of them can have the normal function types, while only the second one can be
 This term can only reach the value $0$ since $f\;()$ can either reduce to $0$ or to any positive number. In other words, the two applications of $f$ are indeed dependent, and $f$ is not persistent.
 
 \begin{definition}[Persistent type]
-  The denotation of $\ctpers \tau$ is:\footnote{No additional typing rules are required; existing type and context subtyping rules already subsume $\ctpers \tau$.}
+  The denotation of $\ctpers \tau$ is:
   \begin{align*}
     \denot{\ctpers \tau}_\Sigma\;e \doteq \forall x.\denot{\mstep{e}{x}} \chimpl \chpers (\denot{\tau}_{\Sigma,x{:}\eraserf{\tau}}\;x) \quad (\text{fresh $x$})
   \end{align*}\noindent 
 Note that defining the type denotation as $\chpers (\denot{\tau}_{\Sigma}\;e)$ would also allow wrong inhabitants such as $\zzlam{x}{0} \oplus \zzlam{x}{\Code{positive\_gen()}}$. To ensure that $e$ is also single-valued, we introduce a universally quantified fresh variable $x$ that ranges over all possible reduction results of $e$; the persistent modality then ensures only that $x$ is single-valued.
 \end{definition}
+
+\paragraph{Typing rule for persistent types}
+Elimination rule of persistent types is derivable from \textsc{T-Sub} with the fact $\Gamma \vdash \ctpers \tau <: \tau$ always holds.
+Introduction rule is shown below:
+\begin{align*}
+\mprooftr{40mm}
+      {$\Gamma \vdash v : \tau$ \quad $\denot{\Gamma} \models \chpers \denot{\Gamma}$}
+      {T-Pers}
+      {$\Gamma \vdash v : \ctpers \tau$}
+\end{align*}\noindent
+Rule \textsc{T-Pers} requires a value $v$ to enforce the single-valued
+requirement above and a persistent context $\Gamma$ with
+$\denot{\Gamma} \models \chpers \denot{\Gamma}$, i.e., $\Gamma$ contains only persistent bindings.
 
 \subsection{Type Denotation for Nondeterminism}\label{subsec:nondet-denotation}
 
@@ -174,131 +187,3 @@ two branches as usual:
           \demonic\,\Code{Atom}(\vnu = \false)
   \quad\judgok
 \end{align*}
-
-\subsection{Case Studies}\label{subsec:case-studies}
-
-We illustrate the expressiveness of context types with two further
-case studies beyond the BST generator of Example~\ref{ex:coverage}:
-a reverse reachability property for list reversal, and a disprove
-reasoning task for a merge function.
-
-\subsubsection{Coverage type}\label{subsubsec:coverage}
-
-\begin{example}[Coverage Types]\label{ex:coverage}
-  The coverage type system of~\citet{CoverageType} verifies that a
-  test generator produces every desirable input.  Consider the
-  following BST generator:
-\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}    
-let rec bst_gen (r: nat) (lo: nat)
-                (range: nat -> nat -> nat): nat tree =
-  if r <= 0 then Leaf
-  else Leaf ?$\oplus$?
-    let r' = range (1, r) in
-    let left  = bst_gen (r' - 1) lo range in
-    let right = bst_gen (r - r') (lo + r') range in
-    Node r' left right
-\end{minted}
-  The following specification asserts that for any valid range oracle,
-  \texttt{bst\_gen} produces every BST whose keys fall in $(\Code{lo},
-  \Code{lo}+r]$:
-  \begin{align*}
-    &\Code{val bst\_gen} :
-      r{:}\ort{\Nat}{\top} \ctsarr lo{:}\ort{\Nat}{\top} \ctsarr
-    \\&\quad\quad
-      \Code{range}{:}\underbrace{(x{:}\ort{\Nat}{\top} \ctsarr
-        y{:}\ort{\Nat}{x < \vnu} \ctsarr
-        \urt{\Nat}{x < \vnu < y})}_{\text{demonic parameters; angelic result}}
-      \ctwand
-    \\&\quad\quad
-      \urt{\Nat\;\Code{tree}}{\Code{bst}(\vnu) \land
-        \forall x.\, \Code{mem}(\vnu, x) \iff
-        (\Code{lo}+1 \leq x \leq \Code{lo}+r)}
-  \end{align*}
-  The range oracle has demonic parameter types ($\ort{\Nat}{\top}$ and
-  $\ort{\Nat}{x < \vnu}$) and an angelic result type ($\urt{\Nat}{x <
-    \vnu < y}$).  The demonic parameters mean that successive calls to
-  \texttt{range} with different arguments can be typed with
-  independent result capabilities — the oracle's output at each
-  recursive call is disjoint from its outputs at other calls.  This is
-  precisely the resource duplication property established above: the
-  demonic parameter types make the oracle's capability persistent in
-  negative position, enabling the recursive calls to accumulate
-  independent angelic capabilities for the left and right subtrees.
-  The use of the disjoint function type, $\ctwand$, on the oracle
-  ensures it is disjoint from the size $r$ and lower-bound
-  $\Code{lo}$, so the oracle's choices do not depend on those
-  parameters.  The angelic result type then asserts that every valid
-  BST is reachable by some sequence of oracle choices.
-\end{example}
-
-\subsubsection{Reverse Reachability}\label{subsubsec:reverse}
-
-The standard list reversal function admits two distinct reachability
-specifications:
-\begin{lstlisting}
-let rec reverse (l: list nat) : list nat =
-  match l with
-  | []      -> []
-  | x :: xs -> reverse xs ++ [x]
-\end{lstlisting}
-\begin{align*}
-  &\Code{val reverse} :
-    l{:}\ort{\Nat\;\Code{list}}{\top} \ctsarr
-    \urt{\Nat\;\Code{list}}{\Code{rev}(\vnu, l)}
-  \\&\Code{val reverse} :
-    l{:}\urt{\Nat\;\Code{list}}{\Code{sortedIncr}(\vnu)} \ctsarr
-    \urt{\Nat\;\Code{list}}{\Code{sortedDecr}(\vnu)}
-\end{align*}
-The first uses a demonic input type: for any list $l$,
-\texttt{reverse} produces its reversal.  The second uses an angelic
-input type: when $l$ ranges over all increasingly-sorted lists, the
-output ranges over all decreasingly-sorted lists.  The second
-specification is strictly stronger, demonstrating that context types
-can express reachability properties that depend on the full range of
-the input.
-
-\subsubsection{Disprove Reasoning}\label{subsubsec:disprove}
-
-The following function merges two lists element-by-element:
-\begin{lstlisting}
-let rec merge (l1: elem list) (l2: elem list) : elem list =
-  match l1, l2 with
-  | l1, []          -> l1
-  | [], l2          -> l2
-  | h1::t1, h2::t2 ->
-      let t = merge t1 t2 in
-      if h1 < h2 then h1 :: h2 :: t
-      else if h1 > h2 then h2 :: h1 :: t
-      else h1 :: t
-\end{lstlisting}
-Context types can express both positive reachability specifications
-and \emph{disprove} reasoning — showing that a function cannot always
-produce a sorted output.  The following two specifications hold:
-\begin{align*}
-  &\Code{val merge} :
-    l_1{:}\ort{\Nat\;\Code{list}}{\top} \ctsarr
-    l_2{:}\urt{\Nat\;\Code{list}}{\top} \ctwand
-    (\ort{\Nat\;\Code{list}}{\neg\Code{sortedIncr}(\vnu)}
-      \ctoplus \ort{\Nat\;\Code{list}}{\Code{sortedIncr}(\vnu)})
-  \\&\Code{val merge} :
-    l_1{:}\urt{\Nat\;\Code{list}}{\top} \ctwand
-    l_2{:}\urt{\Nat\;\Code{list}}{\top} \ctwand
-    (\ort{\Nat\;\Code{list}}{\neg\Code{sortedIncr}(\vnu)}
-      \ctoplus \ort{\Nat\;\Code{list}}{\top})
-\end{align*}
-The first says: when $l_2$ ranges over all lists, the output either
-fails to be sorted or is sorted.  The second strengthens this: when
-both inputs range over all lists, the output can fail to be sorted.
-The following specification correctly fails to type-check, confirming
-that \texttt{merge} cannot be specified as always producing a sorted
-output:
-\begin{align*}
-  &\Code{val merge} :
-    l_1{:}\ort{\Nat\;\Code{list}}{\top} \ctsarr
-    l_2{:}\ort{\Nat\;\Code{list}}{\top} \ctsarr
-    \ort{\Nat\;\Code{list}}{\Code{sortedIncr}(\vnu)}
-  \quad\judgfail
-\end{align*}
-This failed judgement serves as a reachability-based witness to the
-function's incorrectness: there exist inputs for which
-\texttt{merge} does not produce a sorted list.
