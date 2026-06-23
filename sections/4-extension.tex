@@ -89,7 +89,8 @@ All of them can have the normal function types, while only the second one can be
 \end{align*}\noindent
 This term can only reach the value $0$ since $f\;()$ can either reduce to $0$ or to any positive number. In other words, the two applications of $f$ are indeed dependent, and $f$ is not persistent.
 
-\begin{definition}[Persistent type] The type denotation of a persistent type $\ctpers \tau$ is defined as:
+\begin{definition}[Persistent type]
+  The denotation of $\ctpers \tau$ is:\footnote{No additional typing rules are required; existing type and context subtyping rules already subsume $\ctpers \tau$.}
   \begin{align*}
     \denot{\ctpers \tau}_\Sigma\;e \doteq \forall x.\denot{\mstep{e}{x}} \chimpl \chpers (\denot{\tau}_{\Sigma,x{:}\eraserf{\tau}}\;x) \quad (\text{fresh $x$})
   \end{align*}\noindent 
