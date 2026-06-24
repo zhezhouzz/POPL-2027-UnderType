@@ -7,6 +7,8 @@
 *synctex.gz
 .vscode/*
 _minted/*
+*.config.minted
+*.data.minted
 *.aux
 *.bbl
 *blg

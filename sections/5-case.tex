@@ -1,11 +1,91 @@
+% !TeX root = ../main.tex
 \section{Case Study}\label{sec:case}
 
 We illustrate the expressiveness of context types with three
-case studies: a coverage completeness property for BST generator~\ref{ex:coverage}, 
-compositional may- and must- reasoning tasks~\ref{?}, and a disprove
-reasoning task for a merge function.
+case studies: compositional may- and must-style reasoning
+(\autoref{subsec:may-must}), a coverage completeness property for a BST
+generator (\autoref{subsec:coverage}), and disprove reasoning for a merge
+function (\autoref{subsec:disprove}).
 
-\subsection{Coverage Completeness Verification}
+\subsection{May and Must Analysis}\label{subsec:may-must}
+
+\begin{figure}[h!]
+    \centering
+    \begin{subfigure}[t]{0.48\linewidth}
+        \centering
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+val g : ?$\Code{i}{:}\ort{\Int}{\top}\ctsarr\ort{\Int}{0 \leq \vnu}$?
+      
+?$\vdash$? let f (x: int) (y: int) = 
+    (g x) < 0 || (g y) < 0    
+: ?$\Code{x}{:}\ort{\Int}{\top}\ctsarr \Code{y}{:}\ort{\Int}{\top}\ctsarr \ort{\Bool}{\vnu = \false}$?
+\end{minted}
+        \subcaption{May-analysis helps may-analysis.}
+        \label{fig:may-must-may}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.48\linewidth}
+        \centering
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+val g : ?$\Code{i}{:}\urt{\Int}{\top}\ctsarr\urt{\Int}{0 \leq \vnu}$?
+        
+?$\vdash$? let f (x: int) (y: int) = 
+    0 <= (g x) && 0 <= (g y)
+: ?$\Code{x}{:}\urt{\Int}{\top}\ctsarr\Code{y}{:}\urt{\Int}{\top}\ctsarr\urt{\Bool}{\vnu = \true}$?
+\end{minted}
+        \subcaption{Must-analysis helps may-analysis.}
+        \label{fig:may-must-must}
+    \end{subfigure}
+
+    \medskip
+
+    \begin{subfigure}[t]{0.48\linewidth}
+        \centering
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+val g : ?$\Code{i}{:}\ort{\Int}{\top}\ctsarr\ort{\Int}{\vnu \neq 0}$?
+
+?$\vdash$? let f (x: int) (y: int) =
+    if y > 10 then (g x) + 1
+    else x + 1          
+: ?$\Code{x}{:}\urt{\Int}{\top}\ctsarr\Code{y}{:}\urt{\Int}{\top}\ctsarr\urt{\Int}{\vnu = 1}$?
+\end{minted}
+        \subcaption{May-analysis helps must-analysis.}
+        \label{fig:may-must-reach}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.48\linewidth}
+        \centering
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+val g : ?$\Code{i}{:}\ort{\Int}{\top}\ctsarr\ort{\Int}{\vnu > 0}\interty $?
+        ?$\Code{i}{:}\urt{\Int}{\top}\ctsarr\urt{\Int}{\vnu > 0}$?
+
+?$\vdash$? let f (x: int) (y: int) =
+    let a = g x in
+    if a > 10 then 3
+    else a
+: ?$\Code{x}{:}\ort{\Int}{\top}\ctsarr\Code{y}{:}\ort{\Int}{\top}\ctsarr\ort{\Int}{0 \leq \vnu}$?
+\end{minted}
+        \subcaption{Must-analysis helps may-analysis.}
+        \label{fig:may-must-inter}
+    \end{subfigure}
+    \caption{Compositional may- and must-style reasoning with context types.}
+    \label{fig:may-must-analysis}
+\end{figure}
+
+Our unified treatment of safety and reachability through context types also furnishes a foundation for compositional may- and must-style program analysis, as developed in prior work~\cite{MayMust}. That analysis is compositional because callee summaries inform caller analysis; Figure~\ref{fig:may-must-analysis} reproduces four representative examples from the original paper. We restate them in our core language and assign context types to the caller $\Code{f}$ and the callee $\Code{g}$. In our encoding, may-analysis summaries use demonic parameters and returns, whereas must-analysis summaries use angelic parameters and returns.
+
+Figure~\ref{fig:may-must-analysis}~(a) calls for a ``not-may'' summary of $\Code{f}$, namely a safety property stating that $\Code{f}$'s result \emph{may not} be $\true$. Because the callee $\Code{g}$ returns only non-negative values (i.e., $\ort{\Int}{0 \leq \vnu}$), the caller $\Code{f}$ may be summarized as returning only $\false$. By contrast, the must-analysis in Figure~\ref{fig:may-must-analysis}~(b) requires $\true$ to be reachable for $\Code{f}$, relying on $\Code{g}$'s guarantee that every non-negative value is reachable. Prior must-style analyses can handle only plain conjunctions of two callee return values, since they cannot express disjointness between the inputs $\Code{x}$ and $\Code{y}$ in $\Code{f}$. On the other hand, if function $\Code{f}$ returns $\Code{(g\;x) - (g\;y)}$ and we want to prove all natural number are reachable, the following disjointed type for $\Code{f}$ is required:
+\begin{align*}
+  \Code{x}{:}\urt{\Int}{\top}\ctwand\Code{y}{:}\urt{\Int}{\top}\ctwand\urt{\Int}{0 \leq \vnu }
+\end{align*}\noindent
+
+Figure~\ref{fig:may-must-analysis}~(c) rules out reachability analysis for the then-branch of the conditional, because $\Code{g}$ may return a non-zero value and thereby prevent that branch from reaching the result $1$. In Figure~\ref{fig:may-must-analysis}~(d), by contrast, the callee $\Code{g}$ carries two summaries as an intersection type; its angelic component states that every integer is reachable. This forces may-analysis of the caller $\Code{f}$ to explore both branches of the conditional. Our type system handles such cases more uniformly, since a single type may be constrained under both angelic and demonic modalities. For instance, safety checking for $\Code{f}$ can proceed under the more comprehensive type:
+\begin{align*}
+    \Code{x}{:}(\ort{\Int}{\top}\interty \urt{\Int}{\top})\ctsarr\Code{y}{:}(\ort{\Int}{\top}\interty \urt{\Int}{\top})\ctsarr(\ort{\Int}{\top}\interty \urt{\Int}{\vnu = 1})
+\end{align*}\noindent
+which supports safety and reachability checking in one pass, rather than alternating between may- and must-style analysis.
+
+\subsection{Coverage Completeness Verification}\label{subsec:coverage}
 The coverage type system of~\citet{CoverageType} verifies that a
 test generator produces every desirable input.
 Consider the following BST generator:
@@ -47,49 +127,7 @@ independent result capabilities — the generator's output at each
 recursive call is disjoint from its outputs at other calls.  
 Similarly, the BST generator follows the same pattern: its demonic parameter types allow any valid size $\Code{r}$ and lower bound $\Code{lo}$, and its angelic result type asserts that every valid BST is reachable by some sequence of generator choices.
 
-One subtyping fact reveals how to type-check a persistent fixpoint function. The following two types are semantically equivalent:
-\begin{align*}
-    \ctpers(\Code{r}{:}\ort{\Nat}{\top} \ctsarr \Code{lo}{:}\ort{\Nat}{\top} \ctsarr ...) \equiv \Code{r}{:}\ctpers\ort{\Nat}{\top} \ctsarr \ctpers(\Code{lo}{:}\ort{\Nat}{\top} \ctsarr ...)
-\end{align*}\noindent
-This fact shows that the persistent modality can be distributed over curried function types: specializing a generator with \emph{one} specific argument (i.e., making $\Code{r}$ persistent) yields another generator. Thus, typing the fixpoint function $\Code{bst\_gen}$ is straightforward:
-\begin{align*}
-    \Code{r}{:}\ctpers\ort{\Nat}{\top} \ctcomma \Code{bst\_gen}{:}(\Code{r}{:}\ctpers\ort{\Nat}{\vnu \prec \Code{r}} \ctsarr \ctpers (\Code{lo}{:}\ort{\Nat}{\top} \ctsarr ...)) \vdash \Code{bst\_gen} : ...
-\end{align*}\noindent
-where the recursive-call type is persistent and strictly decreasing.
-
-On the other hand, the new range $\Code{r'}$ is produced by the range generator, which has angelic base type $\urt{\Nat}{0 < \vnu \leq \Code{r}}$. However, it is treated as a persistent demonic variable in the subsequent computation, where $\Code{r'}$ is used multiple times as a demonic parameter in recursive calls to $\Code{bst\_gen}$ (on lines $6$ and $7$). Our type system accommodates this mismatch with an explicit type annotation:
-\begin{align*}
-    \zlet{\Code{r'}}{\Code{range (1, r)}} { (\mykw{fun\;} (\Code{r'}:\ctpers\ort{\Nat}{0 < \vnu \leq \Code{r}}) \to \text{program from lines $6$ to $8$})\;\Code{r'} }
-\end{align*}\noindent
-Here we require $r'$ to have persistent demonic type $\ctpers\ort{\Nat}{0 < \vnu \leq \Code{r}}$ in the closure of the remainder of the computation, and then apply that closure to the original $\Code{r'}$ with its angelic type. The closure then has the following type:
-\begin{align*}
-    &\Code{r'}{:}\ctpers\ort{\Nat}{0 < \vnu \leq \Code{r}} \ctsarr 
-    \\&\quad \urt{\Nat\;\Code{tree}}{\I{root}(\vnu) = \Code{lo + r'} \land \Code{bst}(\vnu) \land
-    \forall x.\, \Code{mem}(\vnu, x) \iff
-    (\Code{lo} < x \leq \Code{lo}+r)}
-\end{align*}\noindent
-where we force the resulting tree to have $\Code{lo + r'}$ as its root, which is a subtype of the following type:
-\begin{align*}
-    &\Code{r'}{:}\urt{\Nat}{0 < \vnu \leq \Code{r}} \ctsarr \urt{\Nat\;\Code{tree}}{\overbrace{\underbrace{\exists \Code{r'}. 0 < \Code{r'} \leq \Code{r} \land }_\texttt{push qualifier of $\Code{r'}$ into result} \I{root}(\vnu) = \Code{lo + r'}}^\texttt{non-empty tree}  \land \I{bst}(\vnu) ... }
-\end{align*}\noindent
-Intuitively, the closure guarantees that for each $\Code{r'}$ that produces a set of BSTs satisfying some property $\phi(\Code{r'})$, applying the closure to a set of such $\Code{r'}$ values yields a set of BSTs satisfying $\exists \Code{r'}.\, \phi(\Code{r'})$. This subtyping relation exactly simulates the ``$\existsop$'' operator in the original coverage-type paper. Since every non-empty BST whose elements lie in $(\Code{lo}, \Code{lo}+r]$ has a root $\Code{lo + r'}$ for some $\Code{r'}$ in $(0, \Code{r}]$, the closure is guaranteed to produce all desirable non-empty BSTs. Final coverage is obtained by combining this with the empty tree ($\Code{Leaf}$) generated on line $4$.
-
-\subsection{Reverse Reachability}
-
-\begin{figure}[h!]
-    \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
-let rec reverse (l: list nat) : list nat =
-    match l with
-    | [] -> []
-    | x :: xs -> reverse xs ++ [x]
-
-val reverse : ?$\Code{l}{:}\ort{\List[\Nat]}{\top} \ctsarr \urt{\List[\Nat]}{\I{rev}(\vnu,  l)}$?
-val reverse : ?$\Code{l}{:}\urt{\List[\Nat]}{\I{sortedIncr}(\vnu)} \ctsarr \urt{\List[\Nat]}{\I{sortedDecr}(\vnu)}$?
-    \end{minted}
-\end{figure}
-
-
-\subsection{Disprove Reasoning}
+\subsection{Disprove Reasoning}\label{subsec:disprove}
 
 
 \begin{figure}[h!]
@@ -104,10 +142,6 @@ val reverse : ?$\Code{l}{:}\urt{\List[\Nat]}{\I{sortedIncr}(\vnu)} \ctsarr \urt{
             if h1 < h2 then h1 :: h2 :: t (* h2 may be greater than elements in t1 *)
             else if h1 > h2 then h2 :: h1 :: t
             else h1 :: t
-
-val merge : ?$\Code{l1}{:}\ort{\List[\Nat]}{\top} \ctsarr \Code{l2}{:}\urt{\List[\Nat]}{\top} \ctwand \Code{l2}{:}\ort{\List[\Nat]}{\neg \I{sortedIncr}(\vnu)} \ctoplus \ort{\List[\Nat]}{\I{sortedIncr}(\vnu)}$?
-val merge : ?$\Code{l1}{:}\urt{\List[\Nat]}{\top} \ctwand \Code{l2}{:}\urt{\List[\Nat]}{\top} \ctwand \Code{l2}{:}\ort{\List[\Nat]}{\neg \I{sortedIncr}(\vnu)} \ctoplus \ort{\List[\Nat]}{\top}$?
-val merge : ?$\Code{l1}{:}\ort{\List[\Nat]}{\top} \ctsarr \Code{l2}{:}\ort{\List[\Nat]}{\top} \ctsarr \Code{l2}{:}\ort{\List[\Nat]}{\I{sortedIncr}(\vnu)}$? (* disprove *)
 \end{minted}
 \caption{A function that merges two sorted lists. If either of
 the input lists are empty, \Code{merge} returns the other (lines
@@ -115,45 +149,33 @@ $3-4$). Otherwise, the function merges the tails of the two inputs and appends t
 \label{fig:merge}
 \end{figure}
 
-% \subsection{Compare with Logics}
-
-% \begin{figure}[h!]
-% \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
-% let f (x: nat) (y: nat) : nat =
-%   if even x 
-%   then (if odd y then 42 else 0)
-%   else 0
-
-% val f : ?$\Code{x}{:}\urt{\Nat}{\top} \ctwand \Code{y}{:}\urt{\Nat}{\top} \ctwand \urt{\Nat}{\vnu = 42}$?
-% val f : ?$\Code{x}{:}\urt{\Nat}{\top} \ctwand \Code{y}{:}\urt{\Nat}{\top} \ctwand \urt{\Nat}{\vnu = 42}$?
-% \end{minted}
-% \end{figure}
-
-% \begin{figure}[h!]
-%     \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
-%     let rec deleteElem (l: list nat) (x: nat) : nat =
-%         match l with
-%         | [] -> []
-%         | y :: ys -> if x == y then ys else y :: deleteElem ys x
-%     \end{minted}
-% \end{figure}
-
-% \begin{align*}
-%     &\emptyset \vdash \Code{deleteElem} : \Code{l}{:}\ort{\List[\Nat]}{\top} \ctsarr \Code{x}{:}\ort{\Nat}{\top} \ctsarr \ort{\List[\Nat]}{\neg\I{mem}(\Code{l}, x)} \quad \judgfail
-%     \\&\emptyset \vdash \Code{deleteElem} : 
-%     \\&\qquad \Code{l}{:}\urt{\List[\Nat]}{\top} \ctwand \Code{x}{:}\urt{\Nat}{\top} \ctwand \ort{\List[\Nat]}{\I{mem}(\Code{l}, x)}
-%     \\&\qquad \Code{l}{:}\urt{\List[\Nat]}{\top} \ctwand \Code{x}{:}\ort{\Nat}{\top} \ctwand \ort{\List[\Nat]}{\I{mem}(\Code{l}, x)}
-% \end{align*}\noindent
-
-
-% \begin{corollary}[Simulate different reasoning styles] The following facts hold:
-%     \begin{enumerate}
-%       \item $\emptyset \ctvdash e : \ort{b}{\phi}$ implies that $\forall v. \mstep{e}{v} \impl \phi[\vnu \mapsto v]$.
-%       \item $\emptyset \ctvdash e : \urt{b}{\phi}$ implies that $\forall v. \phi[\vnu \mapsto v] \impl \mstep{e}{v}$.
-%       \item Refinement type check: $\emptyset \ctvdash v_f :  x{:}\ort{b_x}{\phi_x} \ctsarr \ort{b}{\phi}$ implies that $\forall v_x\;v. \phi_x[\vnu \mapsto v_x] \land \mstep{v_f\;v_x}{v} \impl \phi[\vnu \mapsto v]$.
-%       \item Coverage type check: $\emptyset \ctvdash v_f :  x{:}\ort{b_x}{\phi_x} \ctsarr \urt{b}{\phi}$ implies that $\forall v_x\;v. \phi_x[\vnu \mapsto v_x] \land \phi[\vnu \mapsto v]  \impl \mstep{v_f\;v_x}{v} $.
-%       \item Incorrectness type check: $\emptyset \ctvdash v_f : \urt{b_x}{\phi_x} \ctsarr \urt{b}{\phi}$ implies that \\ $\forall v. \phi[\vnu \mapsto v] \impl \exists v_x. \phi_x[\vnu \mapsto v_x] \land  \mstep{v_f\;v_x}{v} $.
-%       \item Sufficient incorrectness: $\emptyset \ctvdash v_f : \ort{b_x}{\phi_x} \ctsarr \ort{b}{\phi} \ctoplus b$ implies that \\ $\forall v_x. \phi_x[\vnu \mapsto v_x] \impl \exists v. \phi[\vnu \mapsto v] \land \mstep{v_f\;v_x}{v} $.
-%       \item Existential type check: $\emptyset \ctvdash v_f : \urt{b_x}{\phi_x} \ctsarr \ort{b}{\phi}\ctoplus b$ implies that \\ $\exists v_x\;v. \phi_x[\vnu \mapsto v_x] \land \phi[\vnu \mapsto v] \land \mstep{v_f\;v_x}{v} $.
-%     \end{enumerate}
-%   \end{corollary}
+When a refinement type system fails to prove a safety property, this does not mean the program is incorrect: may-style reasoning offers no guarantee that erroneous behaviors are reachable. Recent work~\cite{RefinementTypeRefutations,RefinementTypeSymbolicExecution} addresses this limitation by using symbolic execution to search for counterexamples; our context type system can establish such counterexamples directly.
+Consider \Code{merge} in Figure~\ref{fig:merge}, a core component of merge sort that should preserve sortedness of the output list:
+\begin{align*}
+  \Code{l1}{:}\ort{\List[\Code{elem}]}{\top} \ctsarr \Code{l2}{:}\ort{\List[\Code{elem}]}{\top} \ctsarr \ort{\List[\Code{elem}]}{\I{sorted}(\vnu)}
+\end{align*}\noindent
+Verification fails nonetheless. The base cases (lines $3$--$4$) type-check, so the failure arises in the recursive case, where the refinement type system offers little guidance.
+Symbolic execution can find the following counterexample:
+\begin{align*}
+    \texttt{Counterexample:}&\quad  \text{ when } \Code{l1} = [1;2] \text{ and } \Code{l2} = [3;4] \text{ then } \mstep{\Code{merge}\;[1;2]\;[3;4]}{[1;3;2;4]}
+\end{align*}\noindent
+The bug stems from the assumption that, after comparing $\Code{h1}$ and $\Code{h2}$, $\Code{h2}$ is always the second-smallest element (line $7$).
+Even when $\Code{h1} < \Code{h2}$, $\Code{h2}$ may exceed some element of $\Code{t1}$, breaking sortedness.
+Alternatively, we can \emph{disprove} the function with the following type:
+\begin{align*}
+    &\Code{l1}{:}\urt{\List[\Code{elem}]}{\top} \ctwand \Code{l2}{:}\urt{\List[\Code{elem}]}{\top} \ctwand \ort{\List[\Code{elem}]}{\neg \I{sorted}(\vnu)} \ctoplus \ort{\List[\Code{elem}]}{\top}
+\end{align*}\noindent
+This type follows the ``affine reachability'' style of \autoref{sec:typing}: the return type is a sum of the top type $\ort{\List[\Code{elem}]}{\top}$ and the negation of the original safety property, $\ort{\List[\Code{elem}]}{\neg \I{sorted}(\vnu)}$, expressing erroneous behavior.
+The parameter types are moreover flipped to \emph{disjointed angelic types}, indicating that $\Code{l1}$ and $\Code{l2}$ may independently range over arbitrary sorted lists.
+Without this disjointness, a carefully crafted environment can hide the bug:
+\begin{center}
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+  let l1 = sorted_list_gen () in
+  let l2 = match l1 with
+           | [] -> sorted_list_gen ()
+           | _ -> [] in
+  merge l1 l2
+\end{minted}
+\end{center}\noindent
+Here $\Code{l1}$ and $\Code{l2}$ each range over all sorted lists, yet they cannot both be non-empty simultaneously.
+Under this environment, the merge bug cannot be triggered, since the case where both inputs are non-empty (line $5$) is never reached.

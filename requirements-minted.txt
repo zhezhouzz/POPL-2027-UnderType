@@ -1,0 +1,12 @@
+# minted v3+ (LaTeX) requires the latexminted CLI. Install with:
+#   pip install -r requirements-minted.txt
+#
+# Version pairing (must match):
+#   minted.sty 3.7.0  <->  latexminted 0.6.0   (this repo; see ./minted.sty)
+#   minted.sty 3.8.0  <->  latexminted 0.7.0+  (needs newer fvextra than TL 2025)
+#
+# TeX Live 2025 ships minted.sty ~3.5/3.6 + latexminted 0.5.0, which is
+# incompatible with pip latexminted 0.6.0 (KeyError: tokenmerge). We vendor
+# minted.sty 3.7.0 locally; TeX Live's bundled latexminted 0.5.0 also breaks
+# on Python 3.14+, so use the pip build below.
+latexminted==0.6.0
