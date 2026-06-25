@@ -1,7 +1,7 @@
 \section{Context Types}\label{sec:context-typing}
 % In this section, we introduce the core language and the context type system for it.
 
-\subsection{Core Language}
+% \subsection{Core Language}
 
 \begin{figure}[h]
   {\small
@@ -11,41 +11,40 @@
       \\\text{\textbf{Operations}}& \quad & \primop ::= \quad & d ~|~ {+} ~|~ {-} ~|~ {==} ~|~ {<} ~|~ {\leq} ~|~ ...
       \\ \text{\textbf{Constants }}& \quad &c ::= \quad & () ~|~ \mathbb{B} ~|~ \mathbb{Z} ~|~ d\ \overline{c}\ ...
       \\ \text{\textbf{Values}}& \quad  & v ::= \quad & c ~|~ x ~|~ \zlam{x}{s}{e} ~|~ \zfix{f}{s}{x}{s}{e}
-      \\ \text{\textbf{Expressions}}& \quad & e ::=\quad & v ~|~ \zlet{x{:}s}{e}{e} ~|~ \primop\ \overline{v} ~|~  v\;v ~|~ \match{v} \overline{d\ \overline{y} \to e} 
+      \\ \text{\textbf{Expressions}}& \quad & e ::=\quad & v ~|~ \zlet{x{:}s}{e}{e} ~|~ \primop\ \overline{v} ~|~  v\;v ~|~ \match{v} \overline{d\ \overline{y} \to e}
       \\\text{\textbf{Base Types}}& \quad & b  ::= \quad &  \Code{unit} ~|~ \Code{bool} ~|~ \Code{nat} ~|~ \List[b] ~|~ ...
       \\\text{\textbf{Basic Types}}& \quad & s  ::= \quad &  b ~|~ s\sarr s
       \\\text{\textbf{Basic Type Context}}& \quad & \Sigma ::= \quad &  \emptyset ~|~ x{:}s ~|~ \Sigma, \Sigma
     \end{alignat*}}
-  \caption{Core Language Syntax \langname{}. }
+  \caption{Syntax of \langname{} \BD{Why do we include both constants
+      and data constructors?}}
   \label{fig:core-lang-syntax}
   \end{figure}
 
-\paragraph{Terms, basic types, and basic type contexts} In order to concretize the context type system,
-we introduce a core language (\langname{}) for terms whose syntax is
-given in \autoref{fig:core-lang-syntax}.  The language is a standard
-call-by-value lambda calculus with pattern-matching (conditional expression is a syntax sugar of pattern matching), inductive
-datatypes, and recursive functions.  Expressions are written in
-monadic normal form (MNF)~\cite{JO94}, a variant of A-Normal Form
-(ANF)~\cite{FSDF93} that allows nested let-bindings. 
-We also equip the
-language with basic types (i.e., $s$) consisting of base types ($b$)
-and function types (i.e., $s\sarr s$). Bound variables in
-\textbf{let}-expressions and function abstractions are explicitly
-annotated with their types (e.g., $\zlam{x}{s}{e}$).
-A basic type context $\Sigma$
-maps variables to their basic types; we assume $\Sigma$
-is well-formed in the sense that all bound variables are distinct,
-i.e., each variable appears at most once in its domain. 
-In the
-following, we often omit these annotations for brevity, when
-appropriate.
+  % \paragraph{Terms, basic types, and basic type contexts}
+  We will use the core language (\langname{}) shown in
+  \autoref{fig:core-lang-syntax} to concretize our proposed context
+  type system.  This language is a standard call-by-value lambda
+  calculus with inductive datatypes, pattern matching (the following
+  uses conditional expressions as syntactic sugar for \Code{match}),
+  and recursive functions. \BD{Are we assuming that built-in
+    operations are deterministic? Do we even need these?}  Expressions
+  are written in monadic normal form (MNF)~\cite{JO94}, a variant of
+  A-Normal Form (ANF)~\cite{FSDF93} that allows nested let-bindings.
+  The language's basic types (i.e., $s$) consist of base types ($b$)
+  and function types (i.e., $s\sarr s$). Both \textbf{let}-expressions
+  and function abstractions explicitly annotate bound variables with a
+  basic type (e.g., $\zlam{x}{s}{e}$); we omit these annotations for
+  brevity, when appropriate.  A basic type context $\Sigma$ maps
+  variables to their basic types; we assume that all bound variables
+  in $\Sigma$ are distinct.
 
 \begin{figure}[h]
-  {
+  { \small
     \begin{alignat*}{2}
       \text{\textbf{Qualifiers}}& \quad & \phi ::= \quad & c ~|~ x ~|~ \primop\;\overline{v} ~|~ \bot ~|~ \top  ~|~ \neg \phi ~|~ \phi \land \phi ~|~ \phi \lor \phi ~|~  \phi \impl \phi ~|~ \forall x{:}b. \phi ~|~ \exists x{:}b. \phi
       \\ \text{\textbf{Refinement Types}}& \quad & \tau ::= \quad & \ort{b}{\phi} ~|~ \urt{b}{\phi} ~|~ \tau \ctinter \tau ~|~ \tau \ctunion \tau ~|~ \tau \ctoplus \tau ~|~ x{:}\tau \ctsarr \tau ~|~ x{:}\tau \ctwand \tau
-      % ~|~ \ctpers \tau 
+      % ~|~ \ctpers \tau
       \\ \text{\textbf{Type Contexts}}& \quad & \Gamma ::= \quad & \emptyset ~|~ x{:}\tau ~|~ \Gamma \ctstar \Gamma ~|~ \Gamma \ctcomma \Gamma ~|~ \Gamma \ctoplus \Gamma
       % \\ \text{\textbf{Contexts With Holes}}& \quad & \Delta ::= \quad & \Box ~|~ \Gamma ~|~ \Delta \ctstar \Delta ~|~ \Delta \ctcomma \Delta ~|~ \Delta \ctoplus \Delta
     \end{alignat*}}
@@ -53,24 +52,26 @@ appropriate.
   %% {\small
   %% \begin{align*}
   %%   \text{\textbf{Type erasure}} \quad & \eraserf{\ort{b}{\phi}} \doteq b \quad \eraserf{\urt{b}{\phi}} \doteq b \quad \eraserf{\tau_1 \ctinter \tau_2} \doteq \eraserf{\tau_1} \quad \eraserf{\tau_1 \ctunion \tau_2} \doteq \eraserf{\tau_1}
-  %%   \\&\eraserf{\tau_1 \ctoplus \tau_2} \doteq \eraserf{\tau_1} \quad  \eraserf{x{:}\tau_x \ctsarr \tau} \doteq \eraserf{\tau_x} \sarr \eraserf{\tau} \quad  
+  %%   \\&\eraserf{\tau_1 \ctoplus \tau_2} \doteq \eraserf{\tau_1} \quad  \eraserf{x{:}\tau_x \ctsarr \tau} \doteq \eraserf{\tau_x} \sarr \eraserf{\tau} \quad
   %%   \\& \eraserf{\emptyset} \doteq \emptyset \quad \eraserf{x{:}\tau} \doteq x{:}\eraserf{\tau} \quad \eraserf{\Gamma_1 \ctcomma \Gamma_2} \doteq \eraserf{\Gamma_1}, \eraserf{\Gamma_2} \quad \eraserf{\Gamma_1 \ctstar \Gamma_2} \doteq \eraserf{\Gamma_1}, \eraserf{\Gamma_2}  \quad \eraserf{\Gamma_1 \ctoplus \Gamma_2} \doteq \eraserf{\Gamma_1}
-    % \\\text{\textbf{Type lifting}} \quad & \liftrf{b} \doteq \ort{b}{\phi} \quad \liftrf{s_x \sarr s} \doteq x{:}\liftrf{s_x} \ctsarr \liftrf{s}  
+    % \\\text{\textbf{Type lifting}} \quad & \liftrf{b} \doteq \ort{b}{\phi} \quad \liftrf{s_x \sarr s} \doteq x{:}\liftrf{s_x} \ctsarr \liftrf{s}
     % \\&\liftrf{\emptyset} \doteq \emptyset \quad \liftrf{x{:}s} \doteq x{:}\liftrf{s} \quad \liftrf{\Gamma_1 , \Gamma_2} \doteq \liftrf{\Gamma_1} \ctcomma \liftrf{\Gamma_2}
 %  \end{align*}}
-  \caption{Context Types Syntax. }
+  \caption{Context Type Syntax}
   \label{fig:context-types-syntax}
 \end{figure}
 
-\subsection{Context Type Language}
+\subsection{Overview}
 
-The syntax of types is shown in \autoref{fig:context-types-syntax}. As
-with other refinement types, \emph{context types} refine basic types
-with qualifiers $\phi$.  Additionally, they support demonic and
-angelic modalities ($\otparenth{...}$ and $\utparenth{...}$, resp.),
-bunching implication operators (e.g., $\ctsarr$, $\ctwand$), disjoint
-sums ($\ctoplus$) for control flow, and standard type
-intersection/union ($\ctinter$, $\ctunion$).
+The syntax of context types is shown in
+\autoref{fig:context-types-syntax}. As in other refinement type
+systems, \emph{context types} refine basic types with qualifiers
+$\phi$; but each refinement is ascribed either a demonic and angelic
+modality ($\otparenth{...}$ and $\utparenth{...}$, resp.). Context
+types additionally include bunched implication (e.g., $\ctsarr$,
+$\ctwand$), disjoint sums ($\ctoplus$), and standard type intersection
+($\ctinter$) operators; the remainder of this section overviews each
+of these features in more detail.
 
 %% Readers can see this
 %% connection via the type erasure function $\eraserf{\tau}$, which
@@ -78,15 +79,16 @@ intersection/union ($\ctinter$, $\ctunion$).
 %% the following paragraphs, we introduce these refinements in detail via
 %% examples.
 
-\paragraph{Demonic and Angelic Modalities}  A base type $b$ can be refined
-with a qualifier $\phi$, a sentence in first-order logic, that can be
-interpreted either demonically ($\ort{b}{\phi}$) or angelically
-($\urt{b}{\phi}$), enabling either safety or reachability
-verification. As discussed in \autoref{sec:intro}, a demonic context
-type $x{:}\ort{b}{\phi}$ allows $x$ to acquire any value $v$ that is
-consistent with qualifier $\phi$.  Conversely, an angelic context type
-$x{:}\urt{b}{\phi}$ requires $x$ to acquire at least all the values
-allowed by qualifier $\phi$.
+\paragraph{Demonic and Angelic Modalities} A base type $b$ can be
+refined with a qualifier $\phi$, a sentence in first-order logic, that
+is interpreted either demonically ($\ort{b}{\phi}$) or angelically
+($\urt{b}{\phi}$). When ascribed to a term $e$, a context type
+describes both safety and reachability properties of $e$. As discussed
+in \autoref{sec:intro}, the demonic context type $\ort{b}{\phi}$
+allows $e$ to (at most) acquire any value $v$ that satisfies its
+qualifier $\phi$.  Conversely, an angelic context type $\urt{b}{\phi}$
+stipulates that $e$ must (at least) acquire every value satisfying
+$\phi$.
 
 % Informally, we have
 % \begin{align*}
@@ -94,8 +96,9 @@ allowed by qualifier $\phi$.
 %   \\&\vdash e : \urt{b}{\phi} \quad\text{iff}\quad \forall v. \phi[\vnu \mapsto v] \implies  \mstep{e}{v}
 % \end{align*}\noin
 
-Consider the following typing judgements of a constant term $1$ ascribed different
-types:
+To illustrate this difference, consider the following typing
+judgements which ascribe different context types to the constant term
+$1$:
 \begin{align*}
   &\vdash 1 : \ort{\Nat}{\top}\;\judgok
   && \vdash 1 : \urt{\Nat}{\top}\;\judgfail
@@ -104,97 +107,227 @@ types:
   \\&\vdash 1 : \ort{\Nat}{\vnu = 1}\;\judgok
   && \vdash 1 : \urt{\Nat}{\vnu = 1}\;\judgok
 \end{align*}\noindent
-The judgements on the left follow the style of standard refinement
-type systems, where the constant $1$ needs to satisfy the safety
-constraint specified by the qualifier.  In contrast, the judgements on
-the right capture reachability constraints, and thus require that the
-expression \emph{reach} all values the qualifier denotes.  Because the
-constant $1$ cannot reach all natural numbers or all positive numbers,
-the first two judgements are invalid. The third (singleton) type
-precisely captures the reachability properties the term exhibits. A
-typing judgement can ascribe a non-trivial (i.e., non-singleton)
-angelic type to its term based on its typing context.  For example,
-the following type judgement is valid:
-\begin{align*}
-  x{:}\urt{\Nat}{\top} \vdash x - 3 : \urt{\Nat}{\vnu > 0}\;\judgok
-\end{align*}\noindent
-Clearly, the term $x - 3$, when evaluated, can produce all positive
-numbers because its corresponding type context $x{:}\urt{\Nat}{\top}$
-assumes that assignments to variable $x$ can reach all natural
-numbers; in particular, this means $x$ can be any number greater than
-3.  An angelic type context allows the type system to presume a
-desirable assignment of $x$ depending on the shape of the
-right-hand-side type; e.g., in order to reach $n$, the assignment of
-$x$ should be $n + 3$.
+The judgements on the left assert \emph{safety} properties, similar to
+a standard refinement type systems, where the constant $1$ needs to
+satisfy the corresponding qualifier. The judgements on the right, in
+contrast, describe \emph{reachability} constraints: since the constant
+$1$ cannot reach every natural number or positive number, the first
+two judgements are invalid. The last (singleton) type precisely
+captures the reachability properties the term exhibits. Under an empty
+typing context, a deterministic term\footnote{All terms in \langname{}
+  are deterministic, a restriction that we will lift in
+  \autoref{sec:extension}.} can only be assigned either an empty or
+singleton angelic type, as it can evaluate to at most one
+value. Richer reachability properties naturally arise when reasoning
+about the behavior of a term within a broader program context. To do
+so, our type system \emph{holistically} considers the \emph{set} of
+values that a term can evaluate to, i.e., its image, under a
+restricted \emph{set} of environments, or \emph{world}, that are
+constrained by a typing context.
+% Put another way, our type system describes the image of a term under
+% a set of environments consistent with a typing context.
 
-We assume an \emph{external impure environment} that serves as a source
-of angelic inputs.  For example, a test generator that yields random
-numbers can serve as an example of such a source:
+Intuitively, a demonic qualifier places an upper bound on the image of
+a term, while an angelic qualifier describes a lower bound. Similar
+intuitions apply to the restrictions that a typing context imposes on
+a set of input environments in our type system. To see how,%  these
+% bounds manifest in the guarantees provided by our type system,
+consider the following typing judgements involving non-singleton
+reachability properties: %
 \begin{align*}
-  \Envir_x(e) \doteq \zlet{x}{\Code{nat\_gen()}}{\boxed{e}}
-\end{align*}
-For our purposes here, we do not include environments such as
-$\Envir_x$ as part of our core language.
+  x{:}\urt{\Nat}{x > 3} \vdash x - 3 : \urt{\Nat}{\vnu > 0}\;\judgok \\
+  x{:}\urt{\Nat}{x > 4} \vdash x - 3 : \urt{\Nat}{\vnu > 0}\;\judgfail
+\end{align*} %
+\noindent
+Clearly, for any particular positive number, the term $x - 3$ will
+evaluate to that number, assuming an appropriate assignment to
+$x$. The angelic types of $x$ in each typing context place different
+restrictions on the set of possible assignments to $x$ in a world:
+under the first, for every $n$ greater than $3$, the world must
+contain an environment in which $x$ is $n$; the second allows a world
+which does not include a mapping of $x$ to $4$, and thus cannot
+guarantee the image of $x - 3$ includes $1$.
 
-\paragraph{Subtyping}  Having both angelic as well as demonic modalities
-in a type context requires a more refined subtype relation than usual.
-Read ``$\Gamma_1 \ctsubseteqA \Gamma_2$'' as ``any term that has type
-$\tau$ under $\Gamma_1$ can also be typed with $\tau$ under $\Gamma_2$
-.''  Then, the following statements hold:
+Switching the modality on the type of $x$ inverts the direction of
+these bounds, thereby restricting the set of assignments to $x$ that
+are impossible. As a consequence, the reachability guarantees that our
+type system can provide about deterministic terms involving only
+demonically qualified variables are somewhat limited:
 \begin{align*}
-  &x{:}\ort{\Nat}{\top} \ctsubseteqA x{:}\ort{\Nat}{\vnu > 0}\;\judgok
-  &&x{:}\urt{\Nat}{\top} \ctsubseteqA x{:}\urt{\Nat}{\vnu > 0} \;\judgfail
-  \\&x{:}\ort{\Nat}{\vnu > 1} \ctsubseteqA  x{:}\ort{\Nat}{\vnu > 0}  \;\judgfail
-  &&x{:}\urt{\Nat}{\vnu > 1} \ctsubseteqA x{:}\urt{\Nat}{\vnu > 0}\;\judgok
-\end{align*}\noindent
-A demonic (over-approximate) context has a subtype relation that is
-covariant with the qualifier, while the angelic (under-approximate)
-context is contravariant with the qualifier.  For example, the last
-statement says that an angelic context requiring $x$ to reach all
-numbers greater than 1 is a subtype of one requiring $x$ to reach all
-positive numbers. This holds because any term that is typed under the
-assumption that $x$ can reach every number greater than 1 can
-certainly be given the same type under the assumption that $x$ can
-reach every positive number, since the latter subsumes the former.  In
-other words, a narrower angelic qualifier (fewer reachable values) is
-a weaker assumption, while a wider angelic qualifier (more reachable
-values) is stronger — the opposite of the demonic case.
+  x{:}\ort{\Nat}{x > 2} \vdash x - 3 : \urt{\Nat}{\vnu > 0}\;\judgfail \\
+  x{:}\ort{\Nat}{x > 4} \vdash x - 3 : \urt{\Nat}{\vnu > 0}\;\judgfail
+\end{align*} %
+Observe there are many singleton worlds containing in which $x$ is
+assigned a value greater than $2$, but $x - 3$ can only reach a single
+result value under such a world!
+% If all we know about $x$ is that it cannot be less than $2$, after
+% all, there's little we can say about the values that $x-3$ can reach!
+Similarly, our type system can provide somewhat limited safety
+guarantees when only equipped with reachability assumptions:
+\begin{align*}
+  x{:}\urt{\Nat}{x > 4} \vdash x - 3 : \ort{\Nat}{\vnu > 0}\;\judgfail \\
+\end{align*} %
+The image of $x - 3$ includes a non-positive value in any world
+containing an environment where $x$ is $4$, but the lower bound
+provided by the angelic type of $x$ in the typing judgement above does
+not preclude such an environment. Using our type system, it is still
+possible in to derive meaningful safety guarantees using reachability
+assumptions through the use of $\oplus$ operator, as we shall see
+shortly.
 
-Additionally, the subtype relation must allow context shifts between
-these two modalities since they serve as resources used by the type
-system.  Specifically, a demonic context cannot be treated as a
-non-trivial angelic context:
+% This
+% A typing
+% judgement can ascribe a non-trivial (i.e., non-singleton) angelic type
+% to its term based on its typing context.  For example, the following
+% type judgement is valid:
+% \begin{align*}
+%   x{:}\urt{\Nat}{\top} \vdash x - 3 : \urt{\Nat}{\vnu > 0}\;\judgok
+% \end{align*}\noindent
+% Clearly, the term $x - 3$, when evaluated, can produce all positive
+% numbers because its corresponding type context $x{:}\urt{\Nat}{\top}$
+% assumes that assignments to variable $x$ can reach all natural
+% numbers; in particular, this means $x$ can be any number greater than
+% 3.  An angelic type context allows the type system to presume a
+% desirable assignment of $x$ depending on the shape of the
+% right-hand-side type; e.g., in order to reach $n$, the assignment of
+% $x$ should be $n + 3$.
+
+% We assume an \emph{external impure environment} that serves as a source
+% of angelic inputs.  For example, a test generator that yields random
+% numbers can serve as an example of such a source:
+% \begin{align*}
+%   \Envir_x(e) \doteq \zlet{x}{\Code{nat\_gen()}}{\boxed{e}}
+% \end{align*}
+% For our purposes here, we do not include environments such as
+% $\Envir_x$ as part of our core language.
+
+\paragraph{Subtyping}
+\BD{As written, the material in this subsection does not seem
+  particularly novel (the subtyping relations are similar to prior
+  work) or important to what follows (I don't believe swapping
+  modalities on singleton refinements is not used elsewhere). }
+
+The subtyping relationship between two angelic or two demonic
+refinements is similar to contemporaneous refinement type
+systems~\cite{LiquidHaskell, CoverageType}, where the subtype
+relationship between demonic refinements is covariant with the
+qualifier, and that of angelic refinements is contravariant with the
+qualifier. These relationships align with the interpretation of
+angelic and demonic modalities as lower- and upper- bounds: a term
+which can reach all positive numbers can also reach all numbers
+greater than 1, while a term that always safely evaluates to a number
+greater than 1 is also guaranteed to evaluate to a positive number.
 \begin{align*}
-  &x{:}\ort{\Nat}{\vnu > 0} \ctsubseteqA x{:}\urt{\Nat}{\top}\;\judgfail
-  &&x{:}\ort{\Nat}{\vnu > 0} \ctsubseteqA x{:}\urt{\Nat}{\vnu > 1}\;\judgfail
-  \\&x{:}\ort{\Nat}{\vnu = 3} \ctsubseteqA x{:}\urt{\Nat}{\vnu = 3}\;\judgok
-  &&x{:}\ort{\Nat}{\vnu > 0} \ctsubseteqA x{:}\urt{\Nat}{\bot}\;\judgok
-\end{align*}\noindent
-For example, the demonic context $x{:}\ort{\Nat}{\vnu > 0}$ only
-constrains $x$ to be \emph{some} positive number, providing no
-guarantee about which positive numbers are reachable.  Treating it as
-a non-trivial angelic context would require it to serve as a witness
-that \emph{every} value satisfying the angelic qualifier is reachable,
-a guarantee that a demonic context is fundamentally incapable of
-providing.   Demonic and angelic contexts align when
-their type qualifier is trivially false ($\bot$) or is a singleton
-(e.g., $\vnu = 3$). When the qualifier is a singleton, safety and
-reachability coincide — there is only one possible value, so the
-demonic constraint (the value must be 3) and the angelic constraint
-(the value 3 must be reachable) make identical demands on the term.
-Finally, an angelic context can be viewed as a subtype
-of a demonic one provided every value reachable under the angelic
-qualifier also satisfies the demonic qualifier.  
+  &\ort{\Nat}{\vnu > 0} \subty \ort{\Nat}{\vnu > 1}\;\judgok
+  &&\urt{\Nat}{\vnu > 1} \subty \urt{\Nat}{\vnu > 0} \;\judgfail \\
+  & \ort{\Nat}{\vnu > 0} \subty \ort{\Nat}{\vnu > 1}  \;\judgfail
+  && \urt{\Nat}{\vnu > 0} \subty \urt{\Nat}{\vnu > 1}\;\judgok
+\end{align*} %
+\noindent These ideas extend naturally to a refinement relation
+between typing contexts, ``$\Gamma_1 \ctsubseteqA \Gamma_2$'', which
+intuitively reads as ``any term that has type $\tau$ under $\Gamma_1$
+can also be typed with $\tau$ under $\Gamma_2$''.
+
+% that an angelic context requiring $x$ to reach all numbers greater
+% than 1 is a subtype of one requiring $x$ to reach all positive
+% numbers. This holds because any term that is typed under the
+% assumption that $x$ can reach every number greater than 1 can
+% certainly be given the same type under the assumption that $x$ can
+% reach every positive number, since the latter subsumes the former.
+% In other words, a narrower angelic qualifier (fewer reachable
+% values) is a weaker assumption, while a wider angelic qualifier
+% (more reachable values) is stronger — the opposite of the demonic
+% case.
+
+
+
+
+% Having both angelic as well as demonic modalities in a type context
+% requires a more refined subtype relation than usual.  Read
+% ``$\Gamma_1 \ctsubseteqA \Gamma_2$'' as ``any term that has type
+% $\tau$ under $\Gamma_1$ can also be typed with $\tau$ under $\Gamma_2$
+% .''  Then, the following statements hold:
+% \begin{align*}
+%   &x{:}\ort{\Nat}{\top} \ctsubseteqA x{:}\ort{\Nat}{\vnu > 0}\;\judgok
+%   &&x{:}\urt{\Nat}{\top} \ctsubseteqA x{:}\urt{\Nat}{\vnu > 0} \;\judgfail
+%   \\&x{:}\ort{\Nat}{\vnu > 1} \ctsubseteqA  x{:}\ort{\Nat}{\vnu > 0}  \;\judgfail
+%   &&x{:}\urt{\Nat}{\vnu > 1} \ctsubseteqA x{:}\urt{\Nat}{\vnu > 0}\;\judgok
+% \end{align*}\noindent
+% A demonic (over-approximate) context has a subtype relation that is
+% covariant with the qualifier, while the angelic (under-approximate)
+% context is contravariant with the qualifier.  For example, the last
+% statement says that an angelic context requiring $x$ to reach all
+% numbers greater than 1 is a subtype of one requiring $x$ to reach all
+% positive numbers. This holds because any term that is typed under the
+% assumption that $x$ can reach every number greater than 1 can
+% certainly be given the same type under the assumption that $x$ can
+% reach every positive number, since the latter subsumes the former.  In
+% other words, a narrower angelic qualifier (fewer reachable values) is
+% a weaker assumption, while a wider angelic qualifier (more reachable
+% values) is stronger — the opposite of the demonic case.
+
+The subtyping relationship between angelic and demonic refinement
+types is more nuanced. In general, no subtyping relationship exists
+between two arbitrary refinements with different modalities:
 \begin{align*}
-  x{:}\urt{\Nat}{\vnu > 0} \ctsubseteqA x{:}\ort{\Nat}{\top}\;\judgok
-  &&x{:}\urt{\Nat}{\vnu > 0} \ctsubseteqA x{:}\ort{\Nat}{\vnu > 1}\;\judgfail
+  &\ort{\Nat}{\vnu > 0} \subty \urt{\Nat}{\vnu > 1}\;\judgfail
+  & &\urt{\Nat}{\vnu > 0} \subty \ort{\Nat}{\vnu > 0} \;\judgfail
 \end{align*}\noindent
-The statement on the right is incorrect because the angelic context
-guarantees that $x$ can reach every positive number, including
-$1$. However, the demonic context $x{:}\ort{\Nat}{\vnu > 1}$ only
-permits values strictly greater than 1 so a term typed as
-the singleton $1$ under the angelic context would violate the
-demonic constraint.
+Knowing that a term can only evaluate to positive numbers does not
+allow us to draw any conclusions about which positive numbers it
+reaches. Similarly, simply knowing that a term can reach every
+positive number does not preclude it from also evaluating to 0.  It is
+only possible to switch the modality of a refinement when its
+qualifier is a singleton, or when the supertype qualifier is trivial:
+\begin{align*}
+  &x{:}\ort{\Nat}{\vnu = 3} \subty x{:}\urt{\Nat}{\vnu =
+    3}\;\judgok
+  & &x{:}\urt{\Nat}{\vnu > 0} \subty x{:}\ort{\Nat}{\top}\;\judgok
+  & &x{:}\ort{\Nat}{\vnu > 0} \ctsubseteqA x{:}\urt{\Nat}{\bot}\;\judgok
+\end{align*}\noindent
+When the qualifier is a singleton, safety and reachability coincide
+--- there is only one possible value, so the demonic constraint (the
+value must be 3) and the angelic constraint (the value 3 must be
+reachable) make identical demands on the term. Converting to a
+supertype with a trivial qualifier, in contrast, simply throws away
+the bounds on a term entirely. \BD{It's a bit harder to explain why
+  the last two cases work, since they -- this }
+
+% Additionally, the subtype relation must allow context shifts between
+% these two modalities since they serve as resources used by the type
+% system.  Specifically, a demonic context cannot be treated as a
+% non-trivial angelic context:
+% \begin{align*}
+%   &x{:}\ort{\Nat}{\vnu > 0} \ctsubseteqA x{:}\urt{\Nat}{\top}\;\judgfail
+%   &&x{:}\ort{\Nat}{\vnu > 0} \ctsubseteqA x{:}\urt{\Nat}{\vnu > 1}\;\judgfail
+%   \\&x{:}\ort{\Nat}{\vnu = 3} \ctsubseteqA x{:}\urt{\Nat}{\vnu = 3}\;\judgok
+%   &&x{:}\ort{\Nat}{\vnu > 0} \ctsubseteqA x{:}\urt{\Nat}{\bot}\;\judgok
+% \end{align*}\noindent
+% For example, the demonic context $x{:}\ort{\Nat}{\vnu > 0}$ only
+% constrains $x$ to be \emph{some} positive number, providing no
+% guarantee about which positive numbers are reachable.  Treating it as
+% a non-trivial angelic context would require it to serve as a witness
+% that \emph{every} value satisfying the angelic qualifier is reachable,
+% a guarantee that a demonic context is fundamentally incapable of
+% providing.   Demonic and angelic contexts align when
+% their type qualifier is trivially false ($\bot$) or is a singleton
+% (e.g., $\vnu = 3$). When the qualifier is a singleton, safety and
+% reachability coincide — there is only one possible value, so the
+% demonic constraint (the value must be 3) and the angelic constraint
+% (the value 3 must be reachable) make identical demands on the term.
+% Finally, an angelic context can be viewed as a subtype
+% of a demonic one provided every value reachable under the angelic
+% qualifier also satisfies the demonic qualifier.
+% \begin{align*}
+%   x{:}\urt{\Nat}{\vnu > 0} \ctsubseteqA x{:}\ort{\Nat}{\top}\;\judgok
+%   &&x{:}\urt{\Nat}{\vnu > 0} \ctsubseteqA x{:}\ort{\Nat}{\vnu > 1}\;\judgfail
+% \end{align*}\noindent
+% The statement on the right is incorrect because the angelic context
+% guarantees that $x$ can reach every positive number, including
+% $1$. However, the demonic context $x{:}\ort{\Nat}{\vnu > 1}$ only
+% permits values strictly greater than 1 so a term typed as the
+% singleton $1$ under the angelic context would violate the demonic
+% constraint.
 
 \paragraph{Dependent and Disjoint Contexts} As discussed in Section~\ref{sec:intro}, type contexts
 can be related via dependent or disjoint conjunction, as illustrated
@@ -250,7 +383,7 @@ An environment $\Envir$ that satisfies a dependent conjunction context
 $x{:}\tau_x \ctcomma y{:}\tau_y$ works like additive logic
 conjunction, and indicates that $\Envir(x): \tau_x$ and $\Envir(y):
 \tau_y$ are both valid.  However, dependent conjunction does not
-guarantee that the corresponding modalities of $x$ and $y$ still hold 
+guarantee that the corresponding modalities of $x$ and $y$ still hold
 \emph{at the same time}.\footnote{Unlike a linear type system, which
   would \emph{consume} the capability to angelically assign $x$ when
   producing the capability to angelically assign $y$, our system
@@ -267,7 +400,7 @@ In these judgements, the context tracks variable dependency,
 specifying that $x$ is independent from $y$ and $z$, while $y$ and
 $z$ are dependent on each other.  Specifying independence in this
 way is sufficient to verify reachability for $x - y$ and $x - z$,
-since $x$ can be angelically chosen independently 
+since $x$ can be angelically chosen independently
 of $y$ or $z$, resp.  However, type-checking $y - z$ against the
 type $\urt{\Nat}{\vnu > 0}$ fails because $y$ and $z$ are entangled: no angelic
 choice can simultaneously make their difference reach every positive
@@ -276,8 +409,8 @@ number.
 \paragraph{Function Types}  Dependent ($\ctsarr$) and disjointed function types ($\ctwand$) are
 adjunctions of dependent and disjointed conjunction in type contexts:
 \begin{align*}
-  \Gamma \vdash e_f : x{:}\tau_x \ctsarr \tau \quad &\text{ iff } \quad \Gamma \ctcomma x{:}\tau_x \vdash (e_f\;x) : \tau 
-  \\\Gamma \vdash e_f : x{:}\tau_x \ctwand \tau \quad &\text{ iff } \quad \Gamma \ctstar x{:}\tau_x \vdash (e_f\;x) : \tau 
+  \Gamma \vdash e_f : x{:}\tau_x \ctsarr \tau \quad &\text{ iff } \quad \Gamma \ctcomma x{:}\tau_x \vdash (e_f\;x) : \tau
+  \\\Gamma \vdash e_f : x{:}\tau_x \ctwand \tau \quad &\text{ iff } \quad \Gamma \ctstar x{:}\tau_x \vdash (e_f\;x) : \tau
 \end{align*}\noindent
 Thus, ($\Code{-}_{\Code{nat}}$) can be given the following types:
 \begin{align*}
@@ -421,7 +554,7 @@ angelic contexts and mixed demonic/angelic reasoning.
 % \mprooftr{28mm}
 % {$\Gamma \basicvdash \tau$ \quad $\wfvdash \Gamma$}
 % {WfType}
-% {$\Gamma \wfvdash \tau$} 
+% {$\Gamma \wfvdash \tau$}
 % \quad
 \mprooftr{35mm}
 {$\Sigma \wfvdash \Gamma_1$ \quad $\Sigma, \eraserf{\Gamma_1} \wfvdash \Gamma_2$}
@@ -490,17 +623,17 @@ $\Gamma_2$ can only refer to variables in $\Gamma_0$.
   {$\Gamma \vdash \zlam{x}{s_x}{e} : x{:}\tau_x \ctwand \tau$}
   \\[.8em]
   \mprooftr{40mm}
-  {$\Gamma \vdash v_1 : x{:}\tau_x \ctsarr \tau$ \quad 
+  {$\Gamma \vdash v_1 : x{:}\tau_x \ctsarr \tau$ \quad
   $\Gamma \vdash v_2 : \tau_x$ }
   {T-AppFun}
   {$\Gamma \vdash v_1\;v_2 : \tau[x \mapsto v_2]$}
   \quad
   \mprooftr{46mm}
-  {$\Gamma_1 \vdash v_1 : x{:}\tau_x \ctwand \tau$ \quad 
+  {$\Gamma_1 \vdash v_1 : x{:}\tau_x \ctwand \tau$ \quad
   $\Gamma_2 \vdash v_2 : \tau_x$  }
   {T-AppFunD}
   {$\Gamma_1 \ctstar \Gamma_2 \vdash v_1\;v_2 : \tau[x \mapsto v_2]$}
-  \\[.8em]  
+  \\[.8em]
   \mprooftr{30mm}
   {$\Gamma \vdash e : \tau_1$ \quad $\Gamma \vdash \tau_1 \subty \tau_2$}
   {T-Sub}
@@ -527,7 +660,7 @@ $\Gamma_2$ can only refer to variables in $\Gamma_0$.
   {$\Gamma \vdash \zzfix{f}{x}{e} : x{:}\ort{b}{\phi} \ctsarr \tau$}
   \\[.8em]
   \mprooftr{34mm}
-  {$\Code{Ty}(\primop) = \overline{x_i{:}\tau_i}\ctsarr \tau_y$ \quad 
+  {$\Code{Ty}(\primop) = \overline{x_i{:}\tau_i}\ctsarr \tau_y$ \quad
     $\forall i. \Gamma \vdash v_i : \tau_i$ }
   {T-AppOp}
   {$\Gamma \vdash \primop\;\overline{v_i} : \tau[\overline{x_i \mapsto v_i}]$}
@@ -566,7 +699,7 @@ additive conjunction in the type context, as shown below:
   {$\Gamma_1 \ctcomma \Gamma_2 \ctcomma \Gamma_2 \vdash e : \tau$}
   {T-Bunched-Contraction}
   {$\Gamma_1 \ctcomma \Gamma_2 \vdash e : \tau$}
-\end{align*}\noindent 
+\end{align*}\noindent
 Unlike standard bunched typing, the dependent version does not require
 an explicit additive conjunction in the type context. The
 well-formedness condition requiring unique variable bindings means
@@ -627,7 +760,7 @@ given in~\autoref{sec:meta}.
       {$\Gamma_2 \ctstar \Gamma_1 \vdash e : \tau$}
       {T-Exchange}
       {$\Gamma_1 \ctstar \Gamma_2 \vdash e : \tau$}
-    \end{align*}\noindent 
+    \end{align*}\noindent
 The variable-set constraint in context subtyping relation is important.
 For example, framing rule \textsc{T-Frame} actually requires that $\Gamma_1 \ctstar \Gamma_2 \ctsubseteq{\Code{FV}(e) \cup \Code{FV}(\tau)} \Gamma_2$ holds, which is silently forced by $\Gamma_2 \vdash e : \tau$, requiring that the domain of $\Gamma_2$ is a subset of $\Code{FV}(e) \cup \Code{FV}(\tau)$.
 \end{example}
@@ -659,7 +792,7 @@ dependency between the argument of the recursive call and the original
 parameter $x$.  This dependency makes the disjointness requirement of
 $\ctwand$ impossible to satisfy, since $\ctwand$ requires the argument
 context to be independent of the closure context, whereas well-founded
-induction inherently requires the opposite. Although \textsc{T-Fix} 
+induction inherently requires the opposite. Although \textsc{T-Fix}
 therefore restricts the function type of recursive calls to use $\ctsarr$,
 the subsumption rule \textsc{T-Sub} still allows a recursive function
 to be typed against arbitrary function types after the fact, provided
@@ -667,12 +800,12 @@ the subtyping relation holds.
 
 \begin{example}[Fixpoint Function] The following fixpoint function defines natural number subtraction discussed in \autoref{sec:intro}.
 \begin{align*}
-  \vdash &\zzfix{f}{x}{\zzlam{y}{\zif{x = 0}{0}{\zif{y = 0}{x}{f\;(x - 1)\;(y - 1)}}}} 
+  \vdash &\zzfix{f}{x}{\zzlam{y}{\zif{x = 0}{0}{\zif{y = 0}{x}{f\;(x - 1)\;(y - 1)}}}}
   \\& : x{:}\ort{\Nat}{\top} \ctsarr y{:}\ort{\Nat}{\top} \ctsarr \ort{\Nat}{\vnu = x -_{\Nat} y}
 \end{align*}\noindent
 With a stronger function type that enables type checking with rule \textsc{T-Fix}, we can convert it into the type shown in \autoref{sec:intro} via  \textsc{T-Sub}.
 \begin{align*}
-  \vdash ... :  x{:}\urt{\Nat}{\vnu > 0} \ctwand y{:}\urt{\Nat}{\vnu > 0} \ctwand \urt{\Nat}{\vnu > 0} 
+  \vdash ... :  x{:}\urt{\Nat}{\vnu > 0} \ctwand y{:}\urt{\Nat}{\vnu > 0} \ctwand \urt{\Nat}{\vnu > 0}
 \end{align*}\noindent
 \end{example}
 
@@ -698,7 +831,7 @@ where we want to show that the angelic context $x{:}\urt{\Nat}{\top}$ can be spl
 the true branch is reachable and types with $\ort{\Nat}{\vnu < 4}$.  We first divide the
 type context via subsumption rule \textsc{T-CtxSub}.
 {\small\begin{align*}
-  &x{:}\urt{\Nat}{\top} \ctsubseteq{\{x\}} 
+  &x{:}\urt{\Nat}{\top} \ctsubseteq{\{x\}}
   \\&\quad \underbrace{x{:}\ort{\Nat}{\vnu = 0}\interty \urt{\Nat}{\vnu = 0}}_{\Gamma_{\Code{trueBranch}}} \ctoplus \underbrace{x{:}\ort{\Nat}{\vnu > 0}\interty \urt{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}}_{\Gamma_{\Code{falseBranch}}}
 \end{align*}}\noindent
 which exactly aligns the assumption about context reachability required by rule \textsc{T-Match}:
