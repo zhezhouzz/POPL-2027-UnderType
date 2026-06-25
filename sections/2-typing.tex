@@ -251,10 +251,10 @@ positive number does not preclude it from also evaluating to 0.  It is
 only possible to switch the modality of a refinement when its
 qualifier is a singleton, or when the supertype qualifier is trivial:
 \begin{align*}
-  &x{:}\ort{\Nat}{\vnu = 3} \subty x{:}\urt{\Nat}{\vnu =
+  &\ort{\Nat}{\vnu = 3} \subty \urt{\Nat}{\vnu =
     3}\;\judgok
-  & & x{:}\urt{\Nat}{\vnu = 3} \subty x{:}\ort{\Nat}{\vnu =
-    3}\;\judgok \\
+  & & \urt{\Nat}{\vnu = 3} \subty \ort{\Nat}{\vnu =
+      3}\;\judgfail \\
   &x{:}\urt{\Nat}{\vnu > 0} \subty x{:}\ort{\Nat}{\top}\;\judgok
   & &x{:}\ort{\Nat}{\vnu > 0} \ctsubseteqA x{:}\urt{\Nat}{\bot}\;\judgok
 \end{align*}\noindent
@@ -339,43 +339,75 @@ the bounds on a term entirely.
 % singleton $1$ under the angelic context would violate the demonic
 % constraint.
 
-\paragraph{Dependent and Disjoint Contexts} As discussed in
-Section~\ref{sec:intro}, type contexts can be related via dependent or
-disjoint conjunction, as illustrated below:
+\paragraph{Combining Type Contexts}
+% Here we want to transition from thinking of type contexts as
+% constraining the surrounding environment to thinking of them as
+% affording us certain reasoning capabilities. Importantly, if we want
+% to reason compositionally, we need to have a finer-grained notion of
+% the sorts of capabilities it can provide
+When they appear in a typing context, the bounds imposed by our two
+modalities afford us different reasoning capabilities: when verifying
+the reachability properties of a term, for example, an angelic
+refinement lets us \emph{choose} a favorable assingment for a variable
+in that term, while a demonic refinement allows us to \emph{rule out}
+certain assignments to that variable establishing that a term is safe.
+% BD: If there's room, we could point back to specific examples in the
+% previous subsection to emphasize this point.
+Importantly, the bounds imposed by the bindings of individual
+variables in a typing context can interact with each other, altering
+the capabilities afforded by the typing context as a whole. To
+illustrate, consider the following pair of program contexts:
+\begin{align}
+  &\zlet{x}{\Code{nat\_gen () }}{\zlet{y}{x + 1}{\square}}
+    \tag{C$_{en}$}\label{ex:EnCon} \\
+  &\zlet{x}{\Code{arbitrary}}{\zlet{y}{\Code{nat\_gen()}}{\square}}
+    \tag{C$_{dis}$}\label{ex:DisjCon}
+\end{align}\noindent
+Both contexts use \Code{nat\_gen ()} to (nondeterministicly) generate
+an aribtrary value for $x$. The first context then sets $y$ based on
+the value as $x$, while the second opts to generate a fresh value for
+$y$ instead. The four programs that result from plugging $x$ and $y$
+into these contexts can all reach reach every possible positive
+number, as can the program \ref{ex:DisjCon}[$x - y$].  The same can
+not be said of \ref{ex:EnCon}[$x - y$], however, because the values of
+$x$ and $y$ in this program are somehow \emph{entangled}.
 \begin{align*}
-  &\EnvirDep(e) \doteq \zlet{x}{\Code{nat\_gen()}}{\zlet{y}{x}{\boxed{e}}}
-  \\&\EnvirDisj(e) \doteq \zlet{x}{\Code{nat\_gen()}}{\zlet{y}{\Code{nat\_gen()}}{\boxed{e}}}
+  &\emptyset \vdash \text{\ref{ex:DisjCon}}[x] : \urt{\Nat}{\vnu > 0}
+    \;\judgok \quad
+  &\emptyset \vdash \text{\ref{ex:EnCon}}[x] : \urt{\Nat}{\vnu > 0}
+    \;\judgok  \\
+  \emptyset \vdash \text{\ref{ex:DisjCon}}[y] : \urt{\Nat}{\vnu > 0}
+  \;\judgok \quad
+  &\emptyset \vdash \text{\ref{ex:EnCon}}[y] : \urt{\Nat}{\vnu > 0}
+    \;\judgok \\
+  & \emptyset \vdash \text{\ref{ex:DisjCon}}[x - y] : \urt{\Nat}{\vnu
+    > 0} \;\judgok \quad & \emptyset \vdash \text{\ref{ex:EnCon}}[x - y] : \urt{\Nat}{\vnu > 0} \;\judgfail
 \end{align*}\noindent
-Here, we consider two concrete (reified) environments, $\EnvirDep$ and
-$\EnvirDisj$, where both allow $x$ to reach all possible natural
-numbers.  They differ in that environment $\EnvirDep$ forces $y$
-to be the same as $x$ during the evaluation of $e$, while environment
-$\EnvirDisj$ does not.
+To deal with this situation, our type system includes two ways to
+combine typing contexts, $\ctcomma$ and $\ctstar$, each of which
+affords different capabilities to the combined context.  Informally,
+$\Gamma_1 \ctstar \Gamma_2$ means that the capabilities of $\Gamma_1$
+and $\Gamma_2$ are independent; when either context includes an
+angelic type binding, our type system is free to ``choose'' a
+favorable assignment for the corresponding variable. By first choosing
+an arbitrary positive value for $x$ and then choosing 0 for $y$, we
+can establish the following judgment:
 \begin{align*}
-  &\emptyset \vdash \EnvirDep(x) : \urt{\Nat}{\vnu > 0} \;\judgok \quad &\emptyset \vdash \EnvirDep(y) : \urt{\Nat}{\vnu > 0} \;\judgok
-  \\&\emptyset \vdash \EnvirDisj(x) : \urt{\Nat}{\vnu > 0} \;\judgok \quad &\emptyset \vdash \EnvirDisj(y) : \urt{\Nat}{\vnu > 0} \;\judgok
-  \\& \emptyset \vdash \EnvirDep(x - y) : \urt{\Nat}{\vnu > 0} \;\judgfail \quad &\emptyset \vdash \EnvirDisj(x - y) : \urt{\Nat}{\vnu > 0} \;\judgok
+  &x{:}\urt{\Nat}{\vnu > 0} \ctstar y{:}\urt{\Nat}{\vnu > 0} \vdash x
+    - y : \urt{\Nat}{\vnu > 0} \;\judgok
 \end{align*}\noindent
-We can observe that within both environments, variables $x$ and $y$
-must reach all possible positive numbers. However, the claim that ``$x
-- y$ can reach all possible positive numbers'' expressed by the type
-judgement for $\EnvirDep$ given above is incorrect: $\EnvirDep(x - y)$
-can only be $0$ since $y$ is forced to be the same as $x$.  The
-judgement fails because it requires a hidden assumption that the
-context $y{:}\urt{\Nat}{\vnu > 0}$ is not \emph{dependent} on
-$x{:}\urt{\Nat}{\vnu > 0}$.  On the other hand, the judgement on the
-same term applied to $\EnvirDisj$ is valid, since $e$ can observe
-different values for $x$ and $y$.  We capture this difference in a
-type judgement via type context constructors ($\ctcomma$) and
-($\ctstar$):
+The $\ctcomma$ operator affords us no such freedom, however,
+preventing us from establishing a similar judgment:
 \begin{align*}
-  &x{:}\urt{\Nat}{\vnu > 0} \ctstar y{:}\urt{\Nat}{\vnu > 0} \vdash x - y : \urt{\Nat}{\vnu > 0} \;\judgok
+  &x{:}\urt{\Nat}{\vnu > 0} \ctcomma y{:}\urt{\Nat}{\vnu > 0} \vdash x - y : \urt{\Nat}{\vnu > 0} \;\judgfail
 \end{align*}\noindent
-Informally, $\Gamma \doteq\Gamma_1 \ctstar \Gamma_2$ means that
-$\Gamma$ can be divided into two parts: angelic or demonic contexts
-found in $\Gamma_1$ do not interfere with the contexts defined by
-$\Gamma_2$. The environment $\EnvirDep$ cannot satisfy the
-disjointness requirement, since once $x$ is bound,
+\BD{I'm not sure how to frame the ``capabilities'' provided by
+  $\ctcomma$... How do we argue that we cannot prove the previous
+  claim?}
+
+
+The environment $\EnvirDep$
+cannot satisfy the disjointness requirement, since once $x$ is bound,
 the value of $y$ is also fixed.  Dependency information can also
 impact demonic contexts; consider the following example:
 \begin{align*}
