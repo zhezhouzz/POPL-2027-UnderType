@@ -282,7 +282,9 @@ qualifier is a singleton, or when the supertype qualifier is trivial:
 \begin{align*}
   &x{:}\ort{\Nat}{\vnu = 3} \subty x{:}\urt{\Nat}{\vnu =
     3}\;\judgok
-  & &x{:}\urt{\Nat}{\vnu > 0} \subty x{:}\ort{\Nat}{\top}\;\judgok
+  & & x{:}\urt{\Nat}{\vnu = 3} \subty x{:}\ort{\Nat}{\vnu =
+    3}\;\judgok \\
+  &x{:}\urt{\Nat}{\vnu > 0} \subty x{:}\ort{\Nat}{\top}\;\judgok
   & &x{:}\ort{\Nat}{\vnu > 0} \ctsubseteqA x{:}\urt{\Nat}{\bot}\;\judgok
 \end{align*}\noindent
 When the qualifier is a singleton, safety and reachability coincide
@@ -708,7 +710,6 @@ that the substructural contraction rule
 incompatible with our system. Instead, our \textsc{T-Let} rule
 directly entangles the newly added dependent context with the existing
 context, without duplicating or consuming bindings.
-
 
 
 \begin{example}[Let-expression] Consider the following example of typing for a let-expression:
