@@ -324,41 +324,75 @@ $x$ and $y$ in this program are somehow \emph{entangled}.
 \end{align*}\noindent
 To deal with this situation, our type system includes two ways to
 combine typing contexts, $\ctcomma$ and $\ctstar$, each of which
-affords different capabilities to the combined context.  Informally,
-$\Gamma_1 \ctstar \Gamma_2$ means that the capabilities of $\Gamma_1$
-and $\Gamma_2$ are independent; when either context includes an
-angelic type binding, our type system is free to ``choose'' a
-favorable assignment for the corresponding variable. By first choosing
-an arbitrary positive value for $x$ and then choosing 0 for $y$, we
-can establish the following judgment:
+affords different capabilities when reasoning about, e.g., subtyping
+relationships. Informally, $\Gamma_1 \ctstar \Gamma_2$ means that the
+capabilities of $\Gamma_1$ and $\Gamma_2$ are independent; when either
+context includes an angelic type binding, our type system is free to
+``choose'' a favorable assignment for the corresponding variable
+independent of the other context.  To illustrate, consider the
+following two subtyping judgments:
 \begin{align*}
-  &x{:}\urt{\Nat}{\vnu > 0} \ctstar y{:}\urt{\Nat}{\vnu > 0} \vdash x
-    - y : \urt{\Nat}{\vnu > 0} \;\judgok
+  &x{:}\urt{\Nat}{\vnu > 0} \ctstar y{:}\urt{\Nat}{\vnu > 1}
+    \vdash \urt{\Nat}{\vnu = x - y} \subty \urt{\Nat}{\vnu > 0}
+    \;\judgok
+  &x{:}\urt{\Nat}{\vnu > 0} \ctcomma y{:}\urt{\Nat}{\vnu > 1}
+    \vdash \urt{\Nat}{\vnu = x - y} \subty \urt{\Nat}{\vnu > 0} \;\judgfail
 \end{align*}\noindent
-\emph{Entangled} conjunction, $\ctcomma$, affords us no such freedom,
-however, preventing us from establishing a similar judgment:
+Under the first context, we can freely choose both an arbitrary
+positive value for $x$ \emph{and} a $2$ for $y$, from which the
+subtyping relationship follows. Under the second context, however, the
+possible values we can choose for $x$ and $y$ are \emph{Entangled}
+conjunction, $\ctcomma$, meaning we are free to choose a value for one
+but not the other. Intuitively, the hole in \ref{ex:EnCon} has this
+typing context: once $x$ is fixed, the value of $y$ depends on it, and
+vice-versa.  As a consequence, we are unable prove the following
+typing judgement:
 \begin{align*}
   &x{:}\urt{\Nat}{\vnu > 0} \ctcomma y{:}\urt{\Nat}{\vnu > 0} \vdash x - y : \urt{\Nat}{\vnu > 0} \;\judgfail
 \end{align*}\noindent
-\BD{I'm not sure how to frame the ``capabilities'' provided by
-  $\ctcomma$... Mechanically, how does our type system prevent us from
-  typing the previous example?}  The hole in \ref{ex:EnCon} can be typed
-under this latter typing context: once $x$ is bound, the value of $y$
-now depends on it.
 
-The angelic and demonic refinements in a type context can also be
-entangled in a way that impacts its capabilities, as the following
-judgments illustrate:
+The \ctcomma in the context
+$\Gamma \cdot x{:}\tau_x \ctcomma y{:}\tau_y$ works like additive
+logic conjunction in BI, and both $\Gamma \vdash x{:}\tau_x$ and
+$\Gamma \vdash y{:}\tau_y$ are valid. Importantly, however, does not
+guarantee that the modalities of $x$ and $y$ hold \emph{at the same
+  time}. \footnote{Unlike a linear type system, which would
+  \emph{consume} the capability to angelically assign $x$ when
+  producing the capability to angelically assign $y$, our system
+  instead \emph{entangles} these capabilities, allowing the body
+  expression $e$ to use both $x$ and $y$ while still tracking their
+  dependency. This formulation aligns with the intuition of bunched
+  typing~\cite{BunchedType}. \BD{I don't think the reader is going to
+    appreciate this difference unless they have a better intuition of
+    the capabilities afforded by $\ctcomma$.}}  For example,
 \begin{align*}
-  &x{:}\urt{\Nat}{\top} \ctcomma y{:}\ort{\Nat}{\vnu > 0} \vdash x - y : \urt{\Nat}{\I{even}(\vnu)} \;\judgfail
-  \\&x{:}\urt{\Nat}{\top} \ctstar y{:}\ort{\Nat}{\vnu > 0} \vdash x - y : \urt{\Nat}{\I{even}(\vnu)} \;\judgok
+  &x{:}\urt{\Nat}{\vnu > 0} \ctstar (y{:}\urt{\Nat}{\vnu > 0} \ctcomma z{:}\urt{\Nat}{\vnu > 0}) \vdash x - y : \urt{\Nat}{\vnu > 0} \;\judgok
+  \\&x{:}\urt{\Nat}{\vnu > 0} \ctstar (y{:}\urt{\Nat}{\vnu > 0}
+  \ctcomma z{:}\urt{\Nat}{\vnu > 0}) \vdash x - (z + y) : \urt{\Nat}{\vnu > 0} \;\judgok
+  \\&x{:}\urt{\Nat}{\vnu > 0} \ctstar (y{:}\urt{\Nat}{\vnu > 0} \ctcomma z{:}\urt{\Nat}{\vnu > 0}) \vdash y - z : \urt{\Nat}{\vnu > 0} \;\judgfail
+\end{align*}\noindent
+In these judgements, the context tracks variable dependency,
+specifying that $x$ is independent from $y$ and $z$, while $y$ and $z$
+are dependent on each other.  Specifying independence in this way is
+sufficient to verify reachability for $x - y$ and $x - z$, since $x$
+can be angelically chosen independently of $y$ or $z$, resp.  However,
+type-checking $y - z$ against the type $\urt{\Nat}{\vnu > 0}$ fails
+because $y$ and $z$ are entangled: no angelic choice can
+simultaneously make their difference reach every positive number.
+
+Notably, angelic and demonic refinements can also be entangled in a
+way that impacts the capabilities afforded by a type context, as the
+following pair of judgments illustrate:
+\begin{align*}
+  &x{:}\urt{\Nat}{\top} \ctcomma y{:}\ort{\Nat}{\top} \vdash x - y : \urt{\Nat}{\I{even}(\vnu)} \;\judgfail
+  \\&x{:}\urt{\Nat}{\top} \ctstar y{:}\ort{\Nat}{\top} \vdash x - y : \urt{\Nat}{\I{even}(\vnu)} \;\judgok
 \end{align*}\noindent
 The first typing context stipulates that the value of $y$ is positive,
 but that value is allowed to depend on the value $x$ --- the hole in
 \ref{ex:EnCon} can also be typed under this typing
-context. Accordingly, the expression $x - y$ always evaluates to $1$,
-and cannot reach every even number. Contrast this with a variant of
-this context that instead assigns \emph{some} constant value to $y$:
+context. Accordingly, the expression \ref{ex:EnCon}$[x - y]$ cannot
+reach every even number. Contrast this with a variant of this context
+that instead assigns \emph{some} constant value $n$ to $y$:
 \begin{align}
   &\zlet{x}{\Code{nat\_gen () }}{\zlet{y}{n}{\square}}
     \tag{C$_{n}$}\label{ex:DisjSafeCon} \\
@@ -367,43 +401,11 @@ Regardless of the particular value of $n$, for any given even number
 $m$, choosing $x = m + n$ allows \ref{ex:DisjSafeCon}$[x - y]$ to
 reach that number.
 
-The \ctcomma in the context
-$\Gamma \cdot x{:}\tau_x \ctcomma y{:}\tau_y$ works like additive
-logic conjunction in BI, and both $\Gamma \vdash x{:}\tau_x$ and
-$\Gamma \vdash y{:}\tau_y$ are valid. Importantly, however, does not
-guarantee that the modalities of $x$ and $y$ hold \emph{at the same
-  time}. \BD{Can we summarize this point using an example, e.g.,
-  $\Gamma \not\vdash (x, y) {:}(\tau_x, \tau_y)$ ? }
-\footnote{Unlike a linear type system, which would \emph{consume} the
-  capability to angelically assign $x$ when producing the capability
-  to angelically assign $y$, our system instead \emph{entangles} these
-  capabilities, allowing the body expression $e$ to use both $x$ and
-  $y$ while still tracking their dependency. This formulation aligns
-  with the intuition of bunched typing~\cite{BunchedType}. \BD{I don't
-    think the reader is going to appreciate this difference unless
-    they have a better intuition of the capabilities afforded by
-    $\ctcomma$.}}  For example,
-\begin{align*}
-  &x{:}\urt{\Nat}{\vnu > 0} \ctstar (y{:}\urt{\Nat}{\vnu > 0} \ctcomma z{:}\urt{\Nat}{\vnu > 0}) \vdash x - y : \urt{\Nat}{\vnu > 0} \;\judgok
-  \\&x{:}\urt{\Nat}{\vnu > 0} \ctstar (y{:}\urt{\Nat}{\vnu > 0}
-  \ctcomma z{:}\urt{\Nat}{\vnu > 0}) \vdash x - (z + y) : \urt{\Nat}{\vnu > 0} \;\judgok
-  \\&x{:}\urt{\Nat}{\vnu > 0} \ctstar (y{:}\urt{\Nat}{\vnu > 0} \ctcomma z{:}\urt{\Nat}{\vnu > 0}) \vdash y - z : \urt{\Nat}{\vnu > 0} \;\judgfail
-\end{align*}\noindent
-In these judgements, the context tracks variable dependency,
-specifying that $x$ is independent from $y$ and $z$, while $y$ and
-$z$ are dependent on each other.  Specifying independence in this
-way is sufficient to verify reachability for $x - y$ and $x - z$,
-since $x$ can be angelically chosen independently
-of $y$ or $z$, resp.  However, type-checking $y - z$ against the
-type $\urt{\Nat}{\vnu > 0}$ fails because $y$ and $z$ are entangled: no angelic
-choice can simultaneously make their difference reach every positive
-number.
-
-\BD{The $\ctsubseteqA$ relation is doing some heavy lifting in our
-  type system, but at this point, it is not clear how that relation
-  interacts with additive and multiplicative conjunction. Maybe we can
-  provide some algebraic laws to help build up the reader's
-  intuitions?}
+% \BD{The $\ctsubseteqA$ relation is doing some heavy lifting in our
+%   type system, but at this point, it is not clear how that relation
+%   interacts with additive and multiplicative conjunction. Maybe we can
+%   provide some algebraic laws to help build up the reader's
+%   intuitions?}
 
 \paragraph{Function Types} Entangled ($\ctsarr$) and independent
 function types ($\ctwand$) are adjunctions of the corresponding type
@@ -436,36 +438,35 @@ following example:
   \\&\quad  \underbrace{f{:}(\underbrace{y{:}\urt{\Nat}{\vnu > 0} \ctsarr}_\texttt{$y$ can depend on context during application} \urt{\Nat}{\vnu > 0}) \ctwand}_\texttt{$f$ is independent from $x$ and $y$} \urt{\Nat}{\vnu > 0}
 \end{align*}\noindent
 To make $x - (f\;(f\;y))$ reach every positive number, $x$ and
-$f\;(f\;y)$ must be disjoint.  To ensure this, one might expect that all function arrows in
-the result type would need to be $\ctwand$, but this would be incorrect. If $f$
-were given a fully disjoint type - $y{:}\urt{\Nat}{\vnu > 0} \ctwand
-\urt{\Nat}{\vnu > 0}$ - then each application of $f$ would require its
-argument to be disjoint from $f$'s closure. While the first
-application $f\;y$ satisfies this, the second application $f\;(f\;y)$
-fails because the intermediate result $f\;y$ depends on $f$,
-violating the disjointness requirement.  Note that although
-$\ctwand$ guarantees that $f$'s argument is disjoint from its
-closure, it makes no guarantees that $f$'s result is also disjointed.  Thus,
-while $(f\; y)$ is independent of $y$, it may still depend on $f$'s
-closure, making it an invalid argument in the outer application if given this
-signature.
+$f\;(f\;y)$ must be independent.  To ensure this, one might expect
+that all function arrows in the result type would need to be
+$\ctwand$, but this would be incorrect. If $f$ had the fully
+independent type
+$y{:}\urt{\Nat}{\vnu > 0} \ctwand \urt{\Nat}{\vnu > 0}$, then each
+application of $f$ would require its argument to be independent from
+$f$'s closure. While the first application $f\;y$ satisfies this, the
+second application $f\;(f\;y)$ fails because the intermediate result
+$f\;y$ depends on $f$.  While $\ctwand$ guarantees that $f$'s argument
+is not entagled with its closure, it makes no guarantees that $f$'s
+result is also independent.  Thus, while $(f\; y)$ is independent of
+$y$, it may still depend on $f$'s closure, making it an invalid
+argument in the outer application when equipped with this signature.
 
-Instead, $f$ must be given the dependent function type
-$y{:}\urt{\Nat}{\vnu > 0} \ctsarr \urt{\Nat}{\vnu > 0}$, which
-permits its argument to depend on $f$'s closure, accommodating the
-nested application. The function itself is then typed with $\ctwand$,
-ensuring $f$'s body is disjoint from $x$ and $y$ in the outer context. By
-adjunction, this yields:
+If $f$ is instead given the entangled function type
+$y{:}\urt{\Nat}{\vnu > 0} \ctsarr \urt{\Nat}{\vnu > 0}$, its argument
+can now depend on $f$'s closure, accommodating the nested
+application. The function itself is then typed with $\ctwand$,
+ensuring $f$'s body is not entagled with either $x$ or $y$ in the
+outer context. By adjunction, this yields:
 \begin{align*}
   &x{:}\urt{\Nat}{\vnu > 0} \ctstar
   \\&\quad (y{:}\urt{\Nat}{\vnu > 0} \ctstar
   f{:}(y{:}\urt{\Nat}{\vnu > 0} \ctsarr \urt{\Nat}{\vnu > 0}))
   \vdash x - (f\; (f\;y)) : \urt{\Nat}{\vnu > 0}
 \end{align*}\noindent
-Since $x$ is disjoint from both $y$ and $f$, it is also disjoint from
-$f\;(f\;y)$, which guarantees that $x - (f\;(f\;y))$ can reach every
-positive number.
-
+Since $x$ is independent from both $y$ and $f$, it is also independent
+from $f\;(f\;y)$, thus guaranteeing that $x - (f\;(f\;y))$ can reach
+every positive number.
 
 \paragraph{Control Flow} Standard refinement types interpret type
 contexts in a demonic style, requiring \emph{all} control-flow within
