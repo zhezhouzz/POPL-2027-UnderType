@@ -204,13 +204,13 @@ val g : ?$\Code{i}{:}\ort{\Int}{\vnu \le 10}\ctsarr\ort{\Int}{\vnu \neq 0}$?
 That said, numerous prior works~\cite{...} have shown that knowledge
 about the safety properties of terms can aid the automated
 verification of reachability properties, and vice-versa. When
-establishing that the function \ocamlinline{f} in
-\autoref{fig:may-must-reach} must return \ocamlinline{1} on some
+establishing that the function \Code{f} in
+\autoref{fig:may-must-reach} must return \Code{1} on some
 arguments, for example, the program analysis of
 \citet{CompositionalMayMust} uses a not-may summary analogous to the
-signature of \ocamlinline{g} to conclude calling it will never produce
-the \ocamlinline{0} value needed for \ocamlinline{f} to yield
-\ocamlinline{1}. As we shall see shortly, our type system also
+signature of \Code{g} to conclude calling it will never produce
+the \Code{0} value needed for \Code{f} to yield
+\Code{1}. As we shall see shortly, our type system also
 naturally supports verification of a meaningful form of qualified
 safety properties, similar to that found in \citet{ZDS23} and
 \citet{RHLE}.
