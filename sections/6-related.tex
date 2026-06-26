@@ -1,97 +1,82 @@
-\section{Related Work}
-Underapproximate program reasoning---exemplified by incorrectness
-logic~\cite{OHP19} and later unified with correctness in outcome
-logic~\cite{ZDS23,Zil25TOPLAS}---studies judgments whose conclusions
-guarantee \emph{existence} of executions rather than universal safety.
-These frameworks are native to imperative programs: triples relate
-commands to \emph{state-valued} outcomes.
-Incorrectness logic works largely with store predicates;
-outcome logic lifts assertions to \emph{weighted collections} of
-outcomes (e.g.\ via semiring weights), but still composes over a
-command-first operational semantics with heaps and variables in scope.
-Composition therefore continues to co-evolve all parts of the visible
-store unless additional structure says otherwise.
+\section{Discussion}\label{sec:discussion}
 
-\paragraph{Detailed postconditions are no accident.}
-A recurring theme in the incorrectness-logic literature is that
-\emph{informative} triples are almost as granular as separation-logic
-specifications: the postcondition cannot be a loose predicate on
-``the output'' alone.
-Because conclusions are read under an underapproximate (reverse)
-consequence discipline---states mentioned in the post must be
-genuinely reachable---local reasoning typically forces $Q$ to spell out
-fine-grained facts about aliases, heaps, and variables that co-vary
-along a command.
-Technically, one can always write a postcondition that mentions only $y$
-and ignores $x$; but in the underapproximate setting, such a $Q$ is
-either vacuously weak or implicitly relies on a specific $x$ that
-witnesses reachability---the correlation is pushed into the semantics
-rather than eliminated.
-It is not a bug of the formalism but a structural cost of treating
-everything as mutable state.
+Context types provide a type-based theoretical foundation for safety and reachability verification; however, there is an intrinsic difficulty in introducing a decidable bidirectional typing algorithm like those for standard refinement types. The core challenges come from the following three aspects:
+\begin{itemize}
+    \item Not totally term-syntax guided. Bidirectional typing algorithms and other typing algorithms typically leverage the syntax of the program to guide typing; however, within a bunched typing setting, the same term syntax admits multiple different typing rules (e.g., \textsc{T-Let} and \textsc{T-LetD}). This forces each typing algorithm to search through different choices, causing the case analysis to explode. Allowing both entangled and independent ways to construct the type context also yields a tree-like context structure. Like bunched implication (e.g., separation logic), this forces the algorithm to construct and decompose the context structure in a large search space.
+    \item Not totally type-syntax guided. The syntax of the type we type-check against also cannot provide enough guidance. Since function types can have different modalities for parameters and returns, the polarity of demonic and angelic modalities can alternate during the type-checking process.
+    For example, consider the following example, which mimics using a demonic sum type to express a reachability verification task introduced in \autoref{sec:typing}:
+    \begin{align*}
+       &\Gamma \ctcomma f{:}(\urt{\Nat}{\vnu > 0}\ctsarr\ort{\Nat}{\vnu < 0} \ctoplus \ort{\Nat}{\top}) \vdash
+       \\&\quad \zlet{x}{e_x}{f\;x} : \ort{\Nat}{\vnu > 0} \ctoplus \ort{\Nat}{\top}
+    \end{align*}\noindent
+    Although the right-hand-side type is demonic, we should type-check the term $e_x$ against the angelic type $\urt{\Nat}{\vnu > 0}$. 
+    Alternatively, when function $f$ has demonic type, the term $e_x$ should be typed against the demonic type $\ort{\Nat}{\vnu > 0}$:
+    \begin{align*}
+        &\Gamma \ctcomma f{:}(\ort{\Nat}{\vnu > 0}\ctsarr\ort{\Nat}{\vnu < 0} \ctoplus \ort{\Nat}{\top}) \vdash
+        \\&\quad \zlet{x}{e_x}{f\;x} : \ort{\Nat}{\vnu > 0} \ctoplus \ort{\Nat}{\top}
+    \end{align*}\noindent
+    In fact, whether the binding expression $e_x$ should be typed demonic or angelic depends on the body expression in the let-binding rather than on the right-hand-side type. This makes building a decidable typing algorithm require analyzing the continuation, which can be arbitrarily complex.
+    \item Undecidable subtyping checking. Our refinement type system allows arbitrary mixing of demonic and angelic modalities, and our semantic subtyping rules require checking verification conditions that may have arbitrary quantifier alternation, which is undecidable in general.
+\end{itemize}
 
-Outcome logic~\cite{ZDS23,Zil25TOPLAS} lifts assertions from individual
-states to \emph{weighted collections} of outcomes (via semiring
-weights), thereby unifying angelic and demonic branching and reusing
-proof principles across effects.
-Crucially, it introduces an \emph{outcome conjunction} $\varphi \oplus
-\psi$ together with a trivially-true assertion $\top$, so one can write
-$\langle \varphi \rangle\, C\, \langle \chi \oplus \top \rangle$ to
-express that a particular outcome $\chi$ is reachable while discarding
-all information about the remaining branches.
-This $\oplus\,\top$ idiom is outcome logic's analogue of incorrectness
-logic's ability to drop disjuncts from the post, and it is genuinely
-useful for bug-finding: one need not fully characterise every program
-path in order to certify that an erroneous state is reachable.
+We would like to highlight that a decidable bidirectional typing algorithm is still possible to achieve with a limited version of context types. The coverage type system~\cite{CoverageType} provides an example, where all function types are persistent with demonic parameter types and angelic return types. These constraints solve the three issues by (1) using variable references in type qualifiers to express entanglement, i.e., the dependent context $x{:}\urt{b}{\top} \ctcomma y{:}\urt{b}{\top}$ is illegal in coverage type system since their qualifiers do not refer to each other; (2) only allowing the right-hand-side type to be angelic, and providing specialized application rules for angelic arguments and function parameter types; (3) requiring that local angelic variables appear only after demonic parameters in the type context, which leads verification conditions to fall in EPR (i.e., in a $\forall^*\exists^*$ form), which is decidable.
 
-However, $\oplus\,\top$ operates on the \emph{branching} dimension of
-the semantics---it selects which computational paths to keep track
-of---while the problem we face is on a different, orthogonal dimension:
-the \emph{argument-return dependency} of a function application.
-After $y = f\;x$, the states inside $\chi$ still carry both $x$ and
-$y$ in the store, and the question of how $x$'s coverage relates to
-$y$'s is left entirely to the content of $\chi$.
-Outcome logic therefore does not, by itself, supply a
-\emph{function-type-first} account of application.
+\section{Related Work}\label{sec:related}
 
-Judgment-level unifications have progressed further on the logic side:
-program logics now internalize several styles in shared forms---outcome logic~\cite{ZDS23}, together with successor metatheory,
-with related lifts to hyperproperties~\cite{HyperHoareLogic}.
-Incorrectness separation logic supports modular local reasoning about the \emph{presence} of bugs~\cite{RBD+20}.
-Complementary tooling composes incorrectness logic with sufficient incorrectness logic---pairing reachable error states with explanations of which inputs witness them---for stronger incorrectness analyses~\cite{UTurn}.
+\paragraph{Bunched typing and bunched implication.}
+Although Bunched implication is wilded used in program logics, such as seperation logic~\cite{Iris}, the corresponding typing discipline has rarely been explored. Besides the original work by O'Hearn~\cite{BunchedType}, our work is the only bunched type system we are aware of. Context adapts the bunched typing into refinement type system, and equip it with richer modalities (i.e., demomic and angelic modalities, sum type, and persistence modality) to unify safety and reachability verification.
 
-Second, refinement typing favors concise interfaces, whereas incorrectness logic often forces programmers to spell out fully explicit descriptions of reachable stores.
-Incorrectness proofs often require painfully precise jointly refined poststores even when auxiliary
-locations do not visibly change.
-O'Hearn's canonical triple~\cite{OHP19}
-\begin{align*}
-    [ \top ] \; \Code{if\; \I{even}(x)\; \&\&\; \I{odd}(y)\; then\; z := 42} \; [\Code{z} = 42 \land \I{even}(\Code{x}) \land \I{odd}(\Code{y})]
-\end{align*}\noindent
-must mention \(x\) and \(y\) in the postcondition (preserving oddness of \(y\)) \emph{despite} their
-not being assigned: omitting that guard information would unsoundly admit states such as
-\([\Code{x}=0;\Code{y}=1;\Code{z}=42]\) where \(y\) is not odd.
-By contrast, we would like type-level interfaces to stay short, for example
-\begin{align*}
-    x{:}\urt{\Int}{\top} \sarr y{:}\ort{\Int}{\vnu > 0} \sarr \urt{\Int}{\vnu = 42}
-\end{align*}\noindent
-(letting the result value be the third position) without spelling every relational tie between
-\(x\), \(y\), and the returned integer.
-Whether such abstraction is sound depends on later continuations: some uses allow treating
-parameters independently (a variable of type \(x{:}\urt{\Int}{\top}\) may still be used in isolation), while others
-depend on joint behaviour (so naive combinations such as \(x+z\) need not behave as if \(x\) and \(z\) were independent underapproximate draws), meaning
-hidden dependency must be tracked modularly---a task that store-native presentations struggle to surface
-for higher-order judgments.
+\paragraph{Reachability verification.}
+Recent work on reachability verification in type systems includes
+Ramsay's ill-types~\cite{Ill-types,RamsayIncorType}, which refute
+typing formulas to show that ill-formed programs do not evaluate. Reachability types~\cite{ReachabilityTypes,ReachabilityTypesBidirectional,ReachabilityTypesTypestate,ReachabilityTypesLifetimes,ReachabilityTypesCyclic,ReachabilityTypesLogicalRelations,ReachabilityTypesPolymorphic} form a series of works that track aliasing of mutable references in higher-order functional programs by annotating each type with a reachability set of variable names that the reference may alias.
+Coverage types~\cite{CoverageType} underapproximates
+test-input-generator behavior to establish coverage completeness.
+All of these works are more algrithmical and not provides a thoeritical foundation such as an underline semanticaly denotation as our capability algebra and context Kirpke logic in our appoarch. As we discussed in \autoref{sec:discussion}, coverage type can be treated as a limited version of context types that to support decidable bidirectional typing algorithm.
 
-This view has proved useful in incorrectness reasoning, which aims to show that unexpected behaviors must occur~\cite{OHP19}.
-For example, Incorrectness Logic~\cite{OHP19} uses underapproximate triples $[P]\;\Code{C}\;[Q]$, where the postcondition $Q$ is treated as a lower bound of $\Code{C}$'s behavior under an angelic precondition $P$.
-The states in $Q$ underapproximate the states reachable from some state in $P$ by executing $\Code{C}$.
-Importantly, $P$ is interpreted angelically: the context can choose a suitable pre-state $\sigma$ to justify a target post-state $\sigma'$.
-This style of reasoning is widely studied in program logic, especially to reduce overwhelming false positives in bug finding and reachability analyses.
+In program logics, the literature is larger and has focused primarily
+on \emph{incorrectness reasoning}.
+Underapproximate logics~\cite{OHP19,RBD+20,ReverseHoareLogic,
+HyperHoareLogic,QuantitativeWeakestHyperPre,UTurn,BackwardIncorrectness}
+study judgments that guarantee the existence of executions rather than
+universal safety.
+However, all of these program logic has a unified pre- and post-condition in a single modality (angelic or demonic), which doesn't support construct or decompose the context structure as in our work.
+Outcome logic~\cite{ZDS23,Zil25TOPLAS} is the closest to our work
+because it also unifies safety and reachability through semiring-weighted
+outcomes and branch composition $\varphi \oplus \psi$.
+Like our $\tau_1 \ctoplus \tau_2$, its $\oplus$ adjoins control-flow
+alternatives, but outcome logic's base semantics is demonic and
+recovers incorrectness via $\langle \chi \oplus \top \rangle$ rather
+than through native underapproximate modalities $\ort{b}{\phi}$ and
+$\urt{b}{\phi}$ on the same refinement.
+These logics are command-first and store-based, whereas we give a
+complementary higher-order account through context types and bunched
+witness structure.
 
-However, analogous incorrectness reasoning is not yet established in type-based verification.
-Coverage Type~\cite{CoverageType} interprets types as underapproximations of test-input-generator behavior, and can prove coverage completeness (e.g., all binary search trees can be generated nondeterministically).
-But it does not provide the angelic-style context central to Incorrectness Logic.
-Meanwhile, refinement-typing workflows are often extended with external mechanisms such as symbolic execution to search for concrete counterexamples, instead of integrating underapproximation reasoning directly into typing judgments~\cite{RefinementTypeSymbolicExecution}.
-This split leaves overapproximate typing judgments and underapproximate witnesses at different methodological layers, limiting the modularity and reuse that type-system-native reasoning would otherwise provide.
+\paragraph{May- and must-style program analysis.} The program analysis works validate the application domain of coontext types.
+Compositional may- and must-style program analysis~\cite{MayMust}
+alternates overapproximate may-summaries with underapproximate
+must-summaries so that callee information can inform caller analysis.
+Refutation is a type-level specialization of this pattern, since a failed
+refinement type check does not by itself establish that a bug is
+reachable.
+Refinement type refutations~\cite{RefinementTypeRefutations} address
+this gap by deriving \emph{must}-style witnesses that explain why
+typing failed, often through concrete must-instantiations of subterms,
+while symbolic-execution tooling~\cite{RefinementTypeSymbolicExecution}
+searches for such counterexamples externally.
+Again, our context types provides a unified theoretical foundation for these algorithms which revists the duality between safety and reachability reaosning.
 
-Reverse Hoare Logic~\cite{ReverseHoareLogic} uses a similar ``reverse-style'' reasoning to prove reachability of imperative programs for randomized algorithms (e.g., all permutations of a list must be generated by a $\Code{shuffle}$ function). Another underapproximate-style program logic is Incorrectness Logic~\cite{OHP19}. It avoids overwhelming false positives in bug finding by using an angelic context (``angelic'' means finding hidden bugs luckily) to provide proper input states in the precondition that justify the erroneous behavior of a program. Later, Outcome Logic~\cite{ZDS23} and follow-up works in this style provide more unified and powerful reasoning for concurrent or probabilistic programs. 
+\paragraph{Context-aware typing.}
+Coeffect and graded modal type systems~\cite{Coeffects,
+Katsumata+14, GaboardiCombining, OrchardQuantitative} annotate
+programs with semiring-indexed context information such as usage,
+liveness, and security levels, interpreted via graded (co)monads.
+Like our context types, they treat contextual information as a typed
+resource with a compositional algebra, but they track how a
+computation \emph{demands} from its environment rather than how a
+typing context \emph{interprets} value sets under demonic or angelic
+modalities.
+They therefore do not internalise safety/reachability duality on the
+same base refinement, nor the bunched capability structure needed for
+higher-order witness independence (\autoref{subsec:disprove}).
