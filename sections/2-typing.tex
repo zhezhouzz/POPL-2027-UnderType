@@ -185,24 +185,52 @@ between two arbitrary refinements with different modalities:
 \end{align*}\noindent
 Knowing that a term can only evaluate to positive numbers does not
 allow us to draw any conclusions about which positive numbers it
-reaches. Similarly, simply knowing that a term can reach every
-positive number does not preclude it from also evaluating to 0.  It is
-only possible to switch the modality of a refinement when its
-qualifier is a singleton, or when the supertype qualifier is trivial:
-\begin{align*}
-  &\ort{\Nat}{\vnu = 3} \subty \urt{\Nat}{\vnu =
-    3}\;\judgok
-  & & \urt{\Nat}{\vnu = 3} \subty \ort{\Nat}{\vnu =
-      3}\;\judgfail \\
-  &x{:}\urt{\Nat}{\vnu > 0} \subty x{:}\ort{\Nat}{\top}\;\judgok
-  & &x{:}\ort{\Nat}{\vnu > 0} \ctsubseteqA x{:}\urt{\Nat}{\bot}\;\judgok
-\end{align*}\noindent
-When the qualifier is a singleton, safety and reachability coincide
---- there is only one possible value, so the demonic constraint (the
-value must be 3) and the angelic constraint (the value 3 must be
-reachable) make identical demands on the term. Converting to a
-supertype with a trivial qualifier, in contrast, simply throws away
-the bounds on a term entirely.
+reaches, for example. Similarly, simply knowing that a term can reach
+every positive number does not preclude it from also evaluating to 0.
+\begin{wrapfigure}{r}{0.48\linewidth}
+  \centering
+  \begin{minted}[linenos = false, fontsize = \footnotesize, escapeinside=??]{OCaml}
+val g : ?$\Code{i}{:}\ort{\Int}{\vnu \le 10}\ctsarr\ort{\Int}{\vnu \neq 0}$?
+
+?$\vdash$? let f (x: int) (y: int) =
+  if y > 10 then (g x) + 1
+    else x + 1
+: ?$\Code{x}{:}\urt{\Int}{x \le 5}\ctsarr\Code{y}{:}\urt{\Int}{y \le 15}\ctsarr\urt{\Int}{\vnu = 1}$?
+  \end{minted}
+  \caption{A simple example of how may-analysis helps
+    must-analysis~\cite{CompositionalMayMust}.}
+  \label{fig:may-must-reach}
+\end{wrapfigure}
+That said, numerous prior works~\cite{...} have shown that knowledge
+about the safety properties of terms can aid the automated
+verification of reachability properties, and vice-versa. When
+establishing that the function \ocamlinline{f} in
+\autoref{fig:may-must-reach} must return \ocamlinline{1} on some
+arguments, for example, the program analysis of
+\citet{CompositionalMayMust} uses a not-may summary analogous to the
+signature of \ocamlinline{g} to conclude calling it will never produce
+the \ocamlinline{0} value needed for \ocamlinline{f} to yield
+\ocamlinline{1}. As we shall see shortly, our type system also
+naturally supports verification of a meaningful form of qualified
+safety properties, similar to that found in \citet{ZDS23} and
+\citet{RHLE}.
+
+% It is only possible to switch the modality of a refinement when its
+% qualifier is a singleton, or when the supertype qualifier is trivial:
+% \begin{align*}
+%   &\ort{\Nat}{\vnu = 3} \subty \urt{\Nat}{\vnu =
+%     3}\;\judgok
+%   & & \urt{\Nat}{\vnu = 3} \subty \ort{\Nat}{\vnu =
+%       3}\;\judgfail \\
+%   &x{:}\urt{\Nat}{\vnu > 0} \subty x{:}\ort{\Nat}{\top}\;\judgok
+%   & &x{:}\ort{\Nat}{\vnu > 0} \ctsubseteqA x{:}\urt{\Nat}{\bot}\;\judgok
+% \end{align*}\noindent
+% When the qualifier is a singleton, safety and reachability coincide
+% --- there is only one possible value, so the demonic constraint (the
+% value must be 3) and the angelic constraint (the value 3 must be
+% reachable) make identical demands on the term. Converting to a
+% supertype with a trivial qualifier, in contrast, simply throws away
+% the bounds on a term entirely.
 
 % that an angelic context requiring $x$ to reach all numbers greater
 % than 1 is a subtype of one requiring $x$ to reach all positive
@@ -214,9 +242,6 @@ the bounds on a term entirely.
 % values) is a weaker assumption, while a wider angelic qualifier
 % (more reachable values) is stronger — the opposite of the demonic
 % case.
-
-
-
 
 % Having both angelic as well as demonic modalities in a type context
 % requires a more refined subtype relation than usual.  Read
@@ -278,7 +303,7 @@ the bounds on a term entirely.
 % singleton $1$ under the angelic context would violate the demonic
 % constraint.
 
-\paragraph{Combining Type Contexts}
+\paragraph{Type Context Composition}
 % Here we want to transition from thinking of type contexts as
 % constraining the surrounding environment to thinking of them as
 % affording us certain reasoning capabilities. Importantly, if we want
@@ -407,7 +432,12 @@ reach that number.
 %   provide some algebraic laws to help build up the reader's
 %   intuitions?}
 
-\paragraph{Function Types} Entangled ($\ctsarr$) and independent
+\paragraph{Function Types}
+\BD{We need to (re-)emphasize here that this is the first refinement
+  type system that does not place any restrictions on where angelic
+  and demonic modalities can appear in function types. }
+
+Entangled ($\ctsarr$) and independent
 function types ($\ctwand$) are adjunctions of the corresponding type
 context composition operators:
 \begin{align*}
