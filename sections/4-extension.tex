@@ -1,4 +1,5 @@
-\section{Supporting Nondeterminism}\label{sec:extension}
+\section{Supporting Nondeterminism}
+\label{sec:extension}
 
 The core language of Section~\ref{sec:context-typing} is
 deterministic: every term reduces to at most one value under any
@@ -53,7 +54,7 @@ On the other hand, the rule \textsc{T-LetD} allows producing disjoint results bu
 \end{align*}\noindent
 
 With a nondeterministic generator like $\Code{nat\_gen()}$, however,
-successive calls produce genuinely independent values. 
+successive calls produce genuinely independent values.
 The key
 observation is that nondeterministic generators like
 $\Code{nat\_gen()}$ must be given a \emph{persistent} type:
@@ -62,7 +63,7 @@ $\Code{nat\_gen()}$ must be given a \emph{persistent} type:
 \end{align*}
 Persistence allows a binding in the type context to be duplicated, i.e.,
 \begin{align*}
-  x{:}\ctpers \tau \; \ctsubseteq{\{x\}} \; x{:}\ctpers \tau \ctstar x{:}\ctpers \tau 
+  x{:}\ctpers \tau \; \ctsubseteq{\{x\}} \; x{:}\ctpers \tau \ctstar x{:}\ctpers \tau
 \end{align*}\noindent
 With the help of the rule \textsc{T-LetD}, the resource can be freely duplicated across multiple function applications without entangling the corresponding
 capabilities.
@@ -93,7 +94,7 @@ This term can only reach the value $0$ since $f\;()$ can either reduce to $0$ or
   The denotation of $\ctpers \tau$ is:
   \begin{align*}
     \denot{\ctpers \tau}_\Sigma\;e \doteq \forall x.\denot{\mstep{e}{x}} \chimpl \chpers (\denot{\tau}_{\Sigma,x{:}\eraserf{\tau}}\;x) \quad (\text{fresh $x$})
-  \end{align*}\noindent 
+  \end{align*}\noindent
 Note that defining the type denotation as $\chpers (\denot{\tau}_{\Sigma}\;e)$ would also allow wrong inhabitants such as $\zzlam{x}{0} \oplus \zzlam{x}{\Code{positive\_gen()}}$. To ensure that $e$ is also single-valued, we introduce a universally quantified fresh variable $x$ that ranges over all possible reduction results of $e$; the persistent modality then ensures only that $x$ is single-valued.
 \end{definition}
 

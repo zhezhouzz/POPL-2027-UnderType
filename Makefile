@@ -1,26 +1,20 @@
-# create pdf
+JOBNAME      = outypes
+LATEXMK      = latexmk
+LATEXMKFLAGS = -pdf -jobname=$(JOBNAME) -interaction=nonstopmode -halt-on-error
+# keep the next line ONLY if you use minted/gnuplot/etc.
+LATEXMKFLAGS += -shell-escape
 
-.PHONY: clouseau
+.PHONY: all haste clean cleanall
 
-all: clouseau
+all:
+	$(LATEXMK) $(LATEXMKFLAGS) main.tex
 
-clouseau: main.tex \
-	commands.sty refinementtydef.sty
-	pdflatex -jobname="clouseau" -shell-escape main
-	bibtex clouseau
-	clear
-	pdflatex -jobname="clouseau" -shell-escape main
-	clear
-	pdflatex -jobname="clouseau" -shell-escape main
-
-# create pdf without bibs (fast)
 haste:
-	pdflatex -shell-escape main
+	pdflatex $(filter -shell-escape,$(LATEXMKFLAGS)) -jobname=$(JOBNAME) \
+	         -interaction=nonstopmode main
 
-# remove tex objects
 clean:
-	rm -f *.log *.aux *.blg *.bbl *.out *~ *.cut sections/*.aux sections/tech/*.aux
+	$(LATEXMK) -c -jobname=$(JOBNAME)
 
-# remove objects, including the pdf file
 cleanall:
-	 rm -f *.log *.aux *.blg *.bbl *.out *~ *.cut sections/*.aux sections/tech/*.aux *.pdf
+	$(LATEXMK) -C -jobname=$(JOBNAME)

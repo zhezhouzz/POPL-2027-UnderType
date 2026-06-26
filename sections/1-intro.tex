@@ -1,7 +1,7 @@
 \section{Introduction}\label{sec:intro}
 
 A typical type-based verification procedure provides a compositional
-way to reason about a program's \emph{safety} properties~\cite{...}.
+way to reason about a program's \emph{safety} properties~\cite{Milner+78}.
 The procedure can be thought of as defining a logical deduction system
 that validates a program's behaviors with respect to its type
 specification.  For example, a typing judgement $\Gamma \vdash e :
@@ -43,7 +43,7 @@ guarantees that all ill-typed programs will definitely get stuck.
 % safety and reachability properties together, limiting their ability to
 % address useful verification tasks.  For example, consider a
 % specification for subtraction ($\Code{-}_{\Code{natpos}}$) that types
-% argument $y$ as a natural number less than 
+% argument $y$ as a natural number less than
 % $x$ and asserts that the result is a natural number greater
 % than 0 but at most $x$:
 % \[x : \{\Code{nat}\, |\ 0 < \nu\}, y : \Code{\{\Code{nat}\, |\, 0 \leq \nu < x\}}
@@ -153,8 +153,8 @@ we cannot guarantee that an arbitrary function supplied for $f$ will
 satisfy the reachability requirement on $F$'s result.  For example,
 when $f$ is the function $\lambda y.x - y$, $F$ always returns $0$.
 \begin{align*}
-    &f_1 \doteq \lambda y.x - y \quad 
-    \\&\zlet{x}{e_x}{\boxed{(\lambda f. f\;x)\;f_1}} \;\hookrightarrow^*\; \zlet{x}{e_x}{\boxed{x - x}} \;\hookrightarrow^*\; 0 
+    &f_1 \doteq \lambda y.x - y \quad
+    \\&\zlet{x}{e_x}{\boxed{(\lambda f. f\;x)\;f_1}} \;\hookrightarrow^*\; \zlet{x}{e_x}{\boxed{x - x}} \;\hookrightarrow^*\; 0
 \end{align*}\noindent
 The problem is that the ``captured context'' of function $\lambda y.x
 - y$ contains variable $x$.  For the type judgement to be valid, we
@@ -176,7 +176,7 @@ A counter-example to the validity of this judgement is given below:
 \begin{align*}
     &f_2 \doteq \lambda y.\zif{y = 1}{x}{2} \quad
     \\& \zlet{x}{e_x}{\zlet{y}{e_y}{\boxed{(\lambda f. f\;(f\;y))\;f_2}}} \;\hookrightarrow^*\;
-    \\& \zlet{x}{e_x}{\boxed{f_2\;(f_2\;1)}} \;\hookrightarrow^*\;  \quad \text{\textcolor{gray}{(we angelically choose $y = 1$)}}  
+    \\& \zlet{x}{e_x}{\boxed{f_2\;(f_2\;1)}} \;\hookrightarrow^*\;  \quad \text{\textcolor{gray}{(we angelically choose $y = 1$)}}
     \\& \zlet{x}{e_x}{\boxed{f_2\;x}} \;\hookrightarrow^*\; \zlet{x}{e_x}{\boxed{\zif{x = 1}{x}{2}}} \;\hookrightarrow^*\; \boxed{1 \text{ or } 2}
 \end{align*}\noindent
 Angelically choosing $y = 1$, the first application ($f_2\; 1$)
@@ -227,7 +227,7 @@ which guarantees that $y$ can be chosen angelically regardless of $x$.
 While the result context of a deterministic function is always
 dependent on its input context, nondeterministic functions may produce
 results that are independent of some inputs, a distinction that our
-system captures via disjoint result contexts using $\ctwand$; we 
+system captures via disjoint result contexts using $\ctwand$; we
 elaborate on this point in Section~\ref{nondet}.
 
 \noindent \paragraph{Contributions.}

@@ -2,10 +2,11 @@
   title   = {Iris from the ground up: A modular foundation for higher-order concurrent separation logic},
   volume  = {28},
   doi     = {10.1017/S0956796818000151},
+  author = {Jung, Ralf and Krebbers, Robbert and Jourdan, Jacques-Henri and Bizjak, Ale{\v{s}} and Birkedal, Lars and Dreyer, Derek},
   journal = {Journal of Functional Programming},
-  author  = {JUNG, RALF and KREBBERS, ROBBERT and JOURDAN, JACQUES-HENRI and BIZJAK, ALEŠ and BIRKEDAL, LARS and DREYER, DEREK},
   year    = {2018},
-  pages   = {e20}
+  pages   = {e20},
+  publisher = {Cambridge University Press}
 }
 
 @inproceedings{ReverseHoareLogic,
@@ -2536,50 +2537,60 @@
 }
 
 @article{ZDS23,
-  author     = {Zilberstein, Noam and Dreyer, Derek and Silva, Alexandra},
-  title      = {{Outcome Logic: A Unifying Foundation for Correctness and Incorrectness Reasoning}},
-  year       = {2023},
-  issue_date = {April 2023},
-  publisher  = {Association for Computing Machinery},
-  address    = {New York, NY, USA},
-  volume     = {7},
-  number     = {OOPSLA1},
-  journal    = {Proc. ACM Program. Lang.},
-  month      = apr,
-  articleno  = {93},
-  numpages   = {29}
+author = {Zilberstein, Noam and Dreyer, Derek and Silva, Alexandra},
+title = {Outcome Logic: A Unifying Foundation for Correctness and Incorrectness Reasoning},
+year = {2023},
+issue_date = {April 2023},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {7},
+number = {OOPSLA1},
+url = {https://doi.org/10.1145/3586045},
+doi = {10.1145/3586045},
+abstract = {Program logics for bug-finding (such as the recently introduced Incorrectness Logic) have framed correctness and incorrectness as dual concepts requiring different logical foundations. In this paper, we argue that a single unified theory can be used for both correctness and incorrectness reasoning. We present Outcome Logic (OL), a novel generalization of Hoare Logic that is both monadic (to capture computational effects) and monoidal (to reason about outcomes and reachability). OL expresses true positive bugs, while retaining correctness reasoning abilities as well. To formalize the applicability of OL to both correctness and incorrectness, we prove that any false OL specification can be disproven in OL itself. We also use our framework to reason about new types of incorrectness in nondeterministic and probabilistic programs. Given these advances, we advocate for OL as a new foundational theory of correctness and incorrectness.},
+journal = {Proc. ACM Program. Lang.},
+month = apr,
+articleno = {93},
+numpages = {29},
+keywords = {Hoare Logic, Incorrectness Reasoning, Program Logics}
 }
-
 
 @article{RW24,
-  author     = {Ramsay, Steven and Walpole, Charlie},
-  title      = {{Ill-Typed Programs Don’t Evaluate}},
-  year       = {2024},
-  issue_date = {January 2024},
-  publisher  = {Association for Computing Machinery},
-  address    = {New York, NY, USA},
-  volume     = {8},
-  number     = {POPL},
-  journal    = {Proc. ACM Program. Lang.},
-  month      = jan,
-  articleno  = {67},
-  numpages   = {31}
+author = {Ramsay, Steven and Walpole, Charlie},
+title = {Ill-Typed Programs Don’t Evaluate},
+year = {2024},
+issue_date = {January 2024},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {8},
+number = {POPL},
+url = {https://doi.org/10.1145/3632909},
+doi = {10.1145/3632909},
+abstract = {We introduce two-sided type systems, which are sequent calculi for typing formulas. Two-sided type systems allow for hypothetical reasoning over the typing of compound program expressions, and the refutation of typing formulas. By incorporating a type of all values, these type systems support more refined notions of well-typing and ill-typing, guaranteeing both that well-typed programs don’t go wrong and that ill-typed programs don’t evaluate - that is, reach a value. This makes two-sided type systems suitable for incorrectness reasoning in higher-order program verification, which we illustrate through an application to precise data-flow typing in a language with constructors and pattern matching. Finally, we investigate the internalisation of the meta-level negation in the system as a complement operator on types. This motivates an alternative semantics for the typing judgement, which guarantees that ill-typed programs don’t evaluate, but in which well-typed programs may yet go wrong.},
+journal = {Proc. ACM Program. Lang.},
+month = jan,
+articleno = {67},
+numpages = {31},
+keywords = {type systems, higher-order program verification, incorrectness}
 }
 
-
 @article{WGJ24,
-  author     = {Webbers, Robin and von Gleissenthall, Klaus and Jhala, Ranjit},
-  title      = {{Refinement Type Refutations}},
-  year       = {2024},
-  issue_date = {October 2024},
-  publisher  = {Association for Computing Machinery},
-  address    = {New York, NY, USA},
-  volume     = {8},
-  number     = {OOPSLA2},
-  journal    = {Proc. ACM Program. Lang.},
-  month      = oct,
-  articleno  = {305},
-  numpages   = {26}
+author = {Webbers, Robin and von Gleissenthall, Klaus and Jhala, Ranjit},
+title = {Refinement Type Refutations},
+year = {2024},
+issue_date = {October 2024},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {8},
+number = {OOPSLA2},
+url = {https://doi.org/10.1145/3689745},
+doi = {10.1145/3689745},
+abstract = {Refinement types combine SMT decidable constraints with a compositional, syntax-directed type system to provide a convenient way to statically and automatically check properties of programs. However, when type checking fails, programmers must use cryptic error messages that, at best, point out the code location where a subtyping constraint failed to determine the root cause of the failure. In this paper, we introduce refinement type refutations, a new approach to explaining why refinement type checking fails, which mirrors the compositional way in which refinement type checking is carried out. First, we show how to systematically transform standard bidirectional type checking rules to obtain refutations. Second, we extend the approach to account for global constraint-based refinement inference via the notion of a must-instantiation: a set of concrete inhabitants of the types of subterms that suffice to demonstrate why typing fails. Third, we implement our method in HayStack–an extension to LiquidHaskell which automatically finds type-refutations when refinement type checking fails, and helps users understand refutations via an interactive user-interface. Finally, we present an empirical evaluation of HayStack using the regression benchmark-set of LiquidHaskell, and the benchmark set of G2, a previous method that searches for (non-compositional) counterexample traces by symbolically executing Haskell source. We show that HayStack can find refutations for 99.7\% of benchmarks, including those with complex typing constructs (e.g., abstract and bounded refinements, and reflection), and does so, an order of magnitude faster than G2.},
+journal = {Proc. ACM Program. Lang.},
+month = oct,
+articleno = {305},
+numpages = {26},
+keywords = {Refinement Types, Counterexamples, Type Refutations}
 }
 
 @inproceedings{CompositionalMayMust,
@@ -2755,4 +2766,34 @@
   articleno = {9},
   numpages  = {30},
   doi       = {10.1145/3776651}
+}
+
+@article{Milner+78,
+title = {A theory of type polymorphism in programming},
+journal = {Journal of Computer and System Sciences},
+volume = {17},
+number = {3},
+pages = {348-375},
+year = {1978},
+issn = {0022-0000},
+doi = {https://doi.org/10.1016/0022-0000(78)90014-4},
+url = {https://www.sciencedirect.com/science/article/pii/0022000078900144},
+author = {Robin Milner},
+abstract = {The aim of this work is largely a practical one. A widely employed style of programming, particularly in structure-processing languages which impose no discipline of types, entails defining procedures which work well on objects of a wide variety. We present a formal type discipline for such polymorphic procedures in the context of a simple programming language, and a compile time type-checking algorithm W which enforces the discipline. A Semantic Soundness Theorem (based on a formal semantics for the language) states that well-type programs cannot “go wrong” and a Syntactic Soundness Theorem states that if W accepts a program then it is well typed. We also discuss extending these results to richer languages; a type-checking algorithm based on W is in fact already implemented and working, for the metalanguage ML in the Edinburgh LCF system.}
+}
+
+@inproceedings{RHLE,
+author = {Dickerson, Robert and Ye, Qianchuan and Zhang, Michael K. and Delaware, Benjamin},
+title = {RHLE: Modular Deductive Verification of Relational $\forall\exists$-Properties},
+year = {2022},
+isbn = {978-3-031-21036-5},
+publisher = {Springer-Verlag},
+address = {Berlin, Heidelberg},
+url = {https://doi.org/10.1007/978-3-031-21037-2_4},
+doi = {10.1007/978-3-031-21037-2_4},
+abstract = {Hoare-style program logics are a popular and effective technique for software verification. Relational program logics are an instance of this approach that enables reasoning about relationships between the execution of two or more programs. Existing relational program logics have focused on verifying that all runs of a collection of programs do not violate a specified relational behavior. Several important relational properties, including refinement and noninterference, do not fit into this category, as they also mandate the existence of specific desirable executions. This paper presents RHLE, a logic for verifying these sorts of relational $\for\exists$ properties. Key to our approach is a novel form of function specification that employs a variant of ghost variables to ensure that valid implementations exhibit certain behaviors. We have used a program verifier based on RHLE to verify a diverse set of relational $\for\exists$ properties drawn from the literature.},
+booktitle = {Programming Languages and Systems: 20th Asian Symposium, APLAS 2022, Auckland, New Zealand, December 5, 2022, Proceedings},
+pages = {67–87},
+numpages = {21},
+location = {Auckland, New Zealand}
 }
