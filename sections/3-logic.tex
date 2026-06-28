@@ -326,8 +326,8 @@ consistent with $x$'s full range.
 
 \begin{definition}[Type Denotation]\label{def:type-denotation}
   \begin{align*}
-    \denot{\ort{b}{\phi}}_\Sigma\;e &\doteq \denot{\mstep{e}{\vnu}}_\Sigma \chimpl \forallM{\Code{FV}(\ort{b}{\phi})}\,\demonic\,\phi \quad \text{($\vnu$ fresh)}
-    \\\denot{\urt{b}{\phi}}_\Sigma\;e &\doteq \denot{\mstep{e}{\vnu}}_\Sigma \chimpl \forallM{\Code{FV}(\urt{b}{\phi})}\,\angelic\,\phi \quad \text{($\vnu$ fresh)}
+    \denot{\ort{b}{\phi}}_\Sigma\;e &\doteq \denot{\mstep{e}{\vnu}}_\Sigma \chimpl \forallM{\Code{FV}(\ort{b}{\phi})}\,\demonic\,\Code{Atom}(\phi) \quad \text{($\vnu$ fresh)}
+    \\\denot{\urt{b}{\phi}}_\Sigma\;e &\doteq \denot{\mstep{e}{\vnu}}_\Sigma \chimpl \forallM{\Code{FV}(\urt{b}{\phi})}\,\angelic\,\Code{Atom}(\phi) \quad \text{($\vnu$ fresh)}
     \\\denot{x{:}\tau_x \ctsarr \tau}_\Sigma\;e &\doteq \denot{\tau_x}_\Sigma\;x \chimpl \denot{\tau}_{\Sigma,x{:}\eraserf{\tau_x}}\;(e\;x) \quad \text{($x$ fresh)}
     \\\denot{x{:}\tau_x \ctwand \tau}_\Sigma\;e &\doteq \denot{\tau_x}_\Sigma\;x \chwand \denot{\tau}_{\Sigma,x{:}\eraserf{\tau_x}}\;(e\;x) \quad \text{($x$ fresh)}
     \\\denot{\tau_1 \ctinter \tau_2}_\Sigma\;e &\doteq \denot{\tau_1}_\Sigma\;e \chland \denot{\tau_2}_\Sigma\;e

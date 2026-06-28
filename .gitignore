@@ -9,6 +9,8 @@
 _minted/*
 *.config.minted
 *.data.minted
+*.errlog.minted
+/minted.sty
 *.aux
 *.bbl
 *blg
