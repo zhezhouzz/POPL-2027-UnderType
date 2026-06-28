@@ -158,6 +158,33 @@
 %% The abstract is a short summary of the work to be presented in the
 %% article.
 
+\begin{abstract}
+
+
+  Safety and reachability can be viewed as dual interpretations of the
+  same syntactic type judgement.  In a type setting, the judgement $e
+  : \tau$, when viewed as a safety property, holds if $e$ \emph{may}
+  evaluate to any value denoted by $\tau$; here, $\tau$ may
+  overapproximate $e$'s possible values.  In contrast, the same
+  judgement, when treated as a reachability constraint, holds if $e$
+  \emph{must} evaluate to every value denoted by $\tau$; here, $\tau$
+  may underapproximate $e$'s possible values.  Soundly integrating
+  safety and reachability within the same type system is challenging
+  because the demonic (for safety) and angelic (for reachability)
+  interpretations require different forms of dependency tracking
+  between the free variables of expressions and their evaluation
+  environments.  To support such tracking, we treat contexts as a kind
+  of resource equipped with capabilities that mediate when demonic or
+  angelic interpretations are valid.  We formalize these notions by
+  developing a resource algebra of contextual capabilities, a bunched
+  modal context logic over this algebra, and a type system interpreted
+  in this logic, establishing soundness with respect to a denotational
+  semantics that gives a unified account of safety and reachability
+  guarantees within a single typing judgement.  We further extend our
+  type system to support nondeterminism by introducing a persistency
+  modality that governs resource duplication.
+
+\end{abstract}  
 
 % \begin{abstract}
 %   Several recently proposed program logics have incorporated notions
