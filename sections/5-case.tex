@@ -15,9 +15,9 @@ function (\autoref{subsec:disprove}).
         \centering
 \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
 val g : ?$\Code{i}{:}\ort{\Int}{\top}\ctsarr\ort{\Int}{0 \leq \vnu}$?
-      
-?$\vdash$? let f (x: int) (y: int) = 
-    (g x) < 0 || (g y) < 0    
+
+?$\vdash$? let f (x: int) (y: int) =
+    (g x) < 0 || (g y) < 0
 : ?$\Code{x}{:}\ort{\Int}{\top}\ctsarr \Code{y}{:}\ort{\Int}{\top}\ctsarr \ort{\Bool}{\vnu = \false}$?
 \end{minted}
         \subcaption{May-analysis helps may-analysis.}
@@ -28,8 +28,8 @@ val g : ?$\Code{i}{:}\ort{\Int}{\top}\ctsarr\ort{\Int}{0 \leq \vnu}$?
         \centering
 \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
 val g : ?$\Code{i}{:}\urt{\Int}{\top}\ctsarr\urt{\Int}{0 \leq \vnu}$?
-        
-?$\vdash$? let f (x: int) (y: int) = 
+
+?$\vdash$? let f (x: int) (y: int) =
     0 <= (g x) && 0 <= (g y)
 : ?$\Code{x}{:}\urt{\Int}{\top}\ctsarr\Code{y}{:}\urt{\Int}{\top}\ctsarr\urt{\Bool}{\vnu = \true}$?
 \end{minted}
@@ -46,11 +46,11 @@ val g : ?$\Code{i}{:}\ort{\Int}{\top}\ctsarr\ort{\Int}{\vnu \neq 0}$?
 
 ?$\vdash$? let f (x: int) (y: int) =
     if y > 10 then (g x) + 1
-    else x + 1          
+    else x + 1
 : ?$\Code{x}{:}\urt{\Int}{\top}\ctsarr\Code{y}{:}\urt{\Int}{\top}\ctsarr\urt{\Int}{\vnu = 1}$?
 \end{minted}
         \subcaption{May-analysis helps must-analysis.}
-        \label{fig:may-must-reach}
+        \label{fig:may-must-reach2}
     \end{subfigure}
     \hfill
     \begin{subfigure}[t]{0.48\linewidth}
@@ -72,14 +72,46 @@ val g : ?$\Code{i}{:}\ort{\Int}{\top}\ctsarr\ort{\Int}{\vnu > 0}\interty $?
     \label{fig:may-must-analysis}
 \end{figure}
 
-Our unified treatment of safety and reachability through context types also furnishes a foundation for compositional may- and must-style program analysis, as developed in prior work~\cite{MayMust}. That analysis is compositional because callee summaries inform caller analysis; Figure~\ref{fig:may-must-analysis} reproduces four representative examples from the original paper. We restate them in our core language and assign context types to the caller $\Code{f}$ and the callee $\Code{g}$. In our encoding, may-analysis summaries use demonic parameters and returns, whereas must-analysis summaries use angelic parameters and returns.
+Our unified treatment of safety and reachability through context types
+also furnishes a foundation for compositional may- and must-style
+program analysis, as developed in prior work~\cite{MayMust}. That
+analysis is compositional because callee summaries inform caller
+analysis; Figure~\ref{fig:may-must-analysis} reproduces four
+representative examples from the original paper. We restate them in
+our core language and assign context types to the caller $\Code{f}$
+and the callee $\Code{g}$. In our encoding, may-analysis summaries use
+demonic parameters and returns, whereas must-analysis summaries use
+angelic parameters and returns.
 
-Figure~\ref{fig:may-must-analysis}~(a) calls for a ``not-may'' summary of $\Code{f}$, namely a safety property stating that $\Code{f}$'s result \emph{may not} be $\true$. Because the callee $\Code{g}$ returns only non-negative values (i.e., $\ort{\Int}{0 \leq \vnu}$), the caller $\Code{f}$ may be summarized as returning only $\false$. By contrast, the must-analysis in Figure~\ref{fig:may-must-analysis}~(b) requires $\true$ to be reachable for $\Code{f}$, relying on $\Code{g}$'s guarantee that every non-negative value is reachable. Prior must-style analyses can handle only plain conjunctions of two callee return values, since they cannot express disjointness between the inputs $\Code{x}$ and $\Code{y}$ in $\Code{f}$. On the other hand, if function $\Code{f}$ returns $\Code{(g\;x) - (g\;y)}$ and we want to prove all natural number are reachable, the following disjointed type for $\Code{f}$ is required:
+Figure~\ref{fig:may-must-analysis}~(a) calls for a ``not-may'' summary
+of $\Code{f}$, namely a safety property stating that $\Code{f}$'s
+result \emph{may not} be $\true$. Because the callee $\Code{g}$
+returns only non-negative values (i.e., $\ort{\Int}{0 \leq \vnu}$),
+the caller $\Code{f}$ may be summarized as returning only $\false$. By
+contrast, the must-analysis in Figure~\ref{fig:may-must-analysis}~(b)
+requires $\true$ to be reachable for $\Code{f}$, relying on
+$\Code{g}$'s guarantee that every non-negative value is
+reachable. Prior must-style analyses can handle only plain
+conjunctions of two callee return values, since they cannot express
+disjointness between the inputs $\Code{x}$ and $\Code{y}$ in
+$\Code{f}$. On the other hand, if function $\Code{f}$ returns
+$\Code{(g\;x) - (g\;y)}$ and we want to prove all natural number are
+reachable, the following disjointed type for $\Code{f}$ is required:
 \begin{align*}
   \Code{x}{:}\urt{\Int}{\top}\ctwand\Code{y}{:}\urt{\Int}{\top}\ctwand\urt{\Int}{0 \leq \vnu }
 \end{align*}\noindent
 
-Figure~\ref{fig:may-must-analysis}~(c) rules out reachability analysis for the then-branch of the conditional, because $\Code{g}$ may return a non-zero value and thereby prevent that branch from reaching the result $1$. In Figure~\ref{fig:may-must-analysis}~(d), by contrast, the callee $\Code{g}$ carries two summaries as an intersection type; its angelic component states that every integer is reachable. This forces may-analysis of the caller $\Code{f}$ to explore both branches of the conditional. Our type system handles such cases more uniformly, since a single type may be constrained under both angelic and demonic modalities. For instance, safety checking for $\Code{f}$ can proceed under the more comprehensive type:
+Figure~\ref{fig:may-must-analysis}~(c) rules out reachability analysis
+for the then-branch of the conditional, because $\Code{g}$ may return
+a non-zero value and thereby prevent that branch from reaching the
+result $1$. In Figure~\ref{fig:may-must-analysis}~(d), by contrast,
+the callee $\Code{g}$ carries two summaries as an intersection type;
+its angelic component states that every integer is reachable. This
+forces may-analysis of the caller $\Code{f}$ to explore both branches
+of the conditional. Our type system handles such cases more uniformly,
+since a single type may be constrained under both angelic and demonic
+modalities. For instance, safety checking for $\Code{f}$ can proceed
+under the more comprehensive type:
 \begin{align*}
     \Code{x}{:}(\ort{\Int}{\top}\interty \urt{\Int}{\top})\ctsarr\Code{y}{:}(\ort{\Int}{\top}\interty \urt{\Int}{\top})\ctsarr(\ort{\Int}{\top}\interty \urt{\Int}{\vnu = 1})
 \end{align*}\noindent
@@ -89,7 +121,7 @@ which supports safety and reachability checking in one pass, rather than alterna
 The coverage type system of~\citet{CoverageType} verifies that a
 test generator produces every desirable input.
 Consider the following BST generator:
-\begin{minted}[xleftmargin=15pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}    
+\begin{minted}[xleftmargin=15pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
 let rec bst_gen (r: nat) (lo: nat)
               (range: nat -> nat -> nat): nat tree =
 if r <= 0 then Leaf
@@ -124,7 +156,7 @@ $\ort{\Nat}{x < \vnu}$) and an angelic result type ($\urt{\Nat}{x <
   \vnu < y}$).  The demonic parameters mean that successive calls to
 \texttt{range} with different arguments can be typed with
 independent result capabilities — the generator's output at each
-recursive call is disjoint from its outputs at other calls.  
+recursive call is disjoint from its outputs at other calls.
 Similarly, the BST generator follows the same pattern: its demonic parameter types allow any valid size $\Code{r}$ and lower bound $\Code{lo}$, and its angelic result type asserts that every valid BST is reachable by some sequence of generator choices.
 
 \subsection{Disprove Reasoning}\label{subsec:disprove}

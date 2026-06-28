@@ -1,85 +1,14 @@
-\section{Context Types}\label{sec:context-typing}
-% In this section, we introduce the core language and the context type system for it.
-
-% \subsection{Core Language}
-
-\begin{figure}[h]
-  {\small
-    \begin{alignat*}{2}
-      \text{\textbf{Variables }}& \quad &\quad& x, y, z, \vnu, ...
-      \\\text{\textbf{Data Constructors }}& \quad &d ::= \quad & () ~|~ \Code{true} ~|~ \Code{false} ~|~ \Code{O} ~|~ \Code{S} ~|~ \Code{Cons} ~|~ \Code{Nil} ~|~ ...
-      \\\text{\textbf{Operations}}& \quad & \primop ::= \quad & d ~|~ {+} ~|~ {-} ~|~ {==} ~|~ {<} ~|~ {\leq} ~|~ ...
-      \\ \text{\textbf{Constants }}& \quad &c ::= \quad & () ~|~ \mathbb{B} ~|~ \mathbb{Z} ~|~ d\ \overline{c}\ ...
-      \\ \text{\textbf{Values}}& \quad  & v ::= \quad & c ~|~ x ~|~ \zlam{x}{s}{e} ~|~ \zfix{f}{s}{x}{s}{e}
-      \\ \text{\textbf{Expressions}}& \quad & e ::=\quad & v ~|~ \zlet{x{:}s}{e}{e} ~|~ \primop\ \overline{v} ~|~  v\;v ~|~ \match{v} \overline{d\ \overline{y} \to e}
-      \\\text{\textbf{Base Types}}& \quad & b  ::= \quad &  \Code{unit} ~|~ \Code{bool} ~|~ \Code{nat} ~|~ \List[b] ~|~ ...
-      \\\text{\textbf{Basic Types}}& \quad & s  ::= \quad &  b ~|~ s\sarr s
-      \\\text{\textbf{Basic Type Context}}& \quad & \Sigma ::= \quad &  \emptyset ~|~ x{:}s ~|~ \Sigma, \Sigma
-    \end{alignat*}}
-  \caption{Syntax of \langname{} \BD{Why do we include both constants
-      and data constructors?}}
-  \label{fig:core-lang-syntax}
-  \end{figure}
-
-  % \paragraph{Terms, basic types, and basic type contexts}
-  We will use the core language (\langname{}) shown in
-  \autoref{fig:core-lang-syntax} to concretize our proposed context
-  type system.  This language is a standard call-by-value lambda
-  calculus with inductive datatypes, pattern matching (the following
-  uses conditional expressions as syntactic sugar for \Code{match}),
-  and recursive functions. \BD{Are we assuming that built-in
-    operations are deterministic? Do we even need these?}  Expressions
-  are written in monadic normal form (MNF)~\cite{JO94}, a variant of
-  A-Normal Form (ANF)~\cite{FSDF93} that allows nested let-bindings.
-  The language's basic types (i.e., $s$) consist of base types ($b$)
-  and function types (i.e., $s\sarr s$). Both \textbf{let}-expressions
-  and function abstractions explicitly annotate bound variables with a
-  basic type (e.g., $\zlam{x}{s}{e}$); we omit these annotations for
-  brevity, when appropriate.  A basic type context $\Sigma$ maps
-  variables to their basic types; we assume that all bound variables
-  in $\Sigma$ are distinct.
-
-\begin{figure}[h]
-  { \small
-    \begin{alignat*}{2}
-      \text{\textbf{Qualifiers}}& \quad & \phi ::= \quad & c ~|~ x ~|~ \primop\;\overline{v} ~|~ \bot ~|~ \top  ~|~ \neg \phi ~|~ \phi \land \phi ~|~ \phi \lor \phi ~|~  \phi \impl \phi ~|~ \forall x{:}b. \phi ~|~ \exists x{:}b. \phi
-      \\ \text{\textbf{Refinement Types}}& \quad & \tau ::= \quad & \ort{b}{\phi} ~|~ \urt{b}{\phi} ~|~ \tau \ctinter \tau ~|~ \tau \ctunion \tau ~|~ \tau \ctoplus \tau ~|~ x{:}\tau \ctsarr \tau ~|~ x{:}\tau \ctwand \tau
-      % ~|~ \ctpers \tau
-      \\ \text{\textbf{Type Contexts}}& \quad & \Gamma ::= \quad & \emptyset ~|~ x{:}\tau ~|~ \Gamma \ctstar \Gamma ~|~ \Gamma \ctcomma \Gamma ~|~ \Gamma \ctoplus \Gamma
-      % \\ \text{\textbf{Contexts With Holes}}& \quad & \Delta ::= \quad & \Box ~|~ \Gamma ~|~ \Delta \ctstar \Delta ~|~ \Delta \ctcomma \Delta ~|~ \Delta \ctoplus \Delta
-    \end{alignat*}}
-  %% \vspace*{-.1in}
-  %% {\small
-  %% \begin{align*}
-  %%   \text{\textbf{Type erasure}} \quad & \eraserf{\ort{b}{\phi}} \doteq b \quad \eraserf{\urt{b}{\phi}} \doteq b \quad \eraserf{\tau_1 \ctinter \tau_2} \doteq \eraserf{\tau_1} \quad \eraserf{\tau_1 \ctunion \tau_2} \doteq \eraserf{\tau_1}
-  %%   \\&\eraserf{\tau_1 \ctoplus \tau_2} \doteq \eraserf{\tau_1} \quad  \eraserf{x{:}\tau_x \ctsarr \tau} \doteq \eraserf{\tau_x} \sarr \eraserf{\tau} \quad
-  %%   \\& \eraserf{\emptyset} \doteq \emptyset \quad \eraserf{x{:}\tau} \doteq x{:}\eraserf{\tau} \quad \eraserf{\Gamma_1 \ctcomma \Gamma_2} \doteq \eraserf{\Gamma_1}, \eraserf{\Gamma_2} \quad \eraserf{\Gamma_1 \ctstar \Gamma_2} \doteq \eraserf{\Gamma_1}, \eraserf{\Gamma_2}  \quad \eraserf{\Gamma_1 \ctoplus \Gamma_2} \doteq \eraserf{\Gamma_1}
-    % \\\text{\textbf{Type lifting}} \quad & \liftrf{b} \doteq \ort{b}{\phi} \quad \liftrf{s_x \sarr s} \doteq x{:}\liftrf{s_x} \ctsarr \liftrf{s}
-    % \\&\liftrf{\emptyset} \doteq \emptyset \quad \liftrf{x{:}s} \doteq x{:}\liftrf{s} \quad \liftrf{\Gamma_1 , \Gamma_2} \doteq \liftrf{\Gamma_1} \ctcomma \liftrf{\Gamma_2}
-%  \end{align*}}
-  \caption{Context Type Syntax}
-  \label{fig:context-types-syntax}
-\end{figure}
-
-\subsection{Overview}
-
-The syntax of context types is shown in
-\autoref{fig:context-types-syntax}. As in other refinement type
-systems, \emph{context types} refine basic types with qualifiers
-$\phi$; but each refinement is ascribed either a demonic and angelic
-modality ($\otparenth{...}$ and $\utparenth{...}$, resp.). Context
-types additionally include bunched implication (e.g., $\ctsarr$,
-$\ctwand$), disjoint sums ($\ctoplus$), and standard type intersection
-($\ctinter$) operators; the remainder of this section overviews each
-of these features in more detail.
+\section{Overview}
+\label{sec:overview}
+Before presenting the full details of our proposed type system, we
+begin with a tour of its key features and how they enable both safety
+and reachability reasoning.
 
 %% Readers can see this
 %% connection via the type erasure function $\eraserf{\tau}$, which
 %% converts context types to basic types by erasing these refinements. In
 %% the following paragraphs, we introduce these refinements in detail via
 %% examples.
-
-
 
 \paragraph{Demonic and Angelic Modalities}
 % BD: The goal of this subsection is to equip the reader with the
@@ -88,16 +17,26 @@ of these features in more detail.
 % currently of the opinion that the lower / upper bound framing is the
 % right intuition (particularly for the type context case), as opposed
 % to the angelic / demonic one.
-A base type $b$ can be
-refined with a qualifier $\phi$, a sentence in first-order logic, that
-is interpreted either demonically ($\ort{b}{\phi}$) or angelically
-($\urt{b}{\phi}$). When ascribed to a term $e$, a context type
-describes both safety and reachability properties of $e$. As discussed
-in \autoref{sec:intro}, the demonic context type $\ort{b}{\phi}$
-allows $e$ to (at most) acquire any value $v$ that satisfies its
-qualifier $\phi$.  Conversely, an angelic context type $\urt{b}{\phi}$
-stipulates that $e$ must (at least) acquire every value satisfying
-$\phi$.
+
+% Note that fundamental question that our type system answers is: what
+% does the image of this term look like, when it is evaluated under a
+% particular restriction? One of the interesting things about the type
+% system is a) the sorts of restrictions our type contexts can
+% describe, and b) how those restrictions afford the type certain
+% reasoning capabilities when verifying safety / reachability
+% properties.
+
+As in other refinement type systems, a context type refines a base
+type $b$ with a qualifier $\phi$, a sentence in first-order
+logic. Every context type is equipped with a modality indicating
+whether it should be interpreted either demonically ($\ort{b}{\phi}$)
+or angelically ($\urt{b}{\phi}$). When ascribed to a term $e$, a
+context type describes both safety and reachability properties of
+$e$. As discussed in \autoref{sec:intro}, the demonic context type
+$\ort{b}{\phi}$ allows $e$ to (at most) acquire any value $v$ that
+satisfies its qualifier $\phi$.  Conversely, an angelic context type
+$\urt{b}{\phi}$ stipulates that $e$ must (at least) acquire every
+value satisfying $\phi$.
 
 % Informally, we have
 % \begin{align*}
@@ -246,24 +185,52 @@ between two arbitrary refinements with different modalities:
 \end{align*}\noindent
 Knowing that a term can only evaluate to positive numbers does not
 allow us to draw any conclusions about which positive numbers it
-reaches. Similarly, simply knowing that a term can reach every
-positive number does not preclude it from also evaluating to 0.  It is
-only possible to switch the modality of a refinement when its
-qualifier is a singleton, or when the supertype qualifier is trivial:
-\begin{align*}
-  &x{:}\ort{\Nat}{\vnu = 3} \subty x{:}\urt{\Nat}{\vnu =
-    3}\;\judgok
-  & & x{:}\urt{\Nat}{\vnu = 3} \subty x{:}\ort{\Nat}{\vnu =
-    3}\;\judgok \\
-  &x{:}\urt{\Nat}{\vnu > 0} \subty x{:}\ort{\Nat}{\top}\;\judgok
-  & &x{:}\ort{\Nat}{\vnu > 0} \ctsubseteqA x{:}\urt{\Nat}{\bot}\;\judgok
-\end{align*}\noindent
-When the qualifier is a singleton, safety and reachability coincide
---- there is only one possible value, so the demonic constraint (the
-value must be 3) and the angelic constraint (the value 3 must be
-reachable) make identical demands on the term. Converting to a
-supertype with a trivial qualifier, in contrast, simply throws away
-the bounds on a term entirely.
+reaches, for example. Similarly, simply knowing that a term can reach
+every positive number does not preclude it from also evaluating to 0.
+\begin{wrapfigure}{r}{0.48\linewidth}
+  \centering
+  \begin{minted}[linenos = false, fontsize = \footnotesize, escapeinside=??]{OCaml}
+val g : ?$\Code{i}{:}\ort{\Int}{\vnu \le 10}\ctsarr\ort{\Int}{\vnu \neq 0}$?
+
+?$\vdash$? let f (x: int) (y: int) =
+  if y > 10 then (g x) + 1
+    else x + 1
+: ?$\Code{x}{:}\urt{\Int}{x \le 5}\ctsarr\Code{y}{:}\urt{\Int}{y \le 15}\ctsarr\urt{\Int}{\vnu = 1}$?
+  \end{minted}
+  \caption{A simple example of how may-analysis helps
+    must-analysis~\cite{CompositionalMayMust}.}
+  \label{fig:may-must-reach}
+\end{wrapfigure}
+That said, numerous prior works~\cite{...} have shown that knowledge
+about the safety properties of terms can aid the automated
+verification of reachability properties, and vice-versa. When
+establishing that the function \Code{f} in
+\autoref{fig:may-must-reach} must return \Code{1} on some
+arguments, for example, the program analysis of
+\citet{CompositionalMayMust} uses a not-may summary analogous to the
+signature of \Code{g} to conclude calling it will never produce
+the \Code{0} value needed for \Code{f} to yield
+\Code{1}. As we shall see shortly, our type system also
+naturally supports verification of a meaningful form of qualified
+safety properties, similar to that found in \citet{ZDS23} and
+\citet{RHLE}.
+
+% It is only possible to switch the modality of a refinement when its
+% qualifier is a singleton, or when the supertype qualifier is trivial:
+% \begin{align*}
+%   &\ort{\Nat}{\vnu = 3} \subty \urt{\Nat}{\vnu =
+%     3}\;\judgok
+%   & & \urt{\Nat}{\vnu = 3} \subty \ort{\Nat}{\vnu =
+%       3}\;\judgfail \\
+%   &x{:}\urt{\Nat}{\vnu > 0} \subty x{:}\ort{\Nat}{\top}\;\judgok
+%   & &x{:}\ort{\Nat}{\vnu > 0} \ctsubseteqA x{:}\urt{\Nat}{\bot}\;\judgok
+% \end{align*}\noindent
+% When the qualifier is a singleton, safety and reachability coincide
+% --- there is only one possible value, so the demonic constraint (the
+% value must be 3) and the angelic constraint (the value 3 must be
+% reachable) make identical demands on the term. Converting to a
+% supertype with a trivial qualifier, in contrast, simply throws away
+% the bounds on a term entirely.
 
 % that an angelic context requiring $x$ to reach all numbers greater
 % than 1 is a subtype of one requiring $x$ to reach all positive
@@ -275,9 +242,6 @@ the bounds on a term entirely.
 % values) is a weaker assumption, while a wider angelic qualifier
 % (more reachable values) is stronger — the opposite of the demonic
 % case.
-
-
-
 
 % Having both angelic as well as demonic modalities in a type context
 % requires a more refined subtype relation than usual.  Read
@@ -339,85 +303,143 @@ the bounds on a term entirely.
 % singleton $1$ under the angelic context would violate the demonic
 % constraint.
 
-\paragraph{Dependent and Disjoint Contexts} As discussed in
-Section~\ref{sec:intro}, type contexts can be related via dependent or
-disjoint conjunction, as illustrated below:
+\paragraph{Type Context Composition}
+% Here we want to transition from thinking of type contexts as
+% constraining the surrounding environment to thinking of them as
+% affording us certain reasoning capabilities. Importantly, if we want
+% to reason compositionally, we need to have a finer-grained notion of
+% the sorts of capabilities it can provide
+When they appear in a typing context, the bounds imposed by our two
+modalities afford us different reasoning capabilities: when verifying
+the reachability properties of a term, for example, an angelic
+refinement lets us \emph{choose} a favorable assingment for a variable
+in that term, while a demonic refinement allows us to \emph{rule out}
+certain assignments to that variable establishing that a term is safe.
+% BD: If there's room, we could point back to specific examples in the
+% previous subsection to emphasize this point.
+Importantly, the bounds imposed by the bindings of individual
+variables in a typing context can interact with each other, altering
+the capabilities afforded by the typing context as a whole. To
+illustrate, consider the following pair of program contexts:
+\begin{align}
+  &\zlet{x}{\Code{nat\_gen () }}{\zlet{y}{x + 1}{\square}}
+    \tag{C$_{en}$}\label{ex:EnCon} \\
+  &\zlet{x}{\Code{arbitrary}}{\zlet{y}{\Code{nat\_gen()}}{\square}}
+    \tag{C$_{dis}$}\label{ex:DisjCon}
+\end{align}\noindent
+Both contexts use \Code{nat\_gen ()} to (nondeterministically) generate
+an arbitrary value for $x$. The first context then sets $y$ based on
+the value as $x$, while the second opts to generate a fresh value for
+$y$ instead. The four programs that result from plugging $x$ and $y$
+into these contexts can all reach reach every possible positive
+number, as can the program \ref{ex:DisjCon}[$x - y$].  The same can
+not be said of \ref{ex:EnCon}[$x - y$], however, because the values of
+$x$ and $y$ in this program are somehow \emph{entangled}.
 \begin{align*}
-  &\EnvirDep(e) \doteq \zlet{x}{\Code{nat\_gen()}}{\zlet{y}{x}{\boxed{e}}}
-  \\&\EnvirDisj(e) \doteq \zlet{x}{\Code{nat\_gen()}}{\zlet{y}{\Code{nat\_gen()}}{\boxed{e}}}
+  &\emptyset \vdash \text{\ref{ex:DisjCon}}[x] : \urt{\Nat}{\vnu > 0}
+    \;\judgok \quad
+  &\emptyset \vdash \text{\ref{ex:EnCon}}[x] : \urt{\Nat}{\vnu > 0}
+    \;\judgok  \\
+  & \emptyset \vdash \text{\ref{ex:DisjCon}}[y] : \urt{\Nat}{\vnu > 0}
+  \;\judgok \quad
+  &\emptyset \vdash \text{\ref{ex:EnCon}}[y] : \urt{\Nat}{\vnu > 0}
+    \;\judgok \\
+  & \emptyset \vdash \text{\ref{ex:DisjCon}}[x - y] : \urt{\Nat}{\vnu
+    > 0} \;\judgok \quad & \emptyset \vdash \text{\ref{ex:EnCon}}[x - y] : \urt{\Nat}{\vnu > 0} \;\judgfail
 \end{align*}\noindent
-Here, we consider two concrete (reified) environments, $\EnvirDep$ and
-$\EnvirDisj$, where both allow $x$ to reach all possible natural
-numbers.  They differ in that environment $\EnvirDep$ forces $y$
-to be the same as $x$ during the evaluation of $e$, while environment
-$\EnvirDisj$ does not.
+To deal with this situation, our type system includes two ways to
+combine typing contexts, $\ctcomma$ and $\ctstar$, each of which
+affords different capabilities when reasoning about, e.g., subtyping
+relationships. Informally, $\Gamma_1 \ctstar \Gamma_2$ means that the
+capabilities of $\Gamma_1$ and $\Gamma_2$ are independent; when either
+context includes an angelic type binding, our type system is free to
+``choose'' a favorable assignment for the corresponding variable
+independent of the other context.  To illustrate, consider the
+following two subtyping judgments:
 \begin{align*}
-  &\emptyset \vdash \EnvirDep(x) : \urt{\Nat}{\vnu > 0} \;\judgok \quad &\emptyset \vdash \EnvirDep(y) : \urt{\Nat}{\vnu > 0} \;\judgok
-  \\&\emptyset \vdash \EnvirDisj(x) : \urt{\Nat}{\vnu > 0} \;\judgok \quad &\emptyset \vdash \EnvirDisj(y) : \urt{\Nat}{\vnu > 0} \;\judgok
-  \\& \emptyset \vdash \EnvirDep(x - y) : \urt{\Nat}{\vnu > 0} \;\judgfail \quad &\emptyset \vdash \EnvirDisj(x - y) : \urt{\Nat}{\vnu > 0} \;\judgok
+  &x{:}\urt{\Nat}{\vnu > 0} \ctstar y{:}\urt{\Nat}{\vnu > 1}
+    \vdash \urt{\Nat}{\vnu = x - y} \subty \urt{\Nat}{\vnu > 0}
+    \;\judgok
+  &x{:}\urt{\Nat}{\vnu > 0} \ctcomma y{:}\urt{\Nat}{\vnu > 1}
+    \vdash \urt{\Nat}{\vnu = x - y} \subty \urt{\Nat}{\vnu > 0} \;\judgfail
 \end{align*}\noindent
-We can observe that within both environments, variables $x$ and $y$
-must reach all possible positive numbers. However, the claim that ``$x
-- y$ can reach all possible positive numbers'' expressed by the type
-judgement for $\EnvirDep$ given above is incorrect: $\EnvirDep(x - y)$
-can only be $0$ since $y$ is forced to be the same as $x$.  The
-judgement fails because it requires a hidden assumption that the
-context $y{:}\urt{\Nat}{\vnu > 0}$ is not \emph{dependent} on
-$x{:}\urt{\Nat}{\vnu > 0}$.  On the other hand, the judgement on the
-same term applied to $\EnvirDisj$ is valid, since $e$ can observe
-different values for $x$ and $y$.  We capture this difference in a
-type judgement via type context constructors ($\ctcomma$) and
-($\ctstar$):
+Under the first context, we can freely choose both an arbitrary
+positive value for $x$ \emph{and} a $2$ for $y$, from which the
+subtyping relationship follows. Under the second context, however, the
+possible values we can choose for $x$ and $y$ are \emph{Entangled}
+conjunction, $\ctcomma$, meaning we are free to choose a value for one
+but not the other. Intuitively, the hole in \ref{ex:EnCon} has this
+typing context: once $x$ is fixed, the value of $y$ depends on it, and
+vice-versa.  As a consequence, we are unable prove the following
+typing judgement:
 \begin{align*}
-  &x{:}\urt{\Nat}{\vnu > 0} \ctstar y{:}\urt{\Nat}{\vnu > 0} \vdash x - y : \urt{\Nat}{\vnu > 0} \;\judgok
+  &x{:}\urt{\Nat}{\vnu > 0} \ctcomma y{:}\urt{\Nat}{\vnu > 0} \vdash x - y : \urt{\Nat}{\vnu > 0} \;\judgfail
 \end{align*}\noindent
-Informally, $\Gamma \doteq\Gamma_1 \ctstar \Gamma_2$ means that
-$\Gamma$ can be divided into two parts: angelic or demonic contexts
-found in $\Gamma_1$ do not interfere with the contexts defined by
-$\Gamma_2$. The environment $\EnvirDep$ cannot satisfy the
-disjointness requirement, since once $x$ is bound,
-the value of $y$ is also fixed.  Dependency information can also
-impact demonic contexts; consider the following example:
-\begin{align*}
-  &x{:}\urt{\Nat}{\top} \ctcomma y{:}\ort{\Nat}{\top} \vdash x - y : \urt{\Nat}{\I{odd}(\vnu)} \;\judgfail
-  \\&x{:}\urt{\Nat}{\top} \ctstar y{:}\ort{\Nat}{\top} \vdash x - y : \urt{\Nat}{\I{odd}(\vnu)} \;\judgok
-\end{align*}\noindent
-In the first judgement, $x$ is constrained to yield all natural
-numbers, and the dependent context constructor ($\ctcomma$) permits
-the environment to force $y$ to take the same value as $x$, as
-$\EnvirDep$ does, since disjointness is not guaranteed.  When $y = x$,
-the expression $x - y = 0$, and thus fails the requirement that every
-odd number must be reachable.
 
-An environment $\Envir$ that satisfies a dependent conjunction context
-$x{:}\tau_x \ctcomma y{:}\tau_y$ works like additive logic
-conjunction, and indicates that $\Envir(x): \tau_x$ and $\Envir(y):
-\tau_y$ are both valid.  However, dependent conjunction does not
-guarantee that the corresponding modalities of $x$ and $y$ still hold
-\emph{at the same time}.\footnote{Unlike a linear type system, which
-  would \emph{consume} the capability to angelically assign $x$ when
+The \ctcomma in the context
+$\Gamma \cdot x{:}\tau_x \ctcomma y{:}\tau_y$ works like additive
+logic conjunction in BI, and both $\Gamma \vdash x{:}\tau_x$ and
+$\Gamma \vdash y{:}\tau_y$ are valid. Importantly, however, does not
+guarantee that the modalities of $x$ and $y$ hold \emph{at the same
+  time}. \footnote{Unlike a linear type system, which would
+  \emph{consume} the capability to angelically assign $x$ when
   producing the capability to angelically assign $y$, our system
   instead \emph{entangles} these capabilities, allowing the body
   expression $e$ to use both $x$ and $y$ while still tracking their
   dependency. This formulation aligns with the intuition of bunched
-  typing~\cite{BunchedType}.}  For example,
+  typing~\cite{BunchedType}. \BD{I don't think the reader is going to
+    appreciate this difference unless they have a better intuition of
+    the capabilities afforded by $\ctcomma$.}}  For example,
 \begin{align*}
   &x{:}\urt{\Nat}{\vnu > 0} \ctstar (y{:}\urt{\Nat}{\vnu > 0} \ctcomma z{:}\urt{\Nat}{\vnu > 0}) \vdash x - y : \urt{\Nat}{\vnu > 0} \;\judgok
-  \\&x{:}\urt{\Nat}{\vnu > 0} \ctstar (y{:}\urt{\Nat}{\vnu > 0} \ctcomma z{:}\urt{\Nat}{\vnu > 0}) \vdash x - z : \urt{\Nat}{\vnu > 0} \;\judgok
+  \\&x{:}\urt{\Nat}{\vnu > 0} \ctstar (y{:}\urt{\Nat}{\vnu > 0}
+  \ctcomma z{:}\urt{\Nat}{\vnu > 0}) \vdash x - (z + y) : \urt{\Nat}{\vnu > 0} \;\judgok
   \\&x{:}\urt{\Nat}{\vnu > 0} \ctstar (y{:}\urt{\Nat}{\vnu > 0} \ctcomma z{:}\urt{\Nat}{\vnu > 0}) \vdash y - z : \urt{\Nat}{\vnu > 0} \;\judgfail
 \end{align*}\noindent
 In these judgements, the context tracks variable dependency,
-specifying that $x$ is independent from $y$ and $z$, while $y$ and
-$z$ are dependent on each other.  Specifying independence in this
-way is sufficient to verify reachability for $x - y$ and $x - z$,
-since $x$ can be angelically chosen independently
-of $y$ or $z$, resp.  However, type-checking $y - z$ against the
-type $\urt{\Nat}{\vnu > 0}$ fails because $y$ and $z$ are entangled: no angelic
-choice can simultaneously make their difference reach every positive
-number.
+specifying that $x$ is independent from $y$ and $z$, while $y$ and $z$
+are dependent on each other.  Specifying independence in this way is
+sufficient to verify reachability for $x - y$ and $x - z$, since $x$
+can be angelically chosen independently of $y$ or $z$, resp.  However,
+type-checking $y - z$ against the type $\urt{\Nat}{\vnu > 0}$ fails
+because $y$ and $z$ are entangled: no angelic choice can
+simultaneously make their difference reach every positive number.
 
-\paragraph{Function Types}  Dependent ($\ctsarr$) and disjointed function types ($\ctwand$) are
-adjunctions of dependent and disjointed conjunction in type contexts:
+Notably, angelic and demonic refinements can also be entangled in a
+way that impacts the capabilities afforded by a type context, as the
+following pair of judgments illustrate:
+\begin{align*}
+  &x{:}\urt{\Nat}{\top} \ctcomma y{:}\ort{\Nat}{\top} \vdash x - y : \urt{\Nat}{\I{even}(\vnu)} \;\judgfail
+  \\&x{:}\urt{\Nat}{\top} \ctstar y{:}\ort{\Nat}{\top} \vdash x - y : \urt{\Nat}{\I{even}(\vnu)} \;\judgok
+\end{align*}\noindent
+The first typing context stipulates that the value of $y$ is positive,
+but that value is allowed to depend on the value $x$ --- the hole in
+\ref{ex:EnCon} can also be typed under this typing
+context. Accordingly, the expression \ref{ex:EnCon}$[x - y]$ cannot
+reach every even number. Contrast this with a variant of this context
+that instead assigns \emph{some} constant value $n$ to $y$:
+\begin{align}
+  &\zlet{x}{\Code{nat\_gen () }}{\zlet{y}{n}{\square}}
+    \tag{C$_{n}$}\label{ex:DisjSafeCon} \\
+\end{align}
+Regardless of the particular value of $n$, for any given even number
+$m$, choosing $x = m + n$ allows \ref{ex:DisjSafeCon}$[x - y]$ to
+reach that number.
+
+% \BD{The $\ctsubseteqA$ relation is doing some heavy lifting in our
+%   type system, but at this point, it is not clear how that relation
+%   interacts with additive and multiplicative conjunction. Maybe we can
+%   provide some algebraic laws to help build up the reader's
+%   intuitions?}
+
+\paragraph{Function Types}
+\BD{We need to (re-)emphasize here that this is the first refinement
+  type system that does not place any restrictions on where angelic
+  and demonic modalities can appear in function types. }
+
+Entangled ($\ctsarr$) and independent
+function types ($\ctwand$) are adjunctions of the corresponding type
+context composition operators:
 \begin{align*}
   \Gamma \vdash e_f : x{:}\tau_x \ctsarr \tau \quad &\text{ iff } \quad \Gamma \ctcomma x{:}\tau_x \vdash (e_f\;x) : \tau
   \\\Gamma \vdash e_f : x{:}\tau_x \ctwand \tau \quad &\text{ iff } \quad \Gamma \ctstar x{:}\tau_x \vdash (e_f\;x) : \tau
@@ -431,13 +453,13 @@ Notably, it cannot have the following type:
 \begin{align*}
   &\vdash (-) : x{:}\urt{\Nat}{\vnu > 0} \ctwand y{:}\urt{\Nat}{\vnu > 0} \ctsarr \urt{\Nat}{\vnu > 0}
 \end{align*}\noindent
-To see why, consider the following type judgement:
+Doing so would requires proving the following type judgement:
 \begin{align*}
   &\emptyset \ctstar x{:}\urt{\Nat}{\vnu > 0} \ctcomma y{:}\urt{\Nat}{\vnu > 0} \vdash x - y : \urt{\Nat}{\vnu > 0} \;\judgfail
 \end{align*}\noindent
-As we have seen earlier, establishing a dependence between $x$ and $y$ via its context as shown above, restricts
-the angelic choices that can be made, preventing the verification of the reachability claim on the result, namely
-that every positive number can be produced.
+As we saw earlier, a type context in which $x$ and $y$ are entangled
+restricts the angelic choices that can be made, preventing us from
+establishing that $x - y$) can produce every positive number.
 
 Higher-order functions introduce additional complexity. Consider the
 following example:
@@ -446,36 +468,35 @@ following example:
   \\&\quad  \underbrace{f{:}(\underbrace{y{:}\urt{\Nat}{\vnu > 0} \ctsarr}_\texttt{$y$ can depend on context during application} \urt{\Nat}{\vnu > 0}) \ctwand}_\texttt{$f$ is independent from $x$ and $y$} \urt{\Nat}{\vnu > 0}
 \end{align*}\noindent
 To make $x - (f\;(f\;y))$ reach every positive number, $x$ and
-$f\;(f\;y)$ must be disjoint.  To ensure this, one might expect that all function arrows in
-the result type would need to be $\ctwand$, but this would be incorrect. If $f$
-were given a fully disjoint type - $y{:}\urt{\Nat}{\vnu > 0} \ctwand
-\urt{\Nat}{\vnu > 0}$ - then each application of $f$ would require its
-argument to be disjoint from $f$'s closure. While the first
-application $f\;y$ satisfies this, the second application $f\;(f\;y)$
-fails because the intermediate result $f\;y$ depends on $f$,
-violating the disjointness requirement.  Note that although
-$\ctwand$ guarantees that $f$'s argument is disjoint from its
-closure, it makes no guarantees that $f$'s result is also disjointed.  Thus,
-while $(f\; y)$ is independent of $y$, it may still depend on $f$'s
-closure, making it an invalid argument in the outer application if given this
-signature.
+$f\;(f\;y)$ must be independent.  To ensure this, one might expect
+that all function arrows in the result type would need to be
+$\ctwand$, but this would be incorrect. If $f$ had the fully
+independent type
+$y{:}\urt{\Nat}{\vnu > 0} \ctwand \urt{\Nat}{\vnu > 0}$, then each
+application of $f$ would require its argument to be independent from
+$f$'s closure. While the first application $f\;y$ satisfies this, the
+second application $f\;(f\;y)$ fails because the intermediate result
+$f\;y$ depends on $f$.  While $\ctwand$ guarantees that $f$'s argument
+is not entagled with its closure, it makes no guarantees that $f$'s
+result is also independent.  Thus, while $(f\; y)$ is independent of
+$y$, it may still depend on $f$'s closure, making it an invalid
+argument in the outer application when equipped with this signature.
 
-Instead, $f$ must be given the dependent function type
-$y{:}\urt{\Nat}{\vnu > 0} \ctsarr \urt{\Nat}{\vnu > 0}$, which
-permits its argument to depend on $f$'s closure, accommodating the
-nested application. The function itself is then typed with $\ctwand$,
-ensuring $f$'s body is disjoint from $x$ and $y$ in the outer context. By
-adjunction, this yields:
+If $f$ is instead given the entangled function type
+$y{:}\urt{\Nat}{\vnu > 0} \ctsarr \urt{\Nat}{\vnu > 0}$, its argument
+can now depend on $f$'s closure, accommodating the nested
+application. The function itself is then typed with $\ctwand$,
+ensuring $f$'s body is not entagled with either $x$ or $y$ in the
+outer context. By adjunction, this yields:
 \begin{align*}
   &x{:}\urt{\Nat}{\vnu > 0} \ctstar
   \\&\quad (y{:}\urt{\Nat}{\vnu > 0} \ctstar
   f{:}(y{:}\urt{\Nat}{\vnu > 0} \ctsarr \urt{\Nat}{\vnu > 0}))
   \vdash x - (f\; (f\;y)) : \urt{\Nat}{\vnu > 0}
 \end{align*}\noindent
-Since $x$ is disjoint from both $y$ and $f$, it is also disjoint from
-$f\;(f\;y)$, which guarantees that $x - (f\;(f\;y))$ can reach every
-positive number.
-
+Since $x$ is independent from both $y$ and $f$, it is also independent
+from $f\;(f\;y)$, thus guaranteeing that $x - (f\;(f\;y))$ can reach
+every positive number.
 
 \paragraph{Control Flow} Standard refinement types interpret type
 contexts in a demonic style, requiring \emph{all} control-flow within
@@ -549,12 +570,82 @@ allows the type system to discard uninteresting branches by weakening
 them to $\ort{b}{\top}$, imposing a precise safety constraint on one branch
 while placing no constraint on the others.
 
-\subsection{Declarative typing rules}
+\section{Context Type System}
+\label{sec:context-typing}
+% In this section, we introduce the core language and the context type system for it.
 
-Our type system shares the same intuition underlying bunched
-implication and refinement types, generally; however, its technical
-development differs significantly from both due to its support for
-angelic contexts and mixed demonic/angelic reasoning.
+% \subsection{Core Language}
+
+\begin{figure}[h]
+  {\small
+    \begin{alignat*}{2}
+      \text{\textbf{Variables }}& \quad &\quad& x, y, z, \vnu, ...
+      \\\text{\textbf{Data Constructors }}& \quad &d ::= \quad & () ~|~ \Code{true} ~|~ \Code{false} ~|~ \Code{O} ~|~ \Code{S} ~|~ \Code{Cons} ~|~ \Code{Nil} ~|~ ...
+      \\\text{\textbf{Operations}}& \quad & \primop ::= \quad & d ~|~ {+} ~|~ {-} ~|~ {==} ~|~ {<} ~|~ {\leq} ~|~ ...
+      \\ \text{\textbf{Constants }}& \quad &c ::= \quad & () ~|~ \mathbb{B} ~|~ \mathbb{Z} ~|~ d\ \overline{c}\ ...
+      \\ \text{\textbf{Values}}& \quad  & v ::= \quad & c ~|~ x ~|~ \zlam{x}{s}{e} ~|~ \zfix{f}{s}{x}{s}{e}
+      \\ \text{\textbf{Expressions}}& \quad & e ::=\quad & v ~|~ \zlet{x{:}s}{e}{e} ~|~ \primop\ \overline{v} ~|~  v\;v ~|~ \match{v} \overline{d\ \overline{y} \to e}
+      \\\text{\textbf{Base Types}}& \quad & b  ::= \quad &  \Code{unit} ~|~ \Code{bool} ~|~ \Code{nat} ~|~ \List[b] ~|~ ...
+      \\\text{\textbf{Basic Types}}& \quad & s  ::= \quad &  b ~|~ s\sarr s
+      \\\text{\textbf{Basic Type Context}}& \quad & \Sigma ::= \quad &  \emptyset ~|~ x{:}s ~|~ \Sigma, \Sigma
+    \end{alignat*}}
+  \caption{Syntax of \langname{} \BD{Why do we include both constants
+      and data constructors?}}
+  \label{fig:core-lang-syntax}
+  \end{figure}
+
+  % \paragraph{Terms, basic types, and basic type contexts}
+  We formalize our proposed context type system for the core language
+  (\langname{}) shown in \autoref{fig:core-lang-syntax}.  This
+  language is a standard call-by-value lambda calculus with inductive
+  datatypes, pattern matching (the following uses conditional
+  expressions as syntactic sugar for \Code{match}), and recursive
+  functions. \BD{Are we assuming that built-in operations are
+    deterministic? Do we even need these?}  Expressions are written in
+  monadic normal form (MNF)~\cite{JO94}, a variant of A-Normal Form
+  (ANF)~\cite{FSDF93} that allows nested let-bindings.  The language's
+  basic types (i.e., $s$) consist of base types ($b$) and function
+  types (i.e., $s\sarr s$). Both \textbf{let}-expressions and function
+  abstractions explicitly annotate bound variables with a basic type
+  (e.g., $\zlam{x}{s}{e}$); we omit these annotations for brevity,
+  when appropriate.  A basic type context $\Sigma$ maps variables to
+  their basic types; we assume that all bound variables in $\Sigma$
+  are distinct.
+
+\begin{figure}[h]
+  { \small
+    \begin{alignat*}{2}
+      \text{\textbf{Qualifiers}}& \quad & \phi ::= \quad & c ~|~ x ~|~ \primop\;\overline{v} ~|~ \bot ~|~ \top  ~|~ \neg \phi ~|~ \phi \land \phi ~|~ \phi \lor \phi ~|~  \phi \impl \phi ~|~ \forall x{:}b. \phi ~|~ \exists x{:}b. \phi
+      \\ \text{\textbf{Refinement Types}}& \quad & \tau ::= \quad & \ort{b}{\phi} ~|~ \urt{b}{\phi} ~|~ \tau \ctinter \tau ~|~ \tau \ctunion \tau ~|~ \tau \ctoplus \tau ~|~ x{:}\tau \ctsarr \tau ~|~ x{:}\tau \ctwand \tau
+      % ~|~ \ctpers \tau
+      \\ \text{\textbf{Type Contexts}}& \quad & \Gamma ::= \quad & \emptyset ~|~ x{:}\tau ~|~ \Gamma \ctstar \Gamma ~|~ \Gamma \ctcomma \Gamma ~|~ \Gamma \ctoplus \Gamma
+      % \\ \text{\textbf{Contexts With Holes}}& \quad & \Delta ::= \quad & \Box ~|~ \Gamma ~|~ \Delta \ctstar \Delta ~|~ \Delta \ctcomma \Delta ~|~ \Delta \ctoplus \Delta
+    \end{alignat*}}
+  %% \vspace*{-.1in}
+  %% {\small
+  %% \begin{align*}
+  %%   \text{\textbf{Type erasure}} \quad & \eraserf{\ort{b}{\phi}} \doteq b \quad \eraserf{\urt{b}{\phi}} \doteq b \quad \eraserf{\tau_1 \ctinter \tau_2} \doteq \eraserf{\tau_1} \quad \eraserf{\tau_1 \ctunion \tau_2} \doteq \eraserf{\tau_1}
+  %%   \\&\eraserf{\tau_1 \ctoplus \tau_2} \doteq \eraserf{\tau_1} \quad  \eraserf{x{:}\tau_x \ctsarr \tau} \doteq \eraserf{\tau_x} \sarr \eraserf{\tau} \quad
+  %%   \\& \eraserf{\emptyset} \doteq \emptyset \quad \eraserf{x{:}\tau} \doteq x{:}\eraserf{\tau} \quad \eraserf{\Gamma_1 \ctcomma \Gamma_2} \doteq \eraserf{\Gamma_1}, \eraserf{\Gamma_2} \quad \eraserf{\Gamma_1 \ctstar \Gamma_2} \doteq \eraserf{\Gamma_1}, \eraserf{\Gamma_2}  \quad \eraserf{\Gamma_1 \ctoplus \Gamma_2} \doteq \eraserf{\Gamma_1}
+    % \\\text{\textbf{Type lifting}} \quad & \liftrf{b} \doteq \ort{b}{\phi} \quad \liftrf{s_x \sarr s} \doteq x{:}\liftrf{s_x} \ctsarr \liftrf{s}
+    % \\&\liftrf{\emptyset} \doteq \emptyset \quad \liftrf{x{:}s} \doteq x{:}\liftrf{s} \quad \liftrf{\Gamma_1 , \Gamma_2} \doteq \liftrf{\Gamma_1} \ctcomma \liftrf{\Gamma_2}
+%  \end{align*}}
+  \caption{Context Type Syntax}
+  \label{fig:context-types-syntax}
+\end{figure}
+
+The syntax of context types is shown in
+\autoref{fig:context-types-syntax}. As in other refinement type
+systems, \emph{context types} refine basic types with qualifiers
+$\phi$; but each refinement is ascribed either a demonic and angelic
+modality ($\otparenth{...}$ and $\utparenth{...}$, resp.). Context
+types additionally include bunched implication (e.g., $\ctsarr$,
+$\ctwand$), disjoint sums ($\ctoplus$), and standard type intersection
+($\ctinter$) operators. Our type system shares the same intuition
+underlying bunched implication and refinement types, generally;
+however, its technical development differs significantly from both due
+to its support for angelic contexts and mixed demonic/angelic
+reasoning.
 
 \begin{figure}[h!]
   {\small
