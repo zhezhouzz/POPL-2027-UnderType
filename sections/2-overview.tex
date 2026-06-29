@@ -79,10 +79,15 @@ constrained by a typing context.
 % Put another way, our type system describes the image of a term under
 % a set of environments consistent with a typing context.
 
-Intuitively, a demonic qualifier places an upper bound on the image of
-a term, while an angelic qualifier describes a lower bound. Similar
-intuitions apply to the restrictions that a typing context imposes on
-a set of input environments in our type system. To see how, %  these
+Intuitively, a demonic refinement acts as an \emph{upper} bound: when
+used as a result type, $\ort{b}{\phi}$ requires every value in the
+image of that term to satisfy $\phi$; in a type context, it only
+admits worlds in which every environment maps the variable to a value
+satisfying $\phi$. An angelic refinement, in contrast, acts as a
+\emph{lower} bound: as a result type, $\urt{b}{\phi}$ requires the
+image of a term to contain every value satisfying $\phi$; in a type
+context, it forces worlds to at least include environments mapping the
+variable to each value that satisfies $\phi$. To illustrate, % these
 % bounds manifest in the guarantees provided by our type system,
 consider the following typing judgements involving non-singleton
 reachability properties: %
