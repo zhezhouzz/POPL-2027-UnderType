@@ -1,3 +1,4 @@
+\newpage
 \section{Overview}
 \label{sec:overview}
 Before presenting the full details of our proposed type system, we
@@ -60,7 +61,7 @@ $1$:
   && \vdash 1 : \urt{\Nat}{\vnu = 1}\;\judgok
 \end{align*}\noindent
 The judgements on the left assert \emph{safety} properties, similar to
-a standard refinement type systems, where the constant $1$ needs to
+a standard refinement type system, where the constant $1$ needs to
 satisfy the corresponding qualifier. The judgements on the right, in
 contrast, describe \emph{reachability} constraints: since the constant
 $1$ cannot reach every natural number or positive number, the first
@@ -82,13 +83,13 @@ constrained by a typing context.
 Intuitively, a demonic qualifier places an upper bound on the image of
 a term, while an angelic qualifier describes a lower bound. Similar
 intuitions apply to the restrictions that a typing context imposes on
-a set of input environments in our type system. To see how,%  these
+a set of input environments in our type system. To see how, %  these
 % bounds manifest in the guarantees provided by our type system,
 consider the following typing judgements involving non-singleton
 reachability properties: %
 \begin{align*}
-  x{:}\urt{\Nat}{x > 3} \vdash x - 3 : \urt{\Nat}{\vnu > 0}\;\judgok \\
-  x{:}\urt{\Nat}{x > 4} \vdash x - 3 : \urt{\Nat}{\vnu > 0}\;\judgfail
+  x{:}\urt{\Nat}{\vnu > 3} \vdash x - 3 : \urt{\Nat}{\vnu > 0}\;\judgok \\
+  x{:}\urt{\Nat}{\vnu > 4} \vdash x - 3 : \urt{\Nat}{\vnu > 0}\;\judgfail
 \end{align*} %
 \noindent
 Clearly, for any particular positive number, the term $x - 3$ will
@@ -106,25 +107,25 @@ are impossible. As a consequence, the reachability guarantees that our
 type system can provide about deterministic terms involving only
 demonically qualified variables are somewhat limited:
 \begin{align*}
-  x{:}\ort{\Nat}{x > 2} \vdash x - 3 : \urt{\Nat}{\vnu > 0}\;\judgfail \\
-  x{:}\ort{\Nat}{x > 4} \vdash x - 3 : \urt{\Nat}{\vnu > 0}\;\judgfail
+  x{:}\ort{\Nat}{\vnu > 2} \vdash x - 3 : \urt{\Nat}{\vnu > 0}\;\judgfail % \\
+  % x{:}\ort{\Nat}{\vnu > 4} \vdash x - 3 : \urt{\Nat}{\vnu > 0}\;\judgfail
 \end{align*} %
-Observe there are many singleton worlds containing in which $x$ is
-assigned a value greater than $2$, but $x - 3$ can only reach a single
-result value under such a world!
+Observe there are many singleton worlds containing an environment in
+which $x$ is assigned a value greater than $2$, but $x - 3$ can only
+reach a single result value under such a world!
 % If all we know about $x$ is that it cannot be less than $2$, after
 % all, there's little we can say about the values that $x-3$ can reach!
 Similarly, our type system can provide somewhat limited safety
 guarantees when only equipped with reachability assumptions:
 \begin{align*}
-  x{:}\urt{\Nat}{x > 4} \vdash x - 3 : \ort{\Nat}{\vnu > 0}\;\judgfail \\
+  x{:}\urt{\Nat}{\vnu > 4} \vdash x - 3 : \ort{\Nat}{\vnu > 0}\;\judgfail
 \end{align*} %
 The image of $x - 3$ includes a non-positive value in any world
 containing an environment where $x$ is $4$, but the lower bound
 provided by the angelic type of $x$ in the typing judgement above does
 not preclude such an environment. Using our type system, it is still
-possible in to derive meaningful safety guarantees using reachability
-assumptions through the use of $\oplus$ operator, as we shall see
+possible to derive meaningful safety guarantees using reachability
+assumptions through the use of the $\oplus$ operator, as we shall see
 shortly.
 
 \BD{At some point early on, we need to introduce the notion of method
@@ -174,7 +175,7 @@ which can reach all positive numbers can also reach all numbers
 greater than 1, while a term that always safely evaluates to a number
 greater than 1 is also guaranteed to evaluate to a positive number.
 \begin{align*}
-  &\ort{\Nat}{\vnu > 0} \subty \ort{\Nat}{\vnu > 1}\;\judgok
+  &\ort{\Nat}{\vnu > 1} \subty \ort{\Nat}{\vnu > 0}\;\judgok
   &&\urt{\Nat}{\vnu > 1} \subty \urt{\Nat}{\vnu > 0} \;\judgfail \\
   & \ort{\Nat}{\vnu > 0} \subty \ort{\Nat}{\vnu > 1}  \;\judgfail
   && \urt{\Nat}{\vnu > 0} \subty \urt{\Nat}{\vnu > 1}\;\judgok
@@ -203,7 +204,7 @@ val g : ?$\Code{i}{:}\ort{\Int}{\vnu \le 10}\ctsarr\ort{\Int}{\vnu \neq 0}$?
 ?$\vdash$? let f (x: int) (y: int) =
   if y > 10 then (g x) + 1
     else x + 1
-: ?$\Code{x}{:}\urt{\Int}{x \le 5}\ctsarr\Code{y}{:}\urt{\Int}{y \le 15}\ctsarr\urt{\Int}{\vnu = 1}$?
+: ?$\Code{x}{:}\urt{\Int}{\vnu \le 5}\ctsarr\Code{y}{:}\urt{\Int}{\vnu \le 15}\ctsarr\urt{\Int}{\vnu = 1}$?
   \end{minted}
   \caption{A simple example of how may-analysis helps
     must-analysis~\cite{CompositionalMayMust}.}
@@ -339,9 +340,9 @@ Both contexts use \Code{nat\_gen ()} to (nondeterministically) generate
 an arbitrary value for $x$. The first context then sets $y$ based on
 the value as $x$, while the second opts to generate a fresh value for
 $y$ instead. The four programs that result from plugging $x$ and $y$
-into these contexts can all reach reach every possible positive
-number, as can the program \ref{ex:DisjCon}[$x - y$].  The same can
-not be said of \ref{ex:EnCon}[$x - y$], however, because the values of
+into these contexts can all reach every possible positive
+number, as can the program \ref{ex:DisjCon}[$x - y$].  The same cannot
+be said of \ref{ex:EnCon}[$x - y$], however, because the values of
 $x$ and $y$ in this program are somehow \emph{entangled}.
 \begin{align*}
   &\emptyset \vdash \text{\ref{ex:DisjCon}}[x] : \urt{\Nat}{\vnu > 0}
@@ -367,18 +368,18 @@ following two subtyping judgments:
 \begin{align*}
   &x{:}\urt{\Nat}{\vnu > 0} \ctstar y{:}\urt{\Nat}{\vnu > 1}
     \vdash \urt{\Nat}{\vnu = x - y} \subty \urt{\Nat}{\vnu > 0}
-    \;\judgok
+    \;\judgok \\
   &x{:}\urt{\Nat}{\vnu > 0} \ctcomma y{:}\urt{\Nat}{\vnu > 1}
     \vdash \urt{\Nat}{\vnu = x - y} \subty \urt{\Nat}{\vnu > 0} \;\judgfail
 \end{align*}\noindent
 Under the first context, we can freely choose both an arbitrary
 positive value for $x$ \emph{and} a $2$ for $y$, from which the
 subtyping relationship follows. Under the second context, however, the
-possible values we can choose for $x$ and $y$ are \emph{Entangled}
-conjunction, $\ctcomma$, meaning we are free to choose a value for one
+possible values we can choose for $x$ and $y$ are constrained by the
+\emph{entangled} conjunction, $\ctcomma$, meaning we are free to choose a value for one
 but not the other. Intuitively, the hole in \ref{ex:EnCon} has this
 typing context: once $x$ is fixed, the value of $y$ depends on it, and
-vice-versa.  As a consequence, we are unable prove the following
+vice-versa.  As a consequence, we are unable to prove the following
 typing judgement:
 \begin{align*}
   &x{:}\urt{\Nat}{\vnu > 0} \ctcomma y{:}\urt{\Nat}{\vnu > 0} \vdash x - y : \urt{\Nat}{\vnu > 0} \;\judgfail
@@ -387,17 +388,19 @@ typing judgement:
 The \ctcomma in the context
 $\Gamma \cdot x{:}\tau_x \ctcomma y{:}\tau_y$ works like additive
 logic conjunction in BI, and both $\Gamma \vdash x{:}\tau_x$ and
-$\Gamma \vdash y{:}\tau_y$ are valid. Importantly, however, does not
-guarantee that the modalities of $x$ and $y$ hold \emph{at the same
+$\Gamma \vdash y{:}\tau_y$ are valid. Importantly, however, it does
+not guarantee that the modalities of $x$ and $y$ hold \emph{at the
+  same
   time}. \footnote{Unlike a linear type system, which would
   \emph{consume} the capability to angelically assign $x$ when
   producing the capability to angelically assign $y$, our system
   instead \emph{entangles} these capabilities, allowing the body
   expression $e$ to use both $x$ and $y$ while still tracking their
   dependency. This formulation aligns with the intuition of bunched
-  typing~\cite{BunchedType}. \BD{I don't think the reader is going to
-    appreciate this difference unless they have a better intuition of
-    the capabilities afforded by $\ctcomma$.}}  For example,
+  typing~\cite{BunchedType}. % \BD{I don't think the reader is going to
+    % appreciate this difference unless they have a better intuition of
+    % the capabilities afforded by $\ctcomma$.}
+}  For example,
 \begin{align*}
   &x{:}\urt{\Nat}{\vnu > 0} \ctstar (y{:}\urt{\Nat}{\vnu > 0} \ctcomma z{:}\urt{\Nat}{\vnu > 0}) \vdash x - y : \urt{\Nat}{\vnu > 0} \;\judgok
   \\&x{:}\urt{\Nat}{\vnu > 0} \ctstar (y{:}\urt{\Nat}{\vnu > 0}
@@ -428,7 +431,7 @@ reach every even number. Contrast this with a variant of this context
 that instead assigns \emph{some} constant value $n$ to $y$:
 \begin{align}
   &\zlet{x}{\Code{nat\_gen () }}{\zlet{y}{n}{\square}}
-    \tag{C$_{n}$}\label{ex:DisjSafeCon} \\
+    \tag{C$_{n}$}\label{ex:DisjSafeCon}
 \end{align}
 Regardless of the particular value of $n$, for any given even number
 $m$, choosing $x = m + n$ allows \ref{ex:DisjSafeCon}$[x - y]$ to
@@ -461,13 +464,13 @@ Notably, it cannot have the following type:
 \begin{align*}
   &\vdash (-) : x{:}\urt{\Nat}{\vnu > 0} \ctwand y{:}\urt{\Nat}{\vnu > 0} \ctsarr \urt{\Nat}{\vnu > 0}
 \end{align*}\noindent
-Doing so would requires proving the following type judgement:
+Doing so would require proving the following type judgement:
 \begin{align*}
   &\emptyset \ctstar x{:}\urt{\Nat}{\vnu > 0} \ctcomma y{:}\urt{\Nat}{\vnu > 0} \vdash x - y : \urt{\Nat}{\vnu > 0} \;\judgfail
 \end{align*}\noindent
 As we saw earlier, a type context in which $x$ and $y$ are entangled
 restricts the angelic choices that can be made, preventing us from
-establishing that $x - y$) can produce every positive number.
+establishing that $x - y$ can produce every positive number.
 
 Higher-order functions introduce additional complexity. Consider the
 following example:
@@ -476,17 +479,16 @@ following example:
   \\&\quad  \underbrace{f{:}(\underbrace{y{:}\urt{\Nat}{\vnu > 0} \ctsarr}_\texttt{$y$ can depend on context during application} \urt{\Nat}{\vnu > 0}) \ctwand}_\texttt{$f$ is independent from $x$ and $y$} \urt{\Nat}{\vnu > 0}
 \end{align*}\noindent
 To make $x - (f\;(f\;y))$ reach every positive number, $x$ and
-$f\;(f\;y)$ must be independent.  To ensure this, one might expect
-that all function arrows in the result type would need to be
-$\ctwand$, but this would be incorrect. If $f$ had the fully
-independent type
+$f\;(f\;y)$ must be independent. To ensure this, one might expect that
+all function arrows in the result type would need to be $\ctwand$, but
+this would be incorrect. If $f$ had the fully independent type
 $y{:}\urt{\Nat}{\vnu > 0} \ctwand \urt{\Nat}{\vnu > 0}$, then each
 application of $f$ would require its argument to be independent from
 $f$'s closure. While the first application $f\;y$ satisfies this, the
 second application $f\;(f\;y)$ fails because the intermediate result
-$f\;y$ depends on $f$.  While $\ctwand$ guarantees that $f$'s argument
-is not entagled with its closure, it makes no guarantees that $f$'s
-result is also independent.  Thus, while $(f\; y)$ is independent of
+$f\;y$ depends on $f$. While $\ctwand$ guarantees that $f$'s argument
+is not entangled with its closure, it makes no guarantees that $f$'s
+result is also independent. Thus, while $(f\; y)$ is independent of
 $y$, it may still depend on $f$'s closure, making it an invalid
 argument in the outer application when equipped with this signature.
 
@@ -494,7 +496,7 @@ If $f$ is instead given the entangled function type
 $y{:}\urt{\Nat}{\vnu > 0} \ctsarr \urt{\Nat}{\vnu > 0}$, its argument
 can now depend on $f$'s closure, accommodating the nested
 application. The function itself is then typed with $\ctwand$,
-ensuring $f$'s body is not entagled with either $x$ or $y$ in the
+ensuring $f$'s body is not entangled with either $x$ or $y$ in the
 outer context. By adjunction, this yields:
 \begin{align*}
   &x{:}\urt{\Nat}{\vnu > 0} \ctstar
@@ -528,16 +530,16 @@ of $\Gamma$, and that all environments consistent with $\Gamma$ are
 accounted for by $\tau_1$ and $\tau_2$ --- no possibility is lost.
 For example:
 \begin{align*}
-  &x{:}\urt{\Nat}{even(x)} \vdash x + 1 : \ort{\Nat}{odd(\vnu)} \ctoplus
-    \ort{\Nat}{even(x)} \;\judgok \\
+  &x{:}\urt{\Nat}{even(\vnu)} \vdash x + 1 : \ort{\Nat}{odd(\vnu)} \ctoplus
+    \ort{\Nat}{even(\vnu)} \;\judgok \\
   &x{:}\urt{\Nat}{\top} \vdash \zif{x == 0}{3}{5} : \ort{\Nat}{\vnu < 4}\ctoplus \ort{\Nat}{\vnu > 4} \;\judgok
 \end{align*}\noindent
 In both judgements, the result type uses $\ctoplus$ to explicitly
 demarcate two subsets of the term's executions: the first example uses
 $\ctoplus$ to distinguish between the executions that must exist due
-to the angelic refinement of $x$ in the typing context that those that
-may exist, while the second uses $\ctoplus$ to distinguish between the
-two possible control flows through the program.
+to the angelic refinement of $x$ in the typing context from those
+that may exist, while the second uses $\ctoplus$ to distinguish
+between the two possible control flows through the program.
 
 Importantly, while
 $\ort{\Nat}{\vnu < 4} \ctoplus \ort{\Nat}{\vnu > 4}$ is a subtype of
@@ -600,3 +602,4 @@ context guarantees exist while placing no constraint on the others.
 % still enabling an existential-like interpretation of angelic contexts,
 % we introduce a \emph{context sum} type constructor $\ctoplus$ that
 % explicitly tracks  expected control flows.
+\newpage
