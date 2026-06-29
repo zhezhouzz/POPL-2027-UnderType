@@ -18,6 +18,10 @@ and reachability reasoning.
 % right intuition (particularly for the type context case), as opposed
 % to the angelic / demonic one.
 
+% The reader should have also internalized the motto'that "angelic
+% refinement = reachability, demonic refinement = safety" by the end
+% of this subsection.
+
 % Note that fundamental question that our type system answers is: what
 % does the image of this term look like, when it is evaluated under a
 % particular restriction? One of the interesting things about the type
@@ -123,6 +127,10 @@ possible in to derive meaningful safety guarantees using reachability
 assumptions through the use of $\oplus$ operator, as we shall see
 shortly.
 
+\BD{At some point early on, we need to introduce the notion of method
+  predicates. This may just happen organically with the addition of
+  the buggy merge example to the introduction... }
+
 % This
 % A typing
 % judgement can ascribe a non-trivial (i.e., non-singleton) angelic type
@@ -205,15 +213,14 @@ That said, numerous prior works~\cite{...} have shown that knowledge
 about the safety properties of terms can aid the automated
 verification of reachability properties, and vice-versa. When
 establishing that the function \Code{f} in
-\autoref{fig:may-must-reach} must return \Code{1} on some
-arguments, for example, the program analysis of
-\citet{CompositionalMayMust} uses a not-may summary analogous to the
-signature of \Code{g} to conclude calling it will never produce
-the \Code{0} value needed for \Code{f} to yield
-\Code{1}. As we shall see shortly, our type system also
-naturally supports verification of a meaningful form of qualified
-safety properties, similar to that found in \citet{ZDS23} and
-\citet{RHLE}.
+\autoref{fig:may-must-reach} must return \Code{1} on some arguments,
+for example, the program analysis of \citet{CompositionalMayMust} uses
+a not-may summary analogous to the signature of \Code{g} to conclude
+calling it will never produce the \Code{0} value needed for \Code{f}
+to yield \Code{1}. As we shall see shortly, our type system also
+naturally supports using angelic information in the type context to
+verify a meaningful form of qualified safety properties, similar to
+that found in \citet{ZDS23} and \citet{RHLE}.
 
 % It is only possible to switch the modality of a refinement when its
 % qualifier is a singleton, or when the supertype qualifier is trivial:
@@ -310,11 +317,12 @@ safety properties, similar to that found in \citet{ZDS23} and
 % to reason compositionally, we need to have a finer-grained notion of
 % the sorts of capabilities it can provide
 When they appear in a typing context, the bounds imposed by our two
-modalities afford us different reasoning capabilities: when verifying
-the reachability properties of a term, for example, an angelic
-refinement lets us \emph{choose} a favorable assingment for a variable
-in that term, while a demonic refinement allows us to \emph{rule out}
-certain assignments to that variable establishing that a term is safe.
+modalities afford us different reasoning capabilities: when
+establishing the reachability properties of a term, for example, an
+angelic refinement lets us \emph{choose} a favorable assignment for a
+variable in that term, while a demonic refinement allows us to
+\emph{rule out} certain assignments to that variable showing that a
+term is safe.
 % BD: If there's room, we could point back to specific examples in the
 % previous subsection to emphasize this point.
 Importantly, the bounds imposed by the bindings of individual
@@ -498,77 +506,100 @@ Since $x$ is independent from both $y$ and $f$, it is also independent
 from $f\;(f\;y)$, thus guaranteeing that $x - (f\;(f\;y))$ can reach
 every positive number.
 
-\paragraph{Control Flow} Standard refinement types interpret type
-contexts in a demonic style, requiring \emph{all} control-flow within
-the program to be consistent with the safety property.  In the
-presence of angelic contexts that can reach multiple control flows,
-additional handling is required.  Consider the following judgements:
-\begin{align*}
-  &x{:}\urt{\Nat}{\top} \vdash \zif{x == 0}{3}{5} : \ort{\Nat}{\vnu < 4} \quad \text{(reach true branch)}
-  \\&x{:}\urt{\Nat}{\top} \vdash \zif{x == 0}{3}{5} : \ort{\Nat}{\vnu > 4} \quad \text{(reach false branch)}
-\end{align*}\noindent
-These judgements informally state that ``there exists an input natural
-number $x$ such that we may reach some number less than (greater than,
-resp.) $4$.''  They mix safety and reachability reasoning, encoding a
-reachability property using imprecise overapproximated constraints
-(i.e., $\ort{\Nat}{\vnu < 4}$ and $\ort{\Nat}{\vnu > 4}$) instead of
-precise underapproximated constraints (i.e., $\urt{\Nat}{\vnu = 3}$
-and $\urt{\Nat}{\vnu = 5}$), since the desired safety property does not need
-to be precise about the exact result values.
+\paragraph{From Reachability to Safety}
+As discussed above, the sort of safety that can be directly derived
+from reachability assumptions in the typing context is quite limited
+--- ascribing a demonic refinement to a term constrains \emph{all} of
+its possible executions, while an angelic type binding only makes
+assumptions about a \emph{subset} of the contexts that term may be run
+in. It is possible, however, to derive meaningful safety properties
+about the executions that an angelic refinement guarantees exist. If
+we have assumed that $x$ must reach every even number, for example, we
+know that the term $x \Code{+ 1}$ will always safely evaluate to an
+odd number \emph{under those environments}. In order to soundly
+establish upper bounds on program executions that are guaranteed to
+exist, our type system includes a \emph{context sum} type constructor
+$\ctoplus$ that explicitly identifies partitions of the values a term
+must reach.
 
-However, na\"{i}vely combining these imprecise reachability properties
-with safety reasoning may lead to semantic conflicts.  A purely safety-focussed
-interpretation of the first judgement would require that
-\emph{every} value produced by $\zif{x == 0}{3}{5}$ under the
-angelic context $x{:}\urt{\Nat}{\top}$ satisfies $\vnu < 4$.  This is
-incorrect: since $x$ can angelically take any natural number,
-including $1$, the expression can evaluate to $5$, violating $\vnu < 4$.
-This conflict also breaks the standard semantic characterization
-of intersection types found in refinement type systems that are used to model
-conditionals:
+The typing judgement $\Gamma \vdash e : \tau_1 \ctoplus \tau_2$ states
+that $e$ can be typed with $\tau_1$ and $\tau_2$ in some partitioning
+of $\Gamma$, and that all environments consistent with $\Gamma$ are
+accounted for by $\tau_1$ and $\tau_2$ --- no possibility is lost.
+For example:
 \begin{align*}
-  &\Gamma \vdash e : \ort{b}{\phi_1} \ctinter \ort{b}{\phi_2} \text{ iff } \Gamma \vdash e : \ort{b}{\phi_1 \land \phi_2}
+  &x{:}\urt{\Nat}{even(x)} \vdash x + 1 : \ort{\Nat}{odd(\vnu)} \ctoplus
+    \ort{\Nat}{even(x)} \;\judgok \\
+  &x{:}\urt{\Nat}{\top} \vdash \zif{x == 0}{3}{5} : \ort{\Nat}{\vnu < 4}\ctoplus \ort{\Nat}{\vnu > 4} \;\judgok
 \end{align*}\noindent
-since no term can have type $\ort{\Nat}{\vnu < 4 \land \vnu > 4}$.
-The root cause is that an angelic context cannot be treated as simple
-existential quantification (e.g., ``there exists an $x$ that reaches
-the true branch'') that discards the possibility that $x$ can also
-reach the false branch.  In order to preserve all possibilities while
-still enabling an existential-like interpretation of angelic contexts,
-we introduce a \emph{context sum} type constructor $\ctoplus$ that
-explicitly tracks  expected control flows.
+In both judgements, the result type uses $\ctoplus$ to explicitly
+demarcate two subsets of the term's executions: the first example uses
+$\ctoplus$ to distinguish between the executions that must exist due
+to the angelic refinement of $x$ in the typing context that those that
+may exist, while the second uses $\ctoplus$ to distinguish between the
+two possible control flows through the program.
 
-The typing judgement $\Gamma \vdash e : \tau_1 \ctoplus \tau_2$
-states that $e$ can be typed with $\tau_1$ and $\tau_2$ in some
-partitioning of $\Gamma$, and that all possibilities of $\Gamma$ are
-accounted for by $\tau_1$ and $\tau_2$ — no possibility is lost.  For
-example:
-\begin{align*}
-  &x{:}\urt{\Nat}{\top} \vdash x : \urt{\Nat}{\vnu = 0} \ctoplus  \urt{\Nat}{\vnu > 0} \;\judgok
-  \\&x{:}\urt{\Nat}{\top} \vdash \zif{x == 0}{3}{5} : \ort{\Nat}{\vnu < 4}\ctoplus \ort{\Nat}{\vnu > 4} \;\judgok
-\end{align*}\noindent
-In the second judgement, the result type uses $\ctoplus$ to explicitly
-record both control-flow branches, with each branch ascribed a type
-consistent with its result.
-
-Note that context sum types explicitly record the shape of control
-flows and precisely express the types of every branch.  Although
+Importantly, while
 $\ort{\Nat}{\vnu < 4} \ctoplus \ort{\Nat}{\vnu > 4}$ is a subtype of
-$\ort{\Nat}{\vnu < 4 \lor \vnu > 4}$, meaning the context sum type
-precisely rules out 4 as a possible result,  the reverse is not true since
-the disjunctive type conflates the two branches and hence this precision.
-One can also focus a safety specification on a single branch
- by dropping uninteresting branches into the $\top$ type:
+$\ort{\Nat}{\vnu < 4 \lor \vnu > 4}$ (both types can only be ascribed
+to a term that never evaluates to $4$), the reverse is not true: the
+disjunctive refinement type loses the information that a term has two
+distinct control flow paths, one whose result is always greater than
+$4$ and another whose result is always less than $4$. \BD{We might
+  want to nod to outcome logic here.} This ability also allows us to
+focus on the safety properties of a particular program path, assigning
+the remainder the $\top$ type:
 \begin{align*}
   &x{:}\urt{\Nat}{\top} \vdash \zif{x > 0}{5}{3} : \ort{\Nat}{\vnu > 4} \ctoplus \ort{\Nat}{\top} \quad \judgok
   \\&x{:}\urt{\Nat}{\top} \vdash \zif{x > 0}{5}{3} : \ort{\Nat}{\vnu < 4} \ctoplus \ort{\Nat}{\top} \quad \judgok
 \end{align*}\noindent
 The use of $\tau \ctoplus \ort{b}{\top}$ expresses an \emph{affine}
-style of branch analysis: like affine logic, which allows
-resources to be used at most once (and hence discarded), this style
-allows the type system to discard uninteresting branches by weakening
-them to $\ort{b}{\top}$, imposing a precise safety constraint on one branch
-while placing no constraint on the others.
+style of control flow analysis when deriving information from angelic
+facts: like affine logic, which allows resources to be used at most
+once (and hence discarded), this style allows the type system to
+discard uninteresting branches by weakening them to $\ort{b}{\top}$,
+imposing a precise safety constraint on the branches that a typing
+context guarantees exist while placing no constraint on the others.
+
+% Standard refinement types interpret type
+% contexts in a demonic style, requiring \emph{all} control-flow within
+% the program to be consistent with the safety property.  In the
+% presence of angelic contexts that can reach multiple control flows,
+% additional handling is required.  Consider the following judgements:
+% \begin{align*}
+%   &x{:}\urt{\Nat}{\top} \vdash \zif{x == 0}{3}{5} : \ort{\Nat}{\vnu < 4} \quad \text{(reach true branch)}
+%   \\&x{:}\urt{\Nat}{\top} \vdash \zif{x == 0}{3}{5} : \ort{\Nat}{\vnu > 4} \quad \text{(reach false branch)}
+% \end{align*}\noindent
+% These judgements informally state that ``there exists an input natural
+% number $x$ such that we may reach some number less than (greater than,
+% resp.) $4$.''  They mix safety and reachability reasoning, encoding a
+% reachability property using imprecise overapproximated constraints
+% (i.e., $\ort{\Nat}{\vnu < 4}$ and $\ort{\Nat}{\vnu > 4}$) instead of
+% precise underapproximated constraints (i.e., $\urt{\Nat}{\vnu = 3}$
+% and $\urt{\Nat}{\vnu = 5}$), since the desired safety property does not need
+% to be precise about the exact result values.
+
+% However, na\"{i}vely combining these imprecise reachability properties
+% with safety reasoning may lead to semantic conflicts.  A purely safety-focussed
+% interpretation of the first judgement would require that
+% \emph{every} value produced by $\zif{x == 0}{3}{5}$ under the
+% angelic context $x{:}\urt{\Nat}{\top}$ satisfies $\vnu < 4$.  This is
+% incorrect: since $x$ can angelically take any natural number,
+% including $1$, the expression can evaluate to $5$, violating $\vnu < 4$.
+% This conflict also breaks the standard semantic characterization
+% of intersection types found in refinement type systems that are used to model
+% conditionals:
+% \begin{align*}
+%   &\Gamma \vdash e : \ort{b}{\phi_1} \ctinter \ort{b}{\phi_2} \text{ iff } \Gamma \vdash e : \ort{b}{\phi_1 \land \phi_2}
+% \end{align*}\noindent
+% since no term can have type $\ort{\Nat}{\vnu < 4 \land \vnu > 4}$.
+% The root cause is that an angelic context cannot be treated as simple
+% existential quantification (e.g., ``there exists an $x$ that reaches
+% the true branch'') that discards the possibility that $x$ can also
+% reach the false branch.  In order to preserve all possibilities while
+% still enabling an existential-like interpretation of angelic contexts,
+% we introduce a \emph{context sum} type constructor $\ctoplus$ that
+% explicitly tracks  expected control flows.
 
 \section{Context Type System}
 \label{sec:context-typing}
