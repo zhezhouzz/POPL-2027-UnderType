@@ -535,8 +535,10 @@ accounted for by $\tau_1$ and $\tau_2$ --- no possibility is lost.
 For example:
 \begin{align*}
   &x{:}\urt{\Nat}{even(\vnu)} \vdash x + 1 : \ort{\Nat}{odd(\vnu)} \ctoplus
-    \ort{\Nat}{even(\vnu)} \;\judgok \\
-  &x{:}\urt{\Nat}{\top} \vdash \zif{x == 0}{3}{5} : \ort{\Nat}{\vnu < 4}\ctoplus \ort{\Nat}{\vnu > 4} \;\judgok
+    \ort{\Nat}{even(\vnu)} \;\judgok \notag \\
+  &x{:}\urt{\Nat}{\top} \vdash \zif{x == 0}{3}{5} : \ort{\Nat}{\vnu <
+    4}\ctoplus \ort{\Nat}{\vnu > 4} \;\judgok
+    \tag{\Code{e}$_\oplus$}\label{ex:oplus}
 \end{align*}\noindent
 In both judgements, the result type uses $\ctoplus$ to explicitly
 demarcate two subsets of the term's executions: the first example uses
@@ -556,8 +558,9 @@ $4$ and another whose result is always less than $4$. \BD{We might
 focus on the safety properties of a particular program path, assigning
 the remainder the $\top$ type:
 \begin{align*}
-  &x{:}\urt{\Nat}{\top} \vdash \zif{x > 0}{5}{3} : \ort{\Nat}{\vnu > 4} \ctoplus \ort{\Nat}{\top} \quad \judgok
-  \\&x{:}\urt{\Nat}{\top} \vdash \zif{x > 0}{5}{3} : \ort{\Nat}{\vnu < 4} \ctoplus \ort{\Nat}{\top} \quad \judgok
+  &x{:}\urt{\Nat}{\top} \vdash \zif{x > 0}{5}{3} : \ort{\Nat}{\vnu >
+    4} \ctoplus \ort{\Nat}{\top} \quad \judgok
+    \tag{\Code{e}$_{\oplus\top}$}\label{ex:oplusWeak}
 \end{align*}\noindent
 The use of $\tau \ctoplus \ort{b}{\top}$ expresses an \emph{affine}
 style of control flow analysis when deriving information from angelic
