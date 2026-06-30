@@ -526,7 +526,7 @@ absent from prior refinement type systems: demonic and angelic
 qualifiers may appear in arbitrary combination throughout a type, and
 the entangled ($\ctsarr$) and independent ($\ctwand$) function type
 constructors may likewise be chosen independently at each argument
-position. 
+position.
 
 \paragraph{From Reachability to Safety}
 As discussed above, the sort of safety that can be directly derived
@@ -550,30 +550,31 @@ of $\Gamma$, and that all environments consistent with $\Gamma$ are
 accounted for by $\tau_1$ and $\tau_2$ --- no possibility is lost.
 For example:
 \begin{align*}
-  &x{:}\urt{\Nat}{even(\vnu)} \vdash x + 1 : \ort{\Nat}{odd(\vnu)} \ctoplus
+  &x{:}\urt{\Nat}{\vnu < 10} \vdash x + 1 : \ort{\Nat}{odd(\vnu)} \ctoplus
     \ort{\Nat}{even(\vnu)} \;\judgok \notag \\
   &x{:}\urt{\Nat}{\top} \vdash \zif{x == 0}{3}{5} : \ort{\Nat}{\vnu <
     4}\ctoplus \ort{\Nat}{\vnu > 4} \;\judgok
     \tag{\Code{e}$_\oplus$}\label{ex:oplus}
 \end{align*}\noindent
 In both judgements, the result type uses $\ctoplus$ to explicitly
-demarcate two subsets of the term's executions: the first example uses
-$\ctoplus$ to distinguish between the executions that must exist due
-to the angelic refinement of $x$ in the typing context from those
-that may exist, while the second uses $\ctoplus$ to distinguish
-between the two possible control flows through the program.
+demarcate two subsets of the term's executions. The first example uses
+$\ctoplus$ to establish that the angelic refinement of $x$ in the
+typing context ensures that $x + 1$ must evaluate to some even and
+some odd number, without stipulating what those numbers are. The
+second uses $\ctoplus$ to distinguish between the two possible control
+flows through the program.
 
 Importantly, while
 $\ort{\Nat}{\vnu < 4} \ctoplus \ort{\Nat}{\vnu > 4}$ is a subtype of
 $\ort{\Nat}{\vnu < 4 \lor \vnu > 4}$ (both types can only be ascribed
 to a term that never evaluates to $4$), the reverse is not true: the
 disjunctive refinement type loses the information that a term has two
-distinct control flow paths, one whose result is always greater than
-$4$ and another whose result is always less than $4$.\footnote{In this
+distinct feasible control flow paths, one whose result is always
+greater than $4$ and another whose result is always less than $4$. \footnote{In this
   sense, the $\ctoplus$  operator plays a role analogous to the commutative
-  monoid disjunction in Outcome Logic~\cite{ZDS23}.}   This ability also allows us to
-focus on the safety properties of a particular program path, assigning
-the remainder type $\top$:
+  monoid disjunction in Outcome Logic~\cite{ZDS23}.} This ability also
+allows us to focus on the safety properties of one particular feasible
+program path, assigning all remaining paths the $\top$ type: %
 \begin{align*}
   &x{:}\urt{\Nat}{\top} \vdash \zif{x > 0}{5}{3} : \ort{\Nat}{\vnu >
     4} \ctoplus \ort{\Nat}{\top} \quad \judgok
