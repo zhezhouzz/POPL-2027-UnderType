@@ -44,7 +44,10 @@
   { \small
     \begin{alignat*}{2}
       \text{\textbf{Qualifiers}}& \quad & \phi ::= \quad & c ~|~ x ~|~ \primop\;\overline{v} ~|~ \bot ~|~ \top  ~|~ \neg \phi ~|~ \phi \land \phi ~|~ \phi \lor \phi ~|~  \phi \impl \phi ~|~ \forall x{:}b. \phi ~|~ \exists x{:}b. \phi
-      \\ \text{\textbf{Refinement Types}}& \quad & \tau ::= \quad & \ort{b}{\phi} ~|~ \urt{b}{\phi} ~|~ \tau \ctinter \tau ~|~ \tau \ctunion \tau ~|~ \tau \ctoplus \tau ~|~ x{:}\tau \ctsarr \tau ~|~ x{:}\tau \ctwand \tau
+      \\ \text{\textbf{Refinement Types}}& \quad & \tau ::= \quad &
+      \ort{b}{\phi} ~|~ \urt{b}{\phi} ~|~ \tau \ctinter \tau ~|~ \tau
+      \ctoplus \tau ~|~ x{:}\tau \ctsarr \tau ~|~ x{:}\tau \ctwand
+      \tau %~|~ \tau \ctunion \tau
       % ~|~ \ctpers \tau
       \\ \text{\textbf{Type Contexts}}& \quad & \Gamma ::= \quad & \emptyset ~|~ x{:}\tau ~|~ \Gamma \ctstar \Gamma ~|~ \Gamma \ctcomma \Gamma ~|~ \Gamma \ctoplus \Gamma
       % \\ \text{\textbf{Contexts With Holes}}& \quad & \Delta ::= \quad & \Box ~|~ \Gamma ~|~ \Delta \ctstar \Delta ~|~ \Delta \ctcomma \Delta ~|~ \Delta \ctoplus \Delta
@@ -67,13 +70,12 @@ The syntax of context types is shown in
 systems, \emph{context types} refine basic types with qualifiers
 $\phi$; but each refinement is ascribed either a demonic and angelic
 modality ($\otparenth{...}$ and $\utparenth{...}$, resp.). Context
-types additionally include bunched implication (e.g., $\ctsarr$,
-$\ctwand$), disjoint sums ($\ctoplus$), and standard type intersection
-($\ctinter$) operators. Our type system shares the same intuition
-underlying bunched implication and refinement types, generally;
-however, its technical development differs significantly from both due
-to its support for angelic contexts and mixed demonic/angelic
-reasoning.
+types additionally include bunched implication ($\ctwand$), disjoint
+sums ($\ctoplus$), and standard type intersection ($\ctinter$)
+operators. Our type system shares the same intuition underlying
+bunched implication and refinement types, generally; however, its
+technical development differs significantly from both due to its
+support for angelic contexts and mixed demonic/angelic reasoning.
 
 \begin{figure}[h!]
   {\small
@@ -112,18 +114,19 @@ reasoning.
   \vspace*{-.1in}
 \end{figure}
 
-\paragraph{Well-formedness} Similar to other refinement type systems, our type system depends on the well-formedness relations shown in
-\autoref{fig:auxiliary-rules}. The well-formedness of types ($\Sigma
-\wfvdash \tau$) and type contexts ($\Sigma \wfvdash \Gamma$) mostly
-requires type qualifiers to be well-typed in the basic type system and
-binding variables in type contexts to be unique. We would like to
-highlight that rule \textsc{WfComma} allows the second context to
-refer to variables in the first context, while rule \textsc{WfStar}
-requires that $\Gamma_1$ and $\Gamma_2$ are completely disjointed. For
-example, within a type context $\Gamma_0 \ctcomma (\Gamma_1 \ctstar
-\Gamma_2)$, context $\Gamma_0$ is closed, and $\Gamma_1$ and
-$\Gamma_2$ can only refer to variables in $\Gamma_0$.
-
+\paragraph{Well-formedness} Similar to other refinement type systems,
+our type system depends on the well-formedness relations shown in
+\autoref{fig:auxiliary-rules}. The well-formedness of types
+($\Sigma \wfvdash \tau$) and type contexts ($\Sigma \wfvdash \Gamma$)
+mostly requires type qualifiers to be well-typed in the basic type
+system and binding variables in type contexts to be unique. We would
+like to highlight that rule \textsc{WfComma} allows the second context
+to refer to variables in the first context, while rule \textsc{WfStar}
+requires that $\Gamma_1$ and $\Gamma_2$ are completely
+independent. For example, within a type context
+$\Gamma_0 \ctcomma (\Gamma_1 \ctstar \Gamma_2)$, context $\Gamma_0$ is
+closed, and $\Gamma_1$ and $\Gamma_2$ can only refer to variables in
+$\Gamma_0$.
 
 \begin{figure}[h!]
   {\small
@@ -195,7 +198,9 @@ $\Gamma_2$ can only refer to variables in $\Gamma_0$.
   {$\Gamma \vdash \primop\;\overline{v_i} : \tau[\overline{x_i \mapsto v_i}]$}
   \quad
   \mprooftr{64mm}
-  {$\forall i. \Gamma_i \vdash d_i(\overline{y}) : \ort{b}{\vnu = v} \interty \urt{b}{\vnu = v}$ and $\Gamma_i \vdash e_i : \tau_i$ }
+  {$\forall i. \Gamma_i \vdash d_i(\overline{y}) : \ort{b}{\vnu = v}
+    \interty \urt{b}{\vnu = v}$ \\
+    $\forall i. \Gamma_i \vdash e_i : \tau_i$ }
   {T-Match}
   {$\ctbigoplus \overline{\Gamma_i} \vdash \match{v} \overline{d\ \overline{y} \to e}  : \ctbigoplus \overline{\tau_i}$}
   }
@@ -213,11 +218,12 @@ there is only one possible value, so the safety and reachability
 constraints are identical.
 
 
-\paragraph{Bunched Typing} The typing rules are shown in \autoref{fig:declarative-typing-rules},
-where rules for let-expressions, lambda functions, and applications
-have dependent and disjointed versions, respectively.  Unlike standard
-bunched typing, the dependent version does not require an explicit
-additive conjunction in the type context, as shown below:
+\paragraph{Bunched Typing} The typing rules are shown in
+\autoref{fig:declarative-typing-rules}, where rules for
+let-expressions, lambda functions, and applications have entangled and
+independent versions, respectively.  Unlike standard bunched typing,
+the entangled version does not require an explicit additive
+conjunction in the type context, as shown below:
 \begin{align*}
 \mprooftr{40mm}
   {$\Gamma_1 \vdash e_1 : \tau_1 $ \quad $\Gamma_2 \ctcomma x{:}\tau_1 \vdash e_2 : \tau_2$}
@@ -229,13 +235,13 @@ additive conjunction in the type context, as shown below:
   {T-Bunched-Contraction}
   {$\Gamma_1 \ctcomma \Gamma_2 \vdash e : \tau$}
 \end{align*}\noindent
-Unlike standard bunched typing, the dependent version does not require
+Unlike standard bunched typing, the entangled version does not require
 an explicit additive conjunction in the type context. The
 well-formedness condition requiring unique variable bindings means
 that the substructural contraction rule
 \textsc{T-Bunched-Contraction}, which duplicates bindings, is
 incompatible with our system. Instead, our \textsc{T-Let} rule
-directly entangles the newly added dependent context with the existing
+directly entangles the newly added entangled context with the existing
 context, without duplicating or consuming bindings.
 
 
@@ -309,7 +315,7 @@ values that $x$ can reach; however, type $\ort{b}{\vnu \prec x}$
 disallows $v_{\Code{arg}}$ from reaching the value of $x$. Such an
 argument does not exist, which means recursive calls can never happen
 when the parameter type has an angelic modality. Moreover, the
-parameter type for a recursive function cannot be a disjointed arrow
+parameter type for a recursive function cannot be an independent arrow
 type, i.e.,
 \begin{align*}
   \Gamma \ctcomma x{:}\tau_x \ctcomma f{:}(x{:}\ort{b}{\phi \land \vnu \prec x} \ctwand \tau) \vdash e : \tau \quad \judgfail
@@ -317,14 +323,14 @@ type, i.e.,
 The parameter type of $f$ in a recursive call must reference $x$ via
 the well-foundedness constraint $\nu \prec x$, which establishes a
 dependency between the argument of the recursive call and the original
-parameter $x$.  This dependency makes the disjointness requirement of
+parameter $x$.  This dependency makes the independence requirement of
 $\ctwand$ impossible to satisfy, since $\ctwand$ requires the argument
 context to be independent of the closure context, whereas well-founded
 induction inherently requires the opposite. Although \textsc{T-Fix}
-therefore restricts the function type of recursive calls to use $\ctsarr$,
-the subsumption rule \textsc{T-Sub} still allows a recursive function
-to be typed against arbitrary function types after the fact, provided
-the subtyping relation holds.
+therefore restricts the function type of recursive calls to use
+$\ctsarr$, the subsumption rule \textsc{T-Sub} still allows a
+recursive function to be typed against arbitrary function types after
+the fact, provided the subtyping relation holds.
 
 \begin{example}[Fixpoint Function] The following fixpoint function defines natural number subtraction discussed in \autoref{sec:intro}.
 \begin{align*}
@@ -351,39 +357,57 @@ core language. We require these primitive types to be precise as in
 \end{align*}\noindent
 With these precise primitive types, rule \textsc{T-AppOp} can forward-infer constraints of operator application results. As discussed previously, rule \textsc{T-Match} requires type context to be divided into a sum of contexts that align with \emph{reachable} control flows, and then the sum of corresponding result types becomes the result type of the whole pattern-matching expression. The reachability condition is guaranteed by $\Gamma_i$ making datatype $d_i(\overline{y})$ have a precise type equal to the matched value $v$, which requires the types of variables $\overline{y}$ to have correct precise types for further type-checking of control-flow branches.
 
-\begin{example}[Pattern matching expression] We revisit our previous example where we unfold the conditional expression into a pattern-matching expression.
+\begin{example}[Pattern matching] To illustrate \textsc{T-Match},
+  consider how we can type \ref{ex:oplusWeak} from the previous
+  section, after desugaring its conditional expression.
 \begin{align*}
   x{:}\urt{\Nat}{\top} \vdash \zmatchNat{x}{3}{y}{5} : \ort{\Nat}{\vnu < 4} \ctoplus \ort{\Nat}{\top}
 \end{align*}
-where we want to show that the angelic context $x{:}\urt{\Nat}{\top}$ can be split so that
-the true branch is reachable and types with $\ort{\Nat}{\vnu < 4}$.  We first divide the
-type context via subsumption rule \textsc{T-CtxSub}.
-{\small\begin{align*}
-  &x{:}\urt{\Nat}{\top} \ctsubseteq{\{x\}}
-  \\&\quad \underbrace{x{:}\ort{\Nat}{\vnu = 0}\interty \urt{\Nat}{\vnu = 0}}_{\Gamma_{\Code{trueBranch}}} \ctoplus \underbrace{x{:}\ort{\Nat}{\vnu > 0}\interty \urt{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}}_{\Gamma_{\Code{falseBranch}}}
-\end{align*}}\noindent
-which exactly aligns the assumption about context reachability required by rule \textsc{T-Match}:
+Here, we want to show that the angelic context $x{:}\urt{\Nat}{\top}$
+ensures that it is possible for \ref{ex:oplusWeak} to reach some value
+less than $4$. To do so, we first partition the type context using
+\textsc{T-CtxSub} %
+{\small %
+  \begin{align*}
+    &x{:}\urt{\Nat}{\top} \ctsubseteq{\{x\}} \\
+    & \quad
+      \underbrace{x{:}\ort{\Nat}{\vnu = 0}\interty \urt{\Nat}{\vnu =
+      0}}_{\Gamma_{\Code{trueBranch}}} \ctoplus
+      \underbrace{x{:}\ort{\Nat}{\vnu > 0}\interty \urt{\Nat}{\vnu > 0}
+      \ctcomma y{:}\ort{\Nat}{\vnu = x -
+      1}}_{\Gamma_{\Code{falseBranch}}}
+  \end{align*}}\noindent
+into type contexts for each branch that align with the first
+assumption of \textsc{T-Match}:
 \begin{align*}
   &\Gamma_{\Code{trueBranch}} \vdash 0 : \ort{\Nat}{\vnu = 0} \interty \urt{\Nat}{\vnu = 0}
   \\&\Gamma_{\Code{falseBranch}} \vdash \Code{S}\;y : \ort{\Nat}{\vnu = x} \interty \urt{\Nat}{\vnu = x}
 \end{align*}\noindent
-We then have the following derivation:
+We can then type each branch under these contexts to show that
+\ref{ex:oplusWeak} has the target type:
 \begin{align*}
   &\Gamma_{\Code{trueBranch}} \vdash 3 : \ort{\Nat}{\vnu < 4}
   \\&\underline{\Gamma_{\Code{falseBranch}} \vdash 5 : \ort{\Nat}{\top}}
   \\&\Gamma_{\Code{trueBranch}} \ctoplus \Gamma_{\Code{falseBranch}} \vdash  \zmatchNat{x}{3}{y}{5} : \ort{\Nat}{\vnu < 4} \ctoplus \ort{\Nat}{\top}
 \end{align*}\noindent
-On the other hand, the following derivation fails:
+On the other hand, we are unable to establish this under a weaker
+typing context:
 \begin{align*}
-  x{:}\urt{\Nat}{\vnu > 0} \vdash \zmatchNat{x}{3}{y}{5} : \ort{\Nat}{\vnu < 4} \ctoplus \ort{\Nat}{\top} \judgfail
+  x{:}\urt{\Nat}{\vnu > 0} \vdash \zmatchNat{x}{3}{y}{5} :
+  \ort{\Nat}{\vnu < 4} \ctoplus \ort{\Nat}{\top} \quad \judgfail
 \end{align*}\noindent
-Because context $x{:}\urt{\Nat}{\vnu > 0}$ admits an environment $\Envir(e) \doteq \zlet{x}{\Code{positive\_gen}()}{e}$ under which execution always follows the false branch, it cannot be decomposed into a sum of two contexts that separately witness the true and false branches.
-Alternatively, we also enable standard refinement type judgement with unreachable control flows:
+Here, $x{:}\urt{\Nat}{\vnu > 0}$ admits a world containing
+environments that only reach the false branch, and thus cannot be
+decomposed into two contexts that separately both branches.  This rule
+also also enables the standard refinement type judgement with
+unreachable control flows:
 \begin{align*}
   &x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}\vdash 5 : \ort{\Nat}{\vnu > 4}
   \\&x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}\vdash \Code{S}\;y : \ort{\Nat}{\vnu = x} \interty \urt{\Nat}{\vnu = x}
   \\&\underline{x{:}\ort{\Nat}{\vnu > 0} \ctsubseteq{\{x\}} x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}}
   \\&x{:}\ort{\Nat}{\vnu > 0} \vdash \zmatchNat{x}{3}{y}{5} : \ort{\Nat}{\vnu > 4} \quad \judgok
 \end{align*}\noindent
-where we adapt rule \textsc{T-Match} with a sum of a single type.
+where we adapt rule \textsc{T-Match} with a sum of a single
+type. \BD{We need to clean this up a bit -- it is weird to leave off
+  the true branch.}
 \end{example}
