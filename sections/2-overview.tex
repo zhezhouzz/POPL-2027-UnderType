@@ -132,9 +132,9 @@ possible to derive meaningful safety guarantees using reachability
 assumptions through the use of the $\oplus$ operator, as we shall see
 shortly.
 
-\BD{At some point early on, we need to introduce the notion of method
-  predicates. This may just happen organically with the addition of
-  the buggy merge example to the introduction... }
+%% \BD{At some point early on, we need to introduce the notion of method
+%%   predicates. This may just happen organically with the addition of
+%%   the buggy merge example to the introduction... }
 
 % This
 % A typing
@@ -196,53 +196,58 @@ between two arbitrary refinements with different modalities:
   &\ort{\Nat}{\vnu > 0} \subty \urt{\Nat}{\vnu > 1}\;\judgfail
   & &\urt{\Nat}{\vnu > 0} \subty \ort{\Nat}{\vnu > 0} \;\judgfail
 \end{align*}\noindent
-Knowing that a term can only evaluate to positive numbers does not
-allow us to draw any conclusions about which positive numbers it
-reaches, for example. Similarly, simply knowing that a term can reach
-every positive number does not preclude it from also evaluating to 0.
-\begin{wrapfigure}{r}{0.48\linewidth}
-  \centering
-  \begin{minted}[linenos = false, fontsize = \footnotesize, escapeinside=??]{OCaml}
-val g : ?$\Code{i}{:}\ort{\Int}{\vnu \le 10}\ctsarr\ort{\Int}{\vnu \neq 0}$?
 
-?$\vdash$? let f (x: int) (y: int) =
-  if y > 10 then (g x) + 1
-    else x + 1
-: ?$\Code{x}{:}\urt{\Int}{\vnu \le 5}\ctsarr\Code{y}{:}\urt{\Int}{\vnu \le 15}\ctsarr\urt{\Int}{\vnu = 1}$?
-  \end{minted}
-  \caption{A simple example of how may-analysis helps
-    must-analysis~\cite{CompositionalMayMust}.}
-  \label{fig:may-must-reach}
-\end{wrapfigure}
-That said, numerous prior works~\cite{...} have shown that knowledge
-about the safety properties of terms can aid the automated
-verification of reachability properties, and vice-versa. When
-establishing that the function \Code{f} in
-\autoref{fig:may-must-reach} must return \Code{1} on some arguments,
-for example, the program analysis of \citet{CompositionalMayMust} uses
-a not-may summary analogous to the signature of \Code{g} to conclude
-calling it will never produce the \Code{0} value needed for \Code{f}
-to yield \Code{1}. As we shall see shortly, our type system also
-naturally supports using angelic information in the type context to
-verify a meaningful form of qualified safety properties, similar to
-that found in \citet{ZDS23} and \citet{RHLE}.
+%% \SJ{I'm not sure why the following paragraphs are related to subtyping -
+%%   the explanations don't explicitly refer to the subtyping relation, and
+%%   the may/must example seems too complicated at this stage.}
+%% Knowing that a term can only evaluate to positive numbers does not
+%% allow us to draw any conclusions about which positive numbers it
+%% reaches, for example. Similarly, simply knowing that a term can reach
+%% every positive number does not preclude it from also evaluating to 0.
+%% \begin{wrapfigure}{r}{0.48\linewidth}
+%%   \centering
+%%   \begin{minted}[linenos = false, fontsize = \footnotesize, escapeinside=??]{OCaml}
+%% val g : ?$\Code{i}{:}\ort{\Int}{\vnu \le 10}\ctsarr\ort{\Int}{\vnu \neq 0}$?
 
-% It is only possible to switch the modality of a refinement when its
-% qualifier is a singleton, or when the supertype qualifier is trivial:
-% \begin{align*}
-%   &\ort{\Nat}{\vnu = 3} \subty \urt{\Nat}{\vnu =
-%     3}\;\judgok
-%   & & \urt{\Nat}{\vnu = 3} \subty \ort{\Nat}{\vnu =
-%       3}\;\judgfail \\
-%   &x{:}\urt{\Nat}{\vnu > 0} \subty x{:}\ort{\Nat}{\top}\;\judgok
-%   & &x{:}\ort{\Nat}{\vnu > 0} \ctsubseteqA x{:}\urt{\Nat}{\bot}\;\judgok
-% \end{align*}\noindent
-% When the qualifier is a singleton, safety and reachability coincide
-% --- there is only one possible value, so the demonic constraint (the
-% value must be 3) and the angelic constraint (the value 3 must be
-% reachable) make identical demands on the term. Converting to a
-% supertype with a trivial qualifier, in contrast, simply throws away
-% the bounds on a term entirely.
+%% ?$\vdash$? let f (x: int) (y: int) =
+%%   if y > 10 then (g x) + 1
+%%     else x + 1
+%% : ?$\Code{x}{:}\urt{\Int}{\vnu \le 5}\ctsarr\Code{y}{:}\urt{\Int}{\vnu \le 15}\ctsarr\urt{\Int}{\vnu = 1}$?
+%%   \end{minted}
+%%   \caption{A simple example of how may-analysis helps
+%%     must-analysis~\cite{CompositionalMayMust}.}
+%%   \label{fig:may-must-reach}
+%% \end{wrapfigure}
+%% That said, numerous prior works~\cite{GHK+06,BVR+08,GN+10,NYC+12} have shown that knowledge
+%% about the safety properties of terms can aid the automated
+%% verification of reachability properties, and vice-versa. When
+%% establishing that the function \Code{f} in
+%% \autoref{fig:may-must-reach} must return \Code{1} on some arguments,
+%% for example, the program analysis of \citet{GN+10} uses
+%% a not-may summary analogous to the signature of \Code{g} to conclude
+%% calling it will never produce the \Code{0} value needed for \Code{f}
+%% to yield \Code{1}. As we shall see shortly, our type system also
+%% naturally supports using angelic information in the type context to
+%% verify a meaningful form of qualified safety properties, similar to
+%% that found in \citet{ZDS23} and \citet{RHLE}.
+
+It is only possible to switch the modality of a refinement when its
+qualifier is a singleton, or when the resulting refinement is trivially
+true ($\ort{b}{\top}$) or unsatisfiable ($\urt{b}{\bot}$):
+\begin{align*}
+  &\ort{\Nat}{\vnu = 3} \subty \urt{\Nat}{\vnu =
+    3}\;\judgok
+  & & \urt{\Nat}{\vnu = 3} \subty \ort{\Nat}{\vnu =
+      3}\;\judgfail \\
+  &x{:}\urt{\Nat}{\vnu > 0} \subty x{:}\ort{\Nat}{\top}\;\judgok
+  & &x{:}\ort{\Nat}{\vnu > 0} \ctsubseteqA x{:}\urt{\Nat}{\bot}\;\judgok
+\end{align*}\noindent
+When the qualifier is a singleton, safety and reachability coincide
+--- there is only one possible value, so the demonic constraint (the
+value must be 3) and the angelic constraint (the value 3 must be
+reachable) make identical demands on the term. Converting to a
+supertype with a trivial qualifier, in contrast, simply throws away
+the bounds on a term entirely.
 
 % that an angelic context requiring $x$ to reach all numbers greater
 % than 1 is a subtype of one requiring $x$ to reach all positive
@@ -342,12 +347,13 @@ illustrate, consider the following pair of program contexts:
 \end{align}\noindent
 Both contexts use \Code{nat\_gen ()} to (nondeterministically) generate
 an arbitrary value for $x$. The first context then sets $y$ based on
-the value as $x$, while the second opts to generate a fresh value for
-$y$ instead. The four programs that result from plugging $x$ and $y$
-into these contexts can all reach every possible positive
-number, as can the program \ref{ex:DisjCon}[$x - y$].  The same cannot
-be said of \ref{ex:EnCon}[$x - y$], however, because the values of
-$x$ and $y$ in this program are somehow \emph{entangled}.
+the value of $x$, while the second opts to generate a fresh value for
+$y$ instead. The values bound to $x$ and $y$
+in either context can all reach every possible positive
+number, as can the program \ref{ex:DisjCon}[$x - y$].  This is not
+true of \ref{ex:EnCon}[$x - y$], however, because the values of
+$x$ and $y$ in this program are \emph{entangled} since the values $y$ can
+yield are tied to $x$'s.
 \begin{align*}
   &\emptyset \vdash \text{\ref{ex:DisjCon}}[x] : \urt{\Nat}{\vnu > 0}
     \;\judgok \quad
@@ -357,39 +363,55 @@ $x$ and $y$ in this program are somehow \emph{entangled}.
   \;\judgok \quad
   &\emptyset \vdash \text{\ref{ex:EnCon}}[y] : \urt{\Nat}{\vnu > 0}
     \;\judgok \\
-  & \emptyset \vdash \text{\ref{ex:DisjCon}}[x - y] : \urt{\Nat}{\vnu
-    > 0} \;\judgok \quad & \emptyset \vdash \text{\ref{ex:EnCon}}[x - y] : \urt{\Nat}{\vnu > 0} \;\judgfail
+  & \emptyset \vdash \text{\ref{ex:DisjCon}}[x -_{\Code{nat}} y] : \urt{\Nat}{\vnu
+    > 0} \;\judgok \quad & \emptyset \vdash \text{\ref{ex:EnCon}}[x -_{\Code{nat}} y] : \urt{\Nat}{\vnu > 0} \;\judgfail
 \end{align*}\noindent
-To deal with this situation, our type system includes two ways to
-combine typing contexts, $\ctcomma$ and $\ctstar$, each of which
+To deal with this situation, our type system includes two constructors
+over typing contexts, ``$\ctcomma$'' and ``$\ctstar$'', each of which
 affords different capabilities when reasoning about, e.g., subtyping
 relationships. Informally, $\Gamma_1 \ctstar \Gamma_2$ means that the
 capabilities of $\Gamma_1$ and $\Gamma_2$ are independent; when either
 context includes an angelic type binding, our type system is free to
 ``choose'' a favorable assignment for the corresponding variable
-independent of the other context.  To illustrate, consider the
-following two subtyping judgments:
+independent of the other context.  Dually, $\Gamma_1 \ctcomma \Gamma_2$
+means that the capabilities of $\Gamma_1$ and $\Gamma_2$ are dependent;
+an angelic type binding in $\Gamma_2$ is constrained by the assignments
+made in $\Gamma_1$.  To illustrate, consider the
+following two subtyping judgments reflecting the typing of the \Code{let}-body
+in $C_{\mathit{en}}$ and $C_{\mathit{dis}}$, resp:
 \begin{align*}
   &x{:}\urt{\Nat}{\vnu > 0} \ctstar y{:}\urt{\Nat}{\vnu > 1}
-    \vdash \urt{\Nat}{\vnu = x - y} \subty \urt{\Nat}{\vnu > 0}
+    \vdash \urt{\Nat}{\vnu = x -_{\Code{nat}} y} \subty \urt{\Nat}{\vnu > 0}
     \;\judgok \\
   &x{:}\urt{\Nat}{\vnu > 0} \ctcomma y{:}\urt{\Nat}{\vnu > 1}
-    \vdash \urt{\Nat}{\vnu = x - y} \subty \urt{\Nat}{\vnu > 0} \;\judgfail
+    \vdash \urt{\Nat}{\vnu = x -_{\Code{nat}} y} \subty \urt{\Nat}{\vnu > 0} \;\judgfail
 \end{align*}\noindent
 Under the first context, we can freely choose both an arbitrary
-positive value for $x$ \emph{and} a $2$ for $y$, from which the
-subtyping relationship follows. Under the second context, however, the
-possible values we can choose for $x$ and $y$ are constrained by the
-\emph{entangled} conjunction, $\ctcomma$, meaning we are free to choose a value for one
-but not the other. Intuitively, the hole in \ref{ex:EnCon} has this
-typing context: once $x$ is fixed, the value of $y$ depends on it, and
-vice-versa.  As a consequence, we are unable to prove the following
-typing judgement:
-\begin{align*}
-  &x{:}\urt{\Nat}{\vnu > 0} \ctcomma y{:}\urt{\Nat}{\vnu > 0} \vdash x - y : \urt{\Nat}{\vnu > 0} \;\judgfail
-\end{align*}\noindent
+positive value for $x$ \emph{and} (say) $2$ for $y$, from which the
+subtyping relationship follows.  Under the second context, the
+dependent conjunction $\ctcomma$ entangles the choices for $x$ and
+$y$: once a value is chosen for $x$, the qualifier $\vnu > 1$ ascribed
+to $y$ must hold for \emph{that same} value of $x$'s capability,
+rather than for a value chosen independently. Concretely, the angelic
+guarantee for $y$ under ``$\ctcomma$'' only promises that $y$ can
+reach every value satisfying $\vnu > 1$ \emph{for some fixed
+  instantiation of $x$}.  Since the subtyping goal requires producing
+every positive number as $x -_{\Code{nat}} y$, and this requires
+pairing each candidate value of $x$ with an independently chosen $y$,
+a dependent context cannot be used to supply such pairs.  This is
+evidenced by $C_{en}$, which always collapses its result to 0, rather
+than all positive numbers.
 
-The \ctcomma in the context
+
+%% Intuitively, the hole in \ref{ex:EnCon} has this
+%% typing context: once $x$ is fixed, the value of $y$ depends on it, and
+%% vice-versa.  As a consequence, we are unable to prove the following
+%% typing judgement:
+%% \begin{align*}
+%%   &x{:}\urt{\Nat}{\vnu > 0} \ctcomma y{:}\urt{\Nat}{\vnu > 0} \vdash x - y : \urt{\Nat}{\vnu > 0} \;\judgfail
+%% \end{align*}\noindent
+
+The ``\ctcomma'' in the context
 $\Gamma \cdot x{:}\tau_x \ctcomma y{:}\tau_y$ works like additive
 logic conjunction in BI, and both $\Gamma \vdash x{:}\tau_x$ and
 $\Gamma \vdash y{:}\tau_y$ are valid. Importantly, however, it does
@@ -447,11 +469,8 @@ reach that number.
 %   provide some algebraic laws to help build up the reader's
 %   intuitions?}
 
-\paragraph{Function Types}
-\BD{We need to (re-)emphasize here that this is the first refinement
-  type system that does not place any restrictions on where angelic
-  and demonic modalities can appear in function types. }
 
+\paragraph{Function Types}
 Entangled ($\ctsarr$) and independent
 function types ($\ctwand$) are adjunctions of the corresponding type
 context composition operators:
@@ -512,6 +531,15 @@ Since $x$ is independent from both $y$ and $f$, it is also independent
 from $f\;(f\;y)$, thus guaranteeing that $x - (f\;(f\;y))$ can reach
 every positive number.
 
+These examples illustrate a flexibility that, to our knowledge, is
+absent from prior refinement type systems: demonic and angelic
+qualifiers may appear in arbitrary combination throughout a type, and
+the entangled ($\ctsarr$) and independent ($\ctwand$) function type
+constructors may likewise be chosen independently at each argument
+position. Existing systems instead fix a single mode of reasoning —
+safety or reachability — uniformly across a signature, or otherwise
+restrict how dependency between arguments may be expressed.
+
 \paragraph{From Reachability to Safety}
 As discussed above, the sort of safety that can be directly derived
 from reachability assumptions in the typing context is quite limited
@@ -551,10 +579,11 @@ $\ort{\Nat}{\vnu < 4 \lor \vnu > 4}$ (both types can only be ascribed
 to a term that never evaluates to $4$), the reverse is not true: the
 disjunctive refinement type loses the information that a term has two
 distinct control flow paths, one whose result is always greater than
-$4$ and another whose result is always less than $4$. \BD{We might
-  want to nod to outcome logic here.} This ability also allows us to
+$4$ and another whose result is always less than $4$.\footnote{In this
+  sense, the $\ctoplus$  operator plays a role analogous to the commutative
+  monoid disjunction in Outcome Logic~\cite{ZDS23}.}   This ability also allows us to
 focus on the safety properties of a particular program path, assigning
-the remainder the $\top$ type:
+the remainder type $\top$:
 \begin{align*}
   &x{:}\urt{\Nat}{\top} \vdash \zif{x > 0}{5}{3} : \ort{\Nat}{\vnu > 4} \ctoplus \ort{\Nat}{\top} \quad \judgok
   \\&x{:}\urt{\Nat}{\top} \vdash \zif{x > 0}{5}{3} : \ort{\Nat}{\vnu < 4} \ctoplus \ort{\Nat}{\top} \quad \judgok
