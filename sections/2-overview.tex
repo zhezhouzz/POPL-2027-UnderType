@@ -340,12 +340,12 @@ variables in a typing context can interact with each other, altering
 the capabilities afforded by the typing context as a whole. To
 illustrate, consider the following pair of program contexts:
 \begin{align}
-  &\zlet{x}{\Code{nat\_gen () }}{\zlet{y}{x + 1}{\square}}
+  &\zlet{x}{\Code{gen_{nat} () }}{\zlet{y}{x + 1}{\square}}
     \tag{C$_{en}$}\label{ex:EnCon} \\
-  &\zlet{x}{\Code{nat\_gen () }}{\zlet{y}{\Code{nat\_gen()}}{\square}}
+  &\zlet{x}{\Code{gen_{nat} () }}{\zlet{y}{\Code{gen_{nat}()}}{\square}}
     \tag{C$_{dis}$}\label{ex:DisjCon}
 \end{align}\noindent
-Both contexts use \Code{nat\_gen ()} to (nondeterministically) generate
+Both contexts use $\Code{gen_{nat} ()}$ to (nondeterministically) generate
 an arbitrary value for $x$. The first context then sets $y$ based on
 the value of $x$, while the second opts to generate a fresh value for
 $y$ instead. The values bound to $x$ and $y$
@@ -446,7 +446,7 @@ context. Accordingly, the expression \ref{ex:EnCon}$[x - y]$ cannot
 reach every even number. Contrast this with a variant of this context
 that instead assigns \emph{some} constant value $n$ to $y$:
 \begin{align}
-  &\zlet{x}{\Code{nat\_gen () }}{\zlet{y}{n}{\square}}
+  &\zlet{x}{\Code{gen_{nat} () }}{\zlet{y}{n}{\square}}
     \tag{C$_{n}$}\label{ex:DisjSafeCon}
 \end{align}
 Regardless of the particular value of $n$, for any given even number
@@ -546,7 +546,7 @@ must reach.
 
 The typing judgement $\Gamma \vdash e : \tau_1 \ctoplus \tau_2$ states
 that $e$ can be typed with $\tau_1$ and $\tau_2$ in some partitioning
-of $\Gamma$, and that all environments consistent with $\Gamma$ are
+of $\Gamma$, and that all worlds consistent with $\Gamma$ are
 accounted for by $\tau_1$ and $\tau_2$ --- no possibility is lost.
 For example:
 \begin{align*}
@@ -560,9 +560,9 @@ In both judgements, the result type uses $\ctoplus$ to explicitly
 demarcate two subsets of the term's executions. The first example uses
 $\ctoplus$ to establish that the angelic refinement of $x$ in the
 typing context ensures that $x + 1$ must evaluate to some even and
-some odd number, without stipulating what those numbers are. The
-second uses $\ctoplus$ to distinguish between the two possible control
-flows through the program.
+some odd number, without stipulating what those numbers are. In the
+second judgment, $\ctoplus$ is used to distinguish between the two
+possible control flows through the program.
 
 Importantly, while
 $\ort{\Nat}{\vnu < 4} \ctoplus \ort{\Nat}{\vnu > 4}$ is a subtype of
@@ -570,7 +570,8 @@ $\ort{\Nat}{\vnu < 4 \lor \vnu > 4}$ (both types can only be ascribed
 to a term that never evaluates to $4$), the reverse is not true: the
 disjunctive refinement type loses the information that a term has two
 distinct feasible control flow paths, one whose result is always
-greater than $4$ and another whose result is always less than $4$. \footnote{In this
+greater than $4$ and another whose result is always less than
+$4$.\footnote{In this
   sense, the $\ctoplus$  operator plays a role analogous to the commutative
   monoid disjunction in Outcome Logic~\cite{ZDS23}.} This ability also
 allows us to focus on the safety properties of one particular feasible
