@@ -337,7 +337,7 @@ illustrate, consider the following pair of program contexts:
 \begin{align}
   &\zlet{x}{\Code{nat\_gen () }}{\zlet{y}{x + 1}{\square}}
     \tag{C$_{en}$}\label{ex:EnCon} \\
-  &\zlet{x}{\Code{arbitrary}}{\zlet{y}{\Code{nat\_gen()}}{\square}}
+  &\zlet{x}{\Code{nat\_gen () }}{\zlet{y}{\Code{nat\_gen()}}{\square}}
     \tag{C$_{dis}$}\label{ex:DisjCon}
 \end{align}\noindent
 Both contexts use \Code{nat\_gen ()} to (nondeterministically) generate
@@ -376,8 +376,8 @@ following two subtyping judgments:
   &x{:}\urt{\Nat}{\vnu > 0} \ctcomma y{:}\urt{\Nat}{\vnu > 1}
     \vdash \urt{\Nat}{\vnu = x - y} \subty \urt{\Nat}{\vnu > 0} \;\judgfail
 \end{align*}\noindent
-Under the first context, we can freely choose both an arbitrary
-positive value for $x$ \emph{and} a $2$ for $y$, from which the
+Under the first context, we can freely choose both $2$ for $y$
+\emph{and} an arbitrary value larger than $2$ for $x$, from which the
 subtyping relationship follows. Under the second context, however, the
 possible values we can choose for $x$ and $y$ are constrained by the
 \emph{entangled} conjunction, $\ctcomma$, meaning we are free to choose a value for one
@@ -424,8 +424,8 @@ Notably, angelic and demonic refinements can also be entangled in a
 way that impacts the capabilities afforded by a type context, as the
 following pair of judgments illustrate:
 \begin{align*}
-  &x{:}\urt{\Nat}{\top} \ctcomma y{:}\ort{\Nat}{\top} \vdash x - y : \urt{\Nat}{\I{even}(\vnu)} \;\judgfail
-  \\&x{:}\urt{\Nat}{\top} \ctstar y{:}\ort{\Nat}{\top} \vdash x - y : \urt{\Nat}{\I{even}(\vnu)} \;\judgok
+  &x{:}\urt{\Nat}{\top} \ctcomma y{:}\ort{\Nat}{\vnu > 0} \vdash x - y : \urt{\Nat}{\I{even}(\vnu)} \;\judgfail
+  \\&x{:}\urt{\Nat}{\top} \ctstar y{:}\ort{\Nat}{\vnu > 0} \vdash x - y : \urt{\Nat}{\I{even}(\vnu)} \;\judgok
 \end{align*}\noindent
 The first typing context stipulates that the value of $y$ is positive,
 but that value is allowed to depend on the value $x$ --- the hole in
