@@ -1,0 +1,94 @@
+\section{Related Work}\label{sec:related}
+
+\paragraph{Bunched typing and bunched implication.}
+
+The idea of expressing fine-grained resource control within a program
+logic as introduced in Bunched Implication~\cite{OHP99} is central to
+modern-day program verifiers~\cite{AD+14,Iris,SLK+21,MSJ16,GM+25}
+based on separation logic~\cite{SeparationLogic,OH19}.  Transplanting
+the notion of \emph{bunched typing} as introduced
+by~\citet{BunchedType}, using $\ctcomma$ and $\ctstar$ to track
+entangled and independent resource use within a type context has
+received much less attention.  Recently proposed type systems and
+type-based verification frameworks that support resource
+reasoning~\cite{FR+21,PLM+23,JJKD18} do so by exposing an explicit
+ownership discipline, rather than manipulating a bunched context
+structure.  Notably, these other systems are designed primarily with
+safety in mind, and do not consider the role of resources and contexts
+as a unifying mechanism for safety and reachability.
+
+\paragraph{Reachability verification.}
+
+Recent work on reachability verification in type systems includes
+two-sided type systems~\cite{Ill-types} which refute typing formulas
+to show that ill-formed programs do not evaluate and a complementary
+approach~\cite{RamsayIncorType} that internalizes negation directly as
+a complement operator on types to support incorrectness reasoning.
+Coverage types~\cite{CoverageType} underapproximate
+test-input-generator behavior to establish coverage completeness.
+While these efforts emphasize an algorithmic characterization of
+reachability within a type system, they do not consider the logical
+underpinning that relates reachability and safety claims as we do
+here, and instead treat reachability properties independently of other
+safety considerations.
+
+We note that contemporary work on \emph{Reachability
+  Types}~\cite{ReachabilityTypes} uses ``reachability'' in a sense
+unrelated to how they are used here, and is concerned with soundly
+tracking aliasing of mutable references in higher-order effectful
+programs.
+
+\paragraph{Incorrectness Logics.}
+Our angelic modality can be viewed as establishing a witness to a
+property, and thus is closely related to operators found in
+underapproximate logics~\cite{OHP19,RBD+20,ReverseHoareLogic,
+  HyperHoareLogic,QuantitativeWeakestHyperPre,UTurn,BackwardIncorrectness}
+that establish judgements which guarantee the existence of executions
+rather than validating universal safety.
+
+However, these store-based incorrectness program logics unify pre- and
+post-condition into a single modality (angelic or demonic), which does
+not support the construction or decomposition of context structure,
+which is a central feature of our type system.  Like us, outcome
+logic~\cite{ZDS23,Zil25TOPLAS} also unifies safety and reachability
+through branch composition $\varphi \oplus \psi$, and its $\oplus$
+adjoins control-flow alternatives like our $\ctoplus$.  But, mixing
+angelic and demonic constraints within a single outcome logic
+judgement requires an \emph{a priori} partitioning of outcomes via
+$\oplus$, whereas our type system determines valid angelic choices
+compositionally, without requiring such a partition to be specified
+upfront.
+
+\paragraph{May- and must-style program analysis.}
+There has been significant prior work on combining may- and must-style
+reasoning within a program analysis~\cite{GHK+06,GN+10,NYC+12,BVR+08}.
+For example,~\citet{GN+10} alternates overapproximate may-summaries
+with underapproximate must-summaries so that callee information can
+inform caller analysis.
+
+Refutation is a type-level specialization of may/must reasoning: a
+failed refinement type check (which is may-style) does not by itself
+establish that a bug is reachable (which requires must-style
+evidence).  Refinement type
+refutations~\cite{RefinementTypeRefutations} address this gap by
+deriving \emph{must}-style witnesses that explain why typing failed,
+often through concrete counterexample instantiations, while
+symbolic-execution tooling~\cite{RefinementTypeSymbolicExecution}
+searches for such counterexamples externally.  More broadly, our
+context types provide a unified theoretical foundation for both 
+approaches by exploiting the duality between safety and
+reachability reasoning.
+
+\paragraph{Context-aware typing}
+Coeffect and graded modal type systems~\cite{Coeffects, Katsumata+14,
+  GaboardiCombining, OrchardQuantitative} annotate programs with
+context information such as usage, liveness, and security levels,
+interpreted via graded (co)monads.  Like our context types, they treat
+contextual information as a typed resource with a compositional
+algebra, but they track the demands a computation makes on its
+environment or what effects the computation has on its environment,
+rather than how a typing context \emph{interprets} value sets under
+demonic or angelic modalities.  Thus, they do not provide a mechanism
+to internalize safety/reachability modalities on the same base
+refinement, nor do they provide a bunched capability structure for
+tracking dependencies between bindings in a higher-order setting.

@@ -98,10 +98,23 @@
   keywords   = {higher-order program verification, incorrectness, refutations, type systems}
 }
 
+
+@article{OHP99,
+ author = {Peter W. O'Hearn and David J. Pym},
+ journal = {The Bulletin of Symbolic Logic},
+ number = {2},
+ pages = {215--244},
+ publisher = {[Association for Symbolic Logic, Cambridge University Press]},
+ title = {{The Logic of Bunched Implications}},
+ urldate = {2026-06-29},
+ volume = {5},
+ year = {1999}
+}
+
 @article{BunchedType,
-  title     = {On bunched typing},
+  title     = {{On Bunched Typing}},
   author    = {O'hearn, Peter},
-  journal   = {Journal of functional Programming},
+  journal   = {Journal of Functional Programming},
   volume    = {13},
   number    = {4},
   pages     = {747--796},
@@ -1281,21 +1294,6 @@
   numpages  = {14}
 }
 
-@inproceedings{SLK+21,
-  author    = {Sammler, Michael and Lepigre, Rodolphe and Krebbers, Robbert and Memarian, Kayvan and Dreyer, Derek and Garg, Deepak},
-  title     = {{RefinedC: Automating the Foundational Verification of C Code with Refined Ownership Types}},
-  year      = {2021},
-  isbn      = {9781450383912},
-  publisher = {Association for Computing Machinery},
-  address   = {New York, NY, USA},
-  url       = {https://doi.org/10.1145/3453483.3454036},
-  doi       = {10.1145/3453483.3454036},
-  booktitle = {Proceedings of the 42nd ACM SIGPLAN International Conference on Programming Language Design and Implementation},
-  pages     = {158–174},
-  numpages  = {17},
-  series    = {PLDI 2021}
-}
-
 
 @article{LG+23,
   author     = {Lehmann, Nico and Geller, Adam T. and Vazou, Niki and Jhala, Ranjit},
@@ -1516,7 +1514,7 @@
 
 @article{ReachabilityTypes,
   author     = {Bao, Yuyan and Wei, Guannan and Bra\v{c}evac, Oliver and Jiang, Yuxuan and He, Qiyang and Rompf, Tiark},
-  title      = {Reachability types: tracking aliasing and separation in higher-order functional programs},
+  title      = {{Reachability Types: Tracking Aliasing and Separation in Higher-Order Functional Programs}},
   year       = {2021},
   issue_date = {October 2021},
   publisher  = {Association for Computing Machinery},
@@ -2593,46 +2591,6 @@ numpages = {26},
 keywords = {Refinement Types, Counterexamples, Type Refutations}
 }
 
-@inproceedings{CompositionalMayMust,
-  author    = {Godefroid, Patrice and Nori, Aditya V. and Rajamani, Sriram K. and Tetali, Sai Deep},
-  title     = {Compositional may-must program analysis: unleashing the power of alternation},
-  year      = {2010},
-  isbn      = {9781605584799},
-  publisher = {Association for Computing Machinery},
-  address   = {New York, NY, USA},
-  url       = {https://doi.org/10.1145/1706299.1706307},
-  doi       = {10.1145/1706299.1706307},
-  abstract  = {Program analysis tools typically compute two types of information: (1) may  information that is true of all  program executions and is used to prove the absence of bugs in the program, and (2) must  information that is true of some  program executions and is used to prove the existence of bugs in the program. In this paper, we propose a new algorithm, dubbed SMASH, which computes both may and must information compositionally . At each procedure boundary, may and must information is represented and stored as may and must summaries, respectively. Those summaries are computed in a demand driven manner and possibly using summaries of the opposite type. We have implemented SMASH using predicate abstraction (as in SLAM) for the may part and using dynamic test generation (as in DART) for the must part. Results of experiments with 69 Microsoft Windows 7 device drivers show that SMASH can significantly outperform may-only, must-only and non-compositional may-must algorithms. Indeed, our empirical results indicate that most complex code fragments in large programs are actually often either easy to prove irrelevant to the specific property of interest using may analysis or  easy to traverse using directed testing. The fine-grained coupling and alternation  of may (universal) and must (existential) summaries allows SMASH to easily navigate through these code fragments while traditional may-only, must-only or non-compositional may-must algorithms are stuck in their specific analyses.},
-  booktitle = {Proceedings of the 37th Annual ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages},
-  pages     = {43–56},
-  numpages  = {14},
-  keywords  = {abstraction refinement, directed testing, software model checking},
-  location  = {Madrid, Spain},
-  series    = {POPL '10}
-}
-
-@article{MayMust,
-  author     = {Godefroid, Patrice and Nori, Aditya V. and Rajamani, Sriram K. and Tetali, Sai Deep},
-  title      = {Compositional may-must program analysis: unleashing the power of alternation},
-  year       = {2010},
-  issue_date = {January 2010},
-  publisher  = {Association for Computing Machinery},
-  address    = {New York, NY, USA},
-  volume     = {45},
-  number     = {1},
-  issn       = {0362-1340},
-  url        = {https://doi.org/10.1145/1707801.1706307},
-  doi        = {10.1145/1707801.1706307},
-  abstract   = {Program analysis tools typically compute two types of information: (1) may  information that is true of all  program executions and is used to prove the absence of bugs in the program, and (2) must  information that is true of some  program executions and is used to prove the existence of bugs in the program. In this paper, we propose a new algorithm, dubbed SMASH, which computes both may and must information compositionally . At each procedure boundary, may and must information is represented and stored as may and must summaries, respectively. Those summaries are computed in a demand driven manner and possibly using summaries of the opposite type. We have implemented SMASH using predicate abstraction (as in SLAM) for the may part and using dynamic test generation (as in DART) for the must part. Results of experiments with 69 Microsoft Windows 7 device drivers show that SMASH can significantly outperform may-only, must-only and non-compositional may-must algorithms. Indeed, our empirical results indicate that most complex code fragments in large programs are actually often either easy to prove irrelevant to the specific property of interest using may analysis or  easy to traverse using directed testing. The fine-grained coupling and alternation  of may (universal) and must (existential) summaries allows SMASH to easily navigate through these code fragments while traditional may-only, must-only or non-compositional may-must algorithms are stuck in their specific analyses.},
-  journal    = {SIGPLAN Not.},
-  month      = jan,
-  pages      = {43–56},
-  numpages   = {14},
-  keywords   = {abstraction refinement, directed testing, software model checking}
-}
-
-
-
 
 @inproceedings{PCRH+11,
   author    = {Pa\l{}ka, Micha\l{} H. and Claessen, Koen and Russo, Alejandro and Hughes, John},
@@ -2797,3 +2755,143 @@ pages = {67–87},
 numpages = {21},
 location = {Auckland, New Zealand}
 }
+
+
+@inproceedings{GHK+06,
+author = {Gulavani, Bhargav S. and Henzinger, Thomas A. and Kannan, Yamini and Nori, Aditya V. and Rajamani, Sriram K.},
+title = {{SYNERGY: A New Algorithm for Property Checking}},
+year = {2006},
+publisher = {Association for Computing Machinery},
+booktitle = {Proceedings of the 14th ACM SIGSOFT International Symposium on Foundations of Software Engineering},
+pages = {117–127}}
+
+@inproceedings{GN+10,
+ author = {Godefroid, Patrice and Nori, Aditya V. and Rajamani, Sriram K. and Tetali, Sai Deep},
+ title = {{Compositional May-Must Program Analysis: Unleashing the Power of Alternation}},
+ year = {2010},
+ booktitle = {Proceedings of the 37th Annual ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages},
+ pages = {43–56},
+ numpages = {14}}
+
+@inproceedings{NYC+12,
+author = {Naik, Mayur and Yang, Hongseok and Castelnuovo, Ghila and Sagiv, Mooly},
+title = {{Abstractions from Tests}},
+year = {2012},
+booktitle = {Proceedings of the 39th Annual ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages},
+pages = {373–386},
+numpages = {14}}
+
+@inproceedings{BVR+08,
+author = {Beckman, Nels E. and Nori, Aditya V. and Rajamani, Sriram K. and Simmons, Robert J.},
+title = {{Proofs from Tests}},
+year = {2008},
+booktitle = {Proceedings of the 2008 International Symposium on Software Testing and Analysis},
+pages = {3–14},
+numpages = {12}}
+
+@article{OH19,
+author = {O'Hearn, Peter},
+title = {{Separation Logic}},
+year = {2019},
+issue_date = {February 2019},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {62},
+number = {2},
+issn = {0001-0782},
+journal = {Commun. ACM}, month = jan, pages = {86–95}, numpages = {10} }
+
+@inproceedings{MSJ16,
+  author    = {Peter M{\"u}ller and Malte Schwerhoff and Alexander J. Summers},
+  title     = {{Viper: {A} Verification Infrastructure for Permission-Based Reasoning}},
+  booktitle = {Proceedings of the 17th International Conference on Verification, Model Checking, and Abstract Interpretation (VMCAI)},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {9583},
+  pages     = {41--62},
+  publisher = {Springer},
+  year      = {2016},
+  doi       = {10.1007/978-3-319-27610-6_3}
+}
+
+@article{SLK+21,
+  author    = {Michael Sammler and Rodolphe Lepigre and Robbert Krebbers and Kayvan Memarian and Derek Dreyer and Deepak Garg},
+  title     = {{RefinedC: Automating the Foundational Verification of {C} Code with Refined Ownership Types}},
+  journal   = {Proceedings of the ACM on Programming Languages},
+  volume    = {5},
+  number    = {PLDI},
+  pages     = {158--174},
+  year      = {2021},
+  doi       = {10.1145/3453483.3454036}
+}
+
+@book{AD+14,
+  author    = {Andrew W. Appel and Robert Dockins and Aquinas Hobor and Lennart Beringer and Josiah Dodds and Gordon Stewart and Sandrine Blazy and Xavier Leroy},
+  title     = {{Program Logics for Certified Compilers}},
+  publisher = {Princeton University Press},
+  year      = {2014},
+  isbn      = {9780691159348}
+}
+
+@article{FR+21,
+  author    = {Aymeric Fromherz and Aseem Rastogi and Nikhil Swamy and Sydney Gibson and Guido Martinez and Denis Merigoux and Tahina Ramananandro},
+  title     = {{Steel: Proof-Oriented Programming in a Dependently Typed Concurrent Separation Logic}},
+  journal   = {Proceedings of the ACM on Programming Languages},
+  volume    = {5},
+  number    = {ICFP},
+  pages     = {1--30},
+  year      = {2021},
+  doi       = {10.1145/3473575}
+}
+
+@article{PLM+23,
+  author    = {Christopher Pulte and Dhruv C. Makwana and Thomas Sewell and Kayvan Memarian and Peter Sewell and Neel Krishnaswami},
+  title     = {{{CN}: Verifying Systems {C} Code with Separation-Logic Refinement Types}},
+  journal   = {Proceedings of the ACM},
+  volume    = {7},
+  number    = {POPL},
+  pages     = {303--333},
+  year      = {2023},
+  publisher = {ACM New York, NY, USA},
+  doi       = {10.1145/3571194}
+}
+
+@article{JJKD18,
+  author    = {Ralf Jung and Jacques-Henri Jourdan and Robbert Krebbers and Derek Dreyer},
+  title     = {RustBelt: Securing the Foundations of the {Rust} Programming Language},
+  journal   = {Proceedings of the ACM on Programming Languages},
+  volume    = {2},
+  number    = {POPL},
+  pages     = {66:1--66:34},
+  year      = {2018},
+  publisher = {ACM New York, NY, USA},
+  doi       = {10.1145/3158154}
+}
+
+@article{GM+25,
+ author = {Ebner, Gabriel and Mart\'{\i}nez, Guido and Rastogi, Aseem and Dardinier, Thibault and Frisella, Megan and Ramananandro, Tahina and Swamy, Nikhil},
+ title = {{PulseCore: An Impredicative Concurrent Separation Logic for Dependently Typed Programs}},
+ year = {2025},
+ issue_date = {June 2025},
+ publisher = {Association for Computing Machinery},
+ address = {New York, NY, USA},
+ volume = {9},
+ number = {PLDI},
+ url = {https://doi.org/10.1145/3729311},
+ journal = {Proc. ACM Program. Lang. (PLDI)},
+ month = jun,
+ articleno = {208},
+ numpages = {24}}
+
+
+@article{YZ+25,
+author = {Yuan, Yongwei and Zhou, Zhe and Belyakova, Julia and Jagannathan, Suresh},
+title = {{Derivative-Guided Symbolic Execution}},
+year = {2025},
+issue_date = {January 2025},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {9},
+number = {POPL},
+url = {https://doi.org/10.1145/3704886},
+journal = {Proc. ACM Program. Lang.}, month = jan, articleno = {50}, numpages = {31}}
+ 

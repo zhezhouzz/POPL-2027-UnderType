@@ -1,0 +1,379 @@
+\section{Metatheory}\label{sec:meta}
+
+In this section, we provide the denotational semantics of types
+($\denot{\tau}$) and type contexts ($\denot{\Gamma}$), and state the
+soundness theorem of our type system.  The key challenge is to give a
+semantics that supports both demonic and angelic modalities
+simultaneously, together with the resource-based interpretation of
+contexts that tracks variable dependencies.  We proceed in four
+steps: we define contextual capabilities as the semantic domain
+(\S\ref{subsec:capabilities}), equip them with algebraic structure
+(\S\ref{subsec:algebra}), build a context logic over this algebra
+(\S\ref{subsec:logic}), and finally give the type denotation and
+soundness theorem (\S\ref{subsec:denotation}).
+
+\subsection{Contextual Capabilities}\label{subsec:capabilities}
+
+In a pure functional language, the free variables of a term $e$ are
+bound by its evaluation environment, a partial map from variables to
+values.  To reason about both safety and reachability, we need to
+consider not just a single environment but a \emph{set} of
+environments, representing the range of possible variable bindings
+available to demonic or angelic choices.  We call such a set a
+\emph{contextual capability}.
+
+\begin{definition}[Contextual Capability]\label{def:contextual-capability}
+  A \emph{contextual capability} $r$ is a non-empty set of
+  environments (partial maps $\Var \rightharpoonup \Val$) that all
+  share the same domain.  We write $\Res$ for the set of all
+  well-formed contextual capabilities and assume throughout that all
+  capabilities are well-formed.
+\end{definition}
+
+The domain condition ensures that all environments in a capability
+bind exactly the same set of variables, reflecting the fact that the
+free variables of a term are fixed by its typing context.  A
+capability with a single environment corresponds to a fully determined
+variable binding; a capability with multiple environments represents
+the range of choices available for demonic or angelic reasoning.
+
+We extend the standard notions of environment compatibility
+($r_1 \uparrow r_2$, meaning every environment in $r_1$ is compatible
+with every environment in $r_2$), projection ($\projectTo{r}{X}$, the
+piecewise restriction of $r$ to variable set $X$), and refinement
+($r_1 \sqsubseteq r_2$, meaning $r_1 = \projectTo{r_2}{\Dom{r_1}}$)
+from environments to capabilities in the obvious pointwise way.
+
+The refinement relation $\sqsubseteq$ plays a central role: $r_1
+\sqsubseteq r_2$ says that $r_1$ is a restriction of $r_2$ to a
+smaller variable domain, i.e., $r_2$ extends the bindings of $r_1$
+with additional variables.  This relation will serve as the Kripke
+accessibility relation in our logic (\S\ref{subsec:logic}).
+
+To express variable dependency in refinement type qualifiers, we also
+need the following notion.
+
+\begin{definition}[Fiber]\label{def:fibers}
+  For a variable $x$ and an environment $[x \mapsto v_x] \in
+  \projectTo{r}{\{x\}}$, the \emph{fiber} of $r$ over $[x \mapsto
+  v_x]$ is:
+  \[
+    \fiberOver{r}{[x \mapsto v_x]} \doteq \{\, \sigma' \in r \mid
+    \sigma'(x) = v_x \,\}.
+  \]
+  That is, $\fiberOver{r}{[x \mapsto v_x]}$ is the sub-capability of
+  $r$ consisting of all environments that assign $x$ to $v_x$.
+\end{definition}
+
+\noindent Fibers allow us to condition a capability on the value of a
+specific variable, which is essential for evaluating refinement
+qualifiers that refer to other variables bound in the typing context
+(see \S\ref{subsec:logic}).
+
+\subsection{Capability Algebra}\label{subsec:algebra}
+
+Our context logic is a bunched implication logic (BI-logic) based on a
+BI-algebra~\cite{...}, a partial commutative monoid with a pre-order
+satisfying bifunctoriality.  We equip contextual capabilities with two
+operations: a \emph{product} that composes disjoint variable bindings,
+and a \emph{sum} that merges capabilities over the same domain to
+support control-flow reasoning.
+
+We equip $\Res$ with two operations. The \emph{product} $r_1 \times
+r_2$, defined when $r_1 \uparrow r_2$ is the set of all pairwise
+unions $\sigma_1 \cup \sigma_2$ $\sigma_1 \in r_1$ and $\sigma_2 \in
+r_2$; it combines capabilities over disjoint variable domains. The
+\emph{sum} $r_1 + r_2$​, defined when $\Dom{r_1} = \Dom{r_2}$​, is
+simply $r_1 \cup r_2$​; it merges capabilities over the same domain to
+support control-flow reasoning. Together with unit $\mathbf{1} \doteq
+\{\emptyset\}$, the tuple $(\Res, +, \times, \mathbf{1}) (\Res,+,×,1)$
+forms a partial commutative semiring without zero. To enable a Kripke
+semantics for BI-logic, this semiring must be equipped with a partial
+order satisfying bifunctoriality.
+
+The natural candidates for this order are the subset ($\subseteq$) and
+superset ($\supseteq$) relations.  However, neither works for both
+modalities simultaneously: the subset order forces an
+overapproximation semantics (demonic), while the superset order forces
+underapproximation (angelic).  Since we need to support both as
+first-class operators, the Kripke order must be \emph{neutral} with
+respect to approximation.  The refinement relation $\sqsubseteq$ has
+exactly this property: $r1 \sqsubseteq r_2$ holds if $r_2$ extends
+$r_1$ with additional bindings, while preserving all existing
+environments, neither adding nor removing possible values for the
+variables already in $r_1$'s domain.  Specifically, $\sqsubseteq$
+satisfies the standard bifunctoriality property required of a
+BI-algebra: $r_1 \sqsubseteq r_1'$ and $r_2 \sqsubseteq r_2'$ implies
+$r_1 \times r_2 \sqsubseteq r_1' \times r_2'$, ensuring that $(\Res,
++, \times, \mathbf{1}, \sqsubseteq)$ forms a BI-algebra.
+
+
+\subsection{Context Logic}\label{subsec:logic}
+
+We now define a logic over the capability algebra.  The logic is a
+bunched implication logic extended with demonic and angelic
+modalities, a sum operator for control-flow reasoning, and a
+\emph{binding reference operator} that expresses how a qualifier may
+depend on specific variable bindings in the current capability.
+
+\begin{definition}[Context Logic]\label{def:context-logic}
+  The syntax of context logic is:
+  \begin{align*}
+    P, Q \;::=\; &\chtrue \mid \chfalse \mid P \chland Q \mid P \chlor Q \mid P \chimpl Q \mid P \chstar Q \mid P \chwand Q
+    \\& \mid \forall x.\, P \mid \exists x.\, P \mid \Code{Atom}(\phi)
+    \mid \demonic P \mid \angelic P \mid P \choplus Q \mid \forallM{x} P
+  \end{align*}
+  The forcing semantics over capabilities $r \in \Res$ is:
+  \begin{itemize}
+  \item $r \models \chtrue$ always; \quad $r \models \chfalse$ never;
+  \item $r \models P \chland Q$ iff $r \models P$ and $r \models Q$;
+  \item $r \models P \chlor Q$ iff $r \models P$ or $r \models Q$;
+  \item $r \models P \chimpl Q$ iff for all $r \sqsubpseteq r'$, $r' \models P$ implies $r' \models Q$;
+  \item $r \models P \chstar Q$ iff $\exists r_1, r_2.\; r_1 \times r_2 \sqsubseteq r$,\; $r_1 \models P$,\; $r_2 \models Q$;
+  \item $r \models P \chwand Q$ iff $\forall r' \uparrow r$,\; $r' \models P$ implies $r' \times r \models Q$;
+  \item $r \models \forall x.\, P$ iff $x \notin \Dom{r}$ and $\forall r \sqsubseteq r'$ with $x \in \Dom{r'}$,\; $r' \models P$;
+  \item $r \models \exists x.\, P$ iff $x \notin \Dom{r}$ and $\exists r \sqsubseteq r'$ with $x \in \Dom{r'}$,\; $r' \models P$;
+  \item $r \models \Code{Atom}(\phi)$ iff $\projectTo{r}{\Code{FV}(\phi)} = \{\,\sigma \mid \Dom{\sigma} = \Code{FV}(\phi) \land \sigma \models \phi\,\}$;
+  \item $r \models \demonic P$ iff $\exists r' \supseteq r$ such that $r' \models P$;
+  \item $r \models \angelic P$ iff $\exists r' \subseteq r$ such that $r' \models P$;
+  \item $r \models P \choplus Q$ iff $\exists r_1, r_2.\; r_1 + r_2 \sqsubseteq r$,\; $r_1 \models P$,\; $r_2 \models Q$;
+  \item $r \models \forallM{x} P$ iff $\forall [x \mapsto v_x] \in \projectTo{r}{\{x\}}.\; \fiberOver{r}{[x \mapsto v_x]} \models P[x \mapsto v_x]$.
+  \end{itemize}
+  We write $P \models Q$ iff for all $r \in \Res$, $r \models P$ implies $r \models Q$.
+\end{definition}
+
+The additive connectives ($\chland$, $\chlor$, $\chimpl$, $\forall$,
+$\exists$) are standard.  The multiplicative connectives ($\chstar$,
+$\chwand$) follow standard BI-logic semantics using the capability
+product.  We discuss the remaining operators below.
+
+\paragraph{Kripke Monotonicity}
+The implication $P \chimpl Q$ and the first-order quantifiers
+$\forall x.\, P$ and $\exists x.\, P$
+use the refinement
+relation $\sqsubseteq$ as the Kripke accessibility relation: truth at
+$r$ requires truth at all $r \sqsubseteq r'$, i.e., at all extensions
+of $r$ with additional variable bindings.  This is the standard Kripke
+semantics for implication in BI-logic~\cite{...}, and ensures the
+following monotonicity property.
+
+\begin{theorem}[Kripke Monotonicity]\label{thm:kripke-monotonicity}
+  $r \sqsubseteq r'$ and $r \models P$ implies $r' \models P$.
+\end{theorem}
+
+The use of $\sqsubseteq$ rather than $\subseteq$ or $\supseteq$ as the
+accessibility relation is what allows our logic to remain neutral with
+respect to approximation direction, as argued in
+\S\ref{subsec:algebra}.
+
+\paragraph{Atomic Propositions}
+The atomic proposition $\Code{Atom}(\phi)$ lifts a standard Boolean
+qualifier $\phi$ to a capability-level predicate with \emph{exact}
+semantics: a capability $r$ satisfies $\Code{Atom}(\phi)$ iff its
+projection to $\Code{FV}(\phi)$ contains \emph{exactly} those
+environments that satisfy $\phi$.  This neutrality leaves the choice
+of approximation direction entirely to the demonic and angelic
+modalities.
+
+\paragraph{Demonic and Angelic Modalities}
+The demonic modality $\demonic P$ holds at $r$ if $r$ can be
+\emph{extended} to some $r'$ (i.e., $r \sqsubseteq r'$) that satisfies
+$P$; this is an overapproximation, since the extension may include
+additional environments beyond what $r$ contains.  Dually, the angelic
+modality $\angelic P$ holds at $r$ if some \emph{sub-capability} $r'
+\sqsubseteq r$ satisfies $P$; this is an underapproximation, since $r'$
+witnesses a specific subset of the environments in $r$.
+
+\begin{example}[Approximation Modalities]\label{ex-approximation-modalities}
+  Let $r_x = \{[x \mapsto 1], [x \mapsto 2]\}$.  The following hold:
+  \begin{align*}
+    &r_x \models \demonic\,\Code{Atom}(x = 1) \;\judgfail \quad
+    &&r_x \models \demonic\,\Code{Atom}(0 \leq x \leq 4) \;\judgok \\
+    &r_x \models \angelic\,\Code{Atom}(x = 1) \;\judgok \quad
+    &&r_x \models \angelic\,\Code{Atom}(0 \leq x \leq 4) \;\judgfail
+  \end{align*}
+  The demonic assertion $\demonic\,\Code{Atom}(x = 1)$ fails because
+  no superset of $r_x$ satisfies $\Code{Atom}(x = 1)$ exactly (since
+  $r_x$ already contains $[x \mapsto 2]$, any superset violates
+  exactness).  The angelic assertion $\angelic\,\Code{Atom}(0 \leq x
+  \leq 4)$ fails because no sub-capability of $r_x$ satisfies
+  $\Code{Atom}(0 \leq x \leq 4)$ exactly (that would require
+  environments for $x = 0, 3, 4$ which $r_x$ does not contain).
+
+  The disjointness distinction between $\chstar$ and $\chland$ also
+  matters for these modalities.  Using the capabilities from
+  Example~\ref{ex-capability-disjointness}:
+  \begin{align*}
+    &r_x \times r_y \models (\angelic\,\Code{Atom}(1 \leq x \leq 2)) \chstar (\angelic\,\Code{Atom}(3 \leq y \leq 4)) \;\judgok \\
+    &r_{xy} \models (\angelic\,\Code{Atom}(1 \leq x \leq 2)) \chland (\angelic\,\Code{Atom}(3 \leq y \leq 4)) \;\judgok \\
+    &r_{xy} \models (\angelic\,\Code{Atom}(1 \leq x \leq 2)) \chstar (\angelic\,\Code{Atom}(3 \leq y \leq 4)) \;\judgfail
+  \end{align*}
+  The product $r_x \times r_y$ satisfies the multiplicative
+  conjunction because $x$ and $y$ are independently bound.  The
+  dependent capability $r_{xy}$ satisfies the additive conjunction but
+  not the multiplicative one, since its bindings cannot be decomposed
+  into two disjoint sub-capabilities.
+\end{example}
+
+\paragraph{Sum Operator}
+The sum $P \choplus Q$ holds at $r$ if $r$ can be split into two
+sub-capabilities $r_1 + r_2 \sqsubseteq r$, one satisfying $P$ and
+one satisfying $Q$.  This supports the context sum type $\tau_1
+\ctoplus \tau_2$ introduced in \S\ref{sec:context-typing}, where a
+single angelic context is partitioned across two control-flow branches.
+The well-formedness requirement that capabilities are non-empty ensures
+that neither branch is vacuous: every summand must witness at least one
+environment.
+
+\paragraph{Binding Reference Operator}
+The binding reference operator $\forallM{x} P$ expresses how a
+qualifier may depend on the specific binding of variable $x$ in the
+current capability.  It holds at $r$ if, for every possible binding $v_x$
+of $x$ in $r$, the sub-capability $\fiberOver{r}{[x \mapsto v_x]}$
+satisfies $P$ with $x$ substituted by $v_x$.  This is needed because
+$\Code{Atom}(\phi)$ has exact semantics: a qualifier $\phi$ mentioning
+$x$ requires capability $r$ to contain \emph{all} environments
+consistent with $x$'s full range, which conflicts with the constrained
+range of $x$ expressed by other conjuncts.  The reference operator
+resolves this by fixing the binding of $x$ before evaluating the
+qualifier, enabling dependent qualifiers to refer to specific variable
+bindings in the capability.
+
+\begin{example}[Binding Reference]\label{ex-variable-reference}
+  Consider the dependent angelic context $x{:}\urt{\Nat}{1 \leq \vnu
+    \leq 2} \ctcomma y{:}\urt{\Nat}{0 \leq \vnu < x}$, where $y$'s
+  range depends on $x$.  Its denotation is:
+  \[
+    \denot{x{:}\urt{\Nat}{1 \leq \vnu \leq 2} \ctcomma y{:}\urt{\Nat}{0 \leq \vnu < x}}
+    = \angelic\,(1 \leq x \leq 2) \chland \forallM{x}\,\angelic\,(0 \leq y < x).
+  \]
+  The reference operator $\forallM{x}$ fixes the binding of $x$ before
+  evaluating $\angelic\,(0 \leq y < x)$, so $y$'s required range is
+  determined separately for each value of $x$.  Capabilities that
+  model this formula include:
+  \begin{align*}
+    &r_1 \doteq \{[x \mapsto 1;\, y \mapsto 0]\} \\
+    &r_2 \doteq \{[x \mapsto 2;\, y \mapsto 0];\, [x \mapsto 2;\, y \mapsto 1]\}
+  \end{align*}
+  and any sum $r_1 + r_2$ of compatible such capabilities.
+\end{example}
+
+\subsection{Type Denotation and Soundness}\label{subsec:denotation}
+
+We now define the denotation of types and type contexts in terms of
+the context logic, and state the soundness theorem.  We write
+$\denot{\tau}_\Sigma : \Code{Term} \to \Code{Formula}$ for the type
+denotation under basic type context $\Sigma$, where $r \models
+\denot{\tau}_\Sigma\;e$ means that $e$ inhabits type $\tau$ under
+capability $r$.  We omit $\Sigma$ when it is clear from context.
+
+As in other refinement type systems, we require terms to be total and
+well-typed in the basic type system.  We encode these side conditions
+into the logic via the guard formula:
+\begin{align*}
+  P_{\Code{guard}} \doteq \forallM{\Dom{\Sigma}}\,\Code{Atom}(\Code{Total}(e) \land \Sigma \vdash_s e : \eraserf{\tau} \land \Sigma \vdash_{\Code{WF}} \tau).
+\end{align*}
+The reference operator $\forallM{\Dom{\Sigma}}$ is necessary here:
+without it, $\Code{Atom}(\Sigma \vdash_s x : \Nat)$ would require the
+capability to contain all possible bindings of $x$, making the basic
+type judgement trivially true regardless of $x$'s actual range.  All
+type denotations below implicitly include this guard, which we omit for
+brevity.
+
+The denotation of a term $e$ under capability $r$ captures all values
+$e$ can reduce to across all environments in $r$:
+\begin{align*}
+  \denot{\mstep{e}{x}}_\Sigma &\doteq \forallM{\Dom{\Sigma}}\,\Code{Atom}(\mstep{e}{x}).
+\end{align*}
+The reference operator again fixes variable bindings before evaluating
+the atomic reduction predicate, ensuring that in a nondeterministic
+language the denotation correctly tracks which values are reachable
+from which bindings.
+
+\begin{definition}[Type Denotation]\label{def:type-denotation}
+  \begin{align*}
+    \denot{\ort{b}{\phi}}_\Sigma\;e &\doteq \denot{\mstep{e}{\vnu}}_\Sigma \chimpl \forallM{\Code{FV}(\ort{b}{\phi})}\,\demonic\,\phi \quad \text{($\vnu$ fresh)}
+    \\\denot{\urt{b}{\phi}}_\Sigma\;e &\doteq \denot{\mstep{e}{\vnu}}_\Sigma \chimpl \forallM{\Code{FV}(\urt{b}{\phi})}\,\angelic\,\phi \quad \text{($\vnu$ fresh)}
+    \\\denot{x{:}\tau_x \ctsarr \tau}_\Sigma\;e &\doteq \denot{\tau_x}_\Sigma\;x \chimpl \denot{\tau}_{\Sigma,x{:}\eraserf{\tau_x}}\;(e\;x) \quad \text{($x$ fresh)}
+    \\\denot{x{:}\tau_x \ctwand \tau}_\Sigma\;e &\doteq \denot{\tau_x}_\Sigma\;x \chwand \denot{\tau}_{\Sigma,x{:}\eraserf{\tau_x}}\;(e\;x) \quad \text{($x$ fresh)}
+    \\\denot{\tau_1 \ctinter \tau_2}_\Sigma\;e &\doteq \denot{\tau_1}_\Sigma\;e \chland \denot{\tau_2}_\Sigma\;e
+    \\\denot{\tau_1 \ctunion \tau_2}_\Sigma\;e &\doteq \denot{\tau_1}_\Sigma\;e \chlor \denot{\tau_2}_\Sigma\;e
+    \\\denot{\tau_1 \ctoplus \tau_2}_\Sigma\;e &\doteq \denot{\tau_1}_\Sigma\;e \choplus \denot{\tau_2}_\Sigma\;e
+  \end{align*}
+\end{definition}
+
+The demonic and angelic type denotations follow directly from the
+corresponding modalities: the result of evaluating $e$ (stored in
+fresh variable $\vnu$) must satisfy $\phi$ under either the demonic or
+angelic interpretation, with the reference operator fixing the bindings
+of the free variables of $\phi$ before applying the modality.  The
+function type denotations internalize the adjunction between function
+types and context combinators: $\ctsarr$ uses additive implication
+(the parameter binding is entangled with the closure context), while
+$\ctwand$ uses multiplicative implication (the parameter binding is
+disjoint from the closure context).
+
+\begin{definition}[Type Context Denotation]\label{def:context-denotation}
+  \begin{align*}
+    \denot{\emptyset}_\Sigma &\doteq \chtrue
+    \\\denot{x{:}\tau}_\Sigma &\doteq \denot{\tau}_\Sigma\;x
+    \\\denot{\Gamma_1 \ctcomma \Gamma_2}_\Sigma &\doteq \denot{\Gamma_1}_\Sigma \chland \denot{\Gamma_2}_{(\Sigma,\,\eraserf{\Gamma_1})}
+    \\\denot{\Gamma_1 \ctstar \Gamma_2}_\Sigma &\doteq \denot{\Gamma_1}_\Sigma \chstar \denot{\Gamma_2}_\Sigma
+    \\\denot{\Gamma_1 \ctoplus \Gamma_2}_\Sigma &\doteq \denot{\Gamma_1}_\Sigma \choplus \denot{\Gamma_2}_\Sigma
+  \end{align*}
+\end{definition}
+
+The dependent conjunction $\ctcomma$ maps to additive conjunction
+$\chland$, reflecting that the second context may refer to bindings in
+the first.  The disjoint conjunction $\ctstar$ maps to multiplicative
+conjunction $\chstar$, requiring the two sub-capabilities to be
+decomposable as a product — i.e., their variable bindings are
+independent.
+
+The semantic subtyping relations used in rules T-Sub and T-CtxSub are:
+\begin{figure}[h]
+  {\small
+  \begin{flalign*}
+    &\text{\textbf{Semantic subtyping}} && \fbox{$\Gamma \vdash \tau \subty \tau$ \quad $\Gamma \ctsubseteq{X} \Gamma$}
+  \end{flalign*}
+  \mprooftr{48mm}
+  {$\forall e.\; \denot{\Gamma} \models \denot{\tau_1}\;e \chimpl \denot{\tau_2}\;e$}
+  {Sub}
+  {$\Gamma \vdash \tau_1 <: \tau_2$}
+  \quad
+  \mprooftr{66mm}
+  {$\forall r.\; r \models \denot{\Gamma_1} \implies \exists r'.\; \projectTo{r}{X} = \projectTo{r'}{X} \land r' \models \denot{\Gamma_2}$}
+  {CtxSub}
+  {$\Gamma_1 \ctsubseteq{X} \Gamma_2$}
+  }
+  \caption{Semantic subtyping relations.}
+  \label{fig:semantic-subtyping-relation}
+\end{figure}
+
+Type subtyping is encoded directly as logical implication in the
+denotational semantics.  Context subtyping uses an explicit projection
+$\projectTo{r}{X}$: the two capabilities agree on the variable set $X$
+(the free variables of the term and type), but $r'$ may differ on
+other variables, reflecting the fact that context subtyping only needs
+to hold for the variables that actually appear in the judgement.
+
+We conclude with the soundness results.
+
+\begin{theorem}[Well-Formed Operator Context]\label{thm:well-formed-operator}
+  Operator context $\Phi$ is well-formed iff for all primitive
+  operators $\primop$:
+  \begin{align*}
+    \Phi(\primop) = \overline{x{:}\ort{b_x}{\phi_x}} \ctsarr \ort{b}{\phi} \ctinter \urt{b}{\phi}
+    \quad\text{and}\quad
+    \models \denot{\overline{x{:}\ort{b_x}{\phi_x}}} \chiff \denot{\ort{b}{\phi} \ctinter \urt{b}{\phi}}\;(\primop\;\overline{x}).
+  \end{align*}
+\end{theorem}
+
+\begin{theorem}[Fundamental Theorem]\label{thm:fundamental}
+  $\Gamma \vdash e : \tau$ implies $\denot{\Gamma}_\emptyset \models \denot{\tau}_{\eraserf{\Gamma}}\;e$.
+\end{theorem}
+
+\begin{theorem}[Denotational Soundness]\label{thm:soundness}
+  $\emptyset \vdash e : \tau$ implies that for any fresh variable $x$,
+  $\{[x \mapsto v] \mid \mstep{e}{v}\} \models \denot{\tau}\;x$.
+\end{theorem}
