@@ -376,6 +376,21 @@ the target type from \autoref{sec:intro}.
   mechanism for computing partial summaries of recursive functions, a
   la IL's loop iteration rules.}
 
+  \begin{example}[Fixpoint Function] The following fixpoint function
+    defines natural number subtraction discussed in \autoref{sec:intro}.
+\begin{align*}
+    \vdash &\zzfix{\Code{sub}}{x}{\zzlam{y}{\zif{x = 0}{0}{\zif{y = 0}{x}{\Code{sub}\;(x - 1)\;(y - 1)}}}}
+    \\& : x{:}\ort{\Nat}{\top} \ctsarr y{:}\urt{\Nat}{\vnu \leq x} \ctsarr \urt{\Nat}{\vnu = 0}
+  \end{align*}\noindent
+  According to \textsc{T-Fix}, we need to show that
+\begin{align*}
+  &x{:}\ort{\Nat}{\top} \ctcomma \Code{sub}{:} (x{:}\ort{\Nat}{\vnu \prec x} \ctsarr y{:}\urt{\Nat}{\vnu \leq x} \ctsarr \urt{\Nat}{\vnu = 0})  \vdash
+  \\ &\quad \zzlam{y}{\zif{x = 0}{0}{\zif{y = 0}{x}{\Code{sub}\;(x - 1)\;(y - 1)}}}
+    \\&\quad  : y{:}\urt{\Nat}{\vnu \leq x} \ctsarr \urt{\Nat}{\vnu = 0}
+\end{align*}\noindent
+When $x = 0$, the program always returns $0$; when $x > 0$, $x - 1$ is a valid argument for the type of $\Code{sub}$, with the well-foundedness constraint $\vnu \prec x$ satisfied. Moreover, when $y$ can cover all values less than or equal to $x$, $y - 1$ can cover all values less than or equal to $x - 1$.
+  \end{example}
+
 Uses of datatype constructors and built-in operations are typed using
 the \textsc{T-AppOp} rule, which is similar to the function
 application rule but relies on an auxiliary function $\Code{Ty}$. This
