@@ -184,19 +184,32 @@ greater than 1 is also guaranteed to evaluate to a positive number.
   & \ort{\Nat}{\vnu > 0} \subty \ort{\Nat}{\vnu > 1}  \;\judgfail
   && \urt{\Nat}{\vnu > 0} \subty \urt{\Nat}{\vnu > 1}\;\judgok
 \end{align*} %
-\noindent These ideas extend naturally to a refinement relation
-between typing contexts, $\Gamma_1 \ctsubseteqA \Gamma_2$, which
-intuitively reads as ``any term that has type $\tau$ under $\Gamma_1$
-can also be typed with $\tau$ under $\Gamma_2$''.
 
 The subtyping relationship between angelic and demonic refinement
 types is more nuanced. In general, no subtyping relationship exists
-between two arbitrary refinements with different modalities:
+between two arbitrary refinements with different modalities: %
 \begin{align*}
   &\ort{\Nat}{\vnu > 0} \subty \urt{\Nat}{\vnu > 1}\;\judgfail
   & &\urt{\Nat}{\vnu > 0} \subty \ort{\Nat}{\vnu > 0} \;\judgfail
+\end{align*} %
+\noindent
+It is only possible to switch the modality of a refinement when its
+qualifier is a singleton, or when the resulting refinement type
+trivially holds ($\ort{b}{\top}$ or $\urt{b}{\bot}$): %
+\begin{align*}
+  &\ort{\Nat}{\vnu = 3} \subty \urt{\Nat}{\vnu =
+    3}\;\judgok
+  & & \urt{\Nat}{\vnu = 3} \subty \ort{\Nat}{\vnu =
+      3}\;\judgfail \\
+  & \urt{\Nat}{\vnu > 0} \subty \ort{\Nat}{\top}\;\judgok
+  & &\ort{\Nat}{\vnu > 0} \subty \urt{\Nat}{\bot}\;\judgok
 \end{align*}\noindent
-
+When the qualifier is a singleton, safety and reachability coincide
+--- there is only one possible value, so the demonic constraint (the
+value must be 3) and the angelic constraint (the value 3 must be
+reachable) make identical demands on the term. Converting to a
+supertype with a trivial qualifier, in contrast, simply throws away
+the bounds on a term entirely.
 %% \SJ{I'm not sure why the following paragraphs are related to subtyping -
 %%   the explanations don't explicitly refer to the subtyping relation, and
 %%   the may/must example seems too complicated at this stage.}
@@ -230,24 +243,6 @@ between two arbitrary refinements with different modalities:
 %% naturally supports using angelic information in the type context to
 %% verify a meaningful form of qualified safety properties, similar to
 %% that found in \citet{ZDS23} and \citet{RHLE}.
-
-It is only possible to switch the modality of a refinement when its
-qualifier is a singleton, or when the resulting refinement is trivially
-true ($\ort{b}{\top}$) or unsatisfiable ($\urt{b}{\bot}$):
-\begin{align*}
-  &\ort{\Nat}{\vnu = 3} \subty \urt{\Nat}{\vnu =
-    3}\;\judgok
-  & & \urt{\Nat}{\vnu = 3} \subty \ort{\Nat}{\vnu =
-      3}\;\judgfail \\
-  &x{:}\urt{\Nat}{\vnu > 0} \subty x{:}\ort{\Nat}{\top}\;\judgok
-  & &x{:}\ort{\Nat}{\vnu > 0} \ctsubseteqA x{:}\urt{\Nat}{\bot}\;\judgok
-\end{align*}\noindent
-When the qualifier is a singleton, safety and reachability coincide
---- there is only one possible value, so the demonic constraint (the
-value must be 3) and the angelic constraint (the value 3 must be
-reachable) make identical demands on the term. Converting to a
-supertype with a trivial qualifier, in contrast, simply throws away
-the bounds on a term entirely.
 
 % that an angelic context requiring $x$ to reach all numbers greater
 % than 1 is a subtype of one requiring $x$ to reach all positive

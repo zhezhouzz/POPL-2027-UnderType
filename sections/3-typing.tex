@@ -1,44 +1,44 @@
+\begin{figure}[!t]
+  {\small
+    \begin{alignat*}{2}
+      \text{\textbf{Variables }}& \quad &\quad& x, y, z, \vnu, ...
+      \\\text{\textbf{Data Constructors }}& \quad &d ::= \quad & () ~|~ \Code{true} ~|~ \Code{false} ~|~ \Code{O} ~|~ \Code{S} ~|~ \Code{Cons} ~|~ \Code{Nil} ~|~ ...
+      \\\text{\textbf{Built-in Operations}}& \quad & \primop ::= \quad & d ~|~ {+} ~|~ {-} ~|~ {==} ~|~ {<} ~|~ {\leq} ~|~ ...
+      \\ \text{\textbf{Constants }}& \quad &c ::= \quad & () ~|~ d\ \overline{c}\ ... % \mathbb{B} ~|~ \mathbb{Z} ~|~
+      \\ \text{\textbf{Values}}& \quad  & v ::= \quad & c ~|~ x ~|~ \zlam{x}{s}{e} ~|~ \zfix{f}{s}{x}{s}{e}
+      \\ \text{\textbf{Expressions}}& \quad & e ::=\quad & v ~|~ \zlet{x{:}s}{e}{e} ~|~ \primop\ \overline{v} ~|~  v\;v ~|~ \match{v} \overline{d\ \overline{y} \to e}
+      \\\text{\textbf{Base Types}}& \quad & b  ::= \quad &  \Code{unit} ~|~ \Code{bool} ~|~ \Code{nat} ~|~ \List[b] ~|~ ...
+      \\\text{\textbf{Basic Types}}& \quad & s  ::= \quad &  b ~|~ s\sarr s
+      \\\text{\textbf{Basic Type Context}}& \quad & \Sigma ::= \quad &  \emptyset ~|~ x{:}s ~|~ \Sigma, \Sigma
+    \end{alignat*}
+  }
+  \vspace{-12pt}
+  \caption{Syntax of \langname{}}
+  \label{fig:core-lang-syntax}
+  \end{figure}
+
 \section{Context Type System}
 \label{sec:context-typing}
 % In this section, we introduce the core language and the context type system for it.
 
 % \subsection{Core Language}
 
-\begin{figure}[h]
-  {\small
-    \begin{alignat*}{2}
-      \text{\textbf{Variables }}& \quad &\quad& x, y, z, \vnu, ...
-      \\\text{\textbf{Data Constructors }}& \quad &d ::= \quad & () ~|~ \Code{true} ~|~ \Code{false} ~|~ \Code{O} ~|~ \Code{S} ~|~ \Code{Cons} ~|~ \Code{Nil} ~|~ ...
-      \\\text{\textbf{Operations}}& \quad & \primop ::= \quad & d ~|~ {+} ~|~ {-} ~|~ {==} ~|~ {<} ~|~ {\leq} ~|~ ...
-      \\ \text{\textbf{Constants }}& \quad &c ::= \quad & () ~|~ \mathbb{B} ~|~ \mathbb{Z} ~|~ d\ \overline{c}\ ...
-      \\ \text{\textbf{Values}}& \quad  & v ::= \quad & c ~|~ x ~|~ \zlam{x}{s}{e} ~|~ \zfix{f}{s}{x}{s}{e}
-      \\ \text{\textbf{Expressions}}& \quad & e ::=\quad & v ~|~ \zlet{x{:}s}{e}{e} ~|~ \primop\ \overline{v} ~|~  v\;v ~|~ \match{v} \overline{d\ \overline{y} \to e}
-      \\\text{\textbf{Base Types}}& \quad & b  ::= \quad &  \Code{unit} ~|~ \Code{bool} ~|~ \Code{nat} ~|~ \List[b] ~|~ ...
-      \\\text{\textbf{Basic Types}}& \quad & s  ::= \quad &  b ~|~ s\sarr s
-      \\\text{\textbf{Basic Type Context}}& \quad & \Sigma ::= \quad &  \emptyset ~|~ x{:}s ~|~ \Sigma, \Sigma
-    \end{alignat*}}
-  \caption{Syntax of \langname{} \BD{Why do we include both constants
-      and data constructors?}}
-  \label{fig:core-lang-syntax}
-  \end{figure}
-
   % \paragraph{Terms, basic types, and basic type contexts}
   We formalize our proposed context type system for the core language
   (\langname{}) shown in \autoref{fig:core-lang-syntax}.  This
   language is a standard call-by-value lambda calculus with inductive
-  datatypes, pattern matching (the following uses conditional
-  expressions as syntactic sugar for \Code{match}), and recursive
-  functions. \BD{Are we assuming that built-in operations are
-    deterministic? Do we even need these?}  Expressions are written in
-  monadic normal form (MNF)~\cite{JO94}, a variant of A-Normal Form
-  (ANF)~\cite{FSDF93} that allows nested let-bindings.  The language's
-  basic types (i.e., $s$) consist of base types ($b$) and function
-  types (i.e., $s\sarr s$). Both \textbf{let}-expressions and function
-  abstractions explicitly annotate bound variables with a basic type
-  (e.g., $\zlam{x}{s}{e}$); we omit these annotations for brevity,
-  when appropriate.  A basic type context $\Sigma$ maps variables to
-  their basic types; we assume that all bound variables in $\Sigma$
-  are distinct.
+  datatypes, pattern matching (we use conditional expressions as
+  syntactic sugar for \Code{match}), and recursive
+  functions. Expressions are written in monadic normal form
+  (MNF)~\cite{JO94}, a variant of A-Normal Form (ANF)~\cite{FSDF93}
+  that allows nested let-bindings.  The language's basic types (i.e.,
+  $s$) consist of base types ($b$) and function types (i.e.,
+  $s\sarr s$). Both \textbf{let}-expressions and function abstractions
+  explicitly annotate bound variables with a basic type (e.g.,
+  $\zlam{x}{s}{e}$); we omit these annotations for brevity, when
+  appropriate.  A basic type context $\Sigma$ maps variables to their
+  basic types; we assume that all bound variables in $\Sigma$ are
+  distinct.
 
 \begin{figure}[h]
   { \small
@@ -66,16 +66,16 @@
 \end{figure}
 
 The syntax of context types is shown in
-\autoref{fig:context-types-syntax}. As in other refinement type
+\autoref{fig:context-types-syntax}. Like other refinement type
 systems, \emph{context types} refine basic types with qualifiers
-$\phi$; but each refinement is ascribed either a demonic and angelic
-modality ($\otparenth{...}$ and $\utparenth{...}$, resp.). Context
-types additionally include bunched implication ($\ctwand$), disjoint
-sums ($\ctoplus$), and standard type intersection ($\ctinter$)
-operators. Our type system shares the same intuition underlying
-bunched implication and refinement types, generally; however, its
-technical development differs significantly from both due to its
-support for angelic contexts and mixed demonic/angelic reasoning.
+$\phi$; but each refinement is additionally given either a demonic or
+angelic modality ($\otparenth{...}$ and $\utparenth{...}$,
+resp.). Context types also include independent function types
+($\ctwand$), disjoint sums ($\ctoplus$), and standard type
+intersections ($\ctinter$). While our type system shares similar
+intuitions as bunched and refinement type systems, its technical
+development differs significantly from both in order to support for
+unified reasoning about safety and reachability properties.
 
 \begin{figure}[h!]
   {\small
@@ -105,28 +105,33 @@ support for angelic contexts and mixed demonic/angelic reasoning.
 % {$\forall r. \denot{\Gamma_1}\;r \impl \exists r'. \restrictTo{r}{X} \sqsubseteq r' \land \denot{\Gamma_2}\;r'$ }
 % {CtxSub}
 % {$\Gamma_1 \ctsubseteq{X} \Gamma_2$}
-	  }
-  \caption{Selected auxiliary well-formedness relations\footnote{Well-formedness rules for types
-      and contexts check that qualifiers are well-typed with respect to the basic
-      type structure.  The $\eraserf{.}$ operator converts context types $\tau$ to basic types $s$
-      by stripping away all refinement information.  Details are provided in the supplemental material.}}
-  \label{fig:auxiliary-rules}
-  \vspace*{-.1in}
+}
+\caption{Selected rules for well-formedness relations.\footnote{The
+    full definitions are provided in the supplemental material. \BD{Do
+      we need to add these to an appendix?}}}
+% Well-formedness rules for types and contexts check that qualifiers
+% are well-typed with respect to the basic type structure.  The
+% $\eraserf{.}$ operator converts context types $\tau$ to basic types
+% $s$ by stripping away all refinement information.
+\label{fig:auxiliary-rules}
+\vspace*{-.1in}
 \end{figure}
 
-\paragraph{Well-formedness} Similar to other refinement type systems,
-our type system depends on the well-formedness relations shown in
-\autoref{fig:auxiliary-rules}. The well-formedness of types
-($\Sigma \wfvdash \tau$) and type contexts ($\Sigma \wfvdash \Gamma$)
-mostly requires type qualifiers to be well-typed in the basic type
-system and binding variables in type contexts to be unique. We would
-like to highlight that rule \textsc{WfComma} allows the second context
-to refer to variables in the first context, while rule \textsc{WfStar}
-requires that $\Gamma_1$ and $\Gamma_2$ are completely
-independent. For example, within a type context
-$\Gamma_0 \ctcomma (\Gamma_1 \ctstar \Gamma_2)$, context $\Gamma_0$ is
-closed, and $\Gamma_1$ and $\Gamma_2$ can only refer to variables in
-$\Gamma_0$.
+% \paragraph{Well-formedness}
+Our type system depends on a pair of well-formedness relations for
+context types ($\Sigma \wfvdash \tau$) and type contexts
+($\Sigma \wfvdash \Gamma$), shown in
+\autoref{fig:auxiliary-rules}. These standard relations require, e.g.,
+a context type to map ($\eraserf{.}$) to a basic type, type qualifiers
+to be well-typed in the basic type system and variable bindings in a
+type context to be unique. Importantly, in a well-formed entangled
+pair of contexts, the second context is allowed to refer to variables
+in the first (\textsc{WfComma}), while well-formed independent pairs
+of contexts cannot share any varible bindings (\textsc{WfStar}). In
+order for the type context
+$\Gamma_0 \ctcomma (\Gamma_1 \ctstar \Gamma_2)$ to be well-formed, for
+example, $\Gamma_0$ must be closed, and $\Gamma_1$ and $\Gamma_2$
+cannot refer to variables in each other.
 
 \begin{figure}[h!]
   {\small
@@ -141,7 +146,7 @@ $\Gamma_0$.
   \quad
   \mprooftr{40mm}
   {$\Gamma_1 \vdash e_1 : \tau_1 $ \quad $\Gamma_2 \ctstar x{:}\tau_1 \vdash e_2 : \tau_2$}
-  {T-LetD}
+  {T-LetI}
   {$\Gamma_1 \ctstar \Gamma_2 \vdash \zlet{x}{e_1}{e_2} : \tau_2$}
   \\[.8em]
   \mprooftr{42mm}
@@ -151,7 +156,7 @@ $\Gamma_0$.
   \quad
   \mprooftr{42mm}
   {$\eraserf{\tau_x} = s_x$ \quad  $\Gamma \ctstar x{:}\tau_x \vdash e : \tau$}
-  {T-LamD}
+  {T-LamI}
   {$\Gamma \vdash \zlam{x}{s_x}{e} : x{:}\tau_x \ctwand \tau$}
   \\[.8em]
   \mprooftr{40mm}
@@ -163,7 +168,7 @@ $\Gamma_0$.
   \mprooftr{46mm}
   {$\Gamma_1 \vdash v_1 : x{:}\tau_x \ctwand \tau$ \quad
   $\Gamma_2 \vdash v_2 : \tau_x$  }
-  {T-AppFunD}
+  {T-AppFunI}
   {$\Gamma_1 \ctstar \Gamma_2 \vdash v_1\;v_2 : \tau[x \mapsto v_2]$}
   \\[.8em]
   \mprooftr{30mm}
@@ -204,81 +209,97 @@ $\Gamma_0$.
   {T-Match}
   {$\ctbigoplus \overline{\Gamma_i} \vdash \match{v} \overline{d\ \overline{y} \to e}  : \ctbigoplus \overline{\tau_i}$}
   }
-  \caption{Declarative typing rules for the core language.}
+  \caption{Declarative typing rules \langname{}}
   \label{fig:declarative-typing-rules}
   \vspace*{-.1in}
 \end{figure}
 
-\paragraph{Variables and Constants} The typing rule for variables is standard;
-a constant is allowed to have the most precise (singleton) type, which
-has the same interpretation in both a demonic as well as angelic
-setting.  In other words, the singleton type $\ort{b}{\vnu = c}
-\ctinter \urt{b}{\vnu = c}$ coincides in both modalities because
-there is only one possible value, so the safety and reachability
-constraints are identical.
+% \paragraph{Bunched Typing}
+The rules of our type system are shown in
+\autoref{fig:declarative-typing-rules}. Every rule assumes well-formed
+typing contexts and types; we elide these assumptions for clarity. Our
+rules use the intersection of an angelic and demonic refinement to
+assign a precise (singleton) type to a term: \textsc{T-Const}, for
+example, assigns the constant $c$ the type
+$\ort{b}{\vnu = c} \ctinter \urt{b}{\vnu = c}$. The typing rules for
+let-expressions, lambda functions, and applications all have entangled
+and independent versions. In contrast to a standard bunched type
+system, the entangled version of the let rule does not require an
+explicit additive conjunction in the type context. Instead,
+\textsc{T-Let} directly entangles the new variable binding with the
+existing context, without duplicating or removing bindings.
 
-
-\paragraph{Bunched Typing} The typing rules are shown in
-\autoref{fig:declarative-typing-rules}, where rules for
-let-expressions, lambda functions, and applications have entangled and
-independent versions, respectively.  Unlike standard bunched typing,
-the entangled version does not require an explicit additive
-conjunction in the type context, as shown below:
-\begin{align*}
-\mprooftr{40mm}
-  {$\Gamma_1 \vdash e_1 : \tau_1 $ \quad $\Gamma_2 \ctcomma x{:}\tau_1 \vdash e_2 : \tau_2$}
-  {T-Bunched-Let}
-  {$\Gamma_1 \ctcomma \Gamma_2 \vdash \zlet{x}{e_1}{e_2} : \tau_2$}
-\qquad
-\mprooftr{26mm}
-  {$\Gamma_1 \ctcomma \Gamma_2 \ctcomma \Gamma_2 \vdash e : \tau$}
-  {T-Bunched-Contraction}
-  {$\Gamma_1 \ctcomma \Gamma_2 \vdash e : \tau$}
-\end{align*}\noindent
-Unlike standard bunched typing, the entangled version does not require
-an explicit additive conjunction in the type context. The
-well-formedness condition requiring unique variable bindings means
-that the substructural contraction rule
-\textsc{T-Bunched-Contraction}, which duplicates bindings, is
-incompatible with our system. Instead, our \textsc{T-Let} rule
-directly entangles the newly added entangled context with the existing
-context, without duplicating or consuming bindings.
-
-
-\begin{example}[Let-expression] Consider the following example of typing for a let-expression:
+\begin{example}[Typing Let-Expressions]
+  To see why, consider the following let-expression:
 \begin{align*}
     x{:}\ort{\Nat}{\vnu < 10} \vdash \zlet{y}{x - 3}{x - y} : \ort{\Nat}{\vnu \leq 3}
 \end{align*}\noindent
-Note that binding term $x - 3$ and body expression $x - y$ share the same variable $x$. If we apply standard bunched typing rule \textsc{T-Bunched-Let}, we require the following type context:
+Here, both the bound term $x - 3$ and the let-body $x - y$ refer to
+the variable $x$. Applying the standard bunched typing rule for
+let-expressions requires the following type context: %
 \begin{align*}
-  \\&\underbrace{x{:}\ort{\Nat}{\vnu < 10}}_{\texttt{for $x - 3$}} \ctcomma \underbrace{x{:}\ort{\Nat}{\vnu < 10}}_{\texttt{for $x - y$}} \vdash \zlet{y}{x - 3}{x - y} : \ort{\Nat}{\vnu \leq 3}
-\end{align*}\noindent
-which requires using rule \textsc{T-Bunched-Contraction} to ``duplicate'' binding $x$. However, our \textsc{T-Let} rule optimizes this ``duplicate-then-consume'' pattern to yield the following derivation:
+  &\underbrace{x{:}\ort{\Nat}{\vnu < 10}}_{\texttt{for $x - 3$}} \ctcomma \underbrace{x{:}\ort{\Nat}{\vnu < 10}}_{\texttt{for $x - y$}} \vdash \zlet{y}{x - 3}{x - y} : \ort{\Nat}{\vnu \leq 3}
+\end{align*} %
+\noindent
+Bunched type system normally include a contraction rule that would
+allow us to obtain such a context by duplicating the binding for $x$
+in our target judgment. Since a context with duplicate bindings is not
+well-formed in our type system, \textsc{T-Let} instead directly
+combines this ``duplicate-then-consume'' pattern:
 \begin{align*}
-  &x{:}\ort{\Nat}{\vnu < 10} \vdash x - 3 : \ort{\Nat}{\vnu < 7}
-  \\&\underline{x{:}\ort{\Nat}{\vnu < 10} \ctcomma y{:}\ort{\Nat}{\vnu < 7} \vdash x - y : \ort{\Nat}{\vnu \leq 3}}
-  \\&x{:}\ort{\Nat}{\vnu < 10} \vdash \zlet{y}{x - 3}{x - y} : \ort{\Nat}{\vnu \leq 3}
+  & x{:}\ort{\Nat}{\vnu < 10} \vdash x - 3 : \ort{\Nat}{\vnu < 7} \\
+  & \underline{x{:}\ort{\Nat}{\vnu < 10} \ctcomma y{:}\ort{\Nat}{\vnu
+    < 7} \vdash x - y : \ort{\Nat}{\vnu \leq 3}} (\textsc{T-Let}) \\
+  & x{:}\ort{\Nat}{\vnu < 10} \vdash \zlet{y}{x - 3}{x - y} : \ort{\Nat}{\vnu \leq 3}
 \end{align*}\noindent
 \end{example}
 
-\paragraph{Subtyping}  Subsumption rules for both types (\textsc{T-Sub}) and
-type contexts (\textsc{T-CtxSub}) use a \emph{semantic
-  subtyping} relation. The type subtyping relation $\Gamma
-\vdash\tau_1 \subty \tau_2$ is standard, i.e., inhabitants of the
-denotation of $\tau_1$ are also inhabitants of the denotation of
-$\tau_2$ under the denotation of context $\Gamma$. The context
-subtyping relation $\Gamma_1 \ctsubseteq{X} \Gamma_2$ follows the
-intuition in previous examples, where we restrict comparison to a set
-of variables $X$.  For example,
+
+% Unlike
+% standard bunched typing, the entangled version does not require an
+% explicit additive conjunction in the type context, as shown below:
+% \begin{align*}
+% \mprooftr{40mm}
+%   {$\Gamma_1 \vdash e_1 : \tau_1 $ \quad $\Gamma_2 \ctcomma x{:}\tau_1 \vdash e_2 : \tau_2$}
+%   {T-Bunched-Let}
+%   {$\Gamma_1 \ctcomma \Gamma_2 \vdash \zlet{x}{e_1}{e_2} : \tau_2$}
+% \qquad
+% \mprooftr{26mm}
+%   {$\Gamma_1 \ctcomma \Gamma_2 \ctcomma \Gamma_2 \vdash e : \tau$}
+%   {T-Bunched-Contraction}
+%   {$\Gamma_1 \ctcomma \Gamma_2 \vdash e : \tau$}
+% \end{align*}\noindent
+
+% \noindent These ideas extend naturally to a refinement relation
+% between typing contexts, $\Gamma_1 \ctsubseteqA \Gamma_2$, which
+% intuitively reads as ``any term that has type $\tau$ under $\Gamma_1$
+% can also be typed with $\tau$ under $\Gamma_2$''.
+
+% \paragraph{Variables and Constants}
+
+% \paragraph{Subtyping}
+
+Our system is equipped with subsumption rules for both types
+(\textsc{T-Sub}) and type contexts (\textsc{T-CtxSub}). These rules
+rely \emph{semantic} relations which appeal to the denotations of
+types and typing contexts; the definitions of both relations are given
+in \autoref{sec:meta}. The intuition behind the subtyping relation
+$\Gamma \vdash\tau_1 \subty \tau_2$ is standard, i.e., inhabitants of
+the denotation of $\tau_1$ are also inhabitants of the denotation of
+$\tau_2$ under the denotation of context $\Gamma$. The refinement
+relation between typing contexts, $\Gamma_1 \ctsubseteq{X} \Gamma_2$
+can be understood as ``any term that has type $\tau$ under $\Gamma_1$
+can also be typed with $\tau$ under $\Gamma_2$'', where the comparison
+is confined to a particular set of variables $X$.  For example,
 \begin{align*}
   x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\urt{\Nat}{\top}
   \ctsubseteq{\{y\}} y{:}\urt{\Nat}{\top} \ctcomma z{:}\urt{\Nat}{\top}
 \end{align*}
-Rule \textsc{T-CtxSub} only requires the context-subtyping relation
-to hold over free variables of the term and type. Further details are
-given in~\autoref{sec:meta}.
+The \textsc{T-CtxSub} rule restricts the context refinement relation
+to the free variables of a target term and type.
 
-\begin{example}[Substructural rules] We can derive the following substructural rules from \textsc{T-CtxSub}:
+\begin{example}[Substructural rules] We can derive the following
+  standard substructural rules from \textsc{T-CtxSub}:
   \begin{align*}
     \mprooftr{25mm}
       {$\Gamma_2 \vdash e : \tau$}
@@ -299,49 +320,65 @@ The variable-set constraint in context subtyping relation is important.
 For example, framing rule \textsc{T-Frame} actually requires that $\Gamma_1 \ctstar \Gamma_2 \ctsubseteq{\Code{FV}(e) \cup \Code{FV}(\tau)} \Gamma_2$ holds, which is silently forced by $\Gamma_2 \vdash e : \tau$, requiring that the domain of $\Gamma_2$ is a subset of $\Code{FV}(e) \cup \Code{FV}(\tau)$.
 \end{example}
 
-\paragraph{Fixpoint Functions} As in standard refinement type systems,
-we require all well-typed terms to be total. Thus, rule \textsc{T-Fix}
-forces its first argument to have only base type and to always
-decrease according to some well-founded relation $\prec$. This
-decreasing constraint means the first parameter type cannot have
-angelic modality; otherwise, the argument of recursive call
-$v_{\Code{arg}}$ is required to have the following type:
+Similar to other refinement type systems, we require all well-typed
+terms to be total. Thus, when typing the body of a recursive function,
+\textsc{T-Fix} requires that the first argument of recursive
+applications is decreasing according to some well-founded relation
+$\prec$. As a consequnce, the first parameter of a recursive function
+needs to be a base type and it cannot have cannot have an angelic
+refinement.  To see why, observe that if we relaxed this restriction,
+the recursive argument $v_{\Code{arg}}$ could have the following type: %
 \begin{align*}
   x{:}\urt{b}{\phi} \vdash v_{\Code{arg}} : \urt{b}{\phi} \interty
   \ort{b}{\vnu \prec x}
-\end{align*}\noindent
-where type $\urt{b}{\phi}$ requires $v_{\Code{arg}}$ to reach all
-values that $x$ can reach; however, type $\ort{b}{\vnu \prec x}$
-disallows $v_{\Code{arg}}$ from reaching the value of $x$. Such an
-argument does not exist, which means recursive calls can never happen
-when the parameter type has an angelic modality. Moreover, the
-parameter type for a recursive function cannot be an independent arrow
-type, i.e.,
-\begin{align*}
-  \Gamma \ctcomma x{:}\tau_x \ctcomma f{:}(x{:}\ort{b}{\phi \land \vnu \prec x} \ctwand \tau) \vdash e : \tau \quad \judgfail
-\end{align*}\noindent
-The parameter type of $f$ in a recursive call must reference $x$ via
-the well-foundedness constraint $\nu \prec x$, which establishes a
-dependency between the argument of the recursive call and the original
-parameter $x$.  This dependency makes the independence requirement of
-$\ctwand$ impossible to satisfy, since $\ctwand$ requires the argument
-context to be independent of the closure context, whereas well-founded
-induction inherently requires the opposite. Although \textsc{T-Fix}
-therefore restricts the function type of recursive calls to use
-$\ctsarr$, the subsumption rule \textsc{T-Sub} still allows a
-recursive function to be typed against arbitrary function types after
-the fact, provided the subtyping relation holds.
+\end{align*}%
+\noindent The first component of this intersection type requires
+$v_{\Code{arg}}$ to reach everything that $x$ can, but the second
+component prohibits $v_{\Code{arg}}$ from reaching the value of $x$
+itself! Intuitively, such a $v_{\Code{arg}}$ cannot exist, meaning
+that a function that does not satisfy this restriction can never call
+itself recursively!
 
-\begin{example}[Fixpoint Function] The following fixpoint function defines natural number subtraction discussed in \autoref{sec:intro}.
+The totality requirement also forces \textsc{T-Fix} to stipulate that
+the first parameter of a recursive function use the entangled arrow
+type. When typing the body of the function, the binding for the
+recursive call references the original recursive parameter $x$ via the
+well-foundedness constraint $\nu \prec x$, leading to a dependency
+between the argument of any recursive call and $x$.
+% cannot use the independent arrow type, i.e., %
+% \begin{align*}
+%   \Gamma \ctcomma x{:}\tau_x \ctcomma f{:}(x{:}\ort{b}{\phi \land \vnu \prec x} \ctwand \tau) \vdash e : \tau \quad \judgfail
+% \end{align*} %
+% \noindent
+This dependency makes the independence requirement of $\ctwand$
+impossible to satisfy: $\ctwand$ requires the argument context to be
+independent of the closure context, but well-founded induction
+inherently requires the opposite. Notably, although \textsc{T-Fix}
+restricts the function type of recursive calls to use $\ctsarr$, the
+subsumption rule \textsc{T-Sub} can be used to relax this restriction
+afterwards, provided the subtyping relation holds.
+
+\begin{example}[Fixpoint Function] The following fixpoint function
+  defines natural number subtraction discussed in \autoref{sec:intro}.
 \begin{align*}
-  \vdash &\zzfix{f}{x}{\zzlam{y}{\zif{x = 0}{0}{\zif{y = 0}{x}{f\;(x - 1)\;(y - 1)}}}}
+  \vdash &\zzfix{\Code{sub}}{x}{\zzlam{y}{\zif{x = 0}{0}{\zif{y = 0}{x}{\Code{sub}\;(x - 1)\;(y - 1)}}}}
   \\& : x{:}\ort{\Nat}{\top} \ctsarr y{:}\ort{\Nat}{\top} \ctsarr \ort{\Nat}{\vnu = x -_{\Nat} y}
 \end{align*}\noindent
-With a stronger function type that enables type checking with rule \textsc{T-Fix}, we can convert it into the type shown in \autoref{sec:intro} via  \textsc{T-Sub}.
+After first establishing that $\Code{sub}$ has this stronger type
+using \textsc{T-Fix}, we can apply \textsc{T-Sub} to check it against
+the target type from \autoref{sec:intro}.
 \begin{align*}
   \vdash ... :  x{:}\urt{\Nat}{\vnu > 0} \ctwand y{:}\urt{\Nat}{\vnu > 0} \ctwand \urt{\Nat}{\vnu > 0}
 \end{align*}\noindent
 \end{example}
+
+\BD{I have to to admit that this example is somewhat unsatisfying ---
+  the semantic subtyping relation (which we haven't shown yet) is
+  doing a lot of work here, and we're forced to come up with a very
+  precise safety type before weakening it... Somewhat relatedly,
+  someone familiar with SMASH may be surprised that we don't have some
+  mechanism for computing partial summaries of recursive functions, a
+  la IL's loop iteration rules.}
 
 \paragraph{Datatypes and pattern matching} The last two rules
 in \autoref{fig:declarative-typing-rules} type data constructors and
