@@ -237,7 +237,7 @@ let-expressions requires the following type context: %
   &\underbrace{x{:}\ort{\Nat}{\vnu < 10}}_{\texttt{for $x - 3$}} \ctcomma \underbrace{x{:}\ort{\Nat}{\vnu < 10}}_{\texttt{for $x - y$}} \vdash \zlet{y}{x - 3}{x - y} : \ort{\Nat}{\vnu \leq 3}
 \end{align*} %
 \noindent
-Bunched type system normally include a contraction rule that would
+Bunched type systems normally include a contraction rule that would
 allow us to obtain such a context by duplicating the binding for $x$
 in our target judgment. Since a context with duplicate bindings is not
 well-formed in our type system, \textsc{T-Let} instead directly
@@ -321,9 +321,9 @@ terms to be total. Thus, when typing the body of a recursive function,
 \textsc{T-Fix} requires that the first argument of recursive
 applications is decreasing according to some well-founded relation
 $\prec$. As a consequence, the first parameter of a recursive function
-needs to be a base type and it cannot have cannot have an angelic
-refinement.  To see why, observe that if we relaxed this restriction,
-the recursive argument $v_{\Code{arg}}$ could have the following type: %
+needs to be a base type and it cannot have an angelic refinement.  To
+see why, observe that if we relaxed this restriction, the recursive
+argument $v_{\Code{arg}}$ could have the following type: %
 \begin{align*}
   x{:}\urt{b}{\phi} \vdash v_{\Code{arg}} : \urt{b}{\phi} \interty
   \ort{b}{\vnu \prec x}
@@ -441,8 +441,8 @@ under a weaker typing context:
 Here, $x{:}\urt{\Nat}{\vnu > 0}$ admits a world containing
 environments that only reach the false branch, and thus cannot be
 decomposed into two contexts that separately both branches.  This rule
-also also enables the standard refinement type judgement with
-unreachable control flows:
+also enables the standard refinement type judgement with unreachable
+control flows:
 \begin{align*}
   &x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}\vdash 5 : \ort{\Nat}{\vnu > 4}
   \\&x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}\vdash \Code{S}\;y : \ort{\Nat}{\vnu = x} \interty \urt{\Nat}{\vnu = x}
