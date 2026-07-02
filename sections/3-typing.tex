@@ -74,7 +74,7 @@ resp.). Context types also include independent function types
 ($\ctwand$), disjoint sums ($\ctoplus$), and standard type
 intersections ($\ctinter$). While our type system shares similar
 intuitions as bunched and refinement type systems, its technical
-development differs significantly from both in order to support for
+development differs significantly from both in order to support 
 unified reasoning about safety and reachability properties.
 
 \begin{figure}[h!]
@@ -106,9 +106,7 @@ unified reasoning about safety and reachability properties.
 % {CtxSub}
 % {$\Gamma_1 \ctsubseteq{X} \Gamma_2$}
 }
-\caption{Selected rules for well-formedness relations.\footnote{The
-    full definitions are provided in the supplemental material. \BD{Do
-      we need to add these to an appendix?}}}
+\caption{Selected rules for well-formedness relations.}
 % Well-formedness rules for types and contexts check that qualifiers
 % are well-typed with respect to the basic type structure.  The
 % $\eraserf{.}$ operator converts context types $\tau$ to basic types
@@ -120,8 +118,10 @@ unified reasoning about safety and reachability properties.
 % \paragraph{Well-formedness}
 Our type system depends on a pair of well-formedness relations for
 context types ($\Sigma \wfvdash \tau$) and type contexts
-($\Sigma \wfvdash \Gamma$), shown in
-\autoref{fig:auxiliary-rules}. These standard relations require, e.g.,
+($\Sigma \wfvdash \Gamma$); select rules are shown in
+\autoref{fig:auxiliary-rules}.\footnote{The
+    full set of definitions are provided in the supplemental material.}
+ These standard relations require, e.g.,
 a context type to map ($\eraserf{.}$) to a basic type, type qualifiers
 to be well-typed in the basic type system and variable bindings in a
 type context to be unique. Importantly, in a well-formed entangled
@@ -245,7 +245,7 @@ combines this ``duplicate-then-consume'' pattern:
 \begin{align*}
   & x{:}\ort{\Nat}{\vnu < 10} \vdash x - 3 : \ort{\Nat}{\vnu < 7} \\
   & \underline{x{:}\ort{\Nat}{\vnu < 10} \ctcomma y{:}\ort{\Nat}{\vnu
-    < 7} \vdash x - y : \ort{\Nat}{\vnu \leq 3}} (\textsc{T-Let}) \\
+    < 7} \vdash x - y : \ort{\Nat}{\vnu \leq 3}}\quad (\textsc{T-Let}) \\
   & x{:}\ort{\Nat}{\vnu < 10} \vdash \zlet{y}{x - 3}{x - y} : \ort{\Nat}{\vnu \leq 3}
 \end{align*}\noindent
 \end{example}
@@ -277,7 +277,7 @@ combines this ``duplicate-then-consume'' pattern:
 
 Our system is equipped with subsumption rules for both types
 (\textsc{T-Sub}) and type contexts (\textsc{T-CtxSub}). These rules
-rely \emph{semantic} relations which appeal to the denotations of
+rely on \emph{semantic} relations which appeal to the denotations of
 types and typing contexts; the definitions of both relations are given
 in \autoref{sec:meta}. The intuition behind the subtyping relation
 $\Gamma \vdash\tau_1 \subty \tau_2$ is standard, i.e., inhabitants of
@@ -312,14 +312,14 @@ to the free variables of a target term and type.
       {T-Exchange}
       {$\Gamma_1 \ctstar \Gamma_2 \vdash e : \tau$}
     \end{align*}\noindent
-The variable-set constraint in context subtyping relation is important.
-For example, framing rule \textsc{T-Frame} actually requires that $\Gamma_1 \ctstar \Gamma_2 \ctsubseteq{\Code{FV}(e) \cup \Code{FV}(\tau)} \Gamma_2$ holds, which is silently forced by $\Gamma_2 \vdash e : \tau$, requiring that the domain of $\Gamma_2$ is a subset of $\Code{FV}(e) \cup \Code{FV}(\tau)$.
+The variable-set constraint in the context subtyping relation is important.
+For example, the framing rule \textsc{T-Frame} actually requires that $\Gamma_1 \ctstar \Gamma_2 \ctsubseteq{\Code{FV}(e) \cup \Code{FV}(\tau)} \Gamma_2$ holds, which is silently forced by $\Gamma_2 \vdash e : \tau$, requiring that the domain of $\Gamma_2$ is a subset of $\Code{FV}(e) \cup \Code{FV}(\tau)$.
 \end{example}
 
 Similar to other refinement type systems, we require all well-typed
 terms to be total. Thus, when typing the body of a recursive function,
-\textsc{T-Fix} requires that the first argument of recursive
-applications is decreasing according to some well-founded relation
+\textsc{T-Fix} requires that the first argument of any recursive
+application is decreasing according to some well-founded relation
 $\prec$. As a consequence, the first parameter of a recursive function
 needs to be a base type and it cannot have an angelic refinement.  To
 see why, observe that if we relaxed this restriction, the recursive
@@ -354,39 +354,39 @@ restricts the function type of recursive calls to use $\ctsarr$, the
 subsumption rule \textsc{T-Sub} can be used to relax this restriction
 afterwards, provided the subtyping relation holds.
 
-\begin{example}[Fixpoint Function] The following fixpoint function
-  defines natural number subtraction discussed in \autoref{sec:intro}.
-\begin{align*}
-  \vdash &\zzfix{\Code{sub}}{x}{\zzlam{y}{\zif{x = 0}{0}{\zif{y = 0}{x}{\Code{sub}\;(x - 1)\;(y - 1)}}}}
-  \\& : x{:}\ort{\Nat}{\top} \ctsarr y{:}\ort{\Nat}{\top} \ctsarr \ort{\Nat}{\vnu = x -_{\Nat} y}
-\end{align*}\noindent
-After first establishing that $\Code{sub}$ has this stronger type
-using \textsc{T-Fix}, we can apply \textsc{T-Sub} to check it against
-the target type from \autoref{sec:intro}.
-\begin{align*}
-  \vdash ... :  x{:}\urt{\Nat}{\vnu > 0} \ctwand y{:}\urt{\Nat}{\vnu > 0} \ctwand \urt{\Nat}{\vnu > 0}
-\end{align*}\noindent
-\end{example}
+%% \begin{example}[Fixpoint Function] The following fixpoint function
+%%   defines natural number subtraction discussed in \autoref{sec:intro}.
+%% \begin{align*}
+%%   \vdash &\zzfix{\Code{sub}}{x}{\zzlam{y}{\zif{x = 0}{0}{\zif{y = 0}{x}{\Code{sub}\;(x - 1)\;(y - 1)}}}}
+%%   \\& : x{:}\ort{\Nat}{\top} \ctsarr y{:}\ort{\Nat}{\top} \ctsarr \ort{\Nat}{\vnu = x -_{\Nat} y}
+%% \end{align*}\noindent
+%% After first establishing that $\Code{sub}$ has this stronger type
+%% using \textsc{T-Fix}, we can apply \textsc{T-Sub} to check it against
+%% the target type from \autoref{sec:intro}.
+%% \begin{align*}
+%%   \vdash ... :  x{:}\urt{\Nat}{\vnu > 0} \ctwand y{:}\urt{\Nat}{\vnu > 0} \ctwand \urt{\Nat}{\vnu > 0}
+%% \end{align*}\noindent
+%% \end{example}
 
-\BD{I have to to admit that this example is somewhat unsatisfying ---
-  the semantic subtyping relation (which we haven't shown yet) is
-  doing a lot of work here, and we're forced to come up with a very
-  precise safety type before weakening it... Somewhat relatedly,
-  someone familiar with SMASH may be surprised that we don't have some
-  mechanism for computing partial summaries of recursive functions, a
-  la IL's loop iteration rules.}
+%% \BD{I have to to admit that this example is somewhat unsatisfying ---
+%%   the semantic subtyping relation (which we haven't shown yet) is
+%%   doing a lot of work here, and we're forced to come up with a very
+%%   precise safety type before weakening it... Somewhat relatedly,
+%%   someone familiar with SMASH may be surprised that we don't have some
+%%   mechanism for computing partial summaries of recursive functions, a
+%%   la IL's loop iteration rules.}
 
   \begin{example}[Fixpoint Function] The following fixpoint function
-    defines natural number subtraction discussed in \autoref{sec:intro}.
+    defines natural number subtraction.
 \begin{align*}
     \vdash &\zzfix{\Code{sub}}{x}{\zzlam{y}{\zif{x = 0}{0}{\zif{y = 0}{x}{\Code{sub}\;(x - 1)\;(y - 1)}}}}
-    \\& : x{:}\ort{\Nat}{\top} \ctsarr y{:}\urt{\Nat}{\vnu \leq x} \ctsarr \urt{\Nat}{\vnu = 0}
+    \\& : x{:}\ort{\Nat}{\top} \ctsarr y{:}\urt{\Nat}{\vnu \leq x} \ctsarr \urt{\Nat}{\vnu \leq x}
   \end{align*}\noindent
   According to \textsc{T-Fix}, we need to show that
 \begin{align*}
   &x{:}\ort{\Nat}{\top} \ctcomma \Code{sub}{:} (x{:}\ort{\Nat}{\vnu \prec x} \ctsarr y{:}\urt{\Nat}{\vnu \leq x} \ctsarr \urt{\Nat}{\vnu = 0})  \vdash
   \\ &\quad \zzlam{y}{\zif{x = 0}{0}{\zif{y = 0}{x}{\Code{sub}\;(x - 1)\;(y - 1)}}}
-    \\&\quad  : y{:}\urt{\Nat}{\vnu \leq x} \ctsarr \urt{\Nat}{\vnu = 0}
+    \\&\quad  : y{:}\urt{\Nat}{\vnu \leq x} \ctsarr \urt{\Nat}{\vnu \leq x}
 \end{align*}\noindent
 When $x = 0$, the program always returns $0$; when $x > 0$, $x - 1$ is a valid argument for the type of $\Code{sub}$, with the well-foundedness constraint $\vnu \prec x$ satisfied. Moreover, when $y$ can cover all values less than or equal to $x$, $y - 1$ can cover all values less than or equal to $x - 1$.
   \end{example}
@@ -437,15 +437,16 @@ less than $4$. To do so, we first partition the type context using
 into type contexts for each branch that satisfy the first set of
 assumptions of \textsc{T-Match}:
 \begin{align*}
-  &\Gamma_{\Code{trueBranch}} \vdash 0 : \ort{\Nat}{\vnu = 0} \interty \urt{\Nat}{\vnu = 0}
-  \\&\Gamma_{\Code{falseBranch}} \vdash \Code{S}\;y : \ort{\Nat}{\vnu = x} \interty \urt{\Nat}{\vnu = x}
+  &\Gamma_{\Code{trueBranch}} \vdash 0 : \ort{\Nat}{\vnu = 0} \interty \urt{\Nat}{\vnu = 0}\\
+  &\Gamma_{\Code{falseBranch}} \vdash \Code{S}\;y : \ort{\Nat}{\vnu = x} \interty \urt{\Nat}{\vnu = x}
 \end{align*}\noindent
 We can then type each branch under these contexts to show that
 \ref{ex:oplusWeak} has the target type:
 \begin{align*}
-  &\Gamma_{\Code{trueBranch}} \vdash 3 : \ort{\Nat}{\vnu < 4}
-  \\&\underline{\Gamma_{\Code{falseBranch}} \vdash 5 : \ort{\Nat}{\top}}
-  \\&\Gamma_{\Code{trueBranch}} \ctoplus \Gamma_{\Code{falseBranch}} \vdash  \zmatchNat{x}{3}{y}{5} : \ort{\Nat}{\vnu < 4} \ctoplus \ort{\Nat}{\top}
+  & \quad \quad \quad \Gamma_{\Code{trueBranch}} \vdash 3 : \ort{\Nat}{\vnu < 4} \quad
+   \Gamma_{\Code{falseBranch}} \vdash 5 : \ort{\Nat}{\top}\\[.2mm]
+  \hline\vspace*{.5mm}
+&\Gamma_{\Code{trueBranch}} \ctoplus \Gamma_{\Code{falseBranch}} \vdash  \zmatchNat{x}{3}{y}{5} : \ort{\Nat}{\vnu < 4} \ctoplus \ort{\Nat}{\top}
 \end{align*}\noindent
 Observe we are unable to check \ref{ex:oplusWeak} against this type
 under a weaker typing context:
@@ -455,7 +456,7 @@ under a weaker typing context:
 \end{align*}\noindent
 Here, $x{:}\urt{\Nat}{\vnu > 0}$ admits a world containing
 environments that only reach the false branch, and thus cannot be
-decomposed into two contexts that separately both branches.  This rule
+decomposed into two contexts that fully separate both branches.  This rule
 also enables the standard refinement type judgement with unreachable
 control flows:
 \begin{align*}

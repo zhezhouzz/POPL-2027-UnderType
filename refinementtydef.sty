@@ -107,8 +107,8 @@
 \newcommand{\zif}[3]{\mykw{if}\ {#1}\ \mykw{then}\ {#2} \ \mykw{else}\ {#3}}
 \newcommand{\zmatchNat}[4]{\mykw{match}\ {#1}\ \mykw{with}\ \Code{O} \to {#2} \ | \ \Code{S}\ {#3} \to {#4} }
 \newcommand{\zzlam}[2]{\lambda {#1}.{#2} }
-\newcommand{\zfix}[5]{\mykw{fix}{#1}{:}{#2}.\zlam{#3}{#4}{#5}}
-\newcommand{\zzfix}[3]{\mykw{fix}{#1}.\zzlam{#2}{#3}}
+\newcommand{\zfix}[5]{\mykw{fix}\;{#1}{:}{#2}.\zlam{#3}{#4}{#5}}
+\newcommand{\zzfix}[3]{\mykw{fix}\;{#1}.\zzlam{#2}{#3}}
 \newcommand{\zrec}[3]{\mykw{fix}\;{#1}{:}{#2}.{#3}}
 \newcommand{\zletappU}[2]{\mykw{let}\;{#1}\;\mykw{in}\;{#2}}
 % \newcommand{\zloop}[1]{\mykw{loop}\;{#1}}

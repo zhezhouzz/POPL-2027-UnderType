@@ -71,10 +71,11 @@ or the other and are not equipped to simultaneously consider both
 safety and reachability properties together, limiting their ability to
 address useful verification tasks.  As a simple example, consider a
 specification for subtraction over natural numbers
-($\Code{-}_{\Code{nat}}$) that types argument $x$ and $y$ as non-negative
-integers and asserts that the result is a non-negative integer less than
-or equal to $x$:
-      \[x : \{\Code{int}\, |\ 0 \leq \nu\}, y : \Code{\{\Code{int}\, |\, 0 \leq \nu \}}
+($\Code{-}_{\Code{nat}}$) that types argument $x$ and $y$ as
+non-negative integers and asserts that the result is a non-negative
+integer less than or equal to $x$\footnote{In the following, we drop
+  the ``\Code{nat}'' subscript when obvious from context.}:
+  \[x : \{\Code{int}\, |\ 0 \leq \nu\}, y : \Code{\{\Code{int}\, |\, 0 \leq \nu \}}
       \vdash x\;\Code{-}_{\Code{nat}}\;y : \{\Code{int}\, |\, 0 \leq
       \nu \leq x \}\]
 \noindent A standard implementation is $\Code{-}_{\Code{nat}} \doteq
@@ -98,8 +99,6 @@ since it may also return values outside this range.  A unified
 treatment would simultaneously establish that the standard
 implementation is both \emph{sound} and \emph{complete} with respect
 to its type specification.
-
-\newcommand{\natminus}{\ensuremath{-_{\Code{nat}}}}
 
 Unifying safety and reachability reasoning in a type-based setting
 is challenging in functional languages, where functions may have
@@ -244,7 +243,7 @@ The paper makes the following contributions:
   interpreted in our context logic, to support both safety and
   reachability reasoning for deterministic functional programs. We
   further generalize context types to a functional language extended
-  with nondeterministic choice (Section~\ref{nondet}), where the
+  with nondeterministism (Section~\ref{sec:extension}), where the
   result context is allowed to be disjoint from the input context.
 \item We formalize our core language and type system in Rocq, and
   provide corresponding helper tactics to automate reasoning about

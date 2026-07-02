@@ -359,8 +359,8 @@ yield are tied to $x$'s.
   \;\judgok \quad
   &\emptyset \vdash \text{\ref{ex:EnCon}}[y] : \urt{\Nat}{\vnu > 0}
     \;\judgok \\
-  & \emptyset \vdash \text{\ref{ex:DisjCon}}[x -_{\Code{nat}} y] : \urt{\Nat}{\vnu
-    > 0} \;\judgok \quad & \emptyset \vdash \text{\ref{ex:EnCon}}[x -_{\Code{nat}} y] : \urt{\Nat}{\vnu > 0} \;\judgfail
+  & \emptyset \vdash \text{\ref{ex:DisjCon}}[x - y] : \urt{\Nat}{\vnu
+    > 0} \;\judgok \quad & \emptyset \vdash \text{\ref{ex:EnCon}}[x - y] : \urt{\Nat}{\vnu > 0} \;\judgfail
 \end{align*}\noindent
 To deal with this situation, our type system includes two constructors
 over typing contexts, ``$\ctcomma$'' and ``$\ctstar$'', each of which
@@ -377,10 +377,10 @@ following two subtyping judgments reflecting the typing of the \Code{let}-body
 in $C_{\mathit{en}}$ and $C_{\mathit{dis}}$, resp:
 \begin{align*}
   &x{:}\urt{\Nat}{\vnu > 0} \ctstar y{:}\urt{\Nat}{\vnu > 1}
-    \vdash \urt{\Nat}{\vnu = x -_{\Code{nat}} y} \subty \urt{\Nat}{\vnu > 0}
+    \vdash \urt{\Nat}{\vnu = x - y} \subty \urt{\Nat}{\vnu > 0}
     \;\judgok \\
   &x{:}\urt{\Nat}{\vnu > 0} \ctcomma y{:}\urt{\Nat}{\vnu > 1}
-    \vdash \urt{\Nat}{\vnu = x -_{\Code{nat}} y} \subty \urt{\Nat}{\vnu > 0} \;\judgfail
+    \vdash \urt{\Nat}{\vnu = x - y} \subty \urt{\Nat}{\vnu > 0} \;\judgfail
 \end{align*}\noindent
 Under the first context, we can freely choose both $2$ for $y$
 \emph{and} an arbitrary value larger than $2$ for $x$, from which the
@@ -393,7 +393,7 @@ chosen independently. Concretely, the angelic guarantee for $y$ under
 ``$\ctcomma$'' only promises that $y$ can reach every value satisfying
 $\vnu > 1$ \emph{for some fixed instantiation of $x$}.  Since the
 subtyping goal requires producing every positive number as $x
--_{\Code{nat}} y$, and this requires pairing each candidate value of
+- y$, and this requires pairing each candidate value of
 $x$ with an independently chosen $y$, a dependent context cannot be
 used to supply such pairs.  This is evidenced by $C_{en}$, which
 always collapses its result to 0, rather than all positive numbers.
@@ -464,7 +464,7 @@ context composition operators:
   \Gamma \vdash e_f : x{:}\tau_x \ctsarr \tau \quad &\text{ iff } \quad \Gamma \ctcomma x{:}\tau_x \vdash (e_f\;x) : \tau
   \\\Gamma \vdash e_f : x{:}\tau_x \ctwand \tau \quad &\text{ iff } \quad \Gamma \ctstar x{:}\tau_x \vdash (e_f\;x) : \tau
 \end{align*}\noindent
-Thus, ($\Code{-}_{\Code{nat}}$) can be given the following types:
+Thus, ($\Code{-}$) can be given the following types:
 \begin{align*}
   &\vdash (-) : x{:}\urt{\Nat}{\vnu > 0} \ctwand y{:}\urt{\Nat}{\vnu > 0} \ctwand \urt{\Nat}{\vnu > 0}
   \\&\vdash (-) : x{:}\urt{\Nat}{\vnu > 0} \ctsarr y{:}\urt{\Nat}{\vnu > 0} \ctwand \urt{\Nat}{\vnu > 0}
