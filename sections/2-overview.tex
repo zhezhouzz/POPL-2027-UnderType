@@ -69,25 +69,26 @@ captures the reachability properties the term exhibits. Under an empty
 typing context, a deterministic term\footnote{All terms in \langname{}
   are deterministic, a restriction that we will lift in
   \autoref{sec:extension}.} can only be assigned either an empty or
-singleton angelic type, as it can evaluate to at most one
-value. Richer reachability properties naturally arise when reasoning
-about the behavior of a term within a broader program context. To do
-so, our type system \emph{holistically} considers the \emph{set} of
-values that a term can evaluate to, i.e., its image, under a
-restricted \emph{set} of environments, or \emph{world}, that are
-constrained by a typing context.
+singleton angelic type, as it can evaluate to at most one value.
+Richer reachability properties naturally arise when reasoning about
+the behavior of a term within a broader program context. To do so, our
+type system \emph{holistically} considers the \emph{set} of values
+that a term can evaluate to, i.e., its image, under a restricted
+\emph{set} of environments, or \emph{capability}, that are constrained
+by a typing context.
 % Put another way, our type system describes the image of a term under
 % a set of environments consistent with a typing context.
 
 Intuitively, a demonic refinement acts as an \emph{upper} bound: when
 used as a result type, $\ort{b}{\phi}$ requires every value in the
 image of that term to satisfy $\phi$; in a type context, it only
-admits worlds in which every environment maps the variable to a value
-satisfying $\phi$. An angelic refinement, in contrast, acts as a
+admits capabilities in which every environment maps the variable to a
+value satisfying $\phi$. An angelic refinement, in contrast, acts as a
 \emph{lower} bound: as a result type, $\urt{b}{\phi}$ requires the
 image of a term to contain every value satisfying $\phi$; in a type
-context, it forces worlds to at least include environments mapping the
-variable to each value that satisfies $\phi$. To illustrate, % these
+context, it forces capabilities to at least include environments
+mapping the variable to each value that satisfies $\phi$. To
+illustrate, % these
 % bounds manifest in the guarantees provided by our type system,
 consider the following typing judgements involving non-singleton
 reachability properties: %
@@ -97,13 +98,13 @@ reachability properties: %
 \end{align*} %
 \noindent
 Clearly, for any particular positive number, the term $x - 3$ will
-evaluate to that number, assuming an appropriate assignment to
-$x$. The angelic types of $x$ in each typing context place different
-restrictions on the set of possible assignments to $x$ in a world:
-under the first, for every $n$ greater than $3$, the world must
-contain an environment in which $x$ is $n$; the second allows a world
-which does not include a mapping of $x$ to $4$, and thus cannot
-guarantee the image of $x - 3$ includes $1$.
+evaluate to that number, assuming an appropriate assignment to $x$.
+The angelic types of $x$ in each typing context place different
+restrictions on the set of possible assignments to $x$ in a
+capability: under the first, for every $n$ greater than $3$, the
+capability must contain an environment in which $x$ is $n$; the second
+allows a capability which does not include a mapping of $x$ to $4$,
+and thus cannot guarantee the image of $x - 3$ includes $1$.
 
 Switching the modality on the type of $x$ inverts the direction of
 these bounds, thereby restricting the set of assignments to $x$ that
@@ -114,9 +115,9 @@ demonically qualified variables are somewhat limited:
   x{:}\ort{\Nat}{\vnu > 2} \vdash x - 3 : \urt{\Nat}{\vnu > 0}\;\judgfail % \\
   % x{:}\ort{\Nat}{\vnu > 4} \vdash x - 3 : \urt{\Nat}{\vnu > 0}\;\judgfail
 \end{align*} %
-Observe there are many singleton worlds containing an environment in
-which $x$ is assigned a value greater than $2$, but $x - 3$ can only
-reach a single result value under such a world!
+Observe there are many singleton capabilities containing an
+environment in which $x$ is assigned a value greater than $2$, but
+$x - 3$ can only reach a single result value under such a capability!
 % If all we know about $x$ is that it cannot be less than $2$, after
 % all, there's little we can say about the values that $x-3$ can reach!
 Similarly, our type system can provide somewhat limited safety
@@ -124,7 +125,7 @@ guarantees when only equipped with reachability assumptions:
 \begin{align*}
   x{:}\urt{\Nat}{\vnu > 4} \vdash x - 3 : \ort{\Nat}{\vnu > 0}\;\judgfail
 \end{align*} %
-The image of $x - 3$ includes a non-positive value in any world
+The image of $x - 3$ includes a non-positive value in any capability
 containing an environment where $x$ is $4$, but the lower bound
 provided by the angelic type of $x$ in the typing judgement above does
 not preclude such an environment. Using our type system, it is still
@@ -541,10 +542,9 @@ must reach.
 
 The typing judgement $\Gamma \vdash e : \tau_1 \ctoplus \tau_2$ states
 that $e$ can be typed with $\tau_1$ and $\tau_2$ in some partitioning
-of $\Gamma$, and that all worlds consistent with $\Gamma$ are
-accounted for by $\tau_1$ and $\tau_2$ --- no possibility is lost.
-For example:
-\begin{align*}
+of $\Gamma$, and that all capabilities consistent with $\Gamma$ are
+accounted for by $\tau_1$ and $\tau_2$ --- no possibility is lost. For
+example: \begin{align*}
   &x{:}\urt{\Nat}{\vnu < 10} \vdash x + 1 : \ort{\Nat}{odd(\vnu)} \ctoplus
     \ort{\Nat}{even(\vnu)} \;\judgok \notag \\
   &x{:}\urt{\Nat}{\top} \vdash \zif{x == 0}{3}{5} : \ort{\Nat}{\vnu <

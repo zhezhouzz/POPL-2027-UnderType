@@ -1,4 +1,5 @@
-\section{Metatheory}\label{sec:meta}
+\section{Metatheory} %
+\label{sec:meta}
 
 In this section, we provide the denotational semantics of types
 ($\denot{\tau}$) and type contexts ($\denot{\Gamma}$), and state the
@@ -12,7 +13,8 @@ steps: we define contextual capabilities as the semantic domain
 (Section~\ref{subsec:logic}), and finally give the type denotation and
 soundness theorem (Section~\ref{subsec:denotation}).
 
-\subsection{Contextual Capabilities}\label{subsec:capabilities}
+\subsection{Contextual Capabilities}%
+\label{subsec:capabilities}
 
 In a pure functional language, the free variables of a term $e$ are
 bound by its evaluation environment, a partial map from variables to
@@ -20,29 +22,29 @@ values.  To reason about both safety and reachability, we need to
 consider not just a single environment but a \emph{set} of
 environments, representing the range of possible variable bindings
 available to demonic or angelic choices.  We call such a set a
-\emph{contextual capability}.
+\emph{contextual capability} or capability for short.
 
 \begin{definition}[Contextual Capability]\label{def:contextual-capability}
   A \emph{contextual capability} is a non-empty set of environments
   (partial maps, $\Var \rightharpoonup \Val$) that all share the same
-  domain.  We use $r$ to range over contextual capabilities and $\Res$
-  as the set of all well-formed contextual capabilities; we assume
-  throughout that all capabilities are well-formed.
+  domain.  We use $r$ to range over capabilities and $\Res$ as the set
+  of all capabilities.
 \end{definition}
 
 The domain condition ensures that all environments in a capability
 bind exactly the same set of variables, reflecting the fact that the
 free variables of a term are fixed by its typing context.  A
 capability with a single environment corresponds to a fully determined
-variable binding; a capability with multiple environments represents
-the range of choices available for demonic or angelic reasoning.
+variable binding; a capability with multiple environments encodes the
+range of choices available for safety or reachability reasoning.
 
 We extend the standard notions of environment compatibility
 ($r_1 \uparrow r_2$, meaning every environment in $r_1$ is compatible
 with every environment in $r_2$), projection ($\projectTo{r}{X}$, the
-piecewise restriction of $r$ to variable set $X$), and refinement
-($r_1 \sqsubseteq r_2$, meaning $r_1 = \projectTo{r_2}{\Dom{r_1}}$)
-from environments to capabilities in the obvious pointwise way.
+piecewise restriction of $r$ to the variables in a set $X$), and
+refinement ($r_1 \sqsubseteq r_2$, meaning
+$r_1 = \projectTo{r_2}{\Dom{r_1}}$) from environments to capabilities
+in the obvious pointwise way.
 
 The refinement relation $\sqsubseteq$ plays a central role: $r_1
 \sqsubseteq r_2$ says that $r_1$ is a restriction of $r_2$ to a
@@ -53,51 +55,51 @@ accessibility relation in our logic (Section~\ref{subsec:logic}).
 To express variable dependency in refinement type qualifiers, we also
 need the following notion.
 
-\begin{definition}[Fiber]\label{def:fibers}
-  For a variable $x$ and an environment $[x \mapsto v_x] \in
+\begin{definition}[Fiber] %
+  \label{def:fibers}
+  For a variable $x$ and an environment $[x \mapsto v] \in
   \projectTo{r}{\{x\}}$, the \emph{fiber} of $r$ over $[x \mapsto
-  v_x]$ is:
+  v]$ is:
   \[
-    \fiberOver{r}{[x \mapsto v_x]} \doteq \{\, \sigma \in r \mid
-    \sigma(x) = v_x \,\}.
+    \fiberOver{r}{[x \mapsto v]} \doteq \{\, \sigma \in r \mid
+    \sigma(x) = v \,\}.
   \]
-  That is, $\fiberOver{r}{[x \mapsto v_x]}$ is the sub-capability of
-  $r$ consisting of all environments that assign $x$ to $v_x$.
+  That is, $\fiberOver{r}{[x \mapsto v]}$ is the largest subset of $r$
+  comprised of environments that map $x$ to $v$.
 \end{definition}
 \noindent Fibers allow us to condition a capability on the value of a
 specific variable, which is essential for evaluating refinement
 qualifiers that refer to other variables bound in the typing context
 (see Section~\ref{subsec:logic}).
 
-\subsection{Capability Algebra}\label{subsec:algebra}
+\subsection{Capability Algebra} %
+\label{subsec:algebra}
 
-Our context logic is a bunched implication logic (BI-logic) based on a
-BI-algebra~\cite{...}, a partial commutative monoid with a pre-order
-satisfying bifunctoriality.  We equip contextual capabilities with two
-operations: a \emph{product} that composes disjoint variable bindings,
-and a \emph{sum} that merges capabilities over the same domain to
-support control-flow reasoning.
-
-We equip $\Res$ with two operations. The \emph{product} $r_1 \times
-r_2$, defined when $r_1 \uparrow r_2$, is the set of all pairwise
-unions $\sigma_1 \cup \sigma_2$ with $\sigma_1 \in r_1$
-and $\sigma_2 \in
-r_2$.
+Our context logic is a bunched implication (BI) logic~\cite{OHP99}
+based on a BI-algebra~\cite{Pym+02}, a partial commutative monoid with
+a pre-order satisfying bifunctoriality.  We equip contextual
+capabilities with two operations: a \emph{product} that composes
+disjoint variable bindings, and a \emph{sum} that merges capabilities
+over the same domain to support control-flow reasoning. The
+\emph{product} $r_1 \times r_2$ operation, defined when
+$r_1 \uparrow r_2$, is the set of all pairwise unions
+$\sigma_1 \cup \sigma_2$ with $\sigma_1 \in r_1$ and
+$\sigma_2 \in r_2$.
 %% it combines capabilities over disjoint variable domains. \ZZ{the varaible domain is allowed to be not disjointed, which is important for resource duplication which will be used in sec 4 and 5. }
-The
-\emph{sum} operation, $r_1 + r_2$, defined when $\Dom{r_1} = \Dom{r_2}$, is
-simply $r_1 \cup r_2$; it merges capabilities over the same domain to
-support control-flow reasoning. Together with unit $\mathbf{1} \doteq
-\{\emptyset\}$, the tuple $(\Res, +, \times, \mathbf{1})$
-forms a partial commutative semiring without zero. To enable a Kripke
-semantics for BI-logic, this semiring must be equipped with a partial
-order satisfying bifunctoriality.
+The \emph{sum} operation, $r_1 + r_2$, defined when
+$\Dom{r_1} = \Dom{r_2}$, is simply $r_1 \cup r_2$; it merges
+capabilities over the same domain to support control-flow
+reasoning. Together with unit $\mathbf{1} \doteq \{\emptyset\}$, the
+tuple $(\Res, +, \times, \mathbf{1})$ forms a partial commutative
+semiring without zero. To enable a Kripke semantics for BI-logic, this
+semiring must be equipped with a partial order satisfying
+bifunctoriality.
 
 The natural candidates for this order are the subset ($\subseteq$) and
 superset ($\supseteq$) relations.  However, neither works for both
-modalities simultaneously: the subset order forces an
-overapproximation semantics (demonic), while the superset order forces
-underapproximation (angelic).  Since we need to support both as
+angelic and demonic modalities simultaneously: the subset order forces
+an overapproximation semantics (demonic), while the superset order
+forces underapproximation (angelic).  Since we need to support both as
 first-class operators, the Kripke order must be \emph{neutral} with
 respect to approximation.  The refinement relation $\sqsubseteq$ has
 exactly this property: $r_1 \sqsubseteq r_2$ holds if $r_2$ extends
@@ -106,17 +108,18 @@ environments, neither adding nor removing possible values for the
 variables already in $r_1$'s domain.  Specifically, $\sqsubseteq$
 satisfies the standard bifunctoriality property required of a
 BI-algebra: $r_1 \sqsubseteq r_1'$ and $r_2 \sqsubseteq r_2'$ implies
-$r_1 \times r_2 \sqsubseteq r_1' \times r_2'$, ensuring that $(\Res,
-+, \times, \mathbf{1}, \sqsubseteq)$ forms a BI-algebra.
+$r_1 \times r_2 \sqsubseteq r_1' \times r_2'$, ensuring that
+$(\Res, +, \times, \mathbf{1}, \sqsubseteq)$ forms a BI-algebra.
 
 
-\subsection{Context Logic}\label{subsec:logic}
+\subsection{Context Logic} %
+\label{subsec:logic}
 
-We now define a logic over the capability algebra.  The logic is a
-bunched implication logic extended with demonic and angelic
-modalities, a sum operator for control-flow reasoning, and a
-\emph{binding reference operator} that expresses how a qualifier may
-depend on specific variable bindings in the current capability.
+We now define a logic over the capability algebra.  The logic is a BI
+logic extended with demonic and angelic modalities, a sum operator for
+control-flow reasoning, and a \emph{binding reference operator} that
+expresses how a qualifier may depend on specific variable bindings in
+the current capability.
 
 \begin{definition}[Context Logic]\label{def:context-logic}
   The syntax of our context logic is:
@@ -139,7 +142,7 @@ depend on specific variable bindings in the current capability.
   \item $r \models \demonic P$ iff $\exists r', r \subseteq r'$ such that $r' \models P$;
   \item $r \models \angelic P$ iff $\exists r', r' \subseteq r$ such that $r' \models P$;
   \item $r \models P \choplus Q$ iff $\exists r_1, r_2.\; r_1 + r_2 \sqsubseteq r$,\; $r_1 \models P$,\; $r_2 \models Q$;
-  \item $r \models \forallM{x} P$ iff $\forall [x \mapsto v_x] \in \projectTo{r}{\{x\}}.\; \fiberOver{r}{[x \mapsto v_x]} \models P[x \mapsto v_x]$.\footnote{
+  \item $r \models \forallM{x} P$ iff $\forall [x \mapsto v] \in \projectTo{r}{\{x\}}.\; \fiberOver{r}{[x \mapsto v]} \models P[x \mapsto v]$.\footnote{
 We extend the binding operator to sets of variables by iterated
 application: for a finite set $X = \{x_1, \ldots, x_n\}$,
 we write $\forallM{X}\, P$ as shorthand
@@ -155,7 +158,7 @@ before evaluating $P$.}
 
 The additive connectives ($\chland$, $\chlor$, $\chimpl$, $\chforall$,
 $\chexists$) are standard.  The multiplicative connectives ($\chstar$,
-$\chwand$) follow standard BI-logic semantics using the capability
+$\chwand$) follow standard BI-logic semantics using our algebra's
 product.  We discuss the remaining operators below.
 
 \paragraph{Kripke Monotonicity}
@@ -174,63 +177,69 @@ following monotonicity property.
 
 The use of $\sqsubseteq$ rather than $\subseteq$ or $\supseteq$ as the
 accessibility relation is what allows our logic to remain neutral with
-respect to approximation direction, as argued in
-Section~\ref{subsec:algebra}.
+respect to approximation direction, per \autoref{subsec:algebra}.
 
 \paragraph{Atomic Propositions}
-The atomic proposition $\Code{Atom}(\phi)$ lifts a standard Boolean
-qualifier $\phi$ to a capability-level predicate with \emph{exact}
-semantics: a capability $r$ satisfies $\Code{Atom}(\phi)$ iff its
-projection to $\Code{FV}(\phi)$ contains \emph{exactly} those
-environments that satisfy $\phi$.  This neutrality leaves the choice
-of approximation direction entirely to the demonic and angelic
-modalities.
+The atomic proposition $\Code{Atom}(\phi)$ lifts a standard formula
+$\phi$ to a capability-level predicate with \emph{exact} semantics: a
+capability $r$ satisfies $\Code{Atom}(\phi)$ iff its projection to
+$\Code{FV}(\phi)$ contains \emph{exactly} those environments that
+satisfy $\phi$.  This neutrality leaves the choice of approximation
+direction entirely to the demonic and angelic modalities.
 
 \paragraph{Demonic and Angelic Modalities}
-The demonic modality $\demonic P$ holds at $r$ if there exists an upper bound $r'$ (i.e., $r \subseteq r'$) that satisfies
-$P$; this models an overapproximation since $r'$ extends $r$ with
-additional environments.  Dually, the angelic modality $\angelic P$ holds at
-$r$ if some lower bound $r' \subseteq r$ satisfies $P$;
-this models an underapproximation since $r'$ witnesses a specific
-subset of the environments in $r$.
-We would like to highlight that the refinement relation $\sqsubseteq$ can also be used to extend the entailment of demonic and angelic modalities. Consider the following example:
-\begin{align*}
-\begin{array}{c @{\hspace{1.5em}} c @{\hspace{1.5em}} c}
-  {\{[x \mapsto 1], [x \mapsto 2]\}} & \sqsubseteq & {\boxed{r' \doteq \{[x \mapsto 1; y \mapsto 2], [x \mapsto 2; y \mapsto 7]\}}} \\[0.6em]
-  \vsubseteq & & \vsubseteq \\[0.6em]
-  {\boxed{r \doteq \{[x \mapsto 1]\}}} & \sqsubseteq & {\{[x \mapsto 1; y \mapsto 2]\}}
-\end{array}
-\end{align*}\noindent
-For any angelic formula $\angelic P$, if we have $r \models \angelic P$, then we also have $r' \models \angelic P$. We have a similar result for the demonic formula $\demonic P$ (i.e., $r \models \demonic P$ implies $r' \models \demonic P$) as illustrated in the following example:
-\begin{align*}
-\begin{array}{c @{\hspace{1.5em}} c @{\hspace{1.5em}} c}
-  {\{[x \mapsto 1]\}} & \sqsubseteq & {\boxed{r' \doteq \{[x \mapsto 1; y \mapsto 2]\}}} \\[0.6em]
-  \vsupseteq & & \vsupseteq \\[0.6em]
-  {\boxed{r \doteq \{[x \mapsto 1], [x \mapsto 2]\}}} & \sqsubseteq & {\{[x \mapsto 1; y \mapsto 2], [x \mapsto 2; y \mapsto 7]\}}
-\end{array}
-\end{align*}\noindent
-Note that the subset relation is reversed; however, the refinement relation is not.
-
-
-\begin{example}[Approximation Modalities]\label{ex-approximation-modalities}
-  Let $r_x = \{[x \mapsto 1], [x \mapsto 2]\}$.  The following hold:
+The demonic modality $\demonic P$ holds at $r$ if there exists an
+upper bound $r'$ (i.e., $r \subseteq r'$) that satisfies $P$; this
+models an overapproximation since $r'$ extends $r$ with additional
+environments.  Dually, the angelic modality $\angelic P$ holds at $r$
+if some lower bound $r' \subseteq r$ satisfies $P$; this models an
+underapproximation since $r'$ witnesses a specific subset of the
+environments in $r$.
+\begin{example}%[Modalities as Lower- and Upper-Bounds]%
+  \label{ex-approximation-modalities}
+  Let $r_1$ be $\{[x \mapsto 1], [x \mapsto 2]\}$. The following hold:
   \begin{align*}
-    &r_x \models \demonic\,\Code{Atom}(x = 1) \;\judgfail \quad
-    &&r_x \models \demonic\,\Code{Atom}(0 \leq x \leq 4) \;\judgok \\
-    &r_x \models \angelic\,\Code{Atom}(x = 1) \;\judgok \quad
-    &&r_x \models \angelic\,\Code{Atom}(0 \leq x \leq 4) \;\judgfail
+    &r_1 \models \demonic\,\Code{Atom}(x = 1) \;\judgfail \quad
+    &&r_1 \models \demonic\,\Code{Atom}(0 \leq x \leq 4) \;\judgok \\
+    &r_1 \models \angelic\,\Code{Atom}(x = 1) \;\judgok \quad
+    &&r_1 \models \angelic\,\Code{Atom}(0 \leq x \leq 4) \;\judgfail
   \end{align*}
   The demonic assertion $\demonic\,\Code{Atom}(x = 1)$ fails because
   no superset of $r_x$ satisfies $\Code{Atom}(x = 1)$ exactly (since
   $r_x$ already contains $[x \mapsto 2]$, any superset violates
-  exactness).  The angelic assertion $\angelic\,\Code{Atom}(0 \leq x
-  \leq 4)$ fails because no subset of $r_x$ satisfies
-  $\Code{Atom}(0 \leq x \leq 4)$ exactly (that would require
-  environments for $x = 0, 3, 4$ which $r_x$ does not contain).
+  exactness).  The angelic assertion
+  $\angelic\,\Code{Atom}(0 \leq x \leq 4)$ fails because no subset of
+  $r_x$ satisfies $\Code{Atom}(0 \leq x \leq 4)$ exactly (that would
+  require environments for $x = 0, 3, 4$ which $r_x$ does not
+  contain).
 
-  Let $r_y \doteq \{[y \mapsto 3], [y \mapsto 4]\}$ and
-      $r_{xy} \doteq \{[x \mapsto 1, y \mapsto 3], [x \mapsto 2, y \mapsto 4]\}$.
-  Then:
+
+Critically, entailment of demonic and angelic modalities is also
+maintained by the refinement relation $\sqsubseteq$. To illustrate,
+consider the following set of capabilities
+\begin{align*}
+\begin{array}{c @{\hspace{1.5em}} c @{\hspace{1.5em}} c}
+  {\boxed{r_1 \doteq \{[x \mapsto 1], [x \mapsto 2]\}}}
+  & \sqsubseteq
+  & {\boxed{r_2 \doteq \{[x \mapsto 1; y \mapsto 2], [x \mapsto 2; y \mapsto 7]\}}} \\[0.6em]
+  \vsubseteq & & \vsubseteq \\[0.6em]
+  {\boxed{r_3 \doteq \{[x \mapsto 1]\}}}
+  & \sqsubseteq
+  & {\boxed{r_4 \doteq \{[x \mapsto 1; y \mapsto 2]\}}}
+\end{array}
+\end{align*}\noindent
+For any angelic formula $\angelic P$ where $r_3 \models \angelic P$,
+then it is also the case $r_2 \models \angelic P$. We have a similar
+result for the demonic formula $\demonic P$, as
+$r_1 \models \demonic P$ implies $r_4 \models \demonic P$.  Under the
+later modality, the subset relation is reversed; however, the
+refinement relation is not.
+
+Finally, to illustrate how the product operation interacts with the
+logic's two conjunction operators, let
+$r_y \doteq \{[y \mapsto 3], [y \mapsto 4]\}$ and
+$r_{xy} \doteq \{[x \mapsto 1, y \mapsto 3], [x \mapsto 2, y \mapsto
+4]\}$.  Then:
 \begin{align*}
 &r_x \times r_y \models (\angelic\,\Code{Atom}(1 \leq x \leq 2)) \chstar (\angelic\,\Code{Atom}(3 \leq y \leq 4)) \;\judgok \\
 &r_{xy} \models (\angelic\,\Code{Atom}(1 \leq x \leq 2)) \chland (\angelic\,\Code{Atom}(3 \leq y \leq 4)) \;\judgok \\
@@ -246,30 +255,30 @@ disjoint sub-capabilities.
 
 \paragraph{Sum Operator}
 The sum $P \choplus Q$ holds at $r$ if $r$ can be split into two
-sub-capabilities $r_1 + r_2 \sqsubseteq r$, one satisfying $P$ and
-one satisfying $Q$.  This supports the context sum type $\tau_1
-\ctoplus \tau_2$ introduced in Section~\ref{sec:context-typing}, where a
-single angelic context is partitioned across two control-flow branches.
-The well-formedness requirement that capabilities are non-empty ensures
-that neither branch is vacuous: every summand must witness at least one
-environment.
+sub-capabilities $r_1 + r_2 \sqsubseteq r$, one satisfying $P$ and one
+satisfying $Q$.  This supports the context sum type
+$\tau_1 \ctoplus \tau_2$ from in \autoref{sec:context-typing}, which
+allows a capability to be partioned into two subsets. The requirement
+that capabilities be non-empty ensures that neither branch is vacuous:
+both summand must contain at least one environment.
 
 \paragraph{Binding Reference Operator}
 The binding reference operator $\forallM{x} P$ expresses how a
 qualifier may depend on the specific binding of variable $x$ in the
-current capability.  It holds at $r$ if, for every possible binding $v_x$
-of $x$ in $r$, the sub-capability $\fiberOver{r}{[x \mapsto v_x]}$
-satisfies $P$ with $x$ substituted by $v_x$.  This is needed because
+current capability.  It holds at $r$ if, for every possible binding
+$v$ of $x$ in $r$, the sub-capability $\fiberOver{r}{[x \mapsto v]}$
+satisfies $P$ with $x$ substituted by $v$.  This is needed because
 $\Code{Atom}(\phi)$ has exact semantics: a qualifier $\phi$ mentioning
-$x$ requires capability $r$ to contain \emph{all} environments
-consistent with $x$'s full range, which conflicts with the constrained
-range of $x$ expressed by other conjuncts.  The binding reference operator
-resolves this by fixing the binding of $x$ before evaluating the
-qualifier, enabling dependent qualifiers to refer to specific variable
-bindings in the capability.
+$x$ requires a satisfying capability $r$ to contain \emph{all}
+environments consistent with $x$'s full range, which conflicts with
+the constrained range of $x$ expressed by other conjuncts.  The
+binding reference operator resolves this by fixing the binding of $x$
+before evaluating the qualifier, enabling dependent qualifiers to
+refer to specific variable bindings in the capability.
 
-\begin{example}[Binding Reference Operation]\label{ex-variable-reference}
-  Consider the dependent angelic context
+\begin{example}% [Binding Reference Operation]
+  \label{ex-variable-reference}
+  Consider the entangled context
   \[x{:}\urt{\Nat}{1 \leq \vnu
     \leq 2} \ctcomma y{:}\urt{\Nat}{0 \leq \vnu < x}\]
 \noindent where $y$'s
@@ -281,18 +290,17 @@ bindings in the capability.
   The operation $\forallM{x}\,\angelic\,(0 \leq y < x)$ fixes the
   binding of $x$ before evaluating $\angelic\,(0 \leq y < x)$, so
   $y$'s required range is determined separately for each value of $x$.
-  Capabilities that model this formula include:
-  \begin{align*}
-    &r_1 \doteq \{[x \mapsto 1;\, y \mapsto 0]\} \\
-    &r_2 \doteq \{[x \mapsto 2;\, y \mapsto 0];\, [x \mapsto 2;\, y \mapsto 1]\}
-  \end{align*}
-  and any sum $r_1 + r_2$ of compatible such capabilities.
+  Capabilities that model this formula include
+  $\{[x \mapsto 1;\, y \mapsto 0]\}$ and
+  $\{[x \mapsto 2;\, y \mapsto 0];\, [x \mapsto 2;\, y \mapsto 1]\}$,
+  as well as their sum.
 \end{example}
 
-\subsection{Type Denotation and Soundness}\label{subsec:denotation}
+\subsection{Type Denotation and Soundness}%
+\label{subsec:denotation}
 
 We now define the denotation of types and type contexts in terms of
-the context logic specified above, and state the main soundness
+the context logic described above, and state the main soundness
 theorem.  We write $\denot{\tau}_\Sigma : \Code{Term} \to
 \Code{Formula}$ for the type denotation under basic type context
 $\Sigma$, where $r \models \denot{\tau}_\Sigma\;e$ means that $e$
