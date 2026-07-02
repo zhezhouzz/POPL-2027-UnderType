@@ -163,12 +163,11 @@ product.  We discuss the remaining operators below.
 
 \paragraph{Kripke Monotonicity}
 The implication $P \chimpl Q$ and the first-order quantifiers
-$\chforall x.\, P$ and $\chexists x.\, P$
-use the refinement
-relation $\sqsubseteq$ as the Kripke accessibility relation: truth at
-$r$ requires truth at all $r'$ such that $r \sqsubseteq r'$, i.e., at all extensions
-of $r$ with additional variable bindings.  This is the standard Kripke
-semantics for implication in BI-logic~\cite{...}, and ensures the
+$\chforall x.\, P$ and $\chexists x.\, P$ use the refinement relation
+$\sqsubseteq$ as the Kripke accessibility relation: truth at $r$
+requires truth at all $r'$ such that $r \sqsubseteq r'$, i.e., at all
+extensions of $r$ with additional variable bindings.  This is the
+standard Kripke semantics for implication in BI-logic, and ensures the
 following monotonicity property.
 
 \begin{theorem}[Kripke Monotonicity]\label{thm:kripke-monotonicity}

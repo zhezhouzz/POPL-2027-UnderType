@@ -4,12 +4,12 @@ Context types provide a type-based theoretical foundation for safety and reachab
 \begin{itemize}
     \item Not totally term-syntax guided. Bidirectional typing algorithms and other typing algorithms typically leverage the syntax of the program to guide typing; however, within a bunched typing setting, the same term syntax admits multiple different typing rules (e.g., \textsc{T-Let} and \textsc{T-LetD}). This forces each typing algorithm to search through different choices, causing the case analysis to explode. Allowing both entangled and independent ways to construct the type context also yields a tree-like context structure. Like bunched implication (e.g., separation logic), this forces the algorithm to construct and decompose the context structure in a large search space.
     \item Not totally type-syntax guided. The syntax of the type we type-check against also cannot provide enough guidance. Since function types can have different modalities for parameters and returns, the polarity of demonic and angelic modalities can alternate during the type-checking process.
-    For example, consider the following example, which mimics using a demonic sum type to express a reachability verification task introduced in \autoref{sec:typing}:
+    For example, consider the following example, which mimics using a demonic sum type to express a reachability verification task introduced in \autoref{sec:context-typing}:
     \begin{align*}
        &\Gamma \ctcomma f{:}(\urt{\Nat}{\vnu > 0}\ctsarr\ort{\Nat}{\vnu < 0} \ctoplus \ort{\Nat}{\top}) \vdash
        \\&\quad \zlet{x}{e_x}{f\;x} : \ort{\Nat}{\vnu > 0} \ctoplus \ort{\Nat}{\top}
     \end{align*}\noindent
-    Although the right-hand-side type is demonic, we should type-check the term $e_x$ against the angelic type $\urt{\Nat}{\vnu > 0}$. 
+    Although the right-hand-side type is demonic, we should type-check the term $e_x$ against the angelic type $\urt{\Nat}{\vnu > 0}$.
     Alternatively, when function $f$ has demonic type, the term $e_x$ should be typed against the demonic type $\ort{\Nat}{\vnu > 0}$:
     \begin{align*}
         &\Gamma \ctcomma f{:}(\ort{\Nat}{\vnu > 0}\ctsarr\ort{\Nat}{\vnu < 0} \ctoplus \ort{\Nat}{\top}) \vdash
@@ -20,4 +20,3 @@ Context types provide a type-based theoretical foundation for safety and reachab
 \end{itemize}
 
 We would like to highlight that a decidable bidirectional typing algorithm is still possible to achieve with a limited version of context types. The coverage type system~\cite{CoverageType} provides an example, where all function types are persistent with demonic parameter types and angelic return types. These constraints solve the three issues by (1) using variable references in type qualifiers to express entanglement, i.e., the dependent context $x{:}\urt{b}{\top} \ctcomma y{:}\urt{b}{\top}$ is illegal in coverage type system since their qualifiers do not refer to each other; (2) only allowing the right-hand-side type to be angelic, and providing specialized application rules for angelic arguments and function parameter types; (3) requiring that local angelic variables appear only after demonic parameters in the type context, which leads verification conditions to fall in EPR (i.e., in a $\forall^*\exists^*$ form), which is decidable.
-

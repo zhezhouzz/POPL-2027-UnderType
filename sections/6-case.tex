@@ -1,5 +1,6 @@
 % !TeX root = ../main.tex
-\section{Case Study}\label{sec:case}
+\section{Case Study} %
+\label{sec:case}
 
 We illustrate the expressiveness of context types with three
 case studies: compositional may- and must-style reasoning
@@ -74,7 +75,7 @@ val g : ?$\Code{i}{:}\ort{\Int}{\top}\ctsarr\ort{\Int}{\vnu > 0}\interty $?
 
 Our unified treatment of safety and reachability through context types
 also furnishes a foundation for compositional may- and must-style
-program analysis, as developed in prior work~\cite{MayMust}. That
+program analysis, as developed in prior work~\cite{GN+10}. That
 analysis is compositional because callee summaries inform caller
 analysis; Figure~\ref{fig:may-must-analysis} reproduces four
 representative examples from the original paper. We restate them in
@@ -197,7 +198,7 @@ Alternatively, we can \emph{disprove} the function with the following type:
 \begin{align*}
     &\Code{l1}{:}\urt{\List[\Code{elem}]}{\top} \ctwand \Code{l2}{:}\urt{\List[\Code{elem}]}{\top} \ctwand \ort{\List[\Code{elem}]}{\neg \I{sorted}(\vnu)} \ctoplus \ort{\List[\Code{elem}]}{\top}
 \end{align*}\noindent
-This type follows the ``affine reachability'' style of \autoref{sec:typing}: the return type is a sum of the top type $\ort{\List[\Code{elem}]}{\top}$ and the negation of the original safety property, $\ort{\List[\Code{elem}]}{\neg \I{sorted}(\vnu)}$, expressing erroneous behavior.
+This type follows the ``affine reachability'' style of \autoref{sec:context-typing}: the return type is a sum of the top type $\ort{\List[\Code{elem}]}{\top}$ and the negation of the original safety property, $\ort{\List[\Code{elem}]}{\neg \I{sorted}(\vnu)}$, expressing erroneous behavior.
 The parameter types are moreover flipped to \emph{disjointed angelic types}, indicating that $\Code{l1}$ and $\Code{l2}$ may independently range over arbitrary sorted lists.
 Without this disjointness, a carefully crafted environment can hide the bug:
 \begin{center}
