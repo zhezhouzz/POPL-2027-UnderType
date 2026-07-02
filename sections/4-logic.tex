@@ -115,7 +115,7 @@ $(\Res, +, \times, \mathbf{1}, \sqsubseteq)$ forms a BI-algebra.
 \subsection{Context Logic} %
 \label{subsec:logic}
 
-We now define a logic over the capability algebra.  The logic is a BI
+We now define a logic over our capability algebra.  The logic is a BI
 logic extended with demonic and angelic modalities, a sum operator for
 control-flow reasoning, and a \emph{binding reference operator} that
 expresses how a qualifier may depend on specific variable bindings in
@@ -212,10 +212,9 @@ environments in $r$.
   require environments for $x = 0, 3, 4$ which $r_x$ does not
   contain).
 
-
-Critically, entailment of demonic and angelic modalities is also
-maintained by the refinement relation $\sqsubseteq$. To illustrate,
-consider the following set of capabilities
+  Critically, satisfiability of demonic and angelic modalities is also
+  maintained by the refinement relation $\sqsubseteq$. To illustrate,
+  consider the following set of capabilities
 \begin{align*}
 \begin{array}{c @{\hspace{1.5em}} c @{\hspace{1.5em}} c}
   {\boxed{r_1 \doteq \{[x \mapsto 1], [x \mapsto 2]\}}}
@@ -292,19 +291,23 @@ refer to specific variable bindings in the capability.
   Capabilities that model this formula include
   $\{[x \mapsto 1;\, y \mapsto 0]\}$ and
   $\{[x \mapsto 2;\, y \mapsto 0];\, [x \mapsto 2;\, y \mapsto 1]\}$,
-  as well as their sum.
+  as well as their sum. Omitting $\forallM{x}$ from the right conjunct
+  would require a satisfying capability to include an environment with
+  a mapping for \emph{every} pair of $x$ and $y$ where $0 \leq y < x$:
+  $[x \mapsto 3;\, y \mapsto 0], [x \mapsto 4;\, y \mapsto 1],
+  \ldots$.
 \end{example}
 
 \subsection{Type Denotation and Soundness}%
 \label{subsec:denotation}
 
-We now define the denotation of types and type contexts in terms of
-the context logic described above, and state the main soundness
-theorem.  We write $\denot{\tau}_\Sigma : \Code{Term} \to
-\Code{Formula}$ for the type denotation under basic type context
-$\Sigma$, where $r \models \denot{\tau}_\Sigma\;e$ means that $e$
-inhabits type $\tau$ under capability $r$.  We omit $\Sigma$ when it
-is clear from context.
+We now give the denotation of types and type contexts in terms of the
+context logic defined above, and state the main soundness theorem.  We
+write $\denot{\tau}_\Sigma : \Code{Term} \to \Code{Formula}$ for the
+type denotation under a basic type context $\Sigma$, and
+$r \models \denot{\tau}_\Sigma\;e$ to mean that $e$ inhabits type
+$\tau$ under capability $r$.  We omit $\Sigma$ when it is clear from
+context.
 
 As is customary in other refinement types, we require terms to be
 total and well-typed in the basic type system.  We encode these side
@@ -312,29 +315,28 @@ conditions into the logic via a guard formula:
 \begin{align*}
   P_{\Code{guard}} \doteq \forallM{\Dom{\Sigma}}\,\Code{Atom}(\Code{Total}(e) \land \Sigma \vdash_s e : \eraserf{\tau} \land \Sigma \vdash_{\Code{WF}} \tau).
 \end{align*}
-The binding reference operator $\forallM{\Dom{\Sigma}}$ is necessary here;
-without it, $\Code{Atom}(\Sigma \vdash_s x : \Nat)$ would require the
-capability to contain all possible bindings of $x$, making the basic
-type judgement trivially true regardless of $x$'s actual range.  All
-type denotations below implicitly include this guard, which we omit for
-brevity.
+The binding reference operator $\forallM{\Dom{\Sigma}}$ is necessary
+here; without it, e.g., $\Code{Atom}(\Sigma \vdash_s x : \Nat)$ is
+only satisfied by a capability that contains an environment for every
+possible value of $x$.  All type denotations below implicitly include
+this guard, which we omit for brevity.
 
-The denotation of a term $e$ under capability $r$ captures all values
-$e$ can reduce to across all environments in $r$:
+The denotation of a term $e$ under capability $r$ captures the image
+of $e$ under all environments in $r$ via a variable $x$:
 \begin{align*}
   \denot{\mstep{e}{x}}_\Sigma &\doteq \forallM{\Dom{\Sigma}}\,\Code{Atom}(\mstep{e}{x}).
 \end{align*}
-Thus, the binding reference operator $\forallM{\Dom{\Sigma}}$ fixes the
-bindings of all context variables before evaluating the atomic
-reduction predicate, ensuring that the reduction $\mstep{e}{x}$ is
-checked under each specific environment in the current capability
+The binding reference operator $\forallM{\Dom{\Sigma}}$ fixes the
+bindings of all variables in the typing context before evaluating the
+atomic reduction predicate, ensuring that the reduction $\mstep{e}{x}$
+is checked under each specific environment in the current capability
 rather than requiring the capability to contain all environments
 consistent with $x$'s full range.
 
 \begin{definition}[Type Denotation]\label{def:type-denotation}
   \begin{align*}
-    \denot{\ort{b}{\phi}}_\Sigma\;e &\doteq \denot{\mstep{e}{\vnu}}_\Sigma \chimpl \forallM{\Code{FV}(\ort{b}{\phi})}\,\demonic\,\Code{Atom}(\phi) \quad \text{($\vnu$ fresh)}
-    \\\denot{\urt{b}{\phi}}_\Sigma\;e &\doteq \denot{\mstep{e}{\vnu}}_\Sigma \chimpl \forallM{\Code{FV}(\urt{b}{\phi})}\,\angelic\,\Code{Atom}(\phi) \quad \text{($\vnu$ fresh)}
+    \denot{\ort{b}{\phi}}_\Sigma\;e &\doteq \denot{\mstep{e}{\vnu}}_\Sigma \chimpl \forallM{(\Code{FV}(\phi)-\{\vnu\})}\,\demonic\,\Code{Atom}(\phi) \quad \text{($\vnu$ fresh)}
+    \\\denot{\urt{b}{\phi}}_\Sigma\;e &\doteq \denot{\mstep{e}{\vnu}}_\Sigma \chimpl \forallM{(\Code{FV}(\phi)-\{\vnu\})}\,\angelic\,\Code{Atom}(\phi) \quad \text{($\vnu$ fresh)}
     \\\denot{x{:}\tau_x \ctsarr \tau}_\Sigma\;e &\doteq \denot{\tau_x}_\Sigma\;x \chimpl \denot{\tau}_{\Sigma,x{:}\eraserf{\tau_x}}\;(e\;x) \quad \text{($x$ fresh)}
     \\\denot{x{:}\tau_x \ctwand \tau}_\Sigma\;e &\doteq \denot{\tau_x}_\Sigma\;x \chwand \denot{\tau}_{\Sigma,x{:}\eraserf{\tau_x}}\;(e\;x) \quad \text{($x$ fresh)}
     \\\denot{\tau_1 \ctinter \tau_2}_\Sigma\;e &\doteq \denot{\tau_1}_\Sigma\;e \chland \denot{\tau_2}_\Sigma\;e
@@ -392,7 +394,8 @@ The semantic subtyping relations used in rules T-Sub and T-CtxSub are:
   {CtxSub}
   {$\Gamma_1 \ctsubseteq{X} \Gamma_2$}
   }
-  \caption{Semantic subtyping relations.}
+  \caption{Semantic subtyping relations \BD{Can we add subscripts here
+      or explicitly state the $\Sigma$ we're using in this caption.}}
   \label{fig:semantic-subtyping-relation}
 \end{figure}
 
@@ -405,7 +408,8 @@ to hold for the variables that actually appear in the judgement.
 
 We conclude with the core soundness results.
 
-\begin{theorem}[Well-Formed Operator Context]\label{thm:well-formed-operator}
+\begin{definition}[Well-Formed Operator Context] %
+  \label{thm:well-formed-operator}
   Operator context $\Phi$ is well-formed iff for all primitive
   operators $\primop$:
   {\small\begin{align*}
@@ -413,28 +417,34 @@ We conclude with the core soundness results.
     \quad\text{and}\quad
     \models \denot{\overline{x{:}\ort{b_x}{\phi_x}}} \chiff \denot{\ort{b}{\phi} \ctinter \urt{b}{\phi}}\;(\primop\;\overline{x}).
   \end{align*}}
+\end{definition}
+
+\BD{We do not mention the above definition anywhere. Presumably it's a
+  premise of the theorems below?}
+
+\begin{theorem}[Fundamental Theorem]%
+  \label{thm:fundamental}
+  The typing judgement $\Gamma \vdash e : \tau$ is sound with respect
+  to the denotation of types in context logic:
+  $\Gamma \vdash e : \tau$ implies
+  $\denot{\Gamma}_\emptyset \models
+  \denot{\tau}_{\eraserf{\Gamma}}\;e$. %Thus, any capability that
+  %satisfies the denotation of $\Gamma$ also satisfies the denotation
+  %of $\tau$ applied to $e$
 \end{theorem}
 
-\begin{theorem}[Fundamental Theorem]\label{thm:fundamental}
-  $\Gamma \vdash e : \tau$ implies $\denot{\Gamma}_\emptyset \models \denot{\tau}_{\eraserf{\Gamma}}\;e$.
-\end{theorem}
-
-This theorem states that the typing judgement $\Gamma \vdash e : \tau$
-is sound with respect to the denotational semantics: any capability
-that satisfies the denotation of $\Gamma$ also satisfies the
-denotation of $\tau$ applied to $e$.
-
-\begin{theorem}[Denotational Soundness]\label{thm:soundness}
+\begin{corollary}[Type Soundness]%
+  \label{thm:soundness}
   $\emptyset \vdash e : \tau$ implies that for any fresh variable $x$,
   $\{[x \mapsto v] \mid \mstep{e}{v}\} \models \denot{\tau}\;x$.
-\end{theorem}
+\end{corollary}
 
-The soundness theorem instantiates the fundamental theorem at the
-empty context. For a closed well-typed term $e$, the capability $\{[x
-  \mapsto v] \mid \mstep{e}{v}\}$, which collects all values $e$ can
-reduce to, each bound to a fresh variable $x$, satisfies the
+Our type soundness theorem simply instantiates the fundamental theorem
+at the empty context. For a closed well-typed term $e$, the capability
+$\{[x \mapsto v] \mid \mstep{e}{v}\}$, which collects all values $e$
+can reduce to, each bound to a fresh variable $x$, satisfies the
 denotation of $\tau$. This has two concrete consequences depending on
-the modality of $\tau$: if $\tau$ is a demonic type, then every
-value that $e$ reduces to satisfies $\tau$'s qualifier (safety); if $\tau$
-is an angelic type, then every value prescribed by $\tau$'s
-qualifier is witnessed by some reduction of $e$ (reachability).
+the modality of $\tau$: if $\tau$ is a demonic type, then every value
+that $e$ reduces to satisfies $\tau$'s qualifier (safety); if $\tau$
+is an angelic type, then every value prescribed by $\tau$'s qualifier
+is witnessed by some reduction of $e$ (reachability).
