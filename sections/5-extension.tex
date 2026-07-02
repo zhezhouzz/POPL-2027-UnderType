@@ -23,7 +23,7 @@ challenges. First, nondeterministic functions like generators can be
 invoked multiple times, producing independent capabilities at each
 call; our extended type system must account for this \emph{resource
   duplication}.  Second, we need to generalize our type denotation to
-accomodate terms whose reachability guarantees are not completely
+accommodate terms whose reachability guarantees are not completely
 dictated by their evaluation environment.
 
 % (\S\ref{subsec:nondet-denotation}).  We conclude with case studies
@@ -60,7 +60,7 @@ independent arguments:
   y_2}}} : \urt{\Nat}{\top} \judgfail
   \tag{$\Code{e_{ND}}$}\label{ex:nondet}
 \end{align}\noindent
-This fact is encoded the typing rules for let-expressions,
+This fact is encoded in the typing rules for let-expressions,
 \textsc{T-Let} and \textsc{T-LetD}, which jointly enforce the
 ``entangled xor consumed'' policy. The rule \textsc{T-Let} allows the
 function $f$ to be used in both the bound expression and the body of a
@@ -88,11 +88,11 @@ result, but prevents $f$ from reappearing in the body of a
 \end{align*}\noindent
 
 Successive applications of a nondeterministic generator like
-$\Code{nat\_gen()}$, however, can produce genuinely independent
+$\Code{gen_{nat}()}$, however, can produce genuinely independent
 values. In order to accurately capture the behavior of such functions,
 \langNDname{} introduces a \emph{persistent} type operator:
 \begin{align*}
-  \Code{nat\_gen} : \ctpers (\ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top})
+  \Code{gen_{nat}} : \ctpers (\ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top})
 \end{align*}
 Persistence allows a binding in the type context to be duplicated,
 e.g.,
@@ -121,11 +121,11 @@ capability containing different choices:
     r \models \chpers P \text{ iff } \exists \sigma. \{\sigma\} \sqsubseteq r \land \{\sigma\} \models P
   \end{align*}\noindent
   Note that we do not require $r$ to be singleton over its entire
-  variable domain, which would violate Kripke monotonicity: if a
+  variable domain, as doing so would violate Kripke monotonicity: if a
   capability $r$ is singleton, then for $r'$ such that
   $r' \sqsubseteq r$, $r'$ is not always singleton. Instead, we impose
   the more relaxed requirement that ensures that $\{\sigma\}$ will at
-  least contains all the variables needed by $P$,
+  least contain all the variables needed by $P$,
   i.e. $\projectTo{r}{\Code{FV}(P)}$.
 \end{definition}
 
@@ -135,24 +135,25 @@ not rely on the capabilities provided by either the bindings in the
 type context $\Gamma$ or \emph{the reduction of the term $e$}. To
 illustrate, consider the following three functions:\footnote{The
   nondeterministic choice operator $e_1 \oplus e_2$ is syntactic sugar
-  for $\zif{\Code{gen}_\Code{bool}\Code{()}}{e_1}{e_2}$.}
+  for $\zif{\Code{gen_{bool} ()}}{e_1}{e_2}$.}
 \begin{align*}
   &z{:}\urt{\Unit}{\top} \vdash \zzlam{x}{z} : \ort{\Unit}{\top}
     \ctsarr \urt{\Nat}{\top} \judgok \\
-  &\emptyset \vdash \zzlam{x}{\Code{nat\_gen()}} : \ort{\Unit}{\top}
+  &\emptyset \vdash \zzlam{x}{\Code{gen_{nat} ()}} : \ort{\Unit}{\top}
     \ctsarr \urt{\Nat}{\top}  \judgok \\
   &\emptyset \vdash \zzlam{x}{0} \oplus
-    \zzlam{x}{\Code{positive\_gen()}} : \ort{\Unit}{\top} \ctsarr
+    \zzlam{x}{\Code{gen_{nat}() + 1}} : \ort{\Unit}{\top} \ctsarr
     \urt{\Nat}{\top}  \judgok \\
 \end{align*}\noindent
 Of these three terms, only the second can be assigned the persistent
 modality. The first is obviously not persistent since it depends on
 the binding $z$ in the type context, while the reachability properties
 of the third \emph{depend on how it is reduced}. To see how, consider
-the following type judgement, which is invalid under \langNDname{}'s
+the following type judgment, which is invalid under \langNDname{}'s
 call-by-value semantics:
 \begin{align*}
-  \emptyset \vdash \zlet{f}{\zzlam{x}{0} \oplus \zzlam{x}{\Code{positive\_gen()}}}{\zif{f\;() = 0}{f\;()}{0}} : \urt{\Nat}{\top} \quad \judgfail
+  \emptyset \vdash \zlet{f}{\zzlam{x}{0} \oplus
+  \zzlam{x}{\Code{gen_{nat} () + 1}}}{\zif{f\;() = 0}{f\;()}{0}} : \urt{\Nat}{\top} \quad \judgfail
 \end{align*}\noindent
 This term can only reach the value $0$ since $f\;()$ can either reduce to $0$ or to any positive number. In other words, the two applications of $f$ are indeed dependent, and $f$ is not persistent.
 
@@ -164,16 +165,16 @@ This term can only reach the value $0$ since $f\;()$ can either reduce to $0$ or
   Note that if we had defined the type denotation as
   $\chpers (\denot{\tau}_{\Sigma}\;e)$, it would (incorrectly) contain
   inhabitants like
-  $\zzlam{x}{0} \oplus \zzlam{x}{\Code{positive\_gen()}}$. To ensure
+  $\zzlam{x}{0} \oplus \zzlam{x}{\Code{gen_{nat} () + 1}}$. To ensure
   that $e$ is also single-valued, we introduce a universally
   quantified fresh variable $x$ that ranges over all possible
   reduction results of $e$; the persistent modality then ensures only
   that $x$ is single-valued. \BD{This last point is a bit confusing --
     why does it matter if $x$ is single-valued? Do we mean
-    'persistant' here?}
+    'persistent' here?}
 \end{definition}
 
-\paragraph{Typing rule for persistent types}
+\paragraph{Type rules for persistent types}
 The elimination rule for persistent types is derivable from
 \textsc{T-Sub} and the fact $\Gamma \vdash \ctpers \tau <: \tau$
 always holds.  The introduction rule is shown below:
@@ -185,62 +186,58 @@ always holds.  The introduction rule is shown below:
 \end{align*}\noindent
 \BD{Can we show the derived elimination rule here? We have the space.}
 In short, \textsc{T-Pers} allows us to conclude that a value is a
-persistant term of type $\ctpers \tau$ if we can establish that it has
+persistent term of type $\ctpers \tau$ if we can establish that it has
 type $\tau$ using a type context comprised only of persistent facts,
 i.e., $\denot{\Gamma} \models \chpers \denot{\Gamma}$. \BD{Just to
   double check, requiring a value $v$ in this rule means there are
-  persistant terms we cannot be checked against a persistant type,
+  persistent terms we cannot be checked against a persistent type,
   right?}
 
 \subsection{Type Denotation for Nondeterminism} %
 \label{subsec:nondet-denotation}
 
-Nondeterminism breaks the single-valued assumption of the deterministic
-language in two ways that require adjustments to the type denotation.
-
-\paragraph{Function Types} The current rules for let binding are inconsistent with the type denotation in the nondeterministic setting. Consider the following judgement:
+When reasoning about reachability properties of \langname{} terms, all
+the choices available to us came from angelic refinements in the
+typing context. In contrast, nondeterministic \langNDname{} terms can
+themselves introduce choices that are not fully captured by our
+previous type denotation. This prevents us from applying semantic
+subtyping to verify properties of terms which should intuitively hold.
+To illustrate, consider the following typing derivation:
 \begin{align*}
-  \emptyset \vdash \zlet{x}{\Code{bool\_gen()}}{\zlam{y}{\Bool}{y = x}} : y{:}\urt{\Bool}{\top} \ctsarr \urt{\Bool}{\top}
-\end{align*}\noindent
-The current type denotation assumes that the parameter type $y$ cannot depend on the choice of $x$, which is hidden inside the generator invocation within the term; thus this function should return all boolean values. However, the let-expression rule (e.g., \textsc{T-Let}) exposes the hidden capability within the nondeterministic term:
-\begin{align*}
-  x{:}\urt{\Bool}{\top} \vdash \zlam{y}{\Bool}{y = x} : y{:}\urt{\Bool}{\top} \ctsarr \urt{\Bool}{\top}
-\end{align*}\noindent
-where $y$ can be chosen equal to $x$, so the function can only return $\true$.
-The issue here is that a nondeterministic term exposes more capabilities into the environment during evaluation, which is not accounted for by the current type denotation.
-
-\paragraph{Sum Types}
-A similar issue arises for sum types.  The judgement:
-\begin{align*}
-  \emptyset \vdash \Code{bool\_gen()} :
-  \ort{\Bool}{\vnu = \true} \ctoplus \ort{\Bool}{\vnu = \false}
+\begin{prooftree}
+  \hypo{\emptyset \vdash \Code{gen_{bool} ()}  : \urt{\Bool}{\top}}
+  \hypo{\emptyset \vdash \urt{\Bool}{\top} \subty \ort{\Bool}{\vnu = \true} \ctoplus \ort{\Bool}{\vnu = \false}}
+  \infer2{\emptyset \vdash \Code{gen_{bool} ()} : \ort{\Bool}{\vnu =
+      \true} \ctoplus \ort{\Bool}{\vnu = \false}}
+\end{prooftree}
 \end{align*}
-should hold, since $\Code{bool\_gen()}$ nondeterministically produces
-either $\true$ or $\false$.  However, the original denotation
-$\denot{\tau_1 \ctoplus \tau_2}\;e \doteq \denot{\tau_1}\;e \choplus
-\denot{\tau_2}\;e$ requires the \emph{context} to be split across the
-two branches, not the term itself.  Under the empty context, there is
-no capability to split, so the judgement fails despite being
-semantically valid.
 
-\paragraph{Generalized Denotation}
-Both issues stem from the same root cause: the original denotation
-evaluates $e$ once and reasons about the result, but a
-nondeterministic $e$ can reduce to different values in different
-executions.  The fix is to universally quantify over all possible
-reduction results of $e$, lifting $e$'s nondeterminism into the
-type context:
+Intuitively, the derivation should be valid: $\Code{gen_{bool} ()}$
+exhibits two control flow paths, reaching \Code{true} on one and
+\Code{false} on the other. Unfortunately, this conclusion does not
+hold \emph{semantically}, i.e.,
+$\not \models~ \denot{\ort{\Bool}{\vnu = \true} \ctoplus
+  \ort{\Bool}{\vnu = \false}}~ \Code{gen_{bool} ()} $! The issue here
+is that the original denotation of $\choplus$ only splits the
+capabilities of the \emph{context} between the two branches, not the
+term itself --- for our target claim to hold, $\Code{gen_{bool} ()}$
+could only evaluate to \Code{true} under some partitioning of the
+empty context, which clearly never happens!
+
+A similar issue arises with the original denotation of function
+types. The fix to both issues is to ``lift'' the extra capability
+provided by a nondeterministic term into the type context:
 \begin{align*}
   \denot{x{:}\tau_x \ctsarr \tau}_\Sigma\;e
-    &\doteq \forall f.\; \denot{f \doteq e}_\Sigma \chimpl
+    &\doteq \forall f.\; \denot{\mstep{e}{f}}_\Sigma \chimpl
              \denot{\tau_x}_\Sigma\;x \chimpl
              \denot{\tau}_{\Sigma,f{:}\eraserf{\tau_x \ctsarr \tau}, x{:}\eraserf{\tau_x}}\;(f\;x)
   \\\denot{x{:}\tau_x \ctwand \tau}_\Sigma\;e
-    &\doteq \forall f.\; \denot{f \doteq e}_\Sigma \chimpl
+    &\doteq \forall f.\; \denot{\mstep{e}{f}}_\Sigma \chimpl
              \denot{\tau_x}_\Sigma\;x \chwand
              \denot{\tau}_{\Sigma,f{:}\eraserf{\tau_x\ctwand \tau}, x{:}\eraserf{\tau_x}}\;(f\;x)
   \\\denot{\tau_1 \ctoplus \tau_2}_\Sigma\;e
-    &\doteq \forall x.\; \denot{x \doteq e}_\Sigma \chimpl
+    &\doteq \forall x.\; \denot{\mstep{e}{x}}_\Sigma \chimpl
              \denot{\tau_1}_{\Sigma,x{:}\eraserf{\tau_1}}\;x \choplus \denot{\tau_2}_{\Sigma,x{:}\eraserf{\tau_2}}\;x
 \end{align*}
 In each case, a universally quantified fresh variable ($f$ or $x$)
@@ -249,24 +246,48 @@ denotation is applied to that variable.  In the deterministic case,
 $e$ has a unique reduction result and the quantifier is trivially
 eliminated, so the generalized denotation coincides with the original.
 
-For the function-type issue, the generalized denotation successfully captures the newly produced capabilities induced by the nondeterministic term. Thus the previous function-type judgement fails under the generalized denotation:
-\begin{align*}
-  &\denot{y{:}\urt{\Bool}{\top} \ctsarr \urt{\Bool}{\top}}\;
-    (\zlet{x}{\Code{bool\_gen()}}{\zlam{y}{\Bool}{y = x}})
-  \\=\;& \forall f.\; \Code{Atom}(f = (\zlam{y}{\Bool}{y = \true}) \lor
-          f = (\zlam{y}{\Bool}{y = \false})) \chimpl
-          \\& \quad \forall y. \Code{Atom}(y = \true \lor y = \false) \chimpl  \angelic\,\Code{Atom}(f\;y = \true \lor f\;y = \false)
-  \quad\judgfail
-\end{align*}
-For the sum-type issue, the generalized denotation lifts
-$\Code{bool\_gen()}$'s nondeterminism into the context via the fresh
-variable $x$, allowing the sum operator to partition it across the
-two branches as usual:
+This new denotation allows us to lift $\Code{gen_{bool} ()}$'s
+nondeterminism into the context via the fresh variable $x$, allowing
+the sum operator to partition it across the two branches as usual:
 \begin{align*}
   &\denot{\ort{\Bool}{\vnu = \true} \ctoplus
-          \ort{\Bool}{\vnu = \false}}\;\Code{bool\_gen()}
+          \ort{\Bool}{\vnu = \false}}\;\Code{gen_{bool} ()}
   \\=\;& \forall x.\; \Code{Atom}(x = \true \lor x = \false) \chimpl
           \demonic\,\Code{Atom}(\vnu = \true) \choplus
           \demonic\,\Code{Atom}(\vnu = \false)
   \quad\judgok
 \end{align*}
+This richer denotation also allows us to discharge the semantic
+subtyping assumption in the previous typing derivation, allowing us to
+verify that $\Code{gen_{bool} ()}$ meets this intuitive
+specification. Finally, we can show that \langNDname{}'s extended type
+system is sound with respect to this generalized type denotation.
+
+\begin{theorem}[\langNDname{} Type Soundness]%
+  \label{thm:soundness}
+  For a well-typed \langNDname{} term $\emptyset \vdash e : \tau$ and
+  fresh variable $x$,
+  $\{[x \mapsto v] \mid \mstep{e}{v}\} \models \denot{\tau}\;x$.
+\end{theorem}
+
+
+% \paragraph{Function Types} The current rules for let binding are inconsistent with the type denotation in the nondeterministic setting. Consider the following judgement:
+% \begin{align*}
+%   \emptyset \vdash \zlet{x}{\Code{gen_{bool} ()}}{\zlam{y}{\Bool}{y = x}} : y{:}\urt{\Bool}{\top} \ctsarr \urt{\Bool}{\top}
+% \end{align*}\noindent
+% The current type denotation assumes that the parameter type $y$ cannot depend on the choice of $x$, which is hidden inside the generator invocation within the term; thus this function should return all boolean values. However, the let-expression rule (e.g., \textsc{T-Let}) exposes the hidden capability within the nondeterministic term:
+% \begin{align*}
+%   x{:}\urt{\Bool}{\top} \vdash \zlam{y}{\Bool}{y = x} : y{:}\urt{\Bool}{\top} \ctsarr \urt{\Bool}{\top}
+% \end{align*}\noindent
+% where $y$ can be chosen equal to $x$, so the function can only return $\true$.
+% The issue here is that a nondeterministic term exposes more capabilities into the environment during evaluation, which is not accounted for by the current type denotation.
+
+% For the function-type issue, the generalized denotation successfully captures the newly produced capabilities induced by the nondeterministic term. Thus the previous function-type judgement fails under the generalized denotation:
+% \begin{align*}
+%   &\denot{y{:}\urt{\Bool}{\top} \ctsarr \urt{\Bool}{\top}}\;
+%     (\zlet{x}{\Code{bool\_gen()}}{\zlam{y}{\Bool}{y = x}})
+%   \\=\;& \forall f.\; \Code{Atom}(f = (\zlam{y}{\Bool}{y = \true}) \lor
+%           f = (\zlam{y}{\Bool}{y = \false})) \chimpl
+%           \\& \quad \forall y. \Code{Atom}(y = \true \lor y = \false) \chimpl  \angelic\,\Code{Atom}(f\;y = \true \lor f\;y = \false)
+%   \quad\judgfail
+% \end{align*}

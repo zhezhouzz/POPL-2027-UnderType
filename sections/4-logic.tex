@@ -410,12 +410,13 @@ We conclude with the core soundness results.
 
 \begin{definition}[Well-Formed Operator Context] %
   \label{thm:well-formed-operator}
-  Operator context $\Phi$ is well-formed iff for all primitive
-  operators $\primop$:
-  {\small\begin{align*}
-    \Phi(\primop) = \overline{x{:}\ort{b_x}{\phi_x}} \ctsarr \ort{b}{\phi} \ctinter \urt{b}{\phi}
-    \quad\text{and}\quad
-    \models \denot{\overline{x{:}\ort{b_x}{\phi_x}}} \chiff \denot{\ort{b}{\phi} \ctinter \urt{b}{\phi}}\;(\primop\;\overline{x}).
+  The operator context $\Phi$ is well-formed iff for all primitive
+  operators $\primop$: {\small\begin{align*} \Phi(\primop) =
+      \overline{x{:}\ort{b_x}{\phi_x}} \ctsarr \ort{b}{\phi} \ctinter
+      \urt{b}{\phi} \quad\text{and}\quad \models
+      \denot{\overline{x{:}\ort{b_x}{\phi_x}}} \chiff
+      \denot{\ort{b}{\phi} \ctinter
+        \urt{b}{\phi}}\;(\primop\;\overline{x}).
   \end{align*}}
 \end{definition}
 
@@ -424,9 +425,9 @@ We conclude with the core soundness results.
 
 \begin{theorem}[Fundamental Theorem]%
   \label{thm:fundamental}
-  The typing judgement $\Gamma \vdash e : \tau$ is sound with respect
-  to the denotation of types in context logic:
-  $\Gamma \vdash e : \tau$ implies
+  \langname{}'s typing judgement is sound with respect to the
+  denotation of types into context logic: $\Gamma \vdash e : \tau$
+  implies
   $\denot{\Gamma}_\emptyset \models
   \denot{\tau}_{\eraserf{\Gamma}}\;e$. %Thus, any capability that
   %satisfies the denotation of $\Gamma$ also satisfies the denotation
