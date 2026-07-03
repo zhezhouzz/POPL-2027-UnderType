@@ -1,71 +1,116 @@
 \section{Discussion}%
 \label{sec:discussion}
 
-The context type system developed in the previous sections provides a
-principled, semantics-driven framework for unified reasoning about
-safety and reachability properties. This framework combines the key
-strengths of refinement type systems and BI-logic-based verification
-approaches: compositional reasoning about semantic resources (in our
-case, angelic and demonic capabilities), support for higher-order
-functions, and semantically rich, modular specifications of program
-behavior. Of course, it also inherits some of the challenges of those
-systems, including the need to limit user-provided guidance and the
-inherent tension between richness of specification and decidability.
+Our context type system combines the strengths of refinement type
+systems and BI-logic-based verification approaches by enabling
+compositional reasoning about semantic resources (in our case, angelic
+and demonic capabilities) from expressive, modular specifications of
+program behavior.  As with these systems, it also inherits many of
+their challenges, including the need to limit user-provided guidance
+and the inherent tension between richness of specification and
+decidability.
 
-Any implementation of this framework would have to address these
-challenges: a syntax-directed typing algorithm based on this system,
-for example, would require additional typing annotations to deal with
-nondeterminism in the typing rules for program constructs like
-let-expressions and lambda terms. This problem is exacerbated by the
-fact that individual typing rules are themselves quite unconstrained,
-such that match statements and functions admit multiple valid typings.
-It is impractical to ask users to write a function signatures that
-anticipate the requirements imposed by all calling contexts. At the
-same time, even if the qualifier language is confined to a decidable
-logic, unrestricted use of angelic and demonic modalities in the
-typing context can generate verification conditions containing
-quantifier alternations that lie outside decidable fragments of
-first-order logic.
+A syntax-directed typing algorithm necessary for any efficient
+implementation would require additional typing annotations to
+constrain the flexibility of the existing typing rules that can be
+otherwise quite unconstrained; the typing rules for match statements
+and functions, for example, admit multiple valid typings.  It is
+impractical, however, to ask users to write function signatures that
+anticipate the requirements imposed by all calling contexts.
+Furthermore, even putting aside the question of typing annotation
+burden, type-checking programs with unrestricted angelic and demonic
+modalities in the typing context can lead to formulae with quantifier
+alternations that lie outside decidable fragments of first-order
+logic.
 
 Similar challenges arise in separation-logic-based verification, with
 initial proposals requiring substantial user-supplied annotations for
 tasks such as frame inference and invariant discovery. Subsequent work
 has shown that these costs can be substantially reduced through
-automated inference techniques, e.g., bi-abduction, which enables
-scalable inference of preconditions and frame information and
-underpins modern automated separation-logic analyzers. Prior
-refinement type systems~\cite{CoverageType} have also shown that
-placing restrictions on, e.g., where angelic and demonic modalities
-can appear, can ensure that verification conditions remain decidable.
-Developing analogous inference techniques and restrictions to enable
-an automated verification procedure based on our context type system
-is an interesting direction for future work.
+automated inference techniques, e.g., bi-abduction~\cite{CD11}, which
+enables scalable precondition and frame inference, and underpins
+modern automated separation-logic analyzers~\cite{DFLO19}.
+Restricting where angelic and demonic modalities can appear can also
+help guarantee decidable verification conditions, as has been
+demonstrated in related settings~\cite{CoverageType}.  Alternatively,
+rather than pursuing full automation, we might consider providing
+support for context types within an interactive mechanized
+verification system like Rocq in the spirit of frameworks like
+Iris~\cite{Iris} or VST~\cite{AD+14}.  In this setting, users retain
+fine-grained control over typing choices, with specialized context
+type-aware tactics used to facilitate local type inference, search,
+and backtracking.
 
-\BD{Do we want to add a blurb about developing a VST / Iris-style
-  interactive verification framework as an alternative direction?}
 
 
-% a syntax-directed typing algorithm would re
+%% The context type system developed in the previous sections provides a
+%% principled, semantics-driven framework for unified reasoning about
+%% safety and reachability properties. This framework combines the key
+%% strengths of refinement type systems and BI-logic-based verification
+%% approaches: compositional reasoning about semantic resources (in our
+%% case, angelic and demonic capabilities), support for higher-order
+%% functions, and semantically rich, modular specifications of program
+%% behavior. Of course, it also inherits some of the challenges of those
+%% systems, including the need to limit user-provided guidance and the
+%% inherent tension between richness of specification and decidability.
 
-% additional annotations would be  required to make type-checkign
+%% Any implementation of this framework would have to address these
+%% challenges: a syntax-directed typing algorithm based on this system,
+%% for example, would require additional typing annotations to deal with
+%% nondeterminism in the typing rules for program constructs like
+%% let-expressions and lambda terms. This problem is exacerbated by the
+%% fact that individual typing rules are themselves quite unconstrained,
+%% such that match statements and functions admit multiple valid typings.
+%% It is impractical to ask users to write a function signatures that
+%% anticipate the requirements imposed by all calling contexts. At the
+%% same time, even if the qualifier language is confined to a decidable
+%% logic, unrestricted use of angelic and demonic modalities in the
+%% typing context can generate verification conditions containing
+%% quantifier alternations that lie outside decidable fragments of
+%% first-order logic.
 
-% Context types provide a type-based theoretical foundation for safety and reachability verification; however, there is an intrinsic difficulty in introducing a decidable bidirectional typing algorithm like those for standard refinement types. The core challenges come from the following three aspects:
-% \begin{itemize}
-%     \item Not totally term-syntax guided. Bidirectional typing algorithms and other typing algorithms typically leverage the syntax of the program to guide typing; however, within a bunched typing setting, the same term syntax admits multiple different typing rules (e.g., \textsc{T-Let} and \textsc{T-LetD}). This forces each typing algorithm to search through different choices, causing the case analysis to explode. Allowing both entangled and independent ways to construct the type context also yields a tree-like context structure. Like bunched implication (e.g., separation logic), this forces the algorithm to construct and decompose the context structure in a large search space.
-%     \item Not totally type-syntax guided. The syntax of the type we type-check against also cannot provide enough guidance. Since function types can have different modalities for parameters and returns, the polarity of demonic and angelic modalities can alternate during the type-checking process.
-%     For example, consider the following example, which mimics using a demonic sum type to express a reachability verification task introduced in \autoref{sec:context-typing}:
-%     \begin{align*}
-%        &\Gamma \ctcomma f{:}(\urt{\Nat}{\vnu > 0}\ctsarr\ort{\Nat}{\vnu < 0} \ctoplus \ort{\Nat}{\top}) \vdash
-%        \\&\quad \zlet{x}{e_x}{f\;x} : \ort{\Nat}{\vnu > 0} \ctoplus \ort{\Nat}{\top}
-%     \end{align*}\noindent
-%     Although the right-hand-side type is demonic, we should type-check the term $e_x$ against the angelic type $\urt{\Nat}{\vnu > 0}$.
-%     Alternatively, when function $f$ has demonic type, the term $e_x$ should be typed against the demonic type $\ort{\Nat}{\vnu > 0}$:
-%     \begin{align*}
-%         &\Gamma \ctcomma f{:}(\ort{\Nat}{\vnu > 0}\ctsarr\ort{\Nat}{\vnu < 0} \ctoplus \ort{\Nat}{\top}) \vdash
-%         \\&\quad \zlet{x}{e_x}{f\;x} : \ort{\Nat}{\vnu > 0} \ctoplus \ort{\Nat}{\top}
-%     \end{align*}\noindent
-%     In fact, whether the binding expression $e_x$ should be typed demonic or angelic depends on the body expression in the let-binding rather than on the right-hand-side type. This makes building a decidable typing algorithm require analyzing the continuation, which can be arbitrarily complex.
-%     \item Undecidable subtyping checking. Our refinement type system allows arbitrary mixing of demonic and angelic modalities, and our semantic subtyping rules require checking verification conditions that may have arbitrary quantifier alternation, which is undecidable in general.
-% \end{itemize}
+%% Similar challenges arise in separation-logic-based verification, with
+%% initial proposals requiring substantial user-supplied annotations for
+%% tasks such as frame inference and invariant discovery. Subsequent work
+%% has shown that these costs can be substantially reduced through
+%% automated inference techniques, e.g., bi-abduction~\cite{CD11}, which
+%% enables scalable inference of preconditions and frame information and
+%% underpins modern automated separation-logic
+%% analyzers~\cite{DFLO19}. Prior refinement type
+%% systems~\cite{CoverageType} have also shown that placing restrictions
+%% on, e.g., where angelic and demonic modalities can appear, can ensure
+%% that verification conditions remain decidable.  Developing analogous
+%% inference techniques and restrictions to enable an automated
+%% verification procedure based on our context type system is an
+%% important direction for future work.  
 
-% We would like to highlight that a decidable bidirectional typing algorithm is still possible to achieve with a limited version of context types. The coverage type system~\cite{CoverageType} provides an example, where all function types are persistent with demonic parameter types and angelic return types. These constraints solve the three issues by (1) using variable references in type qualifiers to express entanglement, i.e., the dependent context $x{:}\urt{b}{\top} \ctcomma y{:}\urt{b}{\top}$ is illegal in coverage type system since their qualifiers do not refer to each other; (2) only allowing the right-hand-side type to be angelic, and providing specialized application rules for angelic arguments and function parameter types; (3) requiring that local angelic variables appear only after demonic parameters in the type context, which leads verification conditions to fall in EPR (i.e., in a $\forall^*\exists^*$ form), which is decidable.
+
+
+
+
+
+
+%% % a syntax-directed typing algorithm would re
+
+%% % additional annotations would be  required to make type-checkign
+
+%% % Context types provide a type-based theoretical foundation for safety and reachability verification; however, there is an intrinsic difficulty in introducing a decidable bidirectional typing algorithm like those for standard refinement types. The core challenges come from the following three aspects:
+%% % \begin{itemize}
+%% %     \item Not totally term-syntax guided. Bidirectional typing algorithms and other typing algorithms typically leverage the syntax of the program to guide typing; however, within a bunched typing setting, the same term syntax admits multiple different typing rules (e.g., \textsc{T-Let} and \textsc{T-LetD}). This forces each typing algorithm to search through different choices, causing the case analysis to explode. Allowing both entangled and independent ways to construct the type context also yields a tree-like context structure. Like bunched implication (e.g., separation logic), this forces the algorithm to construct and decompose the context structure in a large search space.
+%% %     \item Not totally type-syntax guided. The syntax of the type we type-check against also cannot provide enough guidance. Since function types can have different modalities for parameters and returns, the polarity of demonic and angelic modalities can alternate during the type-checking process.
+%% %     For example, consider the following example, which mimics using a demonic sum type to express a reachability verification task introduced in \autoref{sec:context-typing}:
+%% %     \begin{align*}
+%% %        &\Gamma \ctcomma f{:}(\urt{\Nat}{\vnu > 0}\ctsarr\ort{\Nat}{\vnu < 0} \ctoplus \ort{\Nat}{\top}) \vdash
+%% %        \\&\quad \zlet{x}{e_x}{f\;x} : \ort{\Nat}{\vnu > 0} \ctoplus \ort{\Nat}{\top}
+%% %     \end{align*}\noindent
+%% %     Although the right-hand-side type is demonic, we should type-check the term $e_x$ against the angelic type $\urt{\Nat}{\vnu > 0}$.
+%% %     Alternatively, when function $f$ has demonic type, the term $e_x$ should be typed against the demonic type $\ort{\Nat}{\vnu > 0}$:
+%% %     \begin{align*}
+%% %         &\Gamma \ctcomma f{:}(\ort{\Nat}{\vnu > 0}\ctsarr\ort{\Nat}{\vnu < 0} \ctoplus \ort{\Nat}{\top}) \vdash
+%% %         \\&\quad \zlet{x}{e_x}{f\;x} : \ort{\Nat}{\vnu > 0} \ctoplus \ort{\Nat}{\top}
+%% %     \end{align*}\noindent
+%% %     In fact, whether the binding expression $e_x$ should be typed demonic or angelic depends on the body expression in the let-binding rather than on the right-hand-side type. This makes building a decidable typing algorithm require analyzing the continuation, which can be arbitrarily complex.
+%% %     \item Undecidable subtyping checking. Our refinement type system allows arbitrary mixing of demonic and angelic modalities, and our semantic subtyping rules require checking verification conditions that may have arbitrary quantifier alternation, which is undecidable in general.
+%% % \end{itemize}
+
+%% % We would like to highlight that a decidable bidirectional typing algorithm is still possible to achieve with a limited version of context types. The coverage type system~\cite{CoverageType} provides an example, where all function types are persistent with demonic parameter types and angelic return types. These constraints solve the three issues by (1) using variable references in type qualifiers to express entanglement, i.e., the dependent context $x{:}\urt{b}{\top} \ctcomma y{:}\urt{b}{\top}$ is illegal in coverage type system since their qualifiers do not refer to each other; (2) only allowing the right-hand-side type to be angelic, and providing specialized application rules for angelic arguments and function parameter types; (3) requiring that local angelic variables appear only after demonic parameters in the type context, which leads verification conditions to fall in EPR (i.e., in a $\forall^*\exists^*$ form), which is decidable.
