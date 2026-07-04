@@ -1,5 +1,55 @@
-\section{Introduction}\label{sec:intro}
+\section{Introduction} %
+\label{sec:intro}
 
+% BD: trying to get away from talking about verification 'procedures'
+% here -- it may prime the reader for a type checking algorithm
+
+Static type systems are one of the most versatile and widely used
+program reasoning techniques. While their particulars can vary wildly,
+common to all type systems are two key ingredients: the use of
+\emph{types} to specify program behavior, and some deductive mechanism
+for \emph{compositionally verifying} that a program is consistent with
+a specification. Type systems have traditionally targeted
+\emph{safety} properties, a focus embodied by Milner's famous slogan
+that ``well-typed expressions cannot 'go
+wrong'''~\cite{Milner+78}. Here, the typing judgement
+$\Gamma \vdash e : \tau$ asserts that $e$ \emph{may} evaluate to many
+values (under an environment consistent with $\Gamma$), but that set
+of values will fall within the ``safe'' region specified by $\tau$.
+
+Dually, \emph{reachability} properties seek to which precisely capture
+a subset of the values that a program \emph{must} reach. Rather than
+ruling out certain executions, reachability analyses seek to soundly
+establish the existence of (often undesirable)
+executions. Reachability analyses are a well-established and practical
+technique for finding buggy behaviors~\cite{BMC+03}; more recently,
+several works~\cite{ReverseHoareLogic, OHP19, ZDS23} have studied
+``incorrectness'' systems designed to prove the existence of witnesses
+of buggy program behavior, with a goal of avoiding the overwhelming
+number of false positives reported by typical bug detection tools.
+The question of how to develop type systems targeting reachability
+properties, however, has been largely unexplored. A few recent
+exceptions~\cite{RefinementTypeRefutations, CoverageType, Ill-types},
+have begun to study type-based reachability reasoning, but each of
+these systems has focused on a particular property, e.g., checking
+coverage properties of test input generators, or applications, e.g.,
+generating concrete counterexamples refuting refinement type
+specifications.
+
+This paper proposes a new refinement type system in which may- and
+must-style specifications coexist as first-class citizens, allowing
+safety and reachability specifications to be freely combined within a
+unified type discipline. In our type system, type qualifiers are
+equipped with a modality indicating whether it should be interpreted
+as a may or must specification. The resulting framework naturally
+supports higher-order, deterministic, and nondeterministic programs
+can capture both may- and must-style function summaries~\cite{GN+10},
+and can be applied to a range of verification tasks, including
+incorrectness-style reasoning about buggy programs~\cite{OHP19} and
+proving completeness of test-input generators~\cite{CoverageType}.
+
+\iffalse
+% Old Intro
 A typical type-based verification procedure provides a compositional
 way to reason about a program's \emph{safety} properties~\cite{Milner+78}.
 The procedure can be thought of as defining a logical deduction system
@@ -69,12 +119,15 @@ guarantees that all ill-typed programs will definitely get stuck.
 Moreover, existing approaches typically fix on one style of reasoning
 or the other and are not equipped to simultaneously consider both
 safety and reachability properties together, limiting their ability to
-address useful verification tasks.  As a simple example, consider a
-specification for subtraction over natural numbers
-($\Code{-}_{\Code{nat}}$) that types argument $x$ and $y$ as
-non-negative integers and asserts that the result is a non-negative
-integer less than or equal to $x$\footnote{In the following, we drop
-  the ``\Code{nat}'' subscript when obvious from context.}:
+address useful verification tasks.
+\fi
+
+As a simple example, consider a specification for subtraction over
+natural numbers ($\Code{-}_{\Code{nat}}$) that types argument $x$ and
+$y$ as non-negative integers and asserts that the result is a
+non-negative integer less than or equal to $x$\footnote{In the
+  following, we drop the ``\Code{nat}'' subscript when obvious from
+  context.}:
   \[x : \{\Code{int}\, |\ 0 \leq \nu\}, y : \Code{\{\Code{int}\, |\, 0 \leq \nu \}}
       \vdash x\;\Code{-}_{\Code{nat}}\;y : \{\Code{int}\, |\, 0 \leq
       \nu \leq x \}\]
