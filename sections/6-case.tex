@@ -1,127 +1,91 @@
 % !TeX root = ../main.tex
-\section{Case Study} %
+\section{Case Studies} %
 \label{sec:case}
 
-We illustrate the expressiveness of context types with three
-case studies: compositional may- and must-style reasoning
-(\autoref{subsec:may-must}), a coverage completeness property for a BST
-generator (\autoref{subsec:coverage}), and disprove reasoning for a merge
-function (\autoref{subsec:disprove}).
+This paper develops a foundational account of demonic and angelic
+modalities in a bunched type system; in this section, we illustrate
+its expressiveness with three real-world case studies.
 
-\subsection{May and Must Analysis}\label{subsec:may-must}
+\subsection{May/Must Analysis} \label{subsec:may-must}
 
-\begin{figure}[h!]
+\begin{figure}[h]
+\begin{subfigure}[t]{0.48\linewidth}
     \centering
-    \begin{subfigure}[t]{0.48\linewidth}
-        \centering
-\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
-val g : ?$\Code{i}{:}\ort{\Int}{\top}\ctsarr\ort{\Int}{0 \leq \vnu}$?
-
-?$\vdash$? let f (x: int) (y: int) =
-    (g x) < 0 || (g y) < 0
-: ?$\Code{x}{:}\ort{\Int}{\top}\ctsarr \Code{y}{:}\ort{\Int}{\top}\ctsarr \ort{\Bool}{\vnu = \false}$?
-\end{minted}
-        \subcaption{May-analysis helps may-analysis.}
-        \label{fig:may-must-may}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[t]{0.48\linewidth}
-        \centering
-\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
-val g : ?$\Code{i}{:}\urt{\Int}{\top}\ctsarr\urt{\Int}{0 \leq \vnu}$?
-
-?$\vdash$? let f (x: int) (y: int) =
-    0 <= (g x) && 0 <= (g y)
-: ?$\Code{x}{:}\urt{\Int}{\top}\ctsarr\Code{y}{:}\urt{\Int}{\top}\ctsarr\urt{\Bool}{\vnu = \true}$?
-\end{minted}
-        \subcaption{Must-analysis helps may-analysis.}
-        \label{fig:may-must-must}
-    \end{subfigure}
-
-    \medskip
-
-    \begin{subfigure}[t]{0.48\linewidth}
-        \centering
-\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
-val g : ?$\Code{i}{:}\ort{\Int}{\top}\ctsarr\ort{\Int}{\vnu \neq 0}$?
-
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true,
+    fontsize = \footnotesize, escapeinside=??]{OCaml}
+  val g : ?$\Code{i}{:}\ort{\Int}{\top}\ctsarr\ort{\Int}{\vnu \neq 0}$?
+  
 ?$\vdash$? let f (x: int) (y: int) =
     if y > 10 then (g x) + 1
     else x + 1
-: ?$\Code{x}{:}\urt{\Int}{\top}\ctsarr\Code{y}{:}\urt{\Int}{\top}\ctsarr\urt{\Int}{\vnu = 1}$?
+    : ?$\Code{x}{:}\ \urt{\Int}{\vnu = 0} \ctsarr \Code{y}{:}\urt{\Int}{0 \leq \vnu \leq 10} \ctsarr$?
+        ?$\urt{\Int}{\vnu = 1}$?
 \end{minted}
-        \subcaption{May-analysis helps must-analysis.}
-        \label{fig:may-must-reach2}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[t]{0.48\linewidth}
-        \centering
-\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
-val g : ?$\Code{i}{:}\ort{\Int}{\top}\ctsarr\ort{\Int}{\vnu > 0}\interty $?
-        ?$\Code{i}{:}\urt{\Int}{\top}\ctsarr\urt{\Int}{\vnu > 0}$?
+    \subcaption{May-analysis helps must-analysis.}
+    \label{fig:may-must-reach2}
+\end{subfigure}
+\hfill
+\begin{subfigure}[t]{0.48\linewidth}
+    \centering
+\begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true,
+    fontsize = \footnotesize, escapeinside=??]{OCaml}
+  val g : ?$\Code{i}{:}\ort{\Int}{\top}\ctsarr\ort{\Int}{\vnu > 0}\interty$?
+          ?$\Code{i}{:}\urt{\Int}{\top}\ctsarr\urt{\Int}{\vnu > 0}$?
 
-?$\vdash$? let f (x: int) (y: int) =
+?$\vdash$? let f (x: int) =
     let a = g x in
     if a > 10 then 3
     else a
-: ?$\Code{x}{:}\ort{\Int}{\top}\ctsarr\Code{y}{:}\ort{\Int}{\top}\ctsarr\ort{\Int}{0 \leq \vnu}$?
+: ?$\Code{x}{:} \ort{\Int}{\top}\ctsarr\urt{\Int}{1 \leq \vnu \leq 3}$?
 \end{minted}
-        \subcaption{Must-analysis helps may-analysis.}
-        \label{fig:may-must-inter}
-    \end{subfigure}
-    \caption{Compositional may- and must-style reasoning with context types.}
-    \label{fig:may-must-analysis}
+    \subcaption{Must-analysis helps may-analysis.}
+    \label{fig:may-must-inter}
+\end{subfigure}
+\caption{Compositional may- and must-style reasoning with context types.}
+\label{fig:may-must-analysis}
 \end{figure}
 
-Our unified treatment of safety and reachability through context types
-also furnishes a foundation for compositional may- and must-style
-program analysis, as developed in prior work~\cite{GN+10}. That
-analysis is compositional because callee summaries inform caller
-analysis; Figure~\ref{fig:may-must-analysis} reproduces four
-representative examples from the original paper. We restate them in
-our core language and assign context types to the caller $\Code{f}$
-and the callee $\Code{g}$. In our encoding, may-analysis summaries use
-demonic parameters and returns, whereas must-analysis summaries use
-angelic parameters and returns.
+Prior work has considered program analyses that reason about may- and
+must-properties within the same framework~\cite{BVR+08,GN+10}. Like
+our type system, these analyses are compositional because callee
+summaries inform caller deductions. Figure~\ref{fig:may-must-analysis}
+is an adaptation of two examples from~\cite{GN+10}, restated in our
+core language with context types assigned to both the caller
+$\Code{f}$ and the callee $\Code{g}$. In our encoding, demonic types
+correspond to may-analysis summaries (safety), while angelic types
+correspond to must-analysis summaries (reachability).
 
-Figure~\ref{fig:may-must-analysis}~(a) calls for a ``not-may'' summary
-of $\Code{f}$, namely a safety property stating that $\Code{f}$'s
-result \emph{may not} be $\true$. Because the callee $\Code{g}$
-returns only non-negative values (i.e., $\ort{\Int}{0 \leq \vnu}$),
-the caller $\Code{f}$ may be summarized as returning only $\false$. By
-contrast, the must-analysis in Figure~\ref{fig:may-must-analysis}~(b)
-requires $\true$ to be reachable for $\Code{f}$, relying on
-$\Code{g}$'s guarantee that every non-negative value is
-reachable. Prior must-style analyses can handle only plain
-conjunctions of two callee return values, since they cannot express
-disjointness between the inputs $\Code{x}$ and $\Code{y}$ in
-$\Code{f}$. On the other hand, if function $\Code{f}$ returns
-$\Code{(g\;x) - (g\;y)}$ and we want to prove all natural number are
-reachable, the following disjointed type for $\Code{f}$ is required:
-\begin{align*}
-  \Code{x}{:}\urt{\Int}{\top}\ctwand\Code{y}{:}\urt{\Int}{\top}\ctwand\urt{\Int}{0 \leq \vnu }
-\end{align*}\noindent
+Figure~\ref{fig:may-must-analysis}~(a) illustrates how a may-analysis
+result on $\Code{g}$ enables a must-analysis result on
+$\Code{f}$. $\Code{f}$'s type asserts that it must return 1, given
+that $\Code{x}$ can be 0 and $\Code{y}$ can be any value in
+[0,10]. The true branch ($\Code{y} > 10$) would require
+$\Code{g}\;\Code{x} = 0$. However, $\Code{g}$'s demonic type precludes
+this.  The true branch is therefore not a valid witness for
+$\Code{f}$'s reachability guarantee. Instead, angelically choosing
+$\Code{x} = 0$ and $\Code{y} \in [0, 10]$ ensures control goes through
+the false branch, returning $\Code{x} + 1 = 1$, and justifying the
+type. 
 
-Figure~\ref{fig:may-must-analysis}~(c) rules out reachability analysis
-for the then-branch of the conditional, because $\Code{g}$ may return
-a non-zero value and thereby prevent that branch from reaching the
-result $1$. In Figure~\ref{fig:may-must-analysis}~(d), by contrast,
-the callee $\Code{g}$ carries two summaries as an intersection type;
-its angelic component states that every integer is reachable. This
-forces may-analysis of the caller $\Code{f}$ to explore both branches
-of the conditional. Our type system handles such cases more uniformly,
-since a single type may be constrained under both angelic and demonic
-modalities. For instance, safety checking for $\Code{f}$ can proceed
-under the more comprehensive type:
-\begin{align*}
-    \Code{x}{:}(\ort{\Int}{\top}\interty \urt{\Int}{\top})\ctsarr\Code{y}{:}(\ort{\Int}{\top}\interty \urt{\Int}{\top})\ctsarr(\ort{\Int}{\top}\interty \urt{\Int}{\vnu = 1})
-\end{align*}\noindent
-which supports safety and reachability checking in one pass, rather than alternating between may- and must-style analysis.
+Figure~\ref{fig:may-must-analysis}~(b) illustrates how a must-analysis
+result on $\Code{g}$ enables a may-analysis result on $\Code{f}$,
+whose type asserts that it can produce every value in the range
+$[1,3]$. The true branch ($\Code{a} > 10$) always returns 3,
+contributing that to the reachable range. The false branch returns
+$\Code{a}$ when $\Code{a} \leq 10$.  To determine the values it
+reaches, we appeal to both components of $\Code{g}$'s intersection
+type: the demonic component guarantees $\Code{a} > 0$ always (safety),
+while the angelic component guarantees every positive integer is
+reachable.  Since the branch condition restricts $\Code{a} \leq 10$,
+the false branch can produce every value in $[1,10]$, and in
+particular every value in $[1, 2]$. Note that 0 is excluded from the
+range because of $\Code{g}$'s safety type.  Together, the true and
+false branches establish the reachability of every value in $[1,3]$,
+validating $\Code{f}$'s result qualifier.
 
-\subsection{Coverage Completeness Verification}\label{subsec:coverage}
-The coverage type system of~\citet{CoverageType} verifies that a
-test generator produces every desirable input.
-Consider the following BST generator:
+\subsection{Coverage Completeness}\label{subsec:coverage}
+\begin{wrapfigure}{r}{.55\textwidth}
+  \vspace*{-.2in}
 \begin{minted}[xleftmargin=15pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
 let rec bst_gen (r: nat) (lo: nat)
               (range: nat -> nat -> nat): nat tree =
@@ -132,9 +96,18 @@ else Leaf ?$\oplus$?
   let right = bst_gen (r - r') (lo + r') range in
   Node (lo + r') left right
 \end{minted}
-The following specification asserts that for any valid range generator,
-\texttt{bst\_gen} produces every BST whose keys fall in $(\Code{lo},
-\Code{lo}+r]$:
+\caption{A BST generator adapted from~\cite{CoverageType.}}
+  \label{fig:bst}
+\vspace*{-.1in}
+\end{wrapfigure}
+The coverage type system of~\citet{CoverageType} verifies that a test
+generator produces every desirable input.   Given the BST
+generator shown in Figure~\ref{fig:bst},
+the following specification asserts that for any valid range generator,
+\texttt{bst\_gen} produces \emph{every} BST whose keys lie within $(\Code{lo},
+\Code{lo}+r]$\footnote{In the type for $\Code{bst\_gen}$, $\Code{mem}(\vnu,x)$ is
+    a method predicate, i.e., an uninterpreted function used to encode
+    a membership property of BSTs.}:
 \begin{align*}
   \mykw{val}\;\Code{bst\_gen} : \ctpers(&
     \Code{r}{:}\ort{\Nat}{\top} \ctsarr \Code{lo}{:}\ort{\Nat}{\top} \ctsarr
@@ -147,20 +120,26 @@ The following specification asserts that for any valid range generator,
     \urt{\Nat\;\Code{tree}}{\Code{bst}(\vnu) \land
       \forall x.\, \Code{mem}(\vnu, x) \iff
       (\Code{lo} < x \leq \Code{lo}+r)})
-\end{align*}\noindent
-In our setting, all such generators can \emph{produce new angelic capabilities} for \emph{arbitrary} input parameters and thus should have context types of the following form:
+\end{align*}
+In our setting, all such generators introduce fresh angelic
+capabilities at each invocation, independently of the
+surrounding context, for \emph{arbitrary} input parameters and thus should
+have context types of the following form:
 \begin{align*}
     \overbrace{\ctpers (\quad \underbrace{\overline{x{:}\ort{b_x}{\phi_x}\ctsarr}}_{\texttt{demonic parameters}} \quad \underbrace{\urt{b}{\phi}}_{\texttt{angelic result}} \quad )}^{\texttt{duplicatable}}
 \end{align*}\noindent
-Thus, the range generator is persistent and has demonic parameter types ($\ort{\Nat}{\top}$ and
-$\ort{\Nat}{x < \vnu}$) and an angelic result type ($\urt{\Nat}{x <
-  \vnu < y}$).  The demonic parameters mean that successive calls to
-\texttt{range} with different arguments can be typed with
-independent result capabilities — the generator's output at each
-recursive call is disjoint from its outputs at other calls.
-Similarly, the BST generator follows the same pattern: its demonic parameter types allow any valid size $\Code{r}$ and lower bound $\Code{lo}$, and its angelic result type asserts that every valid BST is reachable by some sequence of generator choices.
+Thus, the range generator is persistent and has demonic parameter
+types ($\ort{\Nat}{\top}$ and $\ort{\Nat}{x < \vnu}$) and an angelic
+result type ($\urt{\Nat}{x < \vnu < y}$).  The demonic parameters allow
+successive calls to \texttt{range} with different arguments to
+be typed with independent result capabilities — the generator's output
+at each recursive call is disjoint from its outputs at other calls.
+Similarly, the BST generator follows the same pattern: its demonic
+parameter types allow any valid size $\Code{r}$ and lower bound
+$\Code{lo}$, and its angelic result type asserts that every valid BST
+is reachable by some sequence of generator choices.
 
-\subsection{Disprove Reasoning}\label{subsec:disprove}
+\subsection{Counterexample Generation}\label{subsec:disprove}
 
 
 \begin{figure}[h!]
@@ -182,24 +161,40 @@ $3-4$). Otherwise, the function merges the tails of the two inputs and appends t
 \label{fig:merge}
 \end{figure}
 
-When a refinement type system fails to prove a safety property, this does not mean the program is incorrect: may-style reasoning offers no guarantee that erroneous behaviors are reachable. Recent work~\cite{RefinementTypeRefutations,RefinementTypeSymbolicExecution} addresses this limitation by using symbolic execution to search for counterexamples; our context type system can establish such counterexamples directly.
-Consider \Code{merge} in Figure~\ref{fig:merge}, a core component of merge sort that should preserve sortedness of the output list:
+When a refinement type system fails to prove a safety property, this
+does not mean the program is incorrect: may-style (overapproximate)
+reasoning offers no guarantee that a presumed erroneous behavior is
+actually reachable. Recent
+work~\cite{RefinementTypeRefutations,RefinementTypeSymbolicExecution}
+addresses this limitation by using symbolic execution to search for
+counterexamples; our context type system can establish such
+counterexamples directly.  Consider the $\Code{merge}$ function shown
+in Figure~\ref{fig:merge}, a function intended to merge two sorted
+lists, as used in a mergesort procedure; it is intended to preserve
+sortedness of the output list:
 \begin{align*}
   \Code{l1}{:}\ort{\List[\Code{elem}]}{\top} \ctsarr \Code{l2}{:}\ort{\List[\Code{elem}]}{\top} \ctsarr \ort{\List[\Code{elem}]}{\I{sorted}(\vnu)}
 \end{align*}\noindent
-Verification fails nonetheless. The base cases (lines $3$--$4$) type-check, so the failure arises in the recursive case, where the refinement type system offers little guidance.
-Symbolic execution can find the following counterexample:
+Verification fails nonetheless. The base cases (lines $3$--$4$)
+type-check, so the failure arises in the recursive case, where the
+refinement type system offers little guidance since it cannot
+identify which execution branch leads to the unsorted output.  Symbolic execution 
+finds the following counterexample:
 \begin{align*}
     \texttt{Counterexample:}&\quad  \text{ when } \Code{l1} = [1;2] \text{ and } \Code{l2} = [3;4] \text{ then } \mstep{\Code{merge}\;[1;2]\;[3;4]}{[1;3;2;4]}
 \end{align*}\noindent
-The bug stems from the assumption that, after comparing $\Code{h1}$ and $\Code{h2}$, $\Code{h2}$ is always the second-smallest element (line $7$).
-Even when $\Code{h1} < \Code{h2}$, $\Code{h2}$ may exceed some element of $\Code{t1}$, breaking sortedness.
-Alternatively, we can \emph{disprove} the function with the following type:
+The bug stems from the assumption that, after comparing $\Code{h1}$
+and $\Code{h2}$, $\Code{h2}$ is always the second-smallest element
+(line $7$).  Even when $\Code{h1} < \Code{h2}$, $\Code{h2}$ may exceed
+some element of $\Code{t1}$, breaking sortedness.  Rather than appealing to
+a separate symbolic execution procedure to discover this counterexample,  we
+can directly \emph{disprove} our expectations that the function
+operates correctly, by type-checking it with the following type:
 \begin{align*}
     &\Code{l1}{:}\urt{\List[\Code{elem}]}{\top} \ctwand \Code{l2}{:}\urt{\List[\Code{elem}]}{\top} \ctwand \ort{\List[\Code{elem}]}{\neg \I{sorted}(\vnu)} \ctoplus \ort{\List[\Code{elem}]}{\top}
 \end{align*}\noindent
 This type follows the ``affine reachability'' style of \autoref{sec:context-typing}: the return type is a sum of the top type $\ort{\List[\Code{elem}]}{\top}$ and the negation of the original safety property, $\ort{\List[\Code{elem}]}{\neg \I{sorted}(\vnu)}$, expressing erroneous behavior.
-The parameter types are moreover flipped to \emph{disjointed angelic types}, indicating that $\Code{l1}$ and $\Code{l2}$ may independently range over arbitrary sorted lists.
+The parameter types are given \emph{disjoint angelic types}, indicating that $\Code{l1}$ and $\Code{l2}$ may independently range over arbitrary sorted lists.
 Without this disjointness, a carefully crafted environment can hide the bug:
 \begin{center}
 \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
@@ -210,5 +205,136 @@ Without this disjointness, a carefully crafted environment can hide the bug:
   merge l1 l2
 \end{minted}
 \end{center}\noindent
-Here $\Code{l1}$ and $\Code{l2}$ each range over all sorted lists, yet they cannot both be non-empty simultaneously.
-Under this environment, the merge bug cannot be triggered, since the case where both inputs are non-empty (line $5$) is never reached.
+Here $\Code{l1}$ and $\Code{l2}$ each range over all sorted lists,
+given by $\Code{sorted\_list\_gen}$, yet they cannot both be non-empty
+simultaneously.  Under this environment, the merge bug cannot be
+triggered, since the case where both inputs are non-empty (line $5$)
+is never reached.
+
+
+%% %% We illustrate the expressiveness of context types with three
+%% %% case studies: compositional may- and must-style reasoning
+%% %% (\autoref{subsec:may-must}), a coverage completeness property for a BST
+%% %% generator (\autoref{subsec:coverage}), and disprove reasoning for a merge
+%% %% function (\autoref{subsec:disprove}).
+
+%% \subsection{May and Must Analysis}\label{subsec:may-must}
+
+%% \begin{figure}[h!]
+%%     \centering
+%% %%     \begin{subfigure}[t]{0.48\linewidth}
+%% %%         \centering
+%% %% \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+%% %% val g : ?$\Code{i}{:}\ort{\Int}{\top}\ctsarr\ort{\Int}{0 \leq \vnu}$?
+
+%% %% ?$\vdash$? let f (x: int) (y: int) =
+%% %%     (g x) < 0 || (g y) < 0
+%% %% : ?$\Code{x}{:}\ort{\Int}{\top}\ctsarr \Code{y}{:}\ort{\Int}{\top}\ctsarr \ort{\Bool}{\vnu = \false}$?
+%% %% \end{minted}
+%% %%         \subcaption{May-analysis helps may-analysis.}
+%% %%         \label{fig:may-must-may}
+%% %%    \end{subfigure}
+%% %%    \hfill
+%% %%     \begin{subfigure}[t]{0.48\linewidth}
+%% %%         \centering
+%% %% \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+%% %% val g : ?$\Code{i}{:}\urt{\Int}{\top}\ctsarr\urt{\Int}{0 \leq \vnu}$?
+
+%% %% ?$\vdash$? let f (x: int) (y: int) =
+%% %%     0 <= (g x) && 0 <= (g y)
+%% %% : ?$\Code{x}{:}\urt{\Int}{\top}\ctsarr\Code{y}{:}\urt{\Int}{\top}\ctsarr\urt{\Bool}{\vnu = \true}$?
+%% %% \end{minted}
+%% %%         \subcaption{Must-analysis helps may-analysis.}
+%% %%         \label{fig:may-must-must}
+%% %%     \end{subfigure}
+
+%% %%     \medskip
+%%     \begin{subfigure}[t]{0.48\linewidth}
+%%         \centering
+%% \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+%% val g : ?$\Code{i}{:}\ort{\Int}{\top}\ctsarr\ort{\Int}{\vnu \neq 0}$?
+
+%% ?$\vdash$? let f (x: int) (y: int) =
+%%     if y > 10 then (g x) + 1
+%%     else x + 1
+%% : ?$\Code{x}{:}\urt{\Int}{\top}\ctsarr\Code{y}{:}\urt{\Int}{\top}\ctsarr\urt{\Int}{\vnu = 1}$?
+%% \end{minted}
+%%         \subcaption{May-analysis helps must-analysis.}
+%%         \label{fig:may-must-reach2}
+%%     \end{subfigure}
+%%     \hfill
+%%     \begin{subfigure}[t]{0.48\linewidth}
+%%         \centering
+%% \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
+%% val g : ?$\Code{i}{:}\ort{\Int}{\top}\ctsarr\ort{\Int}{\vnu > 0}\interty $?
+%%         ?$\Code{i}{:}\urt{\Int}{\top}\ctsarr\urt{\Int}{\vnu > 0}$?
+
+%% ?$\vdash$? let f (x: int) (y: int) =
+%%     let a = g x in
+%%     if a > 10 then 3
+%%     else a
+%% : ?$\Code{x}{:}\ort{\Int}{\top}\ctsarr\Code{y}{:}\ort{\Int}{\top}\ctsarr\urt{\Int}{0 \leq \vnu \leq 3}$?
+%% \end{minted}
+%%         \subcaption{Must-analysis helps may-analysis.}
+%%         \label{fig:may-must-inter}
+%%     \end{subfigure}
+%%     \caption{Compositional may- and must-style reasoning with context types.}
+%%     \label{fig:may-must-analysis}
+%% \end{figure}
+
+%% Prior work has considered program analyses that reason about may- and
+%% must- properties within the same framework~\cite{BVR+08,GN+10}.  Like
+%% our type system, these analyses are compositional because callee
+%% summaries inform caller deductions.
+%% Figure~\ref{fig:may-must-analysis} is an adaptation of two examples
+%% from~\cite{GN+10}. We restate them in our core language and assign
+%% context types to the caller $\Code{f}$ and the callee $\Code{g}$. In
+%% our encoding, may-analysis summaries use demonic parameters and
+%% returns, whereas must-analysis summaries use angelic parameters and
+%% returns.
+
+%% Figure~\ref{fig:may-must-analysis}~(a) ascribes an angelic type to
+%% $\Code{f}$ that requires that it returns 1, assuming its inputs
+%% $\Code{x}$ and $\Code{y}$ can produce every integer.  Because
+%% $\Code{g}$'s demonic type precludes it from returning 0, the result
+%% can be reached from the first branch.  Instead, angelically choosing
+%% $\Code{x}$ to be 0, and $\Code{y}$ to be (say) 9 justifies the type.
+
+%% In contrast, Figure~\ref{fig:may-must-analysis}~(b) requires that it
+%% be capable of returning every value in [0,3].  Its true branch
+%% contributes to providing 3, but to justify that the false branch can
+%% produce [0,2], we appeal to $\Code{g}$'s signature, which constrains
+%% it to (a) only produce positive values (i.e., the demonic component of
+%% its intersection type), and (b) all of which are reachable (i.e., the
+%% angelic component of its type).  Taken together, this means that
+%% variable $\Code{a}$ can surely produce [0,2], thus validating
+%% $\Code{f}$'s result qualifier.
+
+
+%% However, the demonic
+%% type signature for  $\Code{g}$'s guarantee that every
+%% non-negative value is reachable. Prior must-style analyses can handle
+%% only plain conjunctions of two callee return values, since they cannot
+%% express disjointness between the inputs $\Code{x}$ and $\Code{y}$ in
+%% $\Code{f}$. On the other hand, if function $\Code{f}$ returns
+%% $\Code{(g\;x) - (g\;y)}$ and we want to prove all natural number are
+%% reachable, the following disjointed type for $\Code{f}$ is required:
+%% \begin{align*}
+%%   \Code{x}{:}\urt{\Int}{\top}\ctwand\Code{y}{:}\urt{\Int}{\top}\ctwand\urt{\Int}{0 \leq \vnu }
+%% \end{align*}\noindent
+
+%% Figure~\ref{fig:may-must-analysis}~(c) rules out reachability analysis
+%% for the then-branch of the conditional, because $\Code{g}$ may return
+%% a non-zero value and thereby prevent that branch from reaching the
+%% result $1$. In Figure~\ref{fig:may-must-analysis}~(d), by contrast,
+%% the callee $\Code{g}$ carries two summaries as an intersection type;
+%% its angelic component states that every integer is reachable. This
+%% forces may-analysis of the caller $\Code{f}$ to explore both branches
+%% of the conditional. Our type system handles such cases more uniformly,
+%% since a single type may be constrained under both angelic and demonic
+%% modalities. For instance, safety checking for $\Code{f}$ can proceed
+%% under the more comprehensive type:
+%% \begin{align*}
+%%     \Code{x}{:}(\ort{\Int}{\top}\interty \urt{\Int}{\top})\ctsarr\Code{y}{:}(\ort{\Int}{\top}\interty \urt{\Int}{\top})\ctsarr(\ort{\Int}{\top}\interty \urt{\Int}{\vnu = 1})
+%% \end{align*}\noindent
+%% which supports safety and reachability checking in one pass, rather than alternating between may- and must-style analysis.

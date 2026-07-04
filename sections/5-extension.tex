@@ -77,12 +77,12 @@ $\Code{y_1 - y_2}$:
     \zlet{y_2}{f\;()}{e} : \tau} \tag{\textsc{T-Let}} \\
   & \empty \ctcomma z{:}\urt{\Unit}{\top} \ctcomma f{:}\ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top} \vdash \zlet{y_1}{f\;()}{\zlet{y_2}{f\;()}{e}} : \tau
 \end{align*}\noindent
-On the other hand, \textsc{T-LetD} produces an independent
+On the other hand, \textsc{T-LetI} produces an independent
 result, but prevents $f$ from reappearing in the body of a
 \Code{let}-expression, leaving us unable to type the second
 \Code{let}-expression in \ref{ex:nondet}:
 \begin{align*}
-  &\underline{\empty \ctstar y_1{:}\urt{\Nat}{\top} \vdash \zlet{y_2}{f\;()}{e} : \tau \quad \judgfail}  \tag{\textsc{T-LetD}}
+  &\underline{\empty \ctstar y_1{:}\urt{\Nat}{\top} \vdash \zlet{y_2}{f\;()}{e} : \tau \quad \judgfail}  \tag{\textsc{T-LetI}}
   \\
   &\empty \ctstar (z{:}\urt{\Unit}{\top} \ctcomma f{:}\ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top}) \vdash \zlet{y_1}{f\;()}{\zlet{y_2}{f\;()}{e}} : \tau
 \end{align*}\noindent
@@ -99,7 +99,7 @@ e.g.,
 \begin{align*}
   x{:}\ctpers \tau \; \ctsubseteq{\{x\}} \; x{:}\ctpers \tau \ctstar x{:}\ctpers \tau
 \end{align*}\noindent
-When combined with \textsc{T-LetD}, a persistent resource can be
+When combined with \textsc{T-LetI}, a persistent resource can be
 freely duplicated across multiple function applications without
 entangling their results.
 

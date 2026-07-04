@@ -196,12 +196,12 @@ underapproximation since $r'$ witnesses a specific subset of the
 environments in $r$.
 \begin{example}%[Modalities as Lower- and Upper-Bounds]%
   \label{ex-approximation-modalities}
-  Let $r_1$ be $\{[x \mapsto 1], [x \mapsto 2]\}$. The following hold:
+  Let $r_x$ be $\{[x \mapsto 1], [x \mapsto 2]\}$. The following hold:
   \begin{align*}
-    &r_1 \models \demonic\,\Code{Atom}(x = 1) \;\judgfail \quad
-    &&r_1 \models \demonic\,\Code{Atom}(0 \leq x \leq 4) \;\judgok \\
-    &r_1 \models \angelic\,\Code{Atom}(x = 1) \;\judgok \quad
-    &&r_1 \models \angelic\,\Code{Atom}(0 \leq x \leq 4) \;\judgfail
+    &r_x \models \demonic\,\Code{Atom}(x = 1) \;\judgfail \quad
+    &&r_x \models \demonic\,\Code{Atom}(0 \leq x \leq 4) \;\judgok \\
+    &r_x \models \angelic\,\Code{Atom}(x = 1) \;\judgok \quad
+    &&r_x \models \angelic\,\Code{Atom}(0 \leq x \leq 4) \;\judgfail
   \end{align*}
   The demonic assertion $\demonic\,\Code{Atom}(x = 1)$ fails because
   no superset of $r_x$ satisfies $\Code{Atom}(x = 1)$ exactly (since
