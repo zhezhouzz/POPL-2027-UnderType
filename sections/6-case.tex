@@ -96,7 +96,7 @@ else Leaf ?$\oplus$?
   let right = bst_gen (r - r') (lo + r') range in
   Node (lo + r') left right
 \end{minted}
-\caption{A BST generator adapted from~\cite{CoverageType.}}
+\caption{A BST generator adapted from~\cite{CoverageType}.}
   \label{fig:bst}
 \vspace*{-.1in}
 \end{wrapfigure}
@@ -195,8 +195,11 @@ operates correctly, by type-checking it with the following type:
 \end{align*}\noindent
 This type follows the ``affine reachability'' style of \autoref{sec:context-typing}: the return type is a sum of the top type $\ort{\List[\Code{elem}]}{\top}$ and the negation of the original safety property, $\ort{\List[\Code{elem}]}{\neg \I{sorted}(\vnu)}$, expressing erroneous behavior.
 The parameter types are given \emph{disjoint angelic types}, indicating that $\Code{l1}$ and $\Code{l2}$ may independently range over arbitrary sorted lists.
-Without this disjointness, a carefully crafted environment can hide the bug:
-\begin{center}
+Without this disjointness, a carefully crafted environment can hide
+the bug, as shown below. Here $\Code{l1}$ and $\Code{l2}$ each
+\begin{wrapfigure}{l}{.4\textwidth}
+  \begin{center}
+    \vspace*{-.1in}
 \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
   let l1 = sorted_list_gen () in
   let l2 = match l1 with
@@ -204,12 +207,12 @@ Without this disjointness, a carefully crafted environment can hide the bug:
            | _ -> [] in
   merge l1 l2
 \end{minted}
-\end{center}\noindent
-Here $\Code{l1}$ and $\Code{l2}$ each range over all sorted lists,
-given by $\Code{sorted\_list\_gen}$, yet they cannot both be non-empty
-simultaneously.  Under this environment, the merge bug cannot be
-triggered, since the case where both inputs are non-empty (line $5$)
-is never reached.
+\end{center}
+\end{wrapfigure}
+range over all sorted lists, given by $\Code{sorted\_list\_gen}$, yet
+they cannot both be non-empty simultaneously.  Under this environment,
+the merge bug cannot be triggered, since the case where both inputs
+are non-empty (line $5$) is never reached.
 
 
 %% %% We illustrate the expressiveness of context types with three

@@ -4,38 +4,41 @@
 % BD: trying to get away from talking about verification 'procedures'
 % here -- it may prime the reader for a type checking algorithm
 
-Static type systems are one of the most versatile and widely used
-program reasoning techniques. While their particulars can vary wildly,
-common to all type systems are two key ingredients: the use of
-\emph{types} to specify program behavior, and some deductive mechanism
-for \emph{compositionally verifying} that a program is consistent with
-a specification. Type systems have traditionally targeted
-\emph{safety} properties, a focus embodied by Milner's famous slogan
-that ``well-typed expressions cannot 'go
-wrong'''~\cite{Milner+78}. Here, the typing judgement
-$\Gamma \vdash e : \tau$ asserts that $e$ \emph{may} evaluate to many
-values (under an environment consistent with $\Gamma$), but that set
-of values is entirely contained within the ``safe'' region specified
-by $\tau$.
+Static type systems are one of the most versatile and widely-used
+program reasoning techniques available today. While their particulars
+can vary wildly, common to all type systems are two key ingredients:
+the use of \emph{types} to specify program behavior, and some
+deductive mechanism for \emph{compositionally verifying} that a
+program is consistent with a specification. Type systems have
+traditionally targeted \emph{safety} properties, a focus embodied by
+Milner's famous slogan that ``well-typed expressions cannot 'go
+wrong'''~\cite{Milner+78}. Here, the typing judgement $\Gamma \vdash e
+: \tau$ asserts that $e$ \emph{may} evaluate to many values (under an
+environment consistent with $\Gamma$), but that set of values is
+entirely contained within the ``safe'' region specified by $\tau$.
 
 Dually, \emph{reachability} properties seek to precisely capture a
 subset of the values that a program \emph{must} reach. Rather than
 ruling out certain executions, reachability analyses seek to soundly
-establish the existence of (often undesirable)
-executions. Reachability analyses are a well-established and practical
-technique for finding buggy behaviors~\cite{BMC+03}; more recently,
-several works~\cite{ReverseHoareLogic, OHP19, ZDS23} have studied
-``incorrectness'' systems designed to prove the existence of witnesses
-of buggy program behavior, with a goal of avoiding the overwhelming
-number of false positives reported by typical bug detection tools.
-The question of how to develop type systems targeting reachability
-properties, however, has been largely unexplored. A few recent
-exceptions~\cite{RefinementTypeRefutations, CoverageType, Ill-types},
-have begun to study type-based reachability reasoning, but each of
-these systems has focused on a particular property, e.g., checking
-coverage properties of test input generators, or applications, e.g.,
-generating concrete counterexamples refuting refinement type
-specifications.
+establish the existence of feasible executions.  Reachability analyses
+are a well-established and practical technique for informing program
+optimizations and transformations~\cite{WS94,GM21,JTW+98}.  They have
+also been effectively used to find buggy behaviors~\cite{BMC+03}; for
+example, several recent works~\cite{ReverseHoareLogic, OHP19, ZDS23}
+have studied ``incorrectness'' systems designed to prove the existence
+of witnesses of buggy program behavior, with a goal of avoiding the
+overwhelming number of false positives reported by typical bug
+detection tools.  The question of how to develop type systems
+targeting reachability properties, however, has been largely
+unexplored. A few recent exceptions~\cite{RefinementTypeRefutations,
+  CoverageType, Ill-types} have studied type-based reachability
+reasoning, but each of these systems has focused on a particular
+property, e.g., checking coverage properties of test input
+generators~\cite{CoverageType}, or applications, e.g., generating
+concrete counterexamples refuting refinement type
+specifications~\cite{RefinementTypeRefutations} or proving ill-typed
+programs do not evaluate~\cite{Ill-types}, rather than providing a
+general type-based reachability framework.
 
 % BD: One thing we should probably foreground more is that our
 % semantic model can track dependencies between free variables when
@@ -60,7 +63,7 @@ Rocq's standard library:
   \tag{\Code{/}}\label{ex:div}
 \end{align}
 A client of \ref{ex:div} may want to know both that (a) on positive
-inputs, its result is always a positive number smaller than its first
+inputs, its result is always a positive number no greater than its first
 argument (a safety property); and (b) for every positive number $n$,
 there exist positive inputs $x$ and $y$ such that $x$ \ref{ex:div}
 $y = n$ (a reachability property). Conventional refinement type
@@ -68,7 +71,7 @@ systems, which interpret refinements as overapproximations, can verify
 the former, but not the latter: e.g., a function that always returns $1$
 also satisfies (a). Conversely, an underapproximate interpretation can
 establish (b), but would also admit an implementation that always
-returns $x$. Our type system, in contrast, is capturing both kinds of
+returns $x$. Our type system, in contrast,  captures both kinds of
 properties as types:
 \begin{align}
   & x{:}\ort{\Nat}{\vnu > 0} \sarr y{:}\ort{\Nat}{\vnu > 0 } \sarr \ort{\Nat}{x \geq \vnu > 0} \tag{$\tau_a$}\\
@@ -85,17 +88,16 @@ denotes.  Conversely, the second uses $\urt{b}{\phi}$ to capture a
 reachability constraint: a term with this type must produce every
 value found in the set the type denotes.
 
-The intuitive meanings of each modality subtly change when a
+The intuitive meaning of each modality subtly changes when a
 refinement appears in a typing context instead of a result type. To
 establish the typing judgment $x{:} \ort{b}{\phi} \vdash e ~:~\tau$,
 our type system intuitively treats any free occurrences of the
 variable $x$ \emph{demonically}, since the surrounding environment is
 free to choose any value of $x$ consistent with $\phi$, which may
 cause $e$ to violate the constraints defined by $\tau$. Conversely,
-when establishing the typing judgment
-$x{:} \urt{b}{\phi} \vdash e ~:~\tau$, $x$ is treated
-\emph{angelically} --- $x$ must be able to take on every value
-consistent with $\phi$.
+when establishing the typing judgment $x{:} \urt{b}{\phi} \vdash e
+~:~\tau$, $x$ is treated \emph{angelically} since it must be able to
+take on every value consistent with $\phi$.
 
 The availability of first-class functions adds additional
 complications. Higher-order functions like the following, for example,
@@ -328,36 +330,58 @@ be combined via context combinators, the structure of a context is
 naturally a binary tree whose internal nodes record how sub-contexts
 are combined, enabling frame-based local reasoning.  For example, to
 establish that \ref{ex:div} can produce every positive number, we can
-type it against the following stronger type signature:
+type it against the following type signature:
 \begin{align*}
   & \vdash \ref{ex:div} ~:~ x{:}\urt{\Nat}{\vnu > 0} \sarr y{:}\urt{\Nat}{\vnu > 0} \ctwand \urt{\Nat}{\vnu > 0} \quad \judgok
 \end{align*}\noindent
 Here, the type constructor ($\ctwand$) requires the arguments for $x$
 and $y$ to be independent, guaranteeing that each angelic choice can
-be made regardless of the other.  While the result context of a
-deterministic function is always dependent on its input context,
-nondeterministic functions may produce results that are independent of
-some inputs, a distinction that our system captures via disjoint
-result contexts using $\ctwand$; we elaborate on this point in
-\autoref{sec:extension}.
+be made regardless of the other.
+
+%SJ: This sentence is a bit too cryptic - it teases non-determinism
+% without really providing enough motivation.  I think it would be
+% fine to list it in the contributions as we do, and have the reader
+% wait until that section to get details.
+%% While the result context of a
+%% deterministic function is always dependent on its input context,
+%% \emph{nondeterministic} functions may produce results that are
+%% independent of some inputs, a distinction that our system captures via
+%% disjoint result contexts using $\ctwand$; we elaborate on this point
+%% in \autoref{sec:extension}.
 
 \paragraph{Contributions.}
-The paper makes the following contributions:
-
+The paper makes the following contributions\footnote{The type system,
+  logic, and metatheory presented in the paper are mechanized in Rocq,
+  and presented as supplemental material.}:
 \begin{itemize}[leftmargin=*]
 \item We interpret the capability of a context to make angelic or
   demonic choices as a resource, and introduce a resource algebra to
-  express compositional operations over this capability.
+  express compositional operations over this
+  capability. 
 \item Building on this algebra, we define an associated modal
   \emph{context logic} that supports dependent and disjoint mixing of
-  safety/demonic and reachability/angelic modalities.
+  safety/demonic and reachability/angelic modalities. 
 \item We introduce \emph{context types}, a bunched modal type system
   interpreted in our context logic, to support both safety and
-  reachability reasoning for deterministic functional programs. We
-  further generalize context types to a functional language extended
-  with nondeterminism (\autoref{sec:extension}), where the result
-  context is allowed to be disjoint from the input context.
-\item We formalize our core language and type system in Rocq, and
-  provide corresponding helper tactics to automate reasoning about
-  context disjointness and capability decomposition.
+  reachability reasoning for deterministic functional programs.
+\item We further generalize context types to a functional language
+  extended with nondeterminism, where the result context is allowed to
+  be disjoint from the input context.
 \end{itemize}
+
+The remainder of the paper is organized as follows.  In the next
+section, we provide an example-driven overview of the type system.
+Section~\ref{sec:context-typing} formalizes this informal explanation
+in terms of a typed $\lambda$-calculus core language.
+Section~\ref{sec:meta} defines a denotational semantics for this type
+system via a bunched implication resource capability algebra along
+with its metatheory.  Section~\ref{sec:extension} considers an
+extension of the core language with non-determinism, along with
+refinements to the logic and denotational semantics necessary to
+support this new capability.  Section~\ref{sec:case} presents case
+studies of application instances for which context types are
+particularly well-aligned.  A discussion on potential ways to realize
+an efficient typing algorithm as well as improved automation and
+inference for this system is given in Section~\ref{sec:discussion}.
+Related work and conclusions are presented in
+Sections~\ref{sec:related} and~\cite{sec:conclusion}.
