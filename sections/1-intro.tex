@@ -71,8 +71,8 @@ establish (b), but would also admit an implementation that always
 returns $x$. Our type system, in contrast, is capturing both kinds of
 properties as types:
 \begin{align}
-  & x{:}\ort{\Nat}{\vnu > 0} \sarr y{:}\ort{\Nat}{\vnu > 0 } \sarr \ort{\Nat}{x \geq \vnu > 0} \tag{a}\\
-  & x{:}\urt{\Nat}{\vnu > 0} \sarr y{:}\urt{\Nat}{\vnu > 0} \sarr \urt{\Nat}{\vnu > 0 } \tag{b}
+  & x{:}\ort{\Nat}{\vnu > 0} \sarr y{:}\ort{\Nat}{\vnu > 0 } \sarr \ort{\Nat}{x \geq \vnu > 0} \tag{$\tau_a$}\\
+  & x{:}\urt{\Nat}{\vnu > 0} \sarr y{:}\urt{\Nat}{\vnu > 0} \sarr \urt{\Nat}{\vnu > 0 } \tag{$\tau_b$}
 \end{align}\noindent
 % \BD{One of the tricky things here is that \ref{ex:div} does not have
 %   the bottom signature -- we'd need to use bunched implication to
