@@ -181,8 +181,13 @@ always holds.  The introduction rule is shown below:
 \begin{align*}
 \mprooftr{40mm}
       {$\Gamma \vdash v : \tau$ \quad $\denot{\Gamma} \models \chpers \denot{\Gamma}$}
-      {T-Pers}
+      {T-PersI}
       {$\Gamma \vdash v : \ctpers \tau$}
+\quad
+\mprooftr{20mm}
+      {$\Gamma \vdash e : \ctpers \tau$}
+      {T-PersE (derived from T-Sub)}
+      {$\Gamma \vdash e : \tau$}
 \end{align*}\noindent
 \BD{Can we show the derived elimination rule here? We have the space.}
 In short, \textsc{T-Pers} allows us to conclude that a value is a
