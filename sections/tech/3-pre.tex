@@ -1,0 +1,117 @@
+% !TeX root = ../main.tex
+\section{Formalization Details}\label{sec:formalization-details}
+
+In this section, we provide the details definition of environment and capability.
+
+\begin{definition}[Environment]\label{def:env}
+  Assume $\Var$ and $\Val$ range over variable and value domains,
+  resp. An environment $\sigma$ is a partial map from variables to
+  values, i.e., $\Var \rightharpoonup \Val$.
+  We define the following standard operations on environments:
+\begin{itemize}
+ \item \emph{Domain}: We write $\Dom{\sigma}$ for its domain, i.e., the set of variables where the store is defined.
+  \item \emph{Compatibility}: Write $\mapCompat{\sigma_1}{\sigma_2}$ when $\sigma_1$ and $\sigma_2$ are
+    \emph{compatible}, i.e.\ they agree on the intersection of their domains.
+    \[
+      \mapCompat{\sigma_1}{\sigma_2}
+      \doteq
+      \forall x \in \Dom{\sigma_1} \cap \Dom{\sigma_2}.\; \sigma_1(x) = \sigma_2(x).
+    \]
+Note that the concatenation of two environment is defined as a map union
+$\sigma_1 \cup \sigma_2$, which is exchangeable when
+$\mapCompat{\sigma_1}{\sigma_2}$ holds.
+  \item \emph{Projection}: Fix finite $X \subseteq_{\mathrm{fin}}
+    \Var$ and an environment $\sigma$; we write $\projectTo{\sigma}{X}$ for
+    the projection of $\sigma$ to $\Dom{\sigma} \cap X$, i.e.,
+  \begin{align*}
+    \projectTo{\sigma}{X} \doteq \{ [x\mapsto \sigma(x)] \mid x \in \Dom{\sigma} \cap X \}.
+  \end{align*}
+  \item \emph{Refinement}: The projection operation can derive a
+    partial order refinement relation. Write $\sigma_1 \sqsubseteq
+    \sigma_2$ when $\sigma_1$ is a refinement of $\sigma_2$, i.e.,
+    $\sigma_1 = \projectTo{\sigma_2}{\Dom{\sigma_1}} $.
+\end{itemize}
+\end{definition}
+
+\begin{definition}[Contextual capability]\label{def:contextual-capability-details}
+A contextual capability $r$ is a \emph{non-empty} set of environments share the same domain.
+\begin{itemize}
+  \item \emph{Domain}: $\Dom{r} \doteq \Dom{\sigma}$ for arbitrary $\sigma \in r$, since $r$ is non-empty and shares the same domain.
+  \item \emph{Compatibility}: Write $\mapCompat{r_1}{r_2}$ when all stores in $r_1$ are compatible with all stores in $r_2$, i.e.,
+    \[
+      \mapCompat{r_1}{r_2}
+      \doteq
+      \forall \sigma_1 \in r_1.\;\forall \sigma_2 \in r_2.\; \mapCompat{\sigma_1}{\sigma_2}
+    \]
+  \item \emph{Projection}: The projection operation $\projectTo{r}{X}$ is defined piecewise, i.e.,
+  \begin{align*}
+    \projectTo{r}{X} \doteq \{ \projectTo{\sigma}{X} \mid \sigma \in r \}.
+  \end{align*}
+  \item \emph{Refinement}: the refinement relation $r_1 \sqsubseteq r_2$ holds iff $r_1 = \projectTo{r_2}{\Dom{r_1}} $.
+\end{itemize}
+\end{definition}
+
+\begin{definition}[Contextual Capabilities Product]\label{def:contextual-capabilities-product}
+  The product of two contextual capabilities $r_1 \times r_2$ is defined
+  as the following  partial binary operation:
+  \[
+    r_1 \times r_2 \;\doteq\;
+    \begin{cases}
+      \{\, \sigma_1 \cup \sigma_2 \mid \sigma_1 \in r_1,\; \sigma_2 \in r_2 \,\}
+        & \text{if } \mapCompat{r_1}{r_2}, \\
+        \text{undefined}
+        & \text{otherwise.}
+      \end{cases}
+  \]
+\end{definition}
+
+\begin{definition}[Contextual Capabilities Sum]\label{def:contextual-capabilities-sum}
+  The sum of two contextual capabilities $r_1 + r_2$ is defined
+  as the following partial binary operation:
+  \[
+    r_1 + r_2 \;\doteq\;
+    \begin{cases}
+      r_1 \cup r_2
+        & \text{if } \Dom{r_1} = \Dom{r_2}, \\
+        \text{undefined}
+        & \text{otherwise.}
+      \end{cases}
+  \]
+\end{definition}
+
+Note that these two operations are \emph{partial}: two resources
+cannot be multiplied unless they are compatible, and two resources
+cannot be summed unless they have the same domain.
+
+\begin{definition}[Contextual Capabilities Algebra]\label{def:contextual-capabilities-algebra}
+  The tuple $(\Res,{+},{\times},\mathbf{1})$ forms a \emph{partial
+    commutative semiring without zero} where the carrier set $\Res$ is
+  the domain of all contextual capabilities, and the unit
+  element $\mathbf{1}$ of product is the singleton capability
+  $\{\emptyset\}$. 
+  The following algebraic properties hold:
+  \begin{itemize}
+  \item Identity: $\forall r \in \Res. r \times \mathbf{1} = \mathbf{1} \times r = r$.
+  \item Commutative (when operations are defined): 
+  \begin{align*}
+    \forall r_1\;r_2 \in \Res. r_1 + r_2 = r_2 + r_1 \\
+    \forall r_1\;r_2 \in \Res. r_1 \times r_2 = r_2 \times r_1
+  \end{align*}
+  \item Associative (when operations are defined): 
+  \begin{align*}
+    \forall r_1\;r_2\;r_3 \in \Res. (r_1 + r_2) + r_3 = r_1 + (r_2 + r_3) \\
+    \forall r_1\;r_2\;r_3 \in \Res. (r_1 \times r_2) \times r_3 = r_1 \times (r_2 \times r_3)
+  \end{align*}
+  \end{itemize}
+\end{definition}
+
+% \begin{definition}[Bifunctoriality]\label{def:bifunctoriality}
+%   The refinement relation $\sqsubseteq$ over capabilities satisfies the bifunctoriality property, i.e.,
+%   \begin{align*}
+%     \forall r_1\;r_2\;r_1'\;r_2' \in \Res. r_1 \sqsubseteq r_1' \land r_2 \sqsubseteq r_2' &\implies r_1 \times r_2 \sqsubseteq r_1' \times r_2' 
+%     \\& (\text{when } r_1 \times r_2 \text{ and } r_1' \times r_2' \text{ are defined.})
+%   \end{align*}
+% \end{definition}
+
+% \begin{theorem}[BI-algebra]\label{thm:bi-algebra} The semiring $(\Res,{+},{\times},\mathbf{1})$ with partial order $\sqsubseteq$ forms a BI-algebra.
+% \end{theorem}
