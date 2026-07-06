@@ -394,8 +394,8 @@ The semantic subtyping relations used in rules T-Sub and T-CtxSub are:
   {CtxSub}
   {$\Gamma_1 \ctsubseteq{X} \Gamma_2$}
   }
-  \caption{Semantic subtyping relations \BD{Can we add subscripts here
-      or explicitly state the $\Sigma$ we're using in this caption.}}
+  \caption{Semantic subtyping relations. All denotations use an empty
+    basic typing context ($\Sigma = \emptyset$).}
   \label{fig:semantic-subtyping-relation}
 \end{figure}
 
@@ -420,14 +420,14 @@ We conclude with the core soundness results.
   \end{align*}}
 \end{definition}
 
-\BD{We do not mention the above definition anywhere. Presumably it's a
-  premise of the theorems below?}
+Our fundemental theorem and type soundness theorem assume a
+well-formed operator context.
 
 \begin{theorem}[Fundamental Theorem]%
   \label{thm:fundamental}
-  \langname{}'s typing judgement is sound with respect to the
-  denotation of types into context logic: $\Gamma \vdash e : \tau$
-  implies
+  \langname{}'s typing judgement
+  is sound with respect to the denotation of types into context logic:
+  $\Gamma \vdash e : \tau$ implies
   $\denot{\Gamma}_\emptyset \models
   \denot{\tau}_{\eraserf{\Gamma}}\;e$. %Thus, any capability that
   %satisfies the denotation of $\Gamma$ also satisfies the denotation
