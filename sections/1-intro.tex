@@ -24,12 +24,12 @@ establish the existence of feasible executions.  Reachability analyses
 are a well-established and practical technique for informing program
 optimizations and transformations~\cite{WS94,GM21,JTW+98}.  They have
 also been effectively used to find buggy behaviors~\cite{BMC+03}; for
-example, several recent works~\cite{ReverseHoareLogic, OHP19, ZDS23}
-have studied ``incorrectness'' systems designed to prove the existence
-of witnesses of buggy program behavior, with a goal of avoiding the
-overwhelming number of false positives reported by typical bug
-detection tools.  The question of how to develop type systems
-targeting reachability properties, however, has been largely
+example, several recent works~\cite{GOS19,ReverseHoareLogic, OHP19,
+  ZDS23} have studied ``incorrectness'' systems designed to prove the
+existence of witnesses of buggy program behavior, with a goal of
+avoiding the overwhelming number of false positives reported by
+typical bug detection tools.  The question of how to develop type
+systems targeting reachability properties, however, has been largely
 unexplored. A few recent exceptions~\cite{RefinementTypeRefutations,
   CoverageType, Ill-types} have studied type-based reachability
 reasoning, but each of these systems has focused on a particular
