@@ -1,4 +1,5 @@
-\section{Related Work}\label{sec:related}
+\section{Related Work}%
+\label{sec:related}
 
 \paragraph{Bunched typing and bunched implication.}
 
@@ -18,10 +19,9 @@ safety in mind, and do not consider the role of resources and contexts
 as a unifying mechanism for safety and reachability.
 
 \paragraph{Reachability verification.}
-
 Recent work on reachability verification in type systems includes
 two-sided type systems~\cite{Ill-types} which refute typing formulas
-to show that ill-formed programs do not evaluate and a complementary
+to show that ill-formed programs do not evaluate, and a complementary
 approach~\cite{RamsayIncorType} that internalizes negation directly as
 a complement operator on types to support incorrectness reasoning.
 Coverage types~\cite{CoverageType} underapproximate
@@ -33,31 +33,47 @@ here, and instead treat reachability properties independently of other
 safety considerations.
 
 We note that contemporary work on \emph{Reachability
-  Types}~\cite{ReachabilityTypes} uses ``reachability'' in a sense
-unrelated to how they are used here, and is concerned with soundly
+  Types}~\cite{ReachabilityTypes, WBJBR+24} uses ``reachability'' in a
+sense unrelated to how it is used here, and focuses on soundly
 tracking aliasing of mutable references in higher-order effectful
 programs.
 
-\paragraph{Incorrectness Logics.}
+\paragraph{Incorrectness logics.}
 Our angelic modality can be viewed as establishing a witness to a
 property, and thus is closely related to operators found in
-underapproximate logics~\cite{OHP19,RBD+20,ReverseHoareLogic,
-  HyperHoareLogic,QuantitativeWeakestHyperPre,UTurn,BackwardIncorrectness}
-that establish judgements which guarantee the existence of executions
-rather than safety validation.
+underapproximate logics~\cite{ReverseHoareLogic, OHP19, RBD+20,
+  RHLE, HyperHoareLogic, QuantitativeWeakestHyperPre, UTurn,
+  BackwardIncorrectness} that establish judgements which guarantee the
+existence of certain executions rather than ensuring the absence of
+unsafe executions.
 
-However, these store-based incorrectness program logics unify pre- and
-post-condition into a single modality (angelic or demonic), which does
-not support the construction or decomposition of context structure,
-which is a central feature of our type system.  Like us, outcome
-logic~\cite{ZDS23,Zil25TOPLAS} also unifies safety and reachability
-through branch composition $\varphi \oplus \psi$, and its $\oplus$
-adjoins control-flow alternatives like our $\ctoplus$.  But, mixing
-angelic and demonic constraints within a single outcome logic
-judgement requires an \emph{a priori} partitioning of outcomes via
-$\oplus$, whereas our type system determines valid angelic choices
+However, these logics and their descendants either fix a single
+approximation direction per triple~\cite{ReverseHoareLogic, OHP19,
+  RBD+20} or disallow approximation entirely~\cite{ESL+23}, and do not
+support the construction or decomposition of context structure, which
+is a central feature of our type system. A complementary line of work
+has studied the relationship between various correctness and
+incorrectness program logics, when viewed through the lens of
+predicate transformers and Galois connections~\cite{Cousot+24, VK+25};
+these efforts relate distinct program logics to one another
+externally, whereas our type system internalizes both approximation
+directions into a single reasoning framework.
+
+Like us, outcome logic~\cite{ZDS23, Zil25TOPLAS} also unifies safety
+and reachability through branch composition $\varphi \oplus \psi$, and
+its $\oplus$ adjoins control-flow alternatives like our $\ctoplus$.
+But, mixing angelic and demonic constraints within a single outcome
+logic judgement requires an \emph{a priori} partitioning of outcomes
+via $\oplus$, whereas our type system determines valid angelic choices
 compositionally, without requiring such a partition to be specified
-upfront.
+upfront. Outcome logic has since been extended to support
+separation-logic-style local reasoning~\cite{ZSS+24} and programs
+featuring adversarially resolved nondeterminism~\cite{ZKST+25}. In
+these extensions, however, ``demonic'' and ``angelic'' characterize
+how a program's nondeterminism is resolved by its semantics, whereas
+our modalities are specification-level annotations that determine
+whether an individual refinement is read as an upper or lower bound,
+and may be mixed freely within a single type judgement.
 
 \paragraph{May- and must-style program analysis.}
 There has been significant prior work on combining may- and must-style
@@ -75,9 +91,9 @@ deriving \emph{must}-style witnesses that explain why typing failed,
 often through concrete counterexample instantiations, while
 symbolic-execution tooling~\cite{RefinementTypeSymbolicExecution}
 searches for such counterexamples externally.  More broadly, our
-context types provide a unified theoretical foundation for both 
-approaches by exploiting the duality between safety and
-reachability reasoning.
+context types provide a unified theoretical foundation for both
+approaches by exploiting the duality between safety and reachability
+reasoning.
 
 \paragraph{Context-aware typing}
 Coeffect and graded modal type systems~\cite{Coeffects, Katsumata+14,

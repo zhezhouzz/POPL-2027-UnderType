@@ -5,7 +5,7 @@ The \langname{} language of \autoref{sec:context-typing} is
 deterministic: every term reduces to (at most) one value under any
 particular environment. This section considers a calculus,
 \langNDname{}, that relaxes this restriction, enabling us to, e.g.,
-type programs like \label{ex:DisjCon} from
+type programs like \ref{ex:DisjCon} from
 \autoref{sec:overview}. Concretely, \langNDname{} extends \langname{}
 with nondeterministic \emph{generators} that can produce multiple
 values across different executions:
@@ -166,12 +166,10 @@ This term can only reach the value $0$ since $f\;()$ can either reduce to $0$ or
   $\chpers (\denot{\tau}_{\Sigma}\;e)$, it would (incorrectly) contain
   inhabitants like
   $\zzlam{x}{0} \oplus \zzlam{x}{\Code{gen_{nat} () + 1}}$. To ensure
-  that $e$ is also single-valued, we introduce a universally
-  quantified fresh variable $x$ that ranges over all possible
-  reduction results of $e$; the persistent modality then ensures only
-  that $x$ is single-valued. \BD{This last point is a bit confusing --
-    why does it matter if $x$ is single-valued? Do we mean
-    'persistent' here?}
+  that $e$ is single-valued, we introduce a universally quantified
+  fresh variable $x$ that ranges over all possible reduction results
+  of $e$; the persistent modality then ensures both the context and
+  this $x$ are single-valued.
 \end{definition}
 
 \paragraph{Type rules for persistent types}
@@ -179,24 +177,25 @@ The elimination rule for persistent types is derivable from
 \textsc{T-Sub} and the fact $\Gamma \vdash \ctpers \tau <: \tau$
 always holds.  The introduction rule is shown below:
 \begin{align*}
-\mprooftr{40mm}
+\mprooftr{20mm}
+      {$\Gamma \vdash e : \ctpers \tau$}
+      {T-PersE}
+      {$\Gamma \vdash e : \tau$}
+\quad
+  \mprooftr{40mm}
       {$\Gamma \vdash v : \tau$ \quad $\denot{\Gamma} \models \chpers \denot{\Gamma}$}
       {T-PersI}
       {$\Gamma \vdash v : \ctpers \tau$}
-\quad
-\mprooftr{20mm}
-      {$\Gamma \vdash e : \ctpers \tau$}
-      {T-PersE (derived from T-Sub)}
-      {$\Gamma \vdash e : \tau$}
 \end{align*}\noindent
-\BD{Can we show the derived elimination rule here? We have the space.}
 In short, \textsc{T-Pers} allows us to conclude that a value is a
 persistent term of type $\ctpers \tau$ if we can establish that it has
 type $\tau$ using a type context comprised only of persistent facts,
-i.e., $\denot{\Gamma} \models \chpers \denot{\Gamma}$. \BD{Just to
-  double check, requiring a value $v$ in this rule means there are
-  persistent terms we cannot be checked against a persistent type,
-  right?}
+i.e., $\denot{\Gamma} \models \chpers \denot{\Gamma}$. Note that
+although \textsc{T-PersI} can only be directly applied to values, $v$,
+it is always possible to let-expand a persistent expression into a
+form which the rule can be applied to, e.g., by transforming
+$(\zzlam{y}{\Code{gen_{nat} ()}}) 3$ to
+$\zlet{x}{(\zzlam{y}{\Code{gen_{nat} ()}}) 3}{x}$.
 
 \subsection{Type Denotation for Nondeterminism} %
 \label{subsec:nondet-denotation}
@@ -269,7 +268,7 @@ specification. Finally, we can show that \langNDname{}'s extended type
 system is sound with respect to this generalized type denotation.
 
 \begin{theorem}[\langNDname{} Type Soundness]%
-  \label{thm:soundness}
+  \label{thm:nondet-soundness}
   For a well-typed \langNDname{} term $\emptyset \vdash e : \tau$ and
   fresh variable $x$,
   $\{[x \mapsto v] \mid \mstep{e}{v}\} \models \denot{\tau}\;x$.

@@ -2,26 +2,25 @@
 \label{sec:discussion}
 
 Our context type system combines the strengths of refinement type
-systems and BI-logic-based verification approaches by enabling
+systems and BI-logic-based verification approaches, enabling
 compositional reasoning about semantic resources (in our case, angelic
 and demonic capabilities) from expressive, modular specifications of
-program behavior.  As with these systems, it also inherits many of
-their challenges, including the need to limit user-provided guidance
+program behavior. It also inherits many of the challenges of these
+systems, including the need for some form of user-provided guidance
 and the inherent tension between richness of specification and
 decidability.
 
-A syntax-directed typing algorithm necessary for any efficient
-implementation would require additional typing annotations to
+A syntax-directed typing algorithm, necessary for any efficient
+implementation, would require additional typing annotations to
 constrain the flexibility of the existing typing rules that can be
-otherwise quite unconstrained; the typing rules for match statements
+otherwise quite unconstrained: the typing rules for match statements
 and functions, for example, admit multiple valid typings.  It is
 impractical, however, to ask users to write function signatures that
-anticipate the requirements imposed by all calling contexts.
-Furthermore, even putting aside the question of typing annotation
-burden, type-checking programs with unrestricted angelic and demonic
-modalities in the typing context can lead to formulae with quantifier
-alternations that lie outside decidable fragments of first-order
-logic.
+anticipate the requirements imposed by all calling contexts.  Even
+putting aside the question of typing annotation burden, type-checking
+programs with unrestricted angelic and demonic modalities in the
+typing context can lead to formulae with quantifier alternations that
+lie outside decidable fragments of first-order logic.
 
 Similar challenges arise in separation-logic-based verification, with
 initial proposals requiring substantial user-supplied annotations for
@@ -36,10 +35,10 @@ demonstrated in related settings~\cite{CoverageType}.  Alternatively,
 rather than pursuing full automation, we might consider providing
 support for context types within an interactive mechanized
 verification system like Rocq in the spirit of frameworks like
-Iris~\cite{Iris} or VST~\cite{AD+14}.  In this setting, users retain
-fine-grained control over typing choices, with specialized context
-type-aware tactics used to facilitate local type inference, search,
-and backtracking.
+Iris~\cite{Iris} or VST~\cite{AD+14}.  In this setting, users would
+retain fine-grained control over typing choices, with specialized
+context type-aware tactics used to facilitate local type inference,
+search, and backtracking.
 
 
 
@@ -82,7 +81,7 @@ and backtracking.
 %% that verification conditions remain decidable.  Developing analogous
 %% inference techniques and restrictions to enable an automated
 %% verification procedure based on our context type system is an
-%% important direction for future work.  
+%% important direction for future work.
 
 
 
