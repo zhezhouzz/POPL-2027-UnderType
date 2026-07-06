@@ -74,21 +74,21 @@ establish (b), but would also admit an implementation that always
 returns $x$. Our type system, in contrast,  captures both kinds of
 properties as types:
 \begin{align}
-  & x{:}\ort{\Nat}{\vnu > 0} \sarr y{:}\ort{\Nat}{\vnu > 0 } \sarr \ort{\Nat}{x \geq \vnu > 0} \tag{$\tau_a$}\\
-  & x{:}\urt{\Nat}{\vnu > 0} \sarr y{:}\urt{\Nat}{\vnu > 0} \sarr \urt{\Nat}{\vnu > 0 } \tag{$\tau_b$}
+  & x{:}\ort{\Nat}{\vnu > 0} \sarr y{:}\ort{\Nat}{\vnu > 0 } \sarr \ort{\Nat}{x \geq \vnu > 0} \tag{$\tau_a$}\label{ex:tauA}\\
+  & x{:}\urt{\Nat}{\vnu > 0} \sarr y{:}\urt{\Nat}{\vnu > 0} \sarr \urt{\Nat}{\vnu > 0 } \tag{$\tau_b$}\label{ex:tauB}
 \end{align}\noindent
 % \BD{One of the tricky things here is that \ref{ex:div} does not have
 %   the bottom signature -- we'd need to use bunched implication to
 %   capture the property, and we do not want to introduce that just
 %   yet.}
-The first signature uses $\ort{b}{\phi}$ to express that the qualifier
-$\phi$ should be interpreted as a safety constraint: a term that has
-this type cannot produce any value outside the set of values the type
-denotes.  Conversely, the second uses $\urt{b}{\phi}$ to capture a
-reachability constraint: a term with this type must produce every
-value found in the set the type denotes.
+The result type of \ref{ex:tauA} uses $\ort{b}{\phi}$ to express that
+the qualifier $\phi$ should be interpreted as a safety constraint: a
+term with this type cannot produce any value outside the set of values
+the type denotes.  Conversely, \ref{ex:tauB} uses $\urt{b}{\phi}$ to
+capture a reachability constraint: a term with this type must produce
+every value found in the set the type denotes.
 
-The intuitive meaning of each modality subtly changes when a
+The intuitive meaning of each modality changes subtly when a
 refinement appears in a typing context instead of a result type. To
 establish the typing judgment $x{:} \ort{b}{\phi} \vdash e ~:~\tau$,
 our type system intuitively treats any free occurrences of the
@@ -350,17 +350,16 @@ be made regardless of the other.
 %% in \autoref{sec:extension}.
 
 \paragraph{Contributions.}
-The paper makes the following contributions\footnote{The type system,
-  logic, and metatheory presented in the paper are mechanized in Rocq,
-  and presented as supplemental material.}:
+The paper makes the following contributions:\footnote{The type system,
+  logic, and metatheory presented in the paper have been fully
+  mechanized in Rocq, and are included in the supplemental material.}
 \begin{itemize}[leftmargin=*]
 \item We interpret the capability of a context to make angelic or
   demonic choices as a resource, and introduce a resource algebra to
-  express compositional operations over this
-  capability. 
+  express compositional operations over this capability.
 \item Building on this algebra, we define an associated modal
   \emph{context logic} that supports dependent and disjoint mixing of
-  safety/demonic and reachability/angelic modalities. 
+  safety/demonic and reachability/angelic modalities.
 \item We introduce \emph{context types}, a bunched modal type system
   interpreted in our context logic, to support both safety and
   reachability reasoning for deterministic functional programs.
