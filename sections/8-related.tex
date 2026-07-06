@@ -21,7 +21,7 @@ as a unifying mechanism for safety and reachability.
 \paragraph{Reachability verification.}
 Recent work on reachability verification in type systems includes
 two-sided type systems~\cite{Ill-types} which refute typing formulas
-to show that ill-formed programs do not evaluate and a complementary
+to show that ill-formed programs do not evaluate, and a complementary
 approach~\cite{RamsayIncorType} that internalizes negation directly as
 a complement operator on types to support incorrectness reasoning.
 Coverage types~\cite{CoverageType} underapproximate
@@ -38,7 +38,7 @@ sense unrelated to how it is used here, and focuses on soundly
 tracking aliasing of mutable references in higher-order effectful
 programs.
 
-\paragraph{Incorrectness Logics.}
+\paragraph{Incorrectness logics.}
 Our angelic modality can be viewed as establishing a witness to a
 property, and thus is closely related to operators found in
 underapproximate logics~\cite{ReverseHoareLogic, OHP19, RBD+20,
@@ -47,7 +47,7 @@ underapproximate logics~\cite{ReverseHoareLogic, OHP19, RBD+20,
 existence of certain executions rather than ensuring the absence of
 unsafe executions.
 
-However, these logics and their descendents either fix a single
+However, these logics and their descendants either fix a single
 approximation direction per triple~\cite{ReverseHoareLogic, OHP19,
   RBD+20} or disallow approximation entirely~\cite{ESL+23}, and do not
 support the construction or decomposition of context structure, which
@@ -66,14 +66,14 @@ But, mixing angelic and demonic constraints within a single outcome
 logic judgement requires an \emph{a priori} partitioning of outcomes
 via $\oplus$, whereas our type system determines valid angelic choices
 compositionally, without requiring such a partition to be specified
-upfront. Outcome logic has since been extended with, e.g.,
-separation-logic-style local reasoning~\cite{ZSS+24} and to programs
-featuring adversarially-resolved nondeterminism~\cite{ZKST+25}. In
-these extensions, however, 'demonic' and 'angelic' characterize how a
-program's nondeterminism is resolved by its semantics, whereas our
-modalities are specification-level annotations that determine whether
-an individual refinement is read as an upper or lower bound, and may
-be mixed freely within a single type judgment.
+upfront. Outcome logic has since been extended to support
+separation-logic-style local reasoning~\cite{ZSS+24} and programs
+featuring adversarially resolved nondeterminism~\cite{ZKST+25}. In
+these extensions, however, ``demonic'' and ``angelic'' characterize
+how a program's nondeterminism is resolved by its semantics, whereas
+our modalities are specification-level annotations that determine
+whether an individual refinement is read as an upper or lower bound,
+and may be mixed freely within a single type judgement.
 
 \paragraph{May- and must-style program analysis.}
 There has been significant prior work on combining may- and must-style
