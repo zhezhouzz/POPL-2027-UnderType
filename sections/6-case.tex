@@ -2,19 +2,19 @@
 \section{Case Studies} %
 \label{sec:case}
 
-This paper develops a foundational account of demonic and angelic
-modalities in a bunched type system; in this section, we illustrate
-its expressiveness with three real-world case studies.
+This section illustrates the expressiveness of our bunched type system
+via three real-world case studies.
 
 \subsection{May/Must Analysis} \label{subsec:may-must}
 
 \begin{figure}[h]
+  \vspace{-24pt}
 \begin{subfigure}[t]{0.48\linewidth}
     \centering
 \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true,
     fontsize = \footnotesize, escapeinside=??]{OCaml}
   val g : ?$\Code{i}{:}\ort{\Int}{\top}\ctsarr\ort{\Int}{\vnu \neq 0}$?
-  
+
 ?$\vdash$? let f (x: int) (y: int) =
     if y > 10 then (g x) + 1
     else x + 1
@@ -41,7 +41,8 @@ its expressiveness with three real-world case studies.
     \subcaption{Must-analysis helps may-analysis.}
     \label{fig:may-must-inter}
 \end{subfigure}
-\caption{Compositional may- and must-style reasoning with context types.}
+\caption{Compositional may- and must-style reasoning with context
+  types, adapted from \cite{GN+10}.}
 \label{fig:may-must-analysis}
 \end{figure}
 
@@ -49,7 +50,7 @@ Prior work has considered program analyses that reason about may- and
 must-properties within the same framework~\cite{BVR+08,GN+10}. Like
 our type system, these analyses are compositional because callee
 summaries inform caller deductions. Figure~\ref{fig:may-must-analysis}
-is an adaptation of two examples from~\cite{GN+10}, restated in our
+adapts two examples from \citet{GN+10}, restated in our
 core language with context types assigned to both the caller
 $\Code{f}$ and the callee $\Code{g}$. In our encoding, demonic types
 correspond to may-analysis summaries (safety), while angelic types
@@ -60,12 +61,12 @@ result on $\Code{g}$ enables a must-analysis result on
 $\Code{f}$. $\Code{f}$'s type asserts that it must return 1, given
 that $\Code{x}$ can be 0 and $\Code{y}$ can be any value in
 [0,10]. The true branch ($\Code{y} > 10$) would require
-$\Code{g}\;\Code{x} = 0$. However, $\Code{g}$'s demonic type precludes
-this.  The true branch is therefore not a valid witness for
-$\Code{f}$'s reachability guarantee. Instead, angelically choosing
-$\Code{x} = 0$ and $\Code{y} \in [0, 10]$ ensures control goes through
-the false branch, returning $\Code{x} + 1 = 1$, and justifying the
-type. 
+$\Code{g}\;\Code{x} = 0$, but $\Code{g}$'s demonic type precludes
+this.  The true branch will therefore never provide a valid witness
+for $\Code{f}$'s reachability guarantee. Focusing on the false branch
+instead by angelically choosing $\Code{y} \in [0, 10]$, reveals that
+calling $f$ with $\Code{x = 0}$ causes it to return
+$\Code{x} + 1 = 1$, and justifying the target type.
 
 Figure~\ref{fig:may-must-analysis}~(b) illustrates how a must-analysis
 result on $\Code{g}$ enables a may-analysis result on $\Code{f}$,
@@ -83,7 +84,8 @@ range because of $\Code{g}$'s safety type.  Together, the true and
 false branches establish the reachability of every value in $[1,3]$,
 validating $\Code{f}$'s result qualifier.
 
-\subsection{Coverage Completeness}\label{subsec:coverage}
+\subsection{Coverage Completeness}%
+\label{subsec:coverage}
 \begin{wrapfigure}{r}{.55\textwidth}
   \vspace*{-.2in}
 \begin{minted}[xleftmargin=15pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
@@ -101,13 +103,14 @@ else Leaf ?$\oplus$?
 \vspace*{-.1in}
 \end{wrapfigure}
 The coverage type system of~\citet{CoverageType} verifies that a test
-generator produces every desirable input.   Given the BST
-generator shown in Figure~\ref{fig:bst},
-the following specification asserts that for any valid range generator,
-\texttt{bst\_gen} produces \emph{every} BST whose keys lie within $(\Code{lo},
-\Code{lo}+r]$\footnote{In the type for $\Code{bst\_gen}$, $\Code{mem}(\vnu,x)$ is
-    a method predicate, i.e., an uninterpreted function used to encode
-    a membership property of BSTs.}:
+generator produces every desirable input.  Given the BST generator
+shown in Figure~\ref{fig:bst}, the following specification asserts
+that for any valid range generator, \texttt{bst\_gen} produces
+\emph{every} BST whose keys lie within
+$(\Code{lo}, \Code{lo}+r]$:\footnote{In the type for
+  $\Code{bst\_gen}$, $\Code{mem}(\vnu,x)$ is a \emph{method
+    predicate}, i.e., an uninterpreted function used to encode a
+  membership property of BSTs.}
 \begin{align*}
   \mykw{val}\;\Code{bst\_gen} : \ctpers(&
     \Code{r}{:}\ort{\Nat}{\top} \ctsarr \Code{lo}{:}\ort{\Nat}{\top} \ctsarr
@@ -121,29 +124,30 @@ the following specification asserts that for any valid range generator,
       \forall x.\, \Code{mem}(\vnu, x) \iff
       (\Code{lo} < x \leq \Code{lo}+r)})
 \end{align*}
-In our setting, all such generators introduce fresh angelic
-capabilities at each invocation, independently of the
-surrounding context, for \emph{arbitrary} input parameters and thus should
-have context types of the following form:
+In our setting, input generators always introduce fresh angelic
+capabilities at each invocation, independently of the surrounding
+context, for \emph{arbitrary} input parameters and thus have context
+types of the following shape:
 \begin{align*}
     \overbrace{\ctpers (\quad \underbrace{\overline{x{:}\ort{b_x}{\phi_x}\ctsarr}}_{\texttt{demonic parameters}} \quad \underbrace{\urt{b}{\phi}}_{\texttt{angelic result}} \quad )}^{\texttt{duplicatable}}
 \end{align*}\noindent
-Thus, the range generator is persistent and has demonic parameter
-types ($\ort{\Nat}{\top}$ and $\ort{\Nat}{x < \vnu}$) and an angelic
-result type ($\urt{\Nat}{x < \vnu < y}$).  The demonic parameters allow
-successive calls to \texttt{range} with different arguments to
-be typed with independent result capabilities — the generator's output
-at each recursive call is disjoint from its outputs at other calls.
-Similarly, the BST generator follows the same pattern: its demonic
-parameter types allow any valid size $\Code{r}$ and lower bound
-$\Code{lo}$, and its angelic result type asserts that every valid BST
-is reachable by some sequence of generator choices.
+The \Code{range} generator, for example, is persistent and has demonic
+parameter types ($\ort{\Nat}{\top}$ and $\ort{\Nat}{x < \vnu}$) and an
+angelic result type ($\urt{\Nat}{x < \vnu < y}$).  The demonic
+parameters allow successive calls to \Code{range} with different
+arguments to be typed with independent result capabilities --- the
+generator's output at each recursive call is disjoint from its outputs
+at other calls.  The BST generator follows the same pattern: its
+demonic parameter types allow any valid size $\Code{r}$ and lower
+bound $\Code{lo}$, and its angelic result type asserts that every
+valid BST is reachable by some sequence of generator choices.
 
-\subsection{Counterexample Generation}\label{subsec:disprove}
-
+\subsection{Incorrectness Reasoning} %
+\label{subsec:disprove}
 
 \begin{figure}[h!]
-    \centering
+  \centering
+  \vspace{-12pt}
 \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
     let rec merge (l1: elem list) (l2: elem list) : elem list =
         match l1, l2 with
@@ -161,42 +165,49 @@ $3-4$). Otherwise, the function merges the tails of the two inputs and appends t
 \label{fig:merge}
 \end{figure}
 
-When a refinement type system fails to prove a safety property, this
-does not mean the program is incorrect: may-style (overapproximate)
-reasoning offers no guarantee that a presumed erroneous behavior is
-actually reachable. Recent
-work~\cite{RefinementTypeRefutations,RefinementTypeSymbolicExecution}
+When a refinement type system fails to prove a safety property, the
+target program is not necessarily incorrect: may-style
+(overapproximate) reasoning offers no guarantee that a presumed
+erroneous behavior is actually reachable. Recent
+work~\cite{RefinementTypeRefutations, RefinementTypeSymbolicExecution}
 addresses this limitation by using symbolic execution to search for
 counterexamples; our context type system can establish such
 counterexamples directly.  Consider the $\Code{merge}$ function shown
-in Figure~\ref{fig:merge}, a function intended to merge two sorted
-lists, as used in a mergesort procedure; it is intended to preserve
-sortedness of the output list:
+in Figure~\ref{fig:merge}. When used in a mergesort procedure, this
+function is intended to merge two sorted lists and produce a sorted
+output list:
 \begin{align*}
-  \Code{l1}{:}\ort{\List[\Code{elem}]}{\top} \ctsarr \Code{l2}{:}\ort{\List[\Code{elem}]}{\top} \ctsarr \ort{\List[\Code{elem}]}{\I{sorted}(\vnu)}
+  \vdash \Code{merge}~:~\Code{l1}{:}\ort{\List[\Code{elem}]}{\top} \ctsarr \Code{l2}{:}\ort{\List[\Code{elem}]}{\top} \ctsarr \ort{\List[\Code{elem}]}{\I{sorted}(\vnu)}\judgfail
 \end{align*}\noindent
 Verification fails nonetheless. The base cases (lines $3$--$4$)
-type-check, so the failure arises in the recursive case, where the
-refinement type system offers little guidance since it cannot
-identify which execution branch leads to the unsorted output.  Symbolic execution 
-finds the following counterexample:
+type-check, so the failure arises in the recursive case, but the
+refinement type system offers little guidance on the underlying fault,
+since it cannot identify which execution branch leads to the unsorted
+output.  A symbolic execution could find the following concrete
+counterexample:
 \begin{align*}
     \texttt{Counterexample:}&\quad  \text{ when } \Code{l1} = [1;2] \text{ and } \Code{l2} = [3;4] \text{ then } \mstep{\Code{merge}\;[1;2]\;[3;4]}{[1;3;2;4]}
 \end{align*}\noindent
-The bug stems from the assumption that, after comparing $\Code{h1}$
-and $\Code{h2}$, $\Code{h2}$ is always the second-smallest element
-(line $7$).  Even when $\Code{h1} < \Code{h2}$, $\Code{h2}$ may exceed
-some element of $\Code{t1}$, breaking sortedness.  Rather than appealing to
-a separate symbolic execution procedure to discover this counterexample,  we
-can directly \emph{disprove} our expectations that the function
-operates correctly, by type-checking it with the following type:
+The failure stems from the assumption that, after comparing
+$\Code{h1}$ and $\Code{h2}$, $\Code{h2}$ is always the second-smallest
+element (line $7$).  Even when $\Code{h1} < \Code{h2}$, however,
+$\Code{h2}$ may still be larger than the next element of $\Code{t1}$,
+breaking sortedness.  Rather than appealing to a separate symbolic
+execution procedure to discover this counterexample, we can directly
+prove that \Code{merge} operates incorrectly, by type-checking it with
+the following type:
 \begin{align*}
     &\Code{l1}{:}\urt{\List[\Code{elem}]}{\top} \ctwand \Code{l2}{:}\urt{\List[\Code{elem}]}{\top} \ctwand \ort{\List[\Code{elem}]}{\neg \I{sorted}(\vnu)} \ctoplus \ort{\List[\Code{elem}]}{\top}
 \end{align*}\noindent
-This type follows the ``affine reachability'' style of \autoref{sec:context-typing}: the return type is a sum of the top type $\ort{\List[\Code{elem}]}{\top}$ and the negation of the original safety property, $\ort{\List[\Code{elem}]}{\neg \I{sorted}(\vnu)}$, expressing erroneous behavior.
-The parameter types are given \emph{disjoint angelic types}, indicating that $\Code{l1}$ and $\Code{l2}$ may independently range over arbitrary sorted lists.
-Without this disjointness, a carefully crafted environment can hide
-the bug, as shown below. Here $\Code{l1}$ and $\Code{l2}$ each
+This type follows the ``affine reachability'' style of
+Section~\ref{sec:overview}: the result type is a sum of the top type
+$\ort{\List[\Code{elem}]}{\top}$ and the negation of the original
+safety property, $\ort{\List[\Code{elem}]}{\neg \I{sorted}(\vnu)}$,
+that captures the erroneous behavior.  The parameter types are given
+\emph{disjoint angelic types}, indicating that $\Code{l1}$ and
+$\Code{l2}$ may independently range over arbitrary sorted lists.
+Without this disjointness, a carefully crafted context can hide the
+bug, as shown below. Here $\Code{l1}$ and $\Code{l2}$ each
 \begin{wrapfigure}{l}{.4\textwidth}
   \begin{center}
     \vspace*{-.1in}
