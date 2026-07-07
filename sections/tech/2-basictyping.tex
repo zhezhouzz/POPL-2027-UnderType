@@ -1,7 +1,18 @@
 \newpage
-\section{Basic Typing Rules}\label{sec:tech:basic-typing}
+\section{Basic Typing and Well-Formedness Rules}\label{sec:tech:basic-typing}
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
+  {\small
+  \begin{align*}
+    \text{\textbf{Type erasure}} \quad & \eraserf{\ort{b}{\phi}} \doteq b \quad \eraserf{\urt{b}{\phi}} \doteq b \quad \eraserf{\tau_1 \ctinter \tau_2} \doteq \eraserf{\tau_1}
+    \\&\eraserf{\tau_1 \ctoplus \tau_2} \doteq \eraserf{\tau_1} \quad  \eraserf{x{:}\tau_x \ctsarr \tau} \doteq \eraserf{\tau_x} \sarr \eraserf{\tau} \quad
+    \\& \eraserf{\emptyset} \doteq \emptyset \quad \eraserf{x{:}\tau} \doteq x{:}\eraserf{\tau} \quad \eraserf{\Gamma_1 \ctcomma \Gamma_2} \doteq \eraserf{\Gamma_1}, \eraserf{\Gamma_2} \quad \eraserf{\Gamma_1 \ctstar \Gamma_2} \doteq \eraserf{\Gamma_1}, \eraserf{\Gamma_2}  \quad \eraserf{\Gamma_1 \ctoplus \Gamma_2} \doteq \eraserf{\Gamma_1}
+ \end{align*}}
+\caption{Type Erasure}
+\label{fig:type-erasure}
+\end{figure}
+
+\begin{figure}[ht!]
     {\footnotesize
     {\small
    \begin{flalign*}
@@ -70,7 +81,7 @@
        \label{fig:basic-type-rules}
    \end{figure}
 
-   \begin{figure}
+   \begin{figure}[ht!]
     {\footnotesize
     {\small
    \begin{flalign*}
@@ -150,7 +161,7 @@
    \end{figure}
 
    
-   \begin{figure}
+\begin{figure}[ht!]
     {\footnotesize
     {\small
    \begin{flalign*}
@@ -237,6 +248,7 @@
        \label{fig:basic-refinement-type-rules}
    \end{figure}
 
+The type erasure function is defined in \autoref{fig:type-erasure}.
 The basic typing rules of our core language, qualifiers and refinement types are shown
 in \autoref{fig:basic-type-rules}, \autoref{fig:basic-qualifier-type-rules}, and \autoref{fig:basic-refinement-type-rules}. We use an auxiliary function
 $\Code{BasicTy}$ to provide a basic type for the primitives of our language,

@@ -136,8 +136,8 @@ cannot refer to variables in each other.
 \begin{figure}[h!]
   {\small
   {\normalsize \begin{flalign*}
-    &\text{\textbf{Subtyping rules}} && \fbox{$\Gamma \vdash \tau \subty \tau$ \quad $\Gamma \ctsubseteq{X} \Gamma$ }
-    \\&\text{\textbf{Typing rules}} && \fbox{$\Gamma \vdash e : \tau$}
+    &\text{\textbf{Subtyping rules}} && \fbox{$\Gamma \vdash \tau \subty \tau$ \quad $\Gamma \ctsubseteq{X} \Gamma$ }\quad
+    &\text{\textbf{Typing rules}} && \fbox{$\Gamma \vdash e : \tau$}
   \end{flalign*}}
   \mprooftr{40mm}
   {$\Gamma \vdash e_1 : \tau_1 $ \quad $\Gamma \ctcomma x{:}\tau_1 \vdash e_2 : \tau_2$}
@@ -384,7 +384,7 @@ afterwards, provided the subtyping relation holds.
   \end{align*}\noindent
   According to \textsc{T-Fix}, we need to show that
 \begin{align*}
-  &x{:}\ort{\Nat}{\top} \ctcomma \Code{sub}{:} (x{:}\ort{\Nat}{\vnu \prec x} \ctsarr y{:}\urt{\Nat}{\vnu \leq x} \ctsarr \urt{\Nat}{\vnu = 0})  \vdash
+  &x{:}\ort{\Nat}{\top} \ctcomma \Code{sub}{:} (x{:}\ort{\Nat}{\vnu \prec x} \ctsarr y{:}\urt{\Nat}{\vnu \leq x} \ctsarr \urt{\Nat}{\vnu \leq x})  \vdash
   \\ &\quad \zzlam{y}{\zif{x = 0}{0}{\zif{y = 0}{x}{\Code{sub}\;(x - 1)\;(y - 1)}}}
     \\&\quad  : y{:}\urt{\Nat}{\vnu \leq x} \ctsarr \urt{\Nat}{\vnu \leq x}
 \end{align*}\noindent
