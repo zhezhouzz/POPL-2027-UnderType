@@ -148,13 +148,16 @@ compositional reasoning:
   y{:}\urt{\Nat}{\vnu > 0} \vdash \lambda f. f(f\;y) : f{:}(\urt{\Nat}{\vnu > 0}\sarr \urt{\Nat}{\vnu > 0}) \sarr \urt{\Nat}{\vnu > 0} \quad \judgfail
 \end{align*}\noindent
 A counter-example to the validity of this judgement is given below:
+{ \setlength{\jot}{-2pt} % Tighten line space for just this example
 \begin{align*}
     &g \doteq \lambda y.\zif{y = 1}{x}{2} \quad
     \\& \zlet{x}{e_x}{\zlet{y}{e_y}{\boxed{(\lambda f. f\;(f\;y))\;g}}} \;\hookrightarrow^*\;
     \\& \zlet{x}{e_x}{\boxed{g\;(g\;1)}} \;\hookrightarrow^*\;  \quad
   \text{\textcolor{gray}{(we assume angelically that $e_y \hookrightarrow^* 1$)}}
     \\& \zlet{x}{e_x}{\boxed{g\;x}} \;\hookrightarrow^*\; \zlet{x}{e_x}{\boxed{\zif{x = 1}{x}{2}}} \;\hookrightarrow^*\; \boxed{1 \text{ or } 2}
-\end{align*}\noindent
+\end{align*}
+}
+\noindent
 Angelically choosing $y = 1$, the first application ($g\; 1$) returns
 $x$. This result is then passed to $g$ again, but since $x$ is a
 captured variable rather than a fresh angelic choice, the second
