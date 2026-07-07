@@ -9,13 +9,14 @@ program reasoning techniques available today. While their particulars
 can vary wildly, common to all type systems are two key ingredients:
 the use of \emph{types} to specify program behavior, and some
 deductive mechanism for \emph{compositionally verifying} that a
-program is consistent with a specification. Type systems have
-traditionally targeted \emph{safety} properties, a focus embodied by
-Milner's famous slogan that ``well-typed expressions cannot 'go
-wrong'''~\cite{Milner+78}. Here, the typing judgement $\Gamma \vdash e
-: \tau$ asserts that $e$ \emph{may} evaluate to many values (under an
-environment consistent with $\Gamma$), but that set of values is
-entirely contained within the ``safe'' region specified by $\tau$.
+program is consistent with a type, i.e., specification. Type systems
+have traditionally targeted \emph{safety} properties, a focus embodied
+by Milner's famous slogan that ``well-typed expressions cannot `go
+wrong'''~\cite{Milner+78}. Here, the typing judgement
+$\Gamma \vdash e : \tau$ asserts that $e$ \emph{may} evaluate to many
+values (under an environment consistent with $\Gamma$), but that set
+of values is entirely contained within the ``safe'' region specified
+by $\tau$.
 
 Dually, \emph{reachability} properties seek to precisely capture a
 subset of the values that a program \emph{must} reach. Rather than
@@ -25,16 +26,16 @@ are a well-established and practical technique for informing program
 optimizations and transformations~\cite{WS94,GM21,JTW+98}.  They have
 also been effectively used to find buggy behaviors~\cite{BMC+03}; for
 example, several recent works~\cite{GOS19,ReverseHoareLogic, OHP19,
-  ZDS23} have studied ``incorrectness'' systems designed to prove the
-existence of witnesses of buggy program behavior, with a goal of
-avoiding the overwhelming number of false positives reported by
-typical bug detection tools.  The question of how to develop type
-systems targeting reachability properties, however, has been largely
+  ZDS23} have studied deductive ``incorrectness'' reasoning frameworks
+which can prove the existence of witnesses of safety violations, with
+a goal of avoiding the overwhelming number of false positives reported
+by typical bug detection tools.  The question of how to develop type
+systems for reachability properties, however, has been largely
 unexplored. A few recent exceptions~\cite{RefinementTypeRefutations,
   CoverageType, Ill-types} have studied type-based reachability
 reasoning, but each of these systems has focused on a particular
 property, e.g., checking coverage properties of test input
-generators~\cite{CoverageType}, or applications, e.g., generating
+generators~\cite{CoverageType}, or application, e.g., generating
 concrete counterexamples refuting refinement type
 specifications~\cite{RefinementTypeRefutations} or proving ill-typed
 programs do not evaluate~\cite{Ill-types}, rather than providing a
@@ -43,38 +44,37 @@ general type-based reachability framework.
 % BD: One thing we should probably foreground more is that our
 % semantic model can track dependencies between free variables when
 % reasoning compositionally...
-This paper proposes a novel semantic model that can simultaneously
-capture both over- and under-approximations of program behaviors,
-allowing safety and reachability specifications to be compositionally
-combined within a single type discipline. This model gives rise to a
-type system in which type qualifiers are equipped with a modality
-indicating whether it should be interpreted as an over- or
-under-approximate specification. This type system naturally supports
-higher-order, deterministic, and nondeterministic programs, captures
-both may- and must-style function summaries~\cite{GN+10}, and can be
-applied to a range of verification tasks, including
-incorrectness-style reasoning about buggy programs~\cite{OHP19} and
+To address this gap, this paper proposes a novel semantic model that
+can simultaneously capture both over- and under-approximations of
+program behaviors, allowing safety and reachability specifications to
+be compositionally combined within a single type discipline. This
+model gives rise to a type system in which type qualifiers are
+equipped with a modality indicating whether it should be interpreted
+as an over- or under-approximate specification. This framework
+naturally supports higher-order, deterministic, and nondeterministic
+programs, captures both may- and must-style function
+summaries~\cite{GN+10}, and can be applied to a range of verification
+tasks, including incorrectness-style reasoning~\cite{OHP19} and
 proving completeness of test-input generators~\cite{CoverageType}.
 
 To illustrate, consider the implementation of Peano division from
 Rocq's standard library:
 \begin{align}
   \lambda x.\lambda y. \zif{y \leq 0}{x}{\Code{fst~(divmod}~x~(y - 1)~0~(y - 1))}
-  \tag{\Code{/}}\label{ex:div}
+  \tag{\Code{div}}\label{ex:div}
 \end{align}
 A client of \ref{ex:div} may want to know both that (a) on positive
-inputs, its result is always a positive number no greater than its first
-argument (a safety property); and (b) for every positive number $n$,
-there exist positive inputs $x$ and $y$ such that $x$ \ref{ex:div}
-$y = n$ (a reachability property). Conventional refinement type
-systems, which interpret refinements as overapproximations, can verify
-the former, but not the latter: e.g., a function that always returns $1$
-also satisfies (a). Conversely, an underapproximate interpretation can
-establish (b), but would also admit an implementation that always
-returns $x$. Our type system, in contrast,  captures both kinds of
-properties as types:
+inputs, its result is never greater than its first argument (a safety
+property); and (b) for every positive number $n$, there exist positive
+inputs $x$ and $y$ such that \ref{ex:div} $x y = n$ (a reachability
+property). Conventional refinement type systems, which interpret
+refinements as overapproximations, can verify the former, but not the
+latter: e.g., a function that always returns $1$ also satisfies
+(a). Conversely, an underapproximate interpretation can establish (b),
+but would also admit an implementation that always returns $y$. Our
+type system, in contrast, captures both kinds of properties as types:
 \begin{align}
-  & x{:}\ort{\Nat}{\vnu > 0} \sarr y{:}\ort{\Nat}{\vnu > 0 } \sarr \ort{\Nat}{x \geq \vnu > 0} \tag{$\tau_a$}\label{ex:tauA}\\
+  & x{:}\ort{\Nat}{\vnu > 0} \sarr y{:}\ort{\Nat}{\vnu > 0 } \sarr \ort{\Nat}{x \geq \vnu} \tag{$\tau_a$}\label{ex:tauA}\\
   & x{:}\urt{\Nat}{\vnu > 0} \sarr y{:}\urt{\Nat}{\vnu > 0} \sarr \urt{\Nat}{\vnu > 0 } \tag{$\tau_b$}\label{ex:tauB}
 \end{align}\noindent
 % \BD{One of the tricky things here is that \ref{ex:div} does not have
@@ -90,49 +90,52 @@ every value found in the set the type denotes.
 
 The intuitive meaning of each modality changes subtly when a
 refinement appears in a typing context instead of a result type. To
-establish the typing judgment $x{:} \ort{b}{\phi} \vdash e ~:~\tau$,
-our type system intuitively treats any free occurrences of the
-variable $x$ \emph{demonically}, since the surrounding environment is
-free to choose any value of $x$ consistent with $\phi$, which may
-cause $e$ to violate the constraints defined by $\tau$. Conversely,
-when establishing the typing judgment $x{:} \urt{b}{\phi} \vdash e
-~:~\tau$, $x$ is treated \emph{angelically} since it must be able to
-take on every value consistent with $\phi$.
+establish the typing judgment $x{:} \ort{b}{\phi} \vdash e : \tau$,
+for example, our type system treats any free occurrences of $x$
+\emph{demonically}, since the surrounding environment is free to
+choose some value of $x$ consistent with $\phi$ that makes $e$ violate
+the constraints defined by $\tau$. Conversely, when establishing the
+typing judgment $x{:} \urt{b}{\phi} \vdash e : \tau$, $x$ is treated
+\emph{angelically}, since we can safely assume that $x$ can take on
+every value consistent with $\phi$ (and maybe more).
 
 The availability of first-class functions adds additional
-complications. Higher-order functions like the following, for example,
-naturally expose two distinct contexts:
-$x : \tau_x \vdash \lambda y. \ldots ~:~ \tau_y \sarr \tau$.  The
-first, $x{:} \tau_x$, captures the type of the free variable $x$,
-while the second, $y{:} \tau_y$, provides assumptions about the
-function's arguments at the point it is applied. Managing these
-contexts separately is necessary because the instantiation of the free
-variables in a function and its parameters can occur at different
-points in a program's evaluation. To illustrate, consider the
-following (failing) type judgement:
+complications. Higher-order functions like
+$x{:} \tau_x \vdash \lambda y. e : y{:}\tau_y \sarr \tau$, for
+example, naturally expose two distinct contexts: the first,
+$x{:} \tau_x$, captures the type of the free variable $x$, while the
+second, $y{:} \tau_y$, provides assumptions about the function's
+arguments at the point it is applied. Our system must manage these
+contexts separately, because the instantiations of the free variables
+and parameters of a function can occur at different points in a
+program's evaluation. To illustrate, consider the following (failing)
+type judgement:
 \begin{align*}
-    x{:}\urt{\Nat}{\vnu > 0} &\vdash  \lambda f. f\;x ~~:~~ (\urt{\Nat}{\vnu > 0}\sarr\tau_f) \sarr \urt{\Nat}{\vnu > 0} \quad\judgfail
+    x{:}\urt{\Nat}{\vnu > 0} &\vdash  \lambda f. f\;x ~~:~~ f{:}(\urt{\Nat}{\vnu > 0}\sarr \urt{\Nat}{\vnu > 0}) \sarr \urt{\Nat}{\vnu > 0} \quad\judgfail
 \end{align*}\noindent
-The higher-order function being typed takes a function $f$ and
+The higher-order function being typed here takes a function $f$ and
 directly applies it to $x$. The type binding for $x$ in the type
 context assumes it can reach every positive number.  Without
 constraining the type of $f$ to account for the free variable $x$ in
-the expression's closure, we cannot guarantee that an arbitrary
-function supplied for $f$ will satisfy the reachability requirement of
-this expression's result.  For example, applying this expression to
-the function $\lambda y.x - y$ yields the constant function that
-always returns $0$.
+the expression's closure, however, we cannot guarantee that an
+arbitrary function supplied for $f$ will satisfy the reachability
+requirement of this expression's result.  For example, applying this
+expression to the function $\lambda y.x - y$ yields the constant
+function that always returns $0$.
 \begin{align*}
   & \zlet{x}{e_x}{\boxed{(\lambda f. f\;x)\;(\lambda y.x - y)}} \;\hookrightarrow^*
     \; \zlet{x}{e_x}{\boxed{x - x}} \;\hookrightarrow^*\; 0
 \end{align*}\noindent
-The problem is that the ``captured context'' of function
-$\lambda y.x - y$ contains variable $x$ \emph{and} that this function
-is supplied $x$ as its argument.  Thus, for this type judgement to be
-valid, the type of $f$ must enforce that its parameter $y$ can be
-chosen independently of $x$. This requires our type system to reason
-explicitly about dependencies between a function's parameters and
-captured variables when both are treated angelically.
+In contrast, applying $\lambda f. f\;x$ to the identity function,
+$\lambda y.y$, yields the term $x$, which can be made to reach any
+particular positive number $n$ by choosing $x$ to be $n$.  The problem
+is that the ``captured context'' of the function $\lambda y.x - y$
+contains $x$ \emph{and} that this function is supplied $x$ as its
+argument. Thus, in order to assign $\lambda f. f\;x$ the desired
+result type, the type of $f$ must enforce that its parameter $y$ can
+be chosen independently of $x$. This requires our type system to
+reason explicitly about dependencies between a function's parameters
+and captured variables when both are treated angelically.
 
 The previous example showed how dependencies between captured
 variables and function parameters can break compositional reachability
@@ -142,7 +145,7 @@ depends on a captured variable, constraining the angelic choices
 available to subsequent applications in a way that also breaks
 compositional reasoning:
 \begin{align*}
-    x{:}\urt{\Nat}{\vnu > 0}, y{:}\urt{\Nat}{\vnu > 0} \vdash \lambda f. f(f\;y) : \tau_f \sarr \urt{\Nat}{\vnu > 0} \quad \judgfail
+  y{:}\urt{\Nat}{\vnu > 0} \vdash \lambda f. f(f\;y) : f{:}(\urt{\Nat}{\vnu > 0}\sarr \urt{\Nat}{\vnu > 0}) \sarr \urt{\Nat}{\vnu > 0} \quad \judgfail
 \end{align*}\noindent
 A counter-example to the validity of this judgement is given below:
 \begin{align*}
@@ -306,7 +309,7 @@ contexts with \emph{capabilities} that are treated as \emph{resources}
 that mediate demonic or angelic choices as necessary. We then
 introduce a \emph{resource algebra} to compose and destruct these
 capabilities in a principled way.  This approach enables us to handle
-context disjointness analogously to the way bunched
+context independence analogously to the way bunched
 implications~\cite{OHP99} handle resource separation, lifting the
 additive/multiplicative conjunction distinction from the level of
 propositions to the level of type contexts.
@@ -314,23 +317,23 @@ propositions to the level of type contexts.
 This framing naturally leads to the notion of a \emph{context type}
 that unifies safety and reachability reasoning in a pure functional
 language.  Specifically, we allow type contexts to be related via
-dependent ($\Gamma_1 \ctcomma \Gamma_2$) and disjoint
+dependent ($\Gamma_1 \ctcomma \Gamma_2$) and independent
 ($\Gamma_1 \ctstar \Gamma_2$) conjunction.  The type constructor
 $\ctsarr$ internalizes dependent conjunction, typing functions whose
-argument context is entangled with the closure context, while
+argument context is entangled with its closure context, while
 $\ctwand$ internalizes independent conjunction, typing functions whose
 argument context does not depend on the closure, directly reflecting
 whether angelic choices for the argument are constrained by the
 closure.
 
-This bunched type system thus enables the tracking of complex
-data-flow dependencies and guides the angelic choices that are
-permissible in a typing judgement.  Specifically, since contexts can
-be combined via context combinators, the structure of a context is
-naturally a binary tree whose internal nodes record how sub-contexts
-are combined, enabling frame-based local reasoning.  For example, to
-establish that \ref{ex:div} can produce every positive number, we can
-type it against the following type signature:
+This bunched type system enables the tracking of complex data-flow
+dependencies and informs the angelic choices that are allowed in a
+typing judgement.  Specifically, since contexts can be combined via
+context combinators, the structure of a context is naturally a binary
+tree whose internal nodes record how sub-contexts are combined,
+enabling frame-based local reasoning.  For example, to establish that
+\ref{ex:div} can produce all positive numbers, we can type it against
+the following type signature:
 \begin{align*}
   & \vdash \ref{ex:div} ~:~ x{:}\urt{\Nat}{\vnu > 0} \sarr y{:}\urt{\Nat}{\vnu > 0} \ctwand \urt{\Nat}{\vnu > 0} \quad \judgok
 \end{align*}\noindent
@@ -351,8 +354,8 @@ be made regardless of the other.
 
 \paragraph{Contributions.}
 The paper makes the following contributions:\footnote{The type system,
-  logic, and metatheory presented in the paper have been fully
-  mechanized in Rocq, and are included in the supplemental material.}
+  logic, and metatheory have been fully mechanized in Rocq, and are
+  included in the supplemental material.}
 \begin{itemize}[leftmargin=*]
 \item We interpret the capability of a context to make angelic or
   demonic choices as a resource, and introduce a resource algebra to
