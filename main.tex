@@ -104,10 +104,11 @@
 \newcommand*\mystrut[1]{\vrule width0pt height0pt depth#1\relax}
 % \usepackage{bm}
 
-\newcommand{\tyName}{\mbox{\textsf{u}\textsc{Hat}}\xspace}
-
 % ZZ's Macros
 \usepackage{spacingtricks, commands, refinementtydef}
+
+% Tightening up line spacing in aligned environments:
+\addtolength{\jot}{-3pt} % Reduces padding in align by 3pt
 
 \begin{document}
 

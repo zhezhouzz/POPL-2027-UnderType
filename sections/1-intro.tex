@@ -361,8 +361,8 @@ The paper makes the following contributions:\footnote{The type system,
   demonic choices as a resource, and introduce a resource algebra to
   express compositional operations over this capability.
 \item Building on this algebra, we define an associated modal
-  \emph{context logic} that supports dependent and disjoint mixing of
-  safety/demonic and reachability/angelic modalities.
+  \emph{context logic} that supports entangled and independent mixing
+  of safety/demonic and reachability/angelic modalities.
 \item We introduce \emph{context types}, a bunched modal type system
   interpreted in our context logic, to support both safety and
   reachability reasoning for deterministic functional programs.
@@ -371,18 +371,17 @@ The paper makes the following contributions:\footnote{The type system,
   be disjoint from the input context.
 \end{itemize}
 
-The remainder of the paper is organized as follows.  In the next
-section, we provide an example-driven overview of the type system.
-Section~\ref{sec:context-typing} formalizes this informal explanation
-in terms of a typed $\lambda$-calculus core language.
+The remainder of the paper is organized as follows.  We begin with an
+example-driven tour of our type system.
+Section~\ref{sec:context-typing} formalizes this informal overview in
+terms of a typed $\lambda$-calculus core language.
 Section~\ref{sec:meta} defines a denotational semantics and metatheory
 for this type system via a bunched implication resource capability
 algebra.  Section~\ref{sec:extension} extends the language with
-non-determinism, along with refinements to the logic and denotational
-semantics necessary to support this new capability.
-Section~\ref{sec:case} presents several case studies for which context
-types are particularly well-aligned.  A brief discussion on potential
-ways to realize an efficient typing algorithm as well as improved
-automation for this system is given in Section~\ref{sec:discussion}.
-Related work and conclusions are presented in
+nondeterminism, along with supporting modifications to the logic and
+denotational semantics.  Section~\ref{sec:case} presents several case
+studies for which context types are particularly well-aligned.  A
+brief discussion on potential ways to realize effective verification
+tools based on this framework is given in
+Section~\ref{sec:discussion}.  Related work and conclusions follow in
 Sections~\ref{sec:related} and~\ref{sec:conclusion}.
