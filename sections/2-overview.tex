@@ -75,7 +75,7 @@ however, richer reachability properties naturally arise when reasoning
 within a broader program context. To do so, our type system
 \emph{holistically} considers the \emph{set} of values that a term can
 evaluate to, i.e., its image, under a restricted \emph{set} of
-environments, or \emph{capability}, that are constrained by a typing
+environments, or \emph{capability}, that is constrained by a typing
 context.
 % Put another way, our type system describes the image of a term under
 % a set of environments consistent with a typing context.
@@ -177,7 +177,7 @@ systems~\cite{LiquidHaskell, CoverageType}, where the subtype
 relationship between demonic refinements is covariant with the
 qualifier, and that of angelic refinements is contravariant with the
 qualifier. These relationships align with the interpretation of
-angelic and demonic modalities as lower- and upper- bounds: a term
+angelic and demonic modalities as lower and upper bounds: a term
 which can reach all positive numbers can also reach all numbers
 greater than 1, while a term that always safely evaluates to a number
 greater than 1 is also guaranteed to always evaluate to a positive
@@ -533,8 +533,8 @@ As discussed above, the sort of safety that can be directly derived
 from reachability assumptions in the typing context is quite limited
 --- ascribing a demonic refinement to a term constrains \emph{all} of
 its possible executions, while an angelic type binding only makes
-assumptions about a \emph{subset} of the environments that term may be
-run in. It is possible, however, to derive meaningful safety
+assumptions about a \emph{subset} of the environments that a term may
+be run in. It is possible, however, to derive meaningful safety
 properties about the executions that an angelic refinement guarantees
 exist. If we have assumed that $x$ must reach every even number, for
 example, we know that the term $x \Code{+ 1}$ will always safely
