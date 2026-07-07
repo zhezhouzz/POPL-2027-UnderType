@@ -437,7 +437,7 @@ way that impacts the capabilities afforded by a type context, as the
 following pair of judgments illustrate:
 \begin{align*}
   &x{:}\urt{\Nat}{\vnu \geq 0} \ctcomma y{:}\ort{\Nat}{\vnu \geq 1} \vdash x - y : \urt{\Nat}{\I{even}(\vnu)} \;\judgfail
-  \\&x{:}\urt{\Nat}{\vnu \geq 0} \ctstar y{:}\ort{\Nat}{\vnu > \geq 1} \vdash x - y : \urt{\Nat}{\I{even}(\vnu)} \;\judgok
+  \\&x{:}\urt{\Nat}{\vnu \geq 0} \ctstar y{:}\ort{\Nat}{\vnu \geq 1} \vdash x - y : \urt{\Nat}{\I{even}(\vnu)} \;\judgok
 \end{align*}\noindent
 The first typing context stipulates that the value of $y$ is positive,
 but that value is allowed to depend on the value $x$ --- the hole in
