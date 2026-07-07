@@ -8,30 +8,29 @@ Static type systems are one of the most versatile and widely-used
 program reasoning techniques available today. While their particulars
 can vary wildly, common to all type systems are two key ingredients:
 the use of \emph{types} to specify program behavior, and some
-deductive mechanism for \emph{compositionally verifying} that a
-program is consistent with a type, i.e., specification. Type systems
-have traditionally targeted \emph{safety} properties, a focus embodied
-by Milner's famous slogan that ``well-typed expressions cannot `go
-wrong'''~\cite{Milner+78}. Here, the typing judgement
-$\Gamma \vdash e : \tau$ asserts that $e$ \emph{may} evaluate to many
-values (under an environment consistent with $\Gamma$), but that set
-of values is entirely contained within the ``safe'' region specified
-by $\tau$.
+deductive mechanism for \emph{compositionally verifying} that the
+program is consistent with that specification.  Type systems have
+traditionally targeted \emph{safety} properties, a focus embodied by
+Milner's famous slogan that ``well-typed programs cannot `go
+wrong'''~\cite{Milner+78}. Here, the typing judgement $\Gamma \vdash e
+: \tau$ asserts that $e$ \emph{may} evaluate to many values (under any
+environment consistent with $\Gamma$), but that set of values is
+entirely contained within the ``safe'' region specified by $\tau$.
 
 Dually, \emph{reachability} properties seek to precisely capture a
 subset of the values that a program \emph{must} reach. Rather than
-ruling out certain executions, reachability analyses seek to soundly
-establish the existence of feasible executions.  Reachability analyses
-are a well-established and practical technique for informing program
+ruling out certain executions, reachability analyses seek to certify
+the existence of feasible executions.  Reachability analyses are a
+well-established and practical technique for informing program
 optimizations and transformations~\cite{WS94,GM21,JTW+98}.  They have
 also been effectively used to find buggy behaviors~\cite{BMC+03}; for
 example, several recent works~\cite{GOS19,ReverseHoareLogic, OHP19,
   ZDS23} have studied deductive ``incorrectness'' reasoning frameworks
 which can prove the existence of witnesses of safety violations, with
-a goal of avoiding the overwhelming number of false positives reported
+a goal of avoiding the high false positive rate reported
 by typical bug detection tools.  The question of how to develop type
 systems for reachability properties, however, has been largely
-unexplored. A few recent exceptions~\cite{RefinementTypeRefutations,
+unexplored.  Recent work~\cite{RefinementTypeRefutations,
   CoverageType, Ill-types} have studied type-based reachability
 reasoning, but each of these systems has focused on a particular
 property, e.g., checking coverage properties of test input
@@ -44,18 +43,19 @@ general type-based reachability framework.
 % BD: One thing we should probably foreground more is that our
 % semantic model can track dependencies between free variables when
 % reasoning compositionally...
-To address this gap, this paper proposes a novel semantic model that
-can simultaneously capture both over- and under-approximations of
-program behaviors, allowing safety and reachability specifications to
-be compositionally combined within a single type discipline. This
-model gives rise to a type system in which type qualifiers are
-equipped with a modality indicating whether they should be interpreted
-as an over- or under-approximate specification. This framework
-naturally supports higher-order, deterministic, and nondeterministic
-programs, captures both may- and must-style function
-summaries~\cite{GN+10}, and can be applied to a range of verification
-tasks, including incorrectness-style reasoning~\cite{OHP19} and
-proving completeness of test-input generators~\cite{CoverageType}.
+To unify these two views of types, this paper proposes a novel
+semantic model that can simultaneously capture both overapproximations
+(may-style) and underapproximations (must-style) of program behaviors,
+allowing safety and reachability specifications to be compositionally
+combined within a single type discipline. This model gives rise to a
+type system in which type qualifiers are equipped with a modality
+indicating whether they should be interpreted as an over- or
+under-approximate specification.  The type system naturally supports
+higher-order, deterministic, and nondeterministic programs, captures
+both may- and must-style function summaries~\cite{GN+10}, and can be
+applied to a range of verification tasks, including
+incorrectness-style reasoning~\cite{OHP19} and proving completeness of
+test-input generators~\cite{CoverageType}.
 
 To illustrate, consider the implementation of Peano division from
 Rocq's standard library:
@@ -63,16 +63,18 @@ Rocq's standard library:
   \lambda x.\lambda y. \zif{y \leq 0}{x}{\Code{fst~(divmod}~x~(y - 1)~0~(y - 1))}
   \tag{\Code{div}}\label{ex:div}
 \end{align}
-A client of \ref{ex:div} may want to know both that (a) on positive
+A client of \ref{ex:div} may want to know that (a) on positive
 inputs, its result is never greater than its first argument (a safety
 property); and (b) for every positive number $n$, there exist positive
 inputs $x$ and $y$ such that \ref{ex:div} $x y = n$ (a reachability
 property). Conventional refinement type systems, which interpret
 refinements as overapproximations, can verify the former, but not the
-latter: e.g., a function that always returns $1$ also satisfies
-(a). Conversely, an underapproximate interpretation can establish (b),
-but would also admit an implementation that always returns $y$. Our
-type system, in contrast, captures both kinds of properties as types:
+latter: e.g., a function that always returns $1$ satisfies
+(a), but not (b). Conversely, an underapproximate interpretation can establish (b),
+but would also admit an implementation that always returns $y$, potentially violating (a). Our
+type system, in contrast, captures both kinds of properties as types\footnote{As we show later,
+  these two types can be combined via intersection to simultaneously verify both
+  properties.}:
 \begin{align}
   & x{:}\ort{\Nat}{\vnu > 0} \sarr y{:}\ort{\Nat}{\vnu > 0 } \sarr \ort{\Nat}{x \geq \vnu} \tag{$\tau_a$}\label{ex:tauA}\\
   & x{:}\urt{\Nat}{\vnu > 0} \sarr y{:}\urt{\Nat}{\vnu > 0} \sarr \urt{\Nat}{\vnu > 0 } \tag{$\tau_b$}\label{ex:tauB}
@@ -318,7 +320,7 @@ additive/multiplicative conjunction distinction from the level of
 propositions to the level of type contexts.
 
 This framing naturally leads to the notion of a \emph{context type}
-that unifies safety and reachability reasoning in a pure functional
+that unifies safety and reachability reasoning in a functional
 language.  Specifically, we allow type contexts to be related via
 dependent ($\Gamma_1 \ctcomma \Gamma_2$) and independent
 ($\Gamma_1 \ctstar \Gamma_2$) conjunction.  The type constructor
@@ -336,7 +338,8 @@ context combinators, the structure of a context is naturally a binary
 tree whose internal nodes record how sub-contexts are combined,
 enabling frame-based local reasoning.  For example, to establish that
 \ref{ex:div} can produce all positive numbers, we can type it against
-the following type signature:
+the following type signature that provides a more precise version of $\tau_b$
+using $\ctwand$ to make explicit that $x$ and $y$ must be chosen independently:
 \begin{align*}
   & \vdash \ref{ex:div} ~:~ x{:}\urt{\Nat}{\vnu > 0} \sarr y{:}\urt{\Nat}{\vnu > 0} \ctwand \urt{\Nat}{\vnu > 0} \quad \judgok
 \end{align*}\noindent
