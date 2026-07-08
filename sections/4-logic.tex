@@ -36,7 +36,8 @@ bind exactly the same set of variables, reflecting the fact that the
 free variables of a term are fixed by its typing context.  A
 capability with a single environment corresponds to a fully determined
 variable binding; a capability with multiple environments encodes the
-range of choices available for safety or reachability reasoning.
+range of choices available when reasoning about safety or
+reachability.
 
 We extend the standard notions of environment compatibility
 ($r_1 \uparrow r_2$, meaning every environment in $r_1$ is compatible
@@ -44,13 +45,12 @@ with every environment in $r_2$), projection ($\projectTo{r}{X}$, the
 piecewise restriction of $r$ to the variables in a set $X$), and
 refinement ($r_1 \sqsubseteq r_2$, meaning
 $r_1 = \projectTo{r_2}{\Dom{r_1}}$) from environments to capabilities
-in the obvious pointwise way.
-
-The refinement relation $\sqsubseteq$ plays a central role: $r_1
-\sqsubseteq r_2$ says that $r_1$ is a restriction of $r_2$ to a
-smaller variable domain, i.e., $r_2$ extends the bindings of $r_1$
-with additional variables.  This relation will serve as the Kripke
-accessibility relation in our logic (Section~\ref{subsec:logic}).
+in the obvious pointwise way. The refinement relation $\sqsubseteq$
+plays a central role: $r_1 \sqsubseteq r_2$ says that $r_1$ is a
+restriction of $r_2$ to a smaller variable domain, i.e., $r_2$ extends
+the bindings of $r_1$ with additional variables.  This relation will
+serve as the Kripke accessibility relation in our logic
+(Section~\ref{subsec:logic}).
 
 To express variable dependency in refinement type qualifiers, we also
 need the following notion.
@@ -87,19 +87,18 @@ $\sigma_1 \cup \sigma_2$ with $\sigma_1 \in r_1$ and
 $\sigma_2 \in r_2$.
 %% it combines capabilities over disjoint variable domains. \ZZ{the varaible domain is allowed to be not disjointed, which is important for resource duplication which will be used in sec 4 and 5. }
 The \emph{sum} operation, $r_1 + r_2$, defined when
-$\Dom{r_1} = \Dom{r_2}$, is simply $r_1 \cup r_2$; it merges
-capabilities over the same domain to support control-flow
-reasoning. Together with unit $\mathbf{1} \doteq \{\emptyset\}$, the
-tuple $(\Res, +, \times, \mathbf{1})$ forms a partial commutative
-semiring without zero. To enable a Kripke semantics for BI-logic, this
-semiring must be equipped with a partial order satisfying
-bifunctoriality.
+$\Dom{r_1} = \Dom{r_2}$, is simply $r_1 \cup r_2$. Together with unit
+$\mathbf{1} \doteq \{\emptyset\}$, the tuple
+$(\Res, +, \times, \mathbf{1})$ forms a partial commutative semiring
+without zero.
 
-The natural candidates for this order are the subset ($\subseteq$) and
-superset ($\supseteq$) relations.  However, neither works for both
-angelic and demonic modalities simultaneously: the subset order forces
-an overapproximation semantics (demonic), while the superset order
-forces underapproximation (angelic).  Since we need to support both as
+To enable a Kripke semantics for BI-logic, this semiring must be
+equipped with a partial order satisfying bifunctoriality.  The natural
+candidates for this order are the subset ($\subseteq$) and superset
+($\supseteq$) relations.  However, neither works for both angelic and
+demonic modalities simultaneously: the subset order forces an
+overapproximation semantics (demonic), while the superset order forces
+underapproximation (angelic).  Since we need to support both as
 first-class operators, the Kripke order must be \emph{neutral} with
 respect to approximation.  The refinement relation $\sqsubseteq$ has
 exactly this property: $r_1 \sqsubseteq r_2$ holds if $r_2$ extends
@@ -189,9 +188,9 @@ direction entirely to the demonic and angelic modalities.
 \paragraph{Demonic and Angelic Modalities}
 The demonic modality $\demonic P$ holds at $r$ if there exists an
 upper bound $r'$ (i.e., $r \subseteq r'$) that satisfies $P$; this
-models an overapproximation since $r'$ extends $r$ with additional
+models overapproximation since $r'$ extends $r$ with additional
 environments.  Dually, the angelic modality $\angelic P$ holds at $r$
-if some lower bound $r' \subseteq r$ satisfies $P$; this models an
+if some lower bound $r' \subseteq r$ satisfies $P$; this models
 underapproximation since $r'$ witnesses a specific subset of the
 environments in $r$.
 \begin{example}%[Modalities as Lower- and Upper-Bounds]%
@@ -217,7 +216,7 @@ environments in $r$.
   consider the following set of capabilities
 \begin{align*}
 \begin{array}{c @{\hspace{1.5em}} c @{\hspace{1.5em}} c}
-  {\boxed{r_1 \doteq \{[x \mapsto 1], [x \mapsto 2]\}}}
+  {\boxed{r_x }}
   & \sqsubseteq
   & {\boxed{r_2 \doteq \{[x \mapsto 1; y \mapsto 2], [x \mapsto 2; y \mapsto 7]\}}} \\[0.6em]
   \vsubseteq & & \vsubseteq \\[0.6em]
@@ -229,8 +228,8 @@ environments in $r$.
 For any angelic formula $\angelic P$ where $r_3 \models \angelic P$,
 then it is also the case $r_2 \models \angelic P$. We have a similar
 result for the demonic formula $\demonic P$, as
-$r_1 \models \demonic P$ implies $r_4 \models \demonic P$.  Under the
-later modality, the subset relation is reversed; however, the
+$r_x \models \demonic P$ implies $r_4 \models \demonic P$.  Under the
+latter modality, the subset relation is reversed; however, the
 refinement relation is not.
 
 Finally, to illustrate how the product operation interacts with the
@@ -256,7 +255,7 @@ The sum $P \choplus Q$ holds at $r$ if $r$ can be split into two
 sub-capabilities $r_1 + r_2 \sqsubseteq r$, one satisfying $P$ and one
 satisfying $Q$.  This supports the context sum type
 $\tau_1 \ctoplus \tau_2$ from in \autoref{sec:context-typing}, which
-allows a capability to be partioned into two subsets. The requirement
+allows a capability to be partitioned into two subsets. The requirement
 that capabilities be non-empty ensures that neither branch is vacuous:
 both summand must contain at least one environment.
 
@@ -268,7 +267,7 @@ $v$ of $x$ in $r$, the sub-capability $\fiberOver{r}{[x \mapsto v]}$
 satisfies $P$ with $x$ substituted by $v$.  This is needed because
 $\Code{Atom}(\phi)$ has exact semantics: a qualifier $\phi$ mentioning
 $x$ requires a satisfying capability $r$ to contain \emph{all}
-environments consistent with $x$'s full range, which conflicts with
+environments consistent with $x$'s full range, which may conflict with
 the constrained range of $x$ expressed by other conjuncts.  The
 binding reference operator resolves this by fixing the binding of $x$
 before evaluating the qualifier, enabling dependent qualifiers to
@@ -295,7 +294,7 @@ refer to specific variable bindings in the capability.
   would require a satisfying capability to include an environment with
   a mapping for \emph{every} pair of $x$ and $y$ where $0 \leq y < x$:
   $[x \mapsto 3;\, y \mapsto 0], [x \mapsto 4;\, y \mapsto 1],
-  \ldots$.
+  \ldots$
 \end{example}
 
 \subsection{Type Denotation and Soundness}%
@@ -335,13 +334,13 @@ consistent with $x$'s full range.
 
 \begin{definition}[Type Denotation]\label{def:type-denotation}
   \begin{align*}
-    \denot{\ort{b}{\phi}}_\Sigma\;e &\doteq \denot{\mstep{e}{\vnu}}_\Sigma \chimpl \forallM{(\Code{FV}(\phi)-\{\vnu\})}\,\demonic\,\Code{Atom}(\phi) \quad \text{($\vnu$ fresh)}
-    \\\denot{\urt{b}{\phi}}_\Sigma\;e &\doteq \denot{\mstep{e}{\vnu}}_\Sigma \chimpl \forallM{(\Code{FV}(\phi)-\{\vnu\})}\,\angelic\,\Code{Atom}(\phi) \quad \text{($\vnu$ fresh)}
-    \\\denot{x{:}\tau_x \ctsarr \tau}_\Sigma\;e &\doteq \denot{\tau_x}_\Sigma\;x \chimpl \denot{\tau}_{\Sigma,x{:}\eraserf{\tau_x}}\;(e\;x) \quad \text{($x$ fresh)}
-    \\\denot{x{:}\tau_x \ctwand \tau}_\Sigma\;e &\doteq \denot{\tau_x}_\Sigma\;x \chwand \denot{\tau}_{\Sigma,x{:}\eraserf{\tau_x}}\;(e\;x) \quad \text{($x$ fresh)}
-    \\\denot{\tau_1 \ctinter \tau_2}_\Sigma\;e &\doteq \denot{\tau_1}_\Sigma\;e \chland \denot{\tau_2}_\Sigma\;e
-    \\\denot{\tau_1 \ctunion \tau_2}_\Sigma\;e &\doteq \denot{\tau_1}_\Sigma\;e \chlor \denot{\tau_2}_\Sigma\;e
-    \\\denot{\tau_1 \ctoplus \tau_2}_\Sigma\;e &\doteq \denot{\tau_1}_\Sigma\;e \choplus \denot{\tau_2}_\Sigma\;e
+    \denot{\ort{b}{\phi}}_\Sigma\;e &\doteq \denot{\mstep{e}{\vnu}}_\Sigma \chimpl \forallM{(\Code{FV}(\phi)-\{\vnu\})}\,\demonic\,\Code{Atom}(\phi) \quad \text{($\vnu$ fresh)}  \\
+    \denot{\urt{b}{\phi}}_\Sigma\;e &\doteq \denot{\mstep{e}{\vnu}}_\Sigma \chimpl \forallM{(\Code{FV}(\phi)-\{\vnu\})}\,\angelic\,\Code{Atom}(\phi) \quad \text{($\vnu$ fresh)}  \\
+    \denot{x{:}\tau_x \ctsarr \tau}_\Sigma\;e &\doteq \denot{\tau_x}_\Sigma\;x \chimpl \denot{\tau}_{\Sigma,x{:}\eraserf{\tau_x}}\;(e\;x) \quad \text{($x$ fresh)}  \\
+    \denot{x{:}\tau_x \ctwand \tau}_\Sigma\;e &\doteq \denot{\tau_x}_\Sigma\;x \chwand \denot{\tau}_{\Sigma,x{:}\eraserf{\tau_x}}\;(e\;x) \quad \text{($x$ fresh)}  \\
+    \denot{\tau_1 \ctinter \tau_2}_\Sigma\;e &\doteq \denot{\tau_1}_\Sigma\;e \chland \denot{\tau_2}_\Sigma\;e  \\
+    \denot{\tau_1 \ctunion \tau_2}_\Sigma\;e &\doteq \denot{\tau_1}_\Sigma\;e \chlor \denot{\tau_2}_\Sigma\;e  \\
+    \denot{\tau_1 \ctoplus \tau_2}_\Sigma\;e &\doteq \denot{\tau_1}_\Sigma\;e \choplus \denot{\tau_2}_\Sigma\;e
   \end{align*}
 \end{definition}
 
@@ -357,28 +356,22 @@ $\ctwand$ uses multiplicative implication (the parameter binding is
 disjoint from the closure context).
 
 \begin{definition}[Type Context Denotation]\label{def:context-denotation}
-  \[
-  \begin{aligned}
-    \denot{\emptyset}_\Sigma &\doteq \chtrue \\
-    \denot{x{:}\tau}_\Sigma &\doteq \denot{\tau}_\Sigma\;x
-  \end{aligned}
-  \qquad
-  \begin{aligned}
-    \denot{\Gamma_1 \ctcomma \Gamma_2}_\Sigma &\doteq \denot{\Gamma_1}_\Sigma \chland \denot{\Gamma_2}_{(\Sigma,\,\eraserf{\Gamma_1})} \\
-    \denot{\Gamma_1 \ctstar \Gamma_2}_\Sigma &\doteq \denot{\Gamma_1}_\Sigma \chstar \denot{\Gamma_2}_\Sigma \\
-    \denot{\Gamma_1 \ctoplus \Gamma_2}_\Sigma &\doteq \denot{\Gamma_1}_\Sigma \choplus \denot{\Gamma_2}_\Sigma
-  \end{aligned}
-  \]
+  \begin{align*}
+    \denot{\emptyset}_\Sigma & \doteq \chtrue \quad
+    & \denot{\Gamma_1 \ctcomma \Gamma_2}_\Sigma & \doteq \denot{\Gamma_1}_\Sigma \chland \denot{\Gamma_2}_{(\Sigma,\,\eraserf{\Gamma_1})}
+                             & \denot{\Gamma_1 \ctoplus \Gamma_2}_\Sigma & \doteq \denot{\Gamma_1}_\Sigma \choplus \denot{\Gamma_2}_\Sigma \\
+    \denot{x{:}\tau}_\Sigma \doteq & \denot{\tau}_\Sigma\;x
+    & \denot{\Gamma_1 \ctstar \Gamma_2}_\Sigma & \doteq \denot{\Gamma_1}_\Sigma \chstar \denot{\Gamma_2}_\Sigma
+  \end{align*}
 \end{definition}
 
-The dependent conjunction ``$\ctcomma$'' maps to additive conjunction
+Entangled conjunction ``$\ctcomma$'' maps to additive conjunction
 $\chland$, reflecting that the second context may refer to bindings in
-the first.  The disjoint conjunction ``$\ctstar$'' maps to multiplicative
-conjunction $\chstar$, requiring the two sub-capabilities to be
-decomposable as a product — i.e., their variable bindings are
-independent.
+the first.  Independent conjunction ``$\ctstar$'' maps to
+multiplicative conjunction $\chstar$, requiring the two
+sub-capabilities to be decomposable as a product — i.e., their
+variable bindings are disjoint.
 
-The semantic subtyping relations used in rules T-Sub and T-CtxSub are:
 \begin{figure}[h]
   {
   \begin{flalign*}
@@ -399,12 +392,15 @@ The semantic subtyping relations used in rules T-Sub and T-CtxSub are:
   \label{fig:semantic-subtyping-relation}
 \end{figure}
 
-Type subtyping is encoded directly as logical implication in the
-denotational semantics.  Context subtyping uses an explicit projection
-$\projectTo{r}{X}$: the two capabilities agree on the variable set $X$
-(the free variables of the term and type), but $r'$ may differ on
-other variables, reflecting the fact that context subtyping only needs
-to hold for the variables that actually appear in the judgement.
+The semantic subtyping relations used in rules \textsc{T-Sub} and
+\textsc{T-CtxSub} are shown in
+\autoref{fig:semantic-subtyping-relation}. Type subtyping is encoded
+directly as logical implication in the denotational semantics.
+Context subtyping uses an explicit projection $\projectTo{r}{X}$: the
+two capabilities agree on the variable set $X$ (the free variables of
+the term and type), but $r'$ may differ on other variables, reflecting
+the fact that context subtyping only needs to hold for the variables
+that actually appear in the judgement.
 
 We conclude with the core soundness results.
 
@@ -420,7 +416,7 @@ We conclude with the core soundness results.
   \end{align*}}
 \end{definition}
 
-Our fundemental theorem and type soundness theorem assume a
+Our fundamental theorem and type soundness theorem assume a
 well-formed operator context.
 
 \begin{theorem}[Fundamental Theorem]%
@@ -441,11 +437,11 @@ well-formed operator context.
 \end{corollary}
 
 Our type soundness theorem simply instantiates the fundamental theorem
-at the empty context. For a closed well-typed term $e$, the capability
-$\{[x \mapsto v] \mid \mstep{e}{v}\}$, which collects all values $e$
-can reduce to, each bound to a fresh variable $x$, satisfies the
-denotation of $\tau$. This has two concrete consequences depending on
-the modality of $\tau$: if $\tau$ is a demonic type, then every value
-that $e$ reduces to satisfies $\tau$'s qualifier (safety); if $\tau$
-is an angelic type, then every value prescribed by $\tau$'s qualifier
-is witnessed by some reduction of $e$ (reachability).
+with the empty context. For a closed well-typed term $e$, the
+capability $\{[x \mapsto v] \mid \mstep{e}{v}\}$, which collects all
+values $e$ can reduce to, each bound to a fresh variable $x$,
+satisfies the denotation of $\tau$. This has two concrete consequences
+depending on the modality of $\tau$: if $\tau$ is a demonic type, then
+every value that $e$ reduces to satisfies $\tau$'s qualifier (safety);
+if $\tau$ is an angelic type, then every value prescribed by $\tau$'s
+qualifier is witnessed by some reduction of $e$ (reachability).
