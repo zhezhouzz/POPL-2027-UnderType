@@ -12,11 +12,11 @@ decidability.
 
 A syntax-directed typing algorithm, necessary for any efficient
 implementation, would require additional typing annotations to
-constrain the flexibility of the existing typing rules that can be
-otherwise quite unconstrained: the typing rules for match statements
-and functions, for example, admit multiple valid typings.  It is
-impractical, however, to ask users to write function signatures that
-anticipate the requirements imposed by all calling contexts.  Even
+constrain the flexibility of the existing typing rules. By themselves,
+these rules are quite unconstrained: the typing rules for match
+statements and functions, for example, admit multiple valid typings.
+It is impractical, however, to ask users to write function signatures
+that anticipate the requirements imposed by all calling contexts. Even
 putting aside the question of typing annotation burden, type-checking
 programs with unrestricted angelic and demonic modalities in the
 typing context can lead to formulae with quantifier alternations that
