@@ -12,16 +12,21 @@ whose structure governs the demonic and angelic choices available when
 reasoning about terms. Building on this insight, we have developed a
 resource algebra of capabilities and a modal context logic over that
 algebra, and given a denotation of our type system into context logic.
-Bunched context combinators track the dependencies between variables
-and determine when angelic choices may be made independently, a
-context sum operator recovers safety guarantees along executions that
-reachability assumptions ensure exist, and a persistence modality
-extends these guarantees to nondeterministic programs. Our metatheory,
-mechanized in Rocq, establishes that a single soundness theorem
-delivers both guarantees: every value produced by a well-typed term
-satisfies its demonic types, and every value prescribed by its angelic
-types is witnessed by some execution. Case studies drawn from
-compositional may/must analysis, coverage verification, and
-incorrectness reasoning suggest that this unified foundation can
-tackle verification tasks previously addressed by separate,
-property-specific systems.
+Our metatheory, mechanized in Rocq, establishes that a single
+soundness theorem delivers both guarantees: every value produced by a
+well-typed term satisfies its demonic types, and every value
+prescribed by its angelic types is witnessed by some execution.
+
+%% Bunched context combinators track the dependencies between variables
+%% and determine when angelic choices may be made independently, a
+%% context sum operator recovers safety guarantees along executions that
+%% reachability assumptions ensure exist, and a persistence modality
+%% extends these guarantees to nondeterministic programs. Our metatheory,
+%% mechanized in Rocq, establishes that a single soundness theorem
+%% delivers both guarantees: every value produced by a well-typed term
+%% satisfies its demonic types, and every value prescribed by its angelic
+%% types is witnessed by some execution. Case studies drawn from
+%% compositional may/must analysis, coverage verification, and
+%% incorrectness reasoning suggest that this unified foundation can
+%% tackle verification tasks previously addressed by separate,
+%% property-specific systems.

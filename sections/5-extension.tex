@@ -15,7 +15,7 @@ values of basic type across different executions:
 Unsurprisingly, the wrinkle introduced by nondeterminism is related to
 dependence: whereas the reachability properties of a \langname{} term
 were fundamentally tied with the environment under which it is
-evaluated, those of a \langname{} term may (or may not) be
+evaluated, those of a \langNDname{} term may (or may not) be
 \emph{independent} of the surrounding context.
 
 Dealing with this new possibility raises two technical
@@ -211,12 +211,14 @@ $\Gamma \vdash \ctpers \tau <: \tau$ always holds.  Its introduction
 rule \textsc{T-Pers} allows us to conclude that a value is a
 persistent term of type $\ctpers \tau$ if we can establish that it has
 type $\tau$ using a type context comprised only of persistent facts,
-i.e., $\denot{\Gamma} \models \chpers \denot{\Gamma}$. Note that
-although \textsc{T-PersI} can only be directly applied to values, $v$,
-it is always possible to let-expand a persistent expression into a
-form which the rule can be applied to, e.g., by transforming
-$(\zzlam{y}{\Code{gen_{nat} \;()}}) 3$ to
-$\zlet{x}{(\zzlam{y}{\Code{gen_{nat} \;()}}) 3}{x}$.
+i.e., $\denot{\Gamma} \models \chpers \denot{\Gamma}$.
+
+%% Note that
+%% although \textsc{T-PersI} can only be directly applied to values, $v$,
+%% it is always possible to let-expand a persistent expression into a
+%% form which the rule can be applied to, e.g., by transforming
+%% $(\zzlam{y}{\Code{gen_{nat} \;()}}) 3$ to
+%% $\zlet{x}{(\zzlam{y}{\Code{gen_{nat} \;()}}) 3}{x}$.
 %\BD{This example is not working for me: as is, the term is not
 %persistent. If we instead eta expand the body, we end up with a
 %term... We either need to come up with a better example or drop this
