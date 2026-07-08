@@ -5,7 +5,7 @@
       \\\text{\textbf{Data Constructors }}& \quad &d ::= \quad & () ~|~ \Code{true} ~|~ \Code{false} ~|~ \Code{O} ~|~ \Code{S} ~|~ \Code{Cons} ~|~ \Code{Nil} ~|~ ...
       \\\text{\textbf{Operations}}& \quad & \primop ::= \quad & d ~|~ {+} ~|~ {-} ~|~ {==} ~|~ {<} ~|~ {\leq} ~|~ ...
       %\\ \text{\textbf{Constants }}& \quad &c ::= \quad & () ~|~ d\ \overline{c}\ ... % \mathbb{B} ~|~ \mathbb{Z} ~|~
-      \\ \text{\textbf{Values}}& \quad  & v ::= \quad & c ~|~ x ~|~ \zlam{x}{s}{e} ~|~ \zfix{f}{s}{x}{s}{e}
+      \\ \text{\textbf{Values}}& \quad  & v ::= \quad & d\ \overline{v} ~|~ x ~|~ \zlam{x}{s}{e} ~|~ \zfix{f}{s}{x}{s}{e}
       \\ \text{\textbf{Expressions}}& \quad & e ::=\quad & v ~|~ \zlet{x{:}s}{e}{e} ~|~ \primop\ \overline{v} ~|~  v\;v ~|~ \match{v} \overline{d\ \overline{y} \to e}
       \\\text{\textbf{Base Types}}& \quad & b  ::= \quad &  \Code{unit} ~|~ \Code{bool} ~|~ \Code{nat} ~|~ \List[b] ~|~ ...
       \\\text{\textbf{Basic Types}}& \quad & s  ::= \quad &  b ~|~ s\sarr s
@@ -91,12 +91,17 @@ safety and reachability properties.
 % {WfType}
 % {$\Gamma \wfvdash \tau$}
 % \quad
-\mprooftr{35mm}
+\mprooftr{23mm}
+{$\Sigma \wfvdash \tau_x$ \quad $x \notin \Dom{\Sigma}$}
+{WfSingle}
+{$\Sigma \wfvdash x{:}\tau_x$}
+\quad
+\mprooftr{25mm}
 {$\Sigma \wfvdash \Gamma_1$ \quad $\Sigma, \eraserf{\Gamma_1} \wfvdash \Gamma_2$}
 {WfComma}
 {$\Sigma \wfvdash \Gamma_1 \ctcomma \Gamma_2$}
 \quad
-\mprooftr{35mm}
+\mprooftr{25mm}
 {$\Sigma \wfvdash \Gamma_1$ \quad $\Sigma \wfvdash \Gamma_2$}
 {WfStar}
 {$\Sigma \wfvdash \Gamma_1 \ctstar \Gamma_2$}
@@ -195,7 +200,7 @@ cannot refer to variables in each other.
   % {$\emptyset \vdash c : \ort{b}{\vnu = c} \ctinter \urt{b}{\vnu = c}$}
   % \quad
   \mprooftr{34mm}
-  {$\Code{Ty}(\primop) = \overline{x_i{:}\tau_i}\ctsarr \tau_y$ \quad
+  {$\Code{Ty}(\primop) = \overline{x_i{:}\tau_i}\ctsarr \tau$ \quad
     $\forall i. \Gamma \vdash v_i : \tau_i$ }
   {T-AppOp}
   {$\Gamma \vdash \primop\;\overline{v_i} : \tau[\overline{x_i \mapsto v_i}]$}
@@ -209,10 +214,10 @@ cannot refer to variables in each other.
     \hypo{\forall i. \Gamma_i \vdash d_i(\overline{y}) : \ort{b}{\vnu = v} \interty \urt{b}{\vnu = v}}
     \hypo{\forall i. \Gamma_i \vdash e_i : \tau_i}
     \infer[no rule]2{\forall j \in (i, n].
-      \Code{Ty}(d_j) = \overline{y_j{:}\tau_j}\ctsarr \tau_y %
-      ~~ \land ~~ %
+      % \Code{Ty}(d_j) = \overline{y_j{:}\tau_j}\ctsarr \tau_y %
+      % ~~ \land ~~ %
       \ctbigoplus
-      \overline{\Gamma_i}\ctcomma \overline{y_j : \tau_j} \vdash v : \ort{b}{\vnu \neq d_j\ \overline{y_j}}}
+      \overline{\Gamma_i}\ctcomma \overline{y_j : \ort{b_j}{\top}} \vdash d_j\ \overline{y_j} : \ort{b}{\vnu \neq v }}
     \infer1[\textsc{T-Match}]{\ctbigoplus \overline{\Gamma_i} \vdash
       \match{v} \overline{d_n\ \overline{y_n} \to e_n}  : \ctbigoplus
       \overline{\tau_i}}
@@ -298,12 +303,12 @@ $\Gamma \vdash\tau_1 \subty \tau_2$ is standard, i.e., inhabitants of
 the denotation of $\tau_1$ are also inhabitants of the denotation of
 $\tau_2$ under the denotation of context $\Gamma$. The refinement
 relation between typing contexts, $\Gamma_1 \ctsubseteq{X} \Gamma_2$
-can be understood as ``any term that has type $\tau$ under $\Gamma_1$
-can also be typed with $\tau$ under $\Gamma_2$'', where the comparison
+can be understood as ``any term that has type $\tau$ under $\Gamma_2$
+can also be typed with $\tau$ under $\Gamma_1$'', where the comparison
 is confined to a particular set of variables $X$.  For example,
 \begin{align*}
-  x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\urt{\Nat}{\vnu > 0}
-  \ctsubseteq{\{y\}} y{:}\urt{\Nat}{\top} \ctcomma z{:}\urt{\Nat}{\top}
+  x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\urt{\Nat}{\top}
+  \ctsubseteq{\{y\}} y{:}\urt{\Nat}{\vnu > 0} \ctcomma z{:}\urt{\Nat}{\top}
 \end{align*}
 The \textsc{T-CtxSub} rule restricts the context refinement relation
 to the free variables of a target term and type.
@@ -358,7 +363,7 @@ The totality requirement also forces \textsc{T-Fix} to stipulate that
 the first parameter of a recursive function use the entangled arrow
 type. When typing the body of the function, the binding for the
 recursive call references the original recursive parameter $x$ via the
-well-foundedness constraint $\nu \prec x$, leading to a dependency
+well-foundedness constraint $\vnu \prec x$, leading to a dependency
 between any recursive argument and $x$.
 % cannot use the independent arrow type, i.e., %
 % \begin{align*}
@@ -486,14 +491,14 @@ Here, $x{:}\urt{\Nat}{\vnu > 0}$ admits a capability containing
 environments that only reach the false branch, and thus cannot be
 decomposed into two contexts that fully separate both branches.  The
 following example illustrates how \textsc{T-Match}'s last set of
-assumptions accounts for unreachable countrol flows: \smallskip
+assumptions accounts for unreachable control flows: \smallskip
 \begin{center}
   \small
   \begin{prooftree}
     \hypo{x{:}\ort{\Nat}{\vnu > 0} \ctsubseteq{\{x\}} x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}}
     \infer[no rule]1{x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}\vdash 5 : \ort{\Nat}{\vnu > 4}}
-    \infer[no rule]1{x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}\vdash \Code{S}\;y : \ort{\Nat}{\vnu = x} \interty \urt{\Nat}{\vnu = x}}
-    \infer[no rule]1{x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}\vdash x : \ort{\Nat}{\vnu \neq 0}}
+    % \infer[no rule]1{x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}\vdash \Code{S}\;y : \ort{\Nat}{\vnu = x} \interty \urt{\Nat}{\vnu = x}}
+    \infer[no rule]1{x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}\vdash 0 : \ort{\Nat}{\vnu \neq x}}
     \infer1[\textsc{T-Match}]{x{:}\ort{\Nat}{\vnu > 0} \vdash \zmatchNat{x}{3}{y}{5} : \ort{\Nat}{\vnu > 4} \quad \judgok}
     \end{prooftree}
   \end{center}\noindent

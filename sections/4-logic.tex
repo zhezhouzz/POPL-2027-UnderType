@@ -253,10 +253,10 @@ disjoint sub-capabilities.
 The sum $P \choplus Q$ holds at $r$ if $r$ can be split into two
 sub-capabilities $r_1 + r_2 \sqsubseteq r$, one satisfying $P$ and one
 satisfying $Q$.  This supports the context sum type
-$\tau_1 \ctoplus \tau_2$ from in \autoref{sec:context-typing}, which
+$\tau_1 \ctoplus \tau_2$ from \autoref{sec:context-typing}, which
 allows a capability to be partitioned into two subsets. The requirement
 that capabilities be non-empty ensures that neither branch is vacuous:
-both summand must contain at least one environment.
+both summands must contain at least one environment.
 
 \paragraph{Binding Reference Operator}
 The binding reference operator $\forallM{x} P$ expresses how a
@@ -338,7 +338,7 @@ consistent with $x$'s full range.
     \denot{x{:}\tau_x \ctsarr \tau}_\Sigma\;e &\doteq \denot{\tau_x}_\Sigma\;x \chimpl \denot{\tau}_{\Sigma,x{:}\eraserf{\tau_x}}\;(e\;x) \quad \text{($x$ fresh)}  \\
     \denot{x{:}\tau_x \ctwand \tau}_\Sigma\;e &\doteq \denot{\tau_x}_\Sigma\;x \chwand \denot{\tau}_{\Sigma,x{:}\eraserf{\tau_x}}\;(e\;x) \quad \text{($x$ fresh)}  \\
     \denot{\tau_1 \ctinter \tau_2}_\Sigma\;e &\doteq \denot{\tau_1}_\Sigma\;e \chland \denot{\tau_2}_\Sigma\;e  \\
-    \denot{\tau_1 \ctunion \tau_2}_\Sigma\;e &\doteq \denot{\tau_1}_\Sigma\;e \chlor \denot{\tau_2}_\Sigma\;e  \\
+    % \denot{\tau_1 \ctunion \tau_2}_\Sigma\;e &\doteq \denot{\tau_1}_\Sigma\;e \chlor \denot{\tau_2}_\Sigma\;e  \\
     \denot{\tau_1 \ctoplus \tau_2}_\Sigma\;e &\doteq \denot{\tau_1}_\Sigma\;e \choplus \denot{\tau_2}_\Sigma\;e
   \end{align*}
 \end{definition}

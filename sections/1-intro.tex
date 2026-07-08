@@ -349,7 +349,7 @@ enabling frame-based local reasoning.  For example, to establish that
 the following type signature that provides a more precise version of $\tau_b$
 using $\ctwand$ to make explicit that $x$ and $y$ must be chosen independently:
 \begin{align*}
-  & \vdash \ref{ex:div} ~:~ x{:}\urt{\Nat}{\vnu > 0} \sarr y{:}\urt{\Nat}{\vnu > 0} \ctwand \urt{\Nat}{\vnu > 0} \quad \judgok
+  & \vdash \ref{ex:div} ~:~ x{:}\urt{\Nat}{\vnu > 0} \ctsarr y{:}\urt{\Nat}{\vnu > 0} \ctwand \urt{\Nat}{\vnu > 0} \quad \judgok
 \end{align*}\noindent
 Here, the type constructor ($\ctwand$) requires the arguments for $x$
 and $y$ to be independent, guaranteeing that each angelic choice can

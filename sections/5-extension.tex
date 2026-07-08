@@ -49,7 +49,7 @@ capture some variable with an angelic binding that provides the
 witnesses needed to construct every positive number:
 \begin{align*}
   z{:}\urt{\Nat}{\top} \vdash \zzlam{x}{z + 1} : \ort{\Unit}{\top} \ctsarr
-  \urt{\Nat}{\vnu + 1}
+  \urt{\Nat}{0 < \vnu}
 \end{align*}\noindent
 Two successive calls to a \langname{} function with this signature
 \emph{always} yield entangled results, even if the calls have
@@ -102,7 +102,7 @@ result, but prevents $f$ from reappearing in the body of a
 Successive applications of a nondeterministic generator like
 $\Code{gen_{nat}\; ()}$, however, can produce genuinely independent
 values. In order to accurately capture the behavior of such functions,
-\langNDname{} introduces a \emph{persistent} type operator, $\chpers$:
+\langNDname{} introduces a \emph{persistent} type operator, $\ctpers$:
 \begin{align*}
   \Code{gen_{nat}} : \ctpers (\ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top})
 \end{align*}
@@ -208,7 +208,7 @@ types are:
 The elimination rule for persistent types \textsc{T-PersE} is
 derivable from \textsc{T-Sub} and the fact
 $\Gamma \vdash \ctpers \tau <: \tau$ always holds.  Its introduction
-rule \textsc{T-Pers} allows us to conclude that a value is a
+rule \textsc{T-PersI} allows us to conclude that a value is a
 persistent term of type $\ctpers \tau$ if we can establish that it has
 type $\tau$ using a type context comprised only of persistent facts,
 i.e., $\denot{\Gamma} \models \chpers \denot{\Gamma}$.
@@ -240,7 +240,7 @@ To illustrate, consider the following typing derivation: \smallskip
 \begin{prooftree}
   \hypo{\emptyset \vdash \Code{gen_{bool} \;()}  : \urt{\Bool}{\top}}
   \hypo{\emptyset \vdash \urt{\Bool}{\top} \subty \ort{\Bool}{\vnu = \true} \ctoplus \ort{\Bool}{\vnu = \false}}
-  \infer2[TCtxSub]{\emptyset \vdash \Code{gen_{bool} \;()} : \ort{\Bool}{\vnu =
+  \infer2[T-CtxSub]{\emptyset \vdash \Code{gen_{bool} \;()} : \ort{\Bool}{\vnu =
       \true} \ctoplus \ort{\Bool}{\vnu = \false}}
 \end{prooftree}
 \end{center}\smallskip
@@ -287,8 +287,8 @@ the sum operator to partition it across the two branches as before:
   &\denot{\ort{\Bool}{\vnu = \true} \ctoplus
           \ort{\Bool}{\vnu = \false}}\;\Code{gen_{bool} \;()}
   \\=\;& \forall x.\; \Code{Atom}(x = \true \lor x = \false) \chimpl
-          \demonic\,\Code{Atom}(\vnu = \true) \choplus
-          \demonic\,\Code{Atom}(\vnu = \false)
+          \demonic\,\Code{Atom}(x = \true) \choplus
+          \demonic\,\Code{Atom}(x = \false)
   \quad\judgok
 \end{align*}
 This richer denotation also allows us to discharge the semantic
