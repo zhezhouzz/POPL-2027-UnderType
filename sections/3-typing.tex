@@ -31,7 +31,7 @@ pattern matching (we use conditional expressions as syntactic sugar
 for \Code{match}), and recursive functions. Expressions are written in
 monadic normal form (MNF)~\cite{JO94}, a variant of A-Normal Form
 (ANF)~\cite{FSDF93} that allows nested let-bindings. All terms in
-\langname{} are deterministic, a restriction that we will lift in
+\langname{} are deterministic, a restriction that we lift in
 \autoref{sec:extension}.  The language's basic types (i.e., $s$)
 consist of base types ($b$) and function types (i.e., $s\sarr
 s$). Both \textbf{let}-expressions and function abstractions
@@ -220,7 +220,7 @@ The rules of our type system are shown in
 typing contexts and types; we elide these assumptions for clarity. The
 typing rules for let-expressions, lambda functions, and applications
 all have entangled and independent versions. In contrast to a standard
-bunched type system, the entangled version of the let rule does not
+bunched type system, the entangled version of the \mykw{let} rule does not
 require an explicit additive conjunction in the type context. Instead,
 \textsc{T-Let} directly entangles the new variable binding with the
 existing context, without duplicating or removing bindings.
