@@ -12,9 +12,10 @@
       \\\text{\textbf{Basic Type Context}}& \quad & \Sigma ::= \quad &  \emptyset ~|~ x{:}s ~|~ \Sigma, \Sigma
     \end{alignat*}
   }
-  \vspace{-12pt}
+  \vspace{-18pt}
   \caption{Syntax of \langname{}}
   \label{fig:core-lang-syntax}
+  \vspace{-6pt}
   \end{figure}
 
 \section{Context Type System}
@@ -61,9 +62,11 @@ distinct.
   %%   \\& \eraserf{\emptyset} \doteq \emptyset \quad \eraserf{x{:}\tau} \doteq x{:}\eraserf{\tau} \quad \eraserf{\Gamma_1 \ctcomma \Gamma_2} \doteq \eraserf{\Gamma_1}, \eraserf{\Gamma_2} \quad \eraserf{\Gamma_1 \ctstar \Gamma_2} \doteq \eraserf{\Gamma_1}, \eraserf{\Gamma_2}  \quad \eraserf{\Gamma_1 \ctoplus \Gamma_2} \doteq \eraserf{\Gamma_1}
     % \\\text{\textbf{Type lifting}} \quad & \liftrf{b} \doteq \ort{b}{\phi} \quad \liftrf{s_x \sarr s} \doteq x{:}\liftrf{s_x} \ctsarr \liftrf{s}
     % \\&\liftrf{\emptyset} \doteq \emptyset \quad \liftrf{x{:}s} \doteq x{:}\liftrf{s} \quad \liftrf{\Gamma_1 , \Gamma_2} \doteq \liftrf{\Gamma_1} \ctcomma \liftrf{\Gamma_2}
-%  \end{align*}}
+    % \end{align*}}
+  \vspace{-18pt}
   \caption{Context Type Syntax}
   \label{fig:context-types-syntax}
+  \vspace{-6pt}
 \end{figure}
 
 The syntax of context types is shown in
