@@ -96,10 +96,11 @@ establish the typing judgment $x{:} \ort{b}{\phi} \vdash e : \tau$,
 for example, our type system treats any free occurrences of $x$
 \emph{demonically}, since the surrounding environment is free to
 choose some value of $x$ consistent with $\phi$ that makes $e$ violate
-the constraints defined by $\tau$. Conversely, when establishing the
-typing judgment $x{:} \urt{b}{\phi} \vdash e : \tau$, $x$ is treated
-\emph{angelically}, since we can safely assume that $x$ can take on
-every value consistent with $\phi$ (and maybe more).
+the constraints defined by $\tau$. Conversely, to establish
+$x{:}\urt{b}{\phi} \vdash e : \tau$ $x$ is treated \emph{angelically}:
+the surrounding environment is guaranteed to assign $x$ every value
+consistent with $\phi$, allowing the type system to assume any such
+value is available when verifying $e$ against $\tau$.
 
 The availability of first-class functions adds additional
 complications. Higher-order functions like
@@ -311,13 +312,20 @@ so the judgement is not valid.
 % mixing in arbitrary ways.
 To solve the context dependency issues raised above, we equip typing
 contexts with \emph{capabilities} that are treated as \emph{resources}
-that mediate demonic or angelic choices as necessary. We then
+that mediate demonic or angelic choices as necessary.  Concretely, a
+capability associated with a typing context $\Gamma$ is a set of
+environments consistent with $\Gamma$, representing the range of
+variable bindings available for demonic or angelic choices.  We then
 introduce a \emph{resource algebra} to compose and destruct these
-capabilities in a principled way.  This approach enables us to handle
-context independence analogously to the way bunched
-implications~\cite{OHP99} handle resource separation, lifting the
-additive/multiplicative conjunction distinction from the level of
-propositions to the level of type contexts.
+capabilities in a principled way.  Specifically, the algebra ensures
+that capabilities can only be combined and decomposed in a way that
+faithfully reflects the dependency structure between variable bindings
+in the typing context, as illustrated in the examples given above.
+This approach enables us to handle context independence analogously to
+the way bunched implications (BI)~\cite{OHP99} handle resource
+separation, lifting the additive/multiplicative conjunction
+distinction from the level of propositions to the level of type
+contexts.
 
 This framing naturally leads to the notion of a \emph{context type}
 that unifies safety and reachability reasoning in a functional
