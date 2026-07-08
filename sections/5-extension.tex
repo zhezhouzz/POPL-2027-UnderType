@@ -1,14 +1,14 @@
 \section{Supporting Nondeterminism}
 \label{sec:extension}
 
-The \langname{} language of \autoref{sec:context-typing} is
+The \langname{} language of Section~\ref{sec:context-typing} is
 deterministic: every term reduces to (at most) one value under any
 particular environment. This section considers a calculus,
 \langNDname{}, that relaxes this restriction, enabling us to, e.g.,
 type programs like \ref{ex:DisjCon} from
 \autoref{sec:overview}. Concretely, \langNDname{} extends \langname{}
 with nondeterministic \emph{generators} that can produce multiple
-values across different executions:
+values of basic type across different executions:
 \begin{align*}
   \primop ::= \quad & \ldots ~|~ \Code{gen}_b ~|~ \ldots
 \end{align*}
@@ -24,7 +24,7 @@ invoked multiple times, producing independent capabilities at each
 call; our extended type system must account for this \emph{resource
   duplication}.  Second, we need to generalize our type denotation to
 accommodate terms whose reachability guarantees are not completely
-dictated by their evaluation environment.
+determined by their evaluation environment.
 
 % (\S\ref{subsec:nondet-denotation}).  We conclude with case studies
 % (\S\ref{subsec:case-studies}) demonstrating the expressiveness of
@@ -44,9 +44,9 @@ dictated by their evaluation environment.
 In \langname{}, the reachability properties of a term are entangled
 with its surrounding context: evaluation does not introduce new
 capabilities. For example, every inhabitant of
-$\ort{\Unit}{\top} \ctsarr \urt{\Nat}{\vnu > 0}$ must capture some
-variable with an angelic binding that provides the witnesses needed to
-construct every positive number:
+$\ort{\Unit}{\top} \ctsarr \urt{\Nat}{\vnu > 0}$ in \langname{} must
+capture some variable with an angelic binding that provides the
+witnesses needed to construct every positive number:
 \begin{align*}
   z{:}\urt{\Nat}{\top} \vdash \zzlam{x}{z + 1} : \ort{\Unit}{\top} \ctsarr
   \urt{\Nat}{\vnu + 1}
@@ -55,42 +55,54 @@ Two successive calls to a \langname{} function with this signature
 \emph{always} yield entangled results, even if the calls have
 independent arguments:
 \begin{align}
-  z{:}\urt{\Unit}{\top} \vdash
+  z{:}\urt{\Nat}{\top} \vdash
   \zlet{f}{\zzlam{x}{z}}{\zlet{y_1}{f\;()}{\zlet{y_2}{f\;()}{y_1 -
-  y_2}}} : \urt{\Nat}{\top} \judgfail
+  y_2}}} : \urt{\Nat}{\top} \quad \judgfail
   \tag{$\Code{e_{ND}}$}\label{ex:nondet}
 \end{align}\noindent
 This fact is encoded in the typing rules for let-expressions,
-\textsc{T-Let} and \textsc{T-LetD}, which jointly enforce the
+\textsc{T-Let} and \textsc{T-LetI}, which jointly enforce an
 ``entangled xor consumed'' policy. The rule \textsc{T-Let} allows the
 function $f$ to be used in both the bound expression and the body of a
 \Code{let}-expression, but the bound expression will be entangled with
 $f$. Thus, if we tried to use \textsc{T-Let} to establish
 \ref{ex:nondet}, we would get stuck when trying to type
-$\Code{y_1 - y_2}$:
-\begin{align*}
-  & \underline{\ldots \ctcomma y_1{:}\urt{\Nat}{\top} \ctcomma
-    y_2{:}\urt{\Nat}{\top} \vdash y_1 - y_2 : \urt{\Nat}{\top}}
-    \quad \judgfail \\
-  &\empty \ctcomma \underline{z{:}\urt{\Unit}{\top} \ctcomma f{:}\ort{\Unit}{\top}
+$y_1 - y_2$:
+
+\begin{center}
+\small
+  \begin{prooftree}
+    \hypo{\ldots \ctcomma y_1{:}\urt{\Nat}{\top} \ctcomma
+    y_2{:}\urt{\Nat}{\top} \vdash y_1 - y_2 : \urt{\Nat}{\top} \quad \judgfail}
+  \infer1[\textsc{T-Let}]{\emptyset \ctcomma z{:}\urt{\Nat}{\top} \ctcomma f{:}\ort{\Unit}{\top}
     \ctsarr \urt{\Nat}{\top} \ctcomma y_1{:}\urt{\Nat}{\top} \vdash
-    \zlet{y_2}{f\;()}{e} : \tau} \tag{\textsc{T-Let}} \\
-  & \empty \ctcomma z{:}\urt{\Unit}{\top} \ctcomma f{:}\ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top} \vdash \zlet{y_1}{f\;()}{\zlet{y_2}{f\;()}{e}} : \tau
-\end{align*}\noindent
-On the other hand, \textsc{T-LetI} produces an independent
+    \zlet{y_2}{f\;()}{y_1 - y_2} : \tau}
+\infer1[\textsc{T-Let}]{\emptyset \ctcomma z{:}\urt{\Nat}{\top}
+  \ctcomma f{:}\ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top} \vdash
+  \zlet{y_1}{f\;()}{\zlet{y_2}{f\;()}{y_1 - y_2}} : \tau}
+\end{prooftree}
+\end{center} \smallskip
+
+\noindent On the other hand, \textsc{T-LetI} produces an independent
 result, but prevents $f$ from reappearing in the body of a
 \Code{let}-expression, leaving us unable to type the second
-\Code{let}-expression in \ref{ex:nondet}:
-\begin{align*}
-  &\underline{\empty \ctstar y_1{:}\urt{\Nat}{\top} \vdash \zlet{y_2}{f\;()}{e} : \tau \quad \judgfail}  \tag{\textsc{T-LetI}}
-  \\
-  &\empty \ctstar (z{:}\urt{\Unit}{\top} \ctcomma f{:}\ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top}) \vdash \zlet{y_1}{f\;()}{\zlet{y_2}{f\;()}{e}} : \tau
-\end{align*}\noindent
+\Code{let}-expression in \ref{ex:nondet}: \smallskip
+
+\begin{center}
+\small
+  \begin{prooftree}
+    \hypo{\emptyset \ctstar y_1{:}\urt{\Nat}{\top} \vdash
+      \zlet{y_2}{f\;()}{y_1 - y_2} : \tau \quad \judgfail}
+  \infer1[\textsc{T-LetI}]{\emptyset \ctstar (z{:}\urt{\Nat}{\top}
+    \ctcomma f{:}\ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top}) \vdash
+    \zlet{y_1}{f\;()}{\zlet{y_2}{f\;()}{y_1 - y_2}} : \tau}
+  \end{prooftree}
+\end{center} \smallskip
 
 Successive applications of a nondeterministic generator like
-$\Code{gen_{nat}()}$, however, can produce genuinely independent
+$\Code{gen_{nat}\; ()}$, however, can produce genuinely independent
 values. In order to accurately capture the behavior of such functions,
-\langNDname{} introduces a \emph{persistent} type operator:
+\langNDname{} introduces a \emph{persistent} type operator, $\chpers$:
 \begin{align*}
   \Code{gen_{nat}} : \ctpers (\ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top})
 \end{align*}
@@ -102,18 +114,21 @@ e.g.,
 When combined with \textsc{T-LetI}, a persistent resource can be
 freely duplicated across multiple function applications without
 entangling their results.
+% BD: A careful reader will notice that this seems to contradict the
+% assertion that "variable bindings in a (well-formed) type context
+% [need] to be unique"  (Line 450)
 
 \paragraph{Duplicable resource and persistent modality} In other
-BI-logics that support the persistent modality~\cite{Iris}, the
-definition of the persistent modality is based on a \emph{duplicable}
-resource with respect to the product operation of the underlying
-BI-algebra. A duplicable resource is idempotent with respect to the
-product operation, i.e., $r \times r = r$, allowing us to duplicate
-the generator types in the type context.  In our setting,
+BI-logics that support the persistent modality~\cite{Iris}, its
+definition is typically based on a \emph{duplicable} resource with
+respect to the product operation of the underlying BI-algebra. A
+duplicable resource is idempotent with respect to the product
+operation, i.e., $r \times r = r$, which is what allows us to
+duplicate generator types in the type context.  In our setting,
 $r \times r = r$ only holds when $r$ is a \emph{singleton} capability
 containing exactly one environment. Following this idea, we define the
 persistent modality to hold on formulas that do not depend on a
-capability containing different choices:
+capability providing different choices:
 
 \begin{definition}[Persistent Modality] We introduce a persistence
   modality $\chpers P$ to our context logic such that:
@@ -124,9 +139,9 @@ capability containing different choices:
   variable domain, as doing so would violate Kripke monotonicity: if a
   capability $r$ is singleton, then for $r'$ such that
   $r' \sqsubseteq r$, $r'$ is not always singleton. Instead, we impose
-  the more relaxed requirement that ensures that $\{\sigma\}$ will at
-  least contain all the variables needed by $P$,
-  i.e. $\projectTo{r}{\Code{FV}(P)}$.
+  the more relaxed requirement that there is some
+  $\{\sigma\} \sqsubseteq r$, which need only include the variables
+  relevant to $P$, i.e. $\projectTo{r}{\Code{FV}(P)}$.
 \end{definition}
 
 \paragraph{Persistent type} The persistent type
@@ -135,47 +150,50 @@ not rely on the capabilities provided by either the bindings in the
 type context $\Gamma$ or \emph{the reduction of the term $e$}. To
 illustrate, consider the following three functions:\footnote{The
   nondeterministic choice operator $e_1 \oplus e_2$ is syntactic sugar
-  for $\zif{\Code{gen_{bool} ()}}{e_1}{e_2}$.}
+  for $\zif{\Code{gen_{bool} \;()}}{e_1}{e_2}$.}
 \begin{align*}
-  &z{:}\urt{\Unit}{\top} \vdash \zzlam{x}{z} : \ort{\Unit}{\top}
+  &z{:}\urt{\Nat}{\top} \vdash \zzlam{x}{z} : \ort{\Nat}{\top}
     \ctsarr \urt{\Nat}{\top} \judgok \\
-  &\emptyset \vdash \zzlam{x}{\Code{gen_{nat} ()}} : \ort{\Unit}{\top}
+  &\emptyset \vdash \zzlam{x}{\Code{gen_{nat} \;()}} : \ort{\Unit}{\top}
     \ctsarr \urt{\Nat}{\top}  \judgok \\
   &\emptyset \vdash \zzlam{x}{0} \oplus
-    \zzlam{x}{\Code{gen_{nat}() + 1}} : \ort{\Unit}{\top} \ctsarr
+    \zzlam{x}{\Code{gen_{nat} \;() + 1}} : \ort{\Unit}{\top} \ctsarr
     \urt{\Nat}{\top}  \judgok
 \end{align*}\noindent
-Of these three terms, only the second can be assigned the persistent
-modality. The first is obviously not persistent since it depends on
-the binding $z$ in the type context, while the reachability properties
-of the third \emph{depend on how it is reduced}. To see how, consider
-the following type judgment, which is invalid under \langNDname{}'s
-call-by-value semantics:
+Of these three terms, only the second can also be assigned a
+persistent modality. The first is obviously not persistent since it
+depends on the binding $z$ in the type context, while the reachability
+properties of the third \emph{depend on how it is reduced}. To see
+how, consider the following type judgment, which is semantically
+invalid under \langNDname{}'s call-by-value reduction strategy:
 \begin{align*}
   \emptyset \vdash \zlet{f}{\zzlam{x}{0} \oplus
-  \zzlam{x}{\Code{gen_{nat} () + 1}}}{\zif{f\;() = 0}{f\;()}{0}} : \urt{\Nat}{\top} \quad \judgfail
+  \zzlam{x}{\Code{gen_{nat} \;() + 1}}}{\zif{f\;() = 0}{f\;()}{0}} : \urt{\Nat}{\top} \quad \judgfail
 \end{align*}\noindent
-This term can only reach the value $0$ since $f\;()$ can either reduce to $0$ or to any positive number. In other words, the two applications of $f$ are indeed dependent, and $f$ is not persistent.
+This term can only reach the value $0$: since $f$ is bound to either
+$\zzlam{x}{0}$ or $\zzlam{x}{\Code{gen_{nat} \;() + 1}}$ when the
+first let expression is reduced, two applications of $f\;()$ will
+either both reduce to $0$ or some positive number. In other words, the
+two applications of $f$ are indeed dependent, and $f$ is not
+persistent.
 
 \begin{definition}[Persistent Type Denotation]
   The denotation of $\ctpers \tau$ is:
   \begin{align*}
     \denot{\ctpers \tau}_\Sigma\;e \doteq \forall x.\denot{\mstep{e}{x}} \chimpl \chpers (\denot{\tau}_{\Sigma,x{:}\eraserf{\tau}}\;x) \quad (\text{fresh $x$})
   \end{align*}\noindent
-  Note that if we had defined the type denotation as
+  Note that if we had instead defined the type denotation as
   $\chpers (\denot{\tau}_{\Sigma}\;e)$, it would (incorrectly) contain
   inhabitants like
-  $\zzlam{x}{0} \oplus \zzlam{x}{\Code{gen_{nat} () + 1}}$. To ensure
-  that $e$ is single-valued, we introduce a universally quantified
-  fresh variable $x$ that ranges over all possible reduction results
-  of $e$; the persistent modality then ensures both the context and
-  this $x$ are single-valued.
+  $\zzlam{x}{0} \oplus \zzlam{x}{\Code{gen_{nat} \;() + 1}}$. To
+  ensure that $e$ is single-valued, we introduce a universally
+  quantified fresh variable $x$ that ranges over all possible
+  reduction results of $e$; the persistent modality then ensures both
+  the context and this $x$ are single-valued.
 \end{definition}
 
-\paragraph{Type rules for persistent types}
-The elimination rule for persistent types is derivable from
-\textsc{T-Sub} and the fact $\Gamma \vdash \ctpers \tau <: \tau$
-always holds.  The introduction rule is shown below:
+\paragraph{Typing rules for $\ctpers$} The typing rules for persistent
+types are:
 \begin{align*}
 \mprooftr{20mm}
       {$\Gamma \vdash e : \ctpers \tau$}
@@ -187,15 +205,23 @@ always holds.  The introduction rule is shown below:
       {T-PersI}
       {$\Gamma \vdash v : \ctpers \tau$}
 \end{align*}\noindent
-In short, \textsc{T-Pers} allows us to conclude that a value is a
+The elimination rule for persistent types \textsc{T-PersE} is
+derivable from \textsc{T-Sub} and the fact
+$\Gamma \vdash \ctpers \tau <: \tau$ always holds.  Its introduction
+rule \textsc{T-Pers} allows us to conclude that a value is a
 persistent term of type $\ctpers \tau$ if we can establish that it has
 type $\tau$ using a type context comprised only of persistent facts,
 i.e., $\denot{\Gamma} \models \chpers \denot{\Gamma}$. Note that
 although \textsc{T-PersI} can only be directly applied to values, $v$,
 it is always possible to let-expand a persistent expression into a
 form which the rule can be applied to, e.g., by transforming
-$(\zzlam{y}{\Code{gen_{nat} ()}}) 3$ to
-$\zlet{x}{(\zzlam{y}{\Code{gen_{nat} ()}}) 3}{x}$.
+$(\zzlam{y}{\Code{gen_{nat} \;()}}) 3$ to
+$\zlet{x}{(\zzlam{y}{\Code{gen_{nat} \;()}}) 3}{x}$.
+%\BD{This example is not working for me: as is, the term is not
+%persistent. If we instead eta expand the body, we end up with a
+%term... We either need to come up with a better example or drop this
+%discussion entirely.}
+
 
 \subsection{Type Denotation for Nondeterminism} %
 \label{subsec:nondet-denotation}
@@ -206,31 +232,32 @@ typing context. In contrast, nondeterministic \langNDname{} terms can
 themselves introduce choices that are not fully captured by our
 previous type denotation. This prevents us from applying semantic
 subtyping to verify properties of terms which should intuitively hold.
-To illustrate, consider the following typing derivation:
-\begin{align*}
+To illustrate, consider the following typing derivation: \smallskip
+\begin{center}
+\small
 \begin{prooftree}
-  \hypo{\emptyset \vdash \Code{gen_{bool} ()}  : \urt{\Bool}{\top}}
+  \hypo{\emptyset \vdash \Code{gen_{bool} \;()}  : \urt{\Bool}{\top}}
   \hypo{\emptyset \vdash \urt{\Bool}{\top} \subty \ort{\Bool}{\vnu = \true} \ctoplus \ort{\Bool}{\vnu = \false}}
-  \infer2{\emptyset \vdash \Code{gen_{bool} ()} : \ort{\Bool}{\vnu =
+  \infer2[TCtxSub]{\emptyset \vdash \Code{gen_{bool} \;()} : \ort{\Bool}{\vnu =
       \true} \ctoplus \ort{\Bool}{\vnu = \false}}
 \end{prooftree}
-\end{align*}
+\end{center}\smallskip
 
-Intuitively, the derivation should be valid: $\Code{gen_{bool} ()}$
+Intuitively, the derivation should be valid: $\Code{gen_{bool} \;()}$
 exhibits two control flow paths, reaching \Code{true} on one and
 \Code{false} on the other. Unfortunately, this conclusion does not
-hold \emph{semantically}, i.e.,
+hold \emph{semantically} under our original denotation, i.e.,
 $\not \models~ \denot{\ort{\Bool}{\vnu = \true} \ctoplus
-  \ort{\Bool}{\vnu = \false}}~ \Code{gen_{bool} ()} $! The issue here
-is that the original denotation of $\choplus$ only splits the
+  \ort{\Bool}{\vnu = \false}}~ \Code{gen_{bool} \;()} $. The issue
+here is that the original denotation of $\choplus$ only splits the
 capabilities of the \emph{context} between the two branches, not the
-term itself --- for our target claim to hold, $\Code{gen_{bool} ()}$
+term itself --- for our target claim to hold, $\Code{gen_{bool} \;()}$
 could only evaluate to \Code{true} under some partitioning of the
 empty context, which clearly never happens!
 
 A similar issue arises with the original denotation of function
 types. The fix to both issues is to ``lift'' the extra capability
-provided by a nondeterministic term into the type context:
+provided by a nondeterministic term into the capability context:
 \begin{align*}
   \denot{x{:}\tau_x \ctsarr \tau}_\Sigma\;e
     &\doteq \forall f.\; \denot{\mstep{e}{f}}_\Sigma \chimpl
@@ -246,16 +273,17 @@ provided by a nondeterministic term into the type context:
 \end{align*}
 In each case, a universally quantified fresh variable ($f$ or $x$)
 ranges over all possible reduction results of $e$, and the original
-denotation is applied to that variable.  In the deterministic case,
-$e$ has a unique reduction result and the quantifier is trivially
-eliminated, so the generalized denotation coincides with the original.
+denotation is applied to that variable.  For deterministic terms,
+which have a unique reduction result, the quantifier is trivially
+eliminated, so the generalized denotation coincides with the original
+when $e$ is deterministic.
 
-This new denotation allows us to lift $\Code{gen_{bool} ()}$'s
+This new denotation allows us to lift $\Code{gen_{bool} \;()}$'s
 nondeterminism into the context via the fresh variable $x$, allowing
-the sum operator to partition it across the two branches as usual:
+the sum operator to partition it across the two branches as before:
 \begin{align*}
   &\denot{\ort{\Bool}{\vnu = \true} \ctoplus
-          \ort{\Bool}{\vnu = \false}}\;\Code{gen_{bool} ()}
+          \ort{\Bool}{\vnu = \false}}\;\Code{gen_{bool} \;()}
   \\=\;& \forall x.\; \Code{Atom}(x = \true \lor x = \false) \chimpl
           \demonic\,\Code{Atom}(\vnu = \true) \choplus
           \demonic\,\Code{Atom}(\vnu = \false)
@@ -263,7 +291,7 @@ the sum operator to partition it across the two branches as usual:
 \end{align*}
 This richer denotation also allows us to discharge the semantic
 subtyping assumption in the previous typing derivation, allowing us to
-verify that $\Code{gen_{bool} ()}$ meets this intuitive
+verify that $\Code{gen_{bool} \;()}$ meets this intuitive
 specification. Finally, we can show that \langNDname{}'s extended type
 system is sound with respect to this generalized type denotation.
 
