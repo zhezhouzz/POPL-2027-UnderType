@@ -191,24 +191,30 @@ cannot refer to variables in each other.
   % {T-Const}
   % {$\emptyset \vdash c : \ort{b}{\vnu = c} \ctinter \urt{b}{\vnu = c}$}
   % \quad
-  \mprooftr{65mm}
-  {$\Gamma \ctcomma x{:}\ort{b}{\phi} \ctcomma f{:}(x{:}\ort{b}{\phi \land \vnu \prec x} \ctsarr \tau) \vdash e : \tau$}
-  {T-Fix}
-  {$\Gamma \vdash \zzfix{f}{x}{e} : x{:}\ort{b}{\phi} \ctsarr \tau$}
-  \\[.8em]
   \mprooftr{34mm}
   {$\Code{Ty}(\primop) = \overline{x_i{:}\tau_i}\ctsarr \tau_y$ \quad
     $\forall i. \Gamma \vdash v_i : \tau_i$ }
   {T-AppOp}
   {$\Gamma \vdash \primop\;\overline{v_i} : \tau[\overline{x_i \mapsto v_i}]$}
   \quad
-  \mprooftr{64mm}
-  {$\forall i. \Gamma_i \vdash d_i(\overline{y}) : \ort{b}{\vnu = v}
-    \interty \urt{b}{\vnu = v}$ \\
-    $\forall i. \Gamma_i \vdash e_i : \tau_i$ }
-  {T-Match}
-  {$\ctbigoplus \overline{\Gamma_i} \vdash \match{v} \overline{d\ \overline{y} \to e}  : \ctbigoplus \overline{\tau_i}$}
-  }
+  \mprooftr{65mm}
+  {$\Gamma \ctcomma x{:}\ort{b}{\phi} \ctcomma f{:}(x{:}\ort{b}{\phi \land \vnu \prec x} \ctsarr \tau) \vdash e : \tau$}
+  {T-Fix}
+  {$\Gamma \vdash \zzfix{f}{x}{e} : x{:}\ort{b}{\phi} \ctsarr \tau$}
+  \\[.8em]
+  \begin{prooftree}
+    \hypo{\forall i. \Gamma_i \vdash d_i(\overline{y}) : \ort{b}{\vnu = v} \interty \urt{b}{\vnu = v}}
+    \hypo{\forall i. \Gamma_i \vdash e_i : \tau_i}
+    \infer[no rule]2{\forall j \in (i, n].
+      \Code{Ty}(d_j) = \overline{y_j{:}\tau_j}\ctsarr \tau_y %
+      ~~ \land ~~ %
+      \ctbigoplus
+      \overline{\Gamma_i}\ctcomma \overline{y_j : \tau_j} \vdash v : \ort{b}{\vnu \neq d_j\ \overline{y_j}}}
+    \infer1[\textsc{T-Match}]{\ctbigoplus \overline{\Gamma_i} \vdash
+      \match{v} \overline{d_n\ \overline{y_n} \to e_n}  : \ctbigoplus
+      \overline{\tau_i}}
+  \end{prooftree}
+}
   \caption{Declarative typing rules \langname{}}
   \label{fig:declarative-typing-rules}
   \vspace*{-.1in}
@@ -220,10 +226,11 @@ The rules of our type system are shown in
 typing contexts and types; we elide these assumptions for clarity. The
 typing rules for let-expressions, lambda functions, and applications
 all have entangled and independent versions. In contrast to a standard
-bunched type system, the entangled version of the \mykw{let} rule does not
-require an explicit additive conjunction in the type context. Instead,
-\textsc{T-Let} directly entangles the new variable binding with the
-existing context, without duplicating or removing bindings.
+bunched type system, the entangled version of the $\mykw{let}$ rule
+does not require an explicit additive conjunction in the type
+context. Instead, \textsc{T-Let} directly entangles the new variable
+binding with the existing context, without duplicating or removing
+bindings.
 
 \begin{example}[Typing Let-Expressions]
   To see why, consider the following let-expression:
@@ -242,7 +249,7 @@ allow us to obtain such a context by duplicating the binding for $x$
 in our target judgment. Since a context with duplicate bindings is not
 well-formed in our type system, \textsc{T-Let} instead directly
 combines this ``duplicate-then-consume'' pattern:
-\begin{align*}
+\begin{center}
   \begin{prooftree}
     \hypo{
       x{:}\ort{\Nat}{\vnu < 10} \vdash x - 3 : \ort{\Nat}{\vnu <
@@ -252,7 +259,7 @@ combines this ``duplicate-then-consume'' pattern:
   \infer1[{\small \textsc{T-Let}}]{x{:}\ort{\Nat}{\vnu < 10} \vdash \zlet{y}{x - 3}{x - y} :
     \ort{\Nat}{\vnu \leq 3}}
   \end{prooftree}
-\end{align*}\noindent
+\end{center}
 \end{example}
 
 % Unlike
@@ -423,16 +430,20 @@ $\Gamma_i$ can assign the discriminee a type that precisely aligns
 with the branch's pattern; this also ensures that any pattern
 variables $\overline{y}$ have precise types when checking the branch.
 
-\begin{example}[Pattern matching] To illustrate how \textsc{T-Match}
-  works, consider how we can type \ref{ex:oplusWeak} from the previous
-  section, once we have desugared its conditional expression.
+\begin{example}[Pattern matching] The first two sets of assumptions of
+  \textsc{T-Match} deal with the reachable branches of a
+  $\mykw{match}$ statement; the last set deals with any branches that
+  are unreachable under the current typing context. To illustrate how
+  the first two assumptions work, consider the typing of
+  \ref{ex:oplusWeak} from the previous section, once we have desugared
+  its $\mykw{if}$ expression.
 \begin{align*}
   x{:}\urt{\Nat}{\top} \vdash \zmatchNat{x}{3}{y}{5} : \ort{\Nat}{\vnu < 4} \ctoplus \ort{\Nat}{\top}
 \end{align*}
 Here, we want to show that the angelic context $x{:}\urt{\Nat}{\top}$
 ensures that it is possible for \ref{ex:oplusWeak} to reach some value
-less than $4$. To do so, we first partition the type context using
-\textsc{T-CtxSub} %
+less than $4$. Both branches in \ref{ex:oplusWeak} are reachable, so
+we first partition the type context using \textsc{T-CtxSub} % \smallskip
 {\small %
   \begin{align*}
     &x{:}\urt{\Nat}{\top} \ctsubseteq{\{x\}} \\
@@ -443,7 +454,7 @@ less than $4$. To do so, we first partition the type context using
       \ctcomma y{:}\ort{\Nat}{\vnu = x -
       1}}_{\Gamma_{\Code{FBranch}}}
   \end{align*}}\noindent
-into type contexts for each branch that satisfy the first set of
+into type contexts covering each branch that satisfy the first set of
 assumptions of \textsc{T-Match}:
 \begin{align*}
   \Gamma_{\Code{TBranch}} \vdash 0 : \ort{\Nat}{\vnu = 0} \interty \urt{\Nat}{\vnu = 0}
@@ -451,8 +462,9 @@ assumptions of \textsc{T-Match}:
 \end{align*}
 \noindent
 We can then type each branch under these contexts to show that
-\ref{ex:oplusWeak} has the target type:
-\begin{align*}
+\ref{ex:oplusWeak} has the target type (since we have accounted for
+both branches, the third set of assumptions trivially holds):\smallskip
+\begin{center}
   \begin{prooftree}
     \hypo{\Gamma_{\Code{TBranch}} \vdash 3 : \ort{\Nat}{\vnu < 4}}
     \hypo{\Gamma_{\Code{FBranch}} \vdash 5 : \ort{\Nat}{\top}}
@@ -460,7 +472,7 @@ We can then type each branch under these contexts to show that
       \vdash  \zmatchNat{x}{3}{y}{5} : \ort{\Nat}{\vnu < 4} \ctoplus
       \ort{\Nat}{\top}}
     \end{prooftree}
-\end{align*}\noindent
+\end{center}\smallskip\noindent
 Observe we are unable to check \ref{ex:oplusWeak} against this type
 under a weaker typing context:
 \begin{align*}
@@ -469,19 +481,17 @@ under a weaker typing context:
 \end{align*}\noindent
 Here, $x{:}\urt{\Nat}{\vnu > 0}$ admits a capability containing
 environments that only reach the false branch, and thus cannot be
-decomposed into two contexts that fully separate both branches.  This
-rule also enables the standard refinement type judgement with
-unreachable control flows:
-\begin{align*}
+decomposed into two contexts that fully separate both branches.  The
+following example illustrates how \textsc{T-Match}'s last set of
+assumptions accounts for unreachable countrol flows: \smallskip
+\begin{center}
+  \small
   \begin{prooftree}
-    \hypo{x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}\vdash 5 : \ort{\Nat}{\vnu > 4}}
+    \hypo{x{:}\ort{\Nat}{\vnu > 0} \ctsubseteq{\{x\}} x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}}
+    \infer[no rule]1{x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}\vdash 5 : \ort{\Nat}{\vnu > 4}}
     \infer[no rule]1{x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}\vdash \Code{S}\;y : \ort{\Nat}{\vnu = x} \interty \urt{\Nat}{\vnu = x}}
-    \infer[no rule]1{x{:}\ort{\Nat}{\vnu > 0} \ctsubseteq{\{x\}} x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}}
+    \infer[no rule]1{x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}\vdash x : \ort{\Nat}{\vnu \neq 0}}
     \infer1[\textsc{T-Match}]{x{:}\ort{\Nat}{\vnu > 0} \vdash \zmatchNat{x}{3}{y}{5} : \ort{\Nat}{\vnu > 4} \quad \judgok}
     \end{prooftree}
-  \end{align*}\noindent
-where we adapt rule \textsc{T-Match} with a sum of a single
-type. \BD{We need to clean this up a bit -- As written, the rule does
-  not appear to allow us to simply omit the assumptions corresponding
-  to the true branch!}
+  \end{center}\noindent
 \end{example}
