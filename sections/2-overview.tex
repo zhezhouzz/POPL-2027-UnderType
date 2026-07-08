@@ -32,15 +32,15 @@ reachability reasoning.
 
 As in other refinement type systems, a context type refines a base
 type $b$ with a qualifier $\phi$, a sentence in first-order
-logic. Every context type is equipped with a modality indicating
-whether it should be interpreted either demonically ($\ort{b}{\phi}$)
-or angelically ($\urt{b}{\phi}$). When ascribed to a term $e$, a
-context type describes both safety and reachability properties of
-$e$. As discussed in \autoref{sec:intro}, the demonic context type
-$\ort{b}{\phi}$ allows $e$ to (at most) acquire any value $v$ that
-satisfies its qualifier $\phi$.  Conversely, an angelic context type
-$\urt{b}{\phi}$ stipulates that $e$ must (at least) acquire every
-value satisfying $\phi$.
+logic. Every context type is equipped with a modality — either demonic
+($\ort{b}{\phi}$) or angelic ($\urt{b}{\phi}$) — indicating how its
+qualifier should be interpreted.  Thus, a context type describes the
+safety and reachability properties of an expression. As discussed in
+\autoref{sec:intro}, when ascribed to an expression $e$, the demonic
+context type $\ort{b}{\phi}$ allows $e$ to (\emph{at most}) acquire
+any value $v$ that satisfies its qualifier $\phi$.  Conversely, an
+angelic context type $\urt{b}{\phi}$ stipulates that $e$ must
+(\emph{at least}) acquire every value satisfying $\phi$.
 
 % Informally, we have
 % \begin{align*}
@@ -130,10 +130,12 @@ guarantees when only equipped with reachability assumptions:
 The image of $x - 3$ includes a non-positive value under any
 capability containing an environment where $x$ is $4$, and the lower
 bound provided by the angelic type of $x$ in the typing judgement
-above does not preclude such an environment. Using our type system, it
-is still possible to derive meaningful safety guarantees from angelic
-assumptions through the use of the $\oplus$ operator, as we shall see
-shortly.
+above does not preclude such an environment.
+
+%% Using our type system, it
+%% is still possible to derive meaningful safety guarantees from angelic
+%% assumptions through the use of the $\ctoplus$ operator, as we shall
+%% see shortly.
 
 %% \BD{At some point early on, we need to introduce the notion of method
 %%   predicates. This may just happen organically with the addition of
