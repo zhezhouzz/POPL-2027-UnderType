@@ -36,7 +36,7 @@ logic. Every context type is equipped with a modality — either demonic
 ($\ort{b}{\phi}$) or angelic ($\urt{b}{\phi}$) — indicating how its
 qualifier should be interpreted.  Thus, a context type describes the
 safety and reachability properties of an expression. As discussed in
-\autoref{sec:intro}, when ascribed to an expression $e$, the demonic
+Section~\ref{sec:intro}, when ascribed to an expression $e$, the demonic
 context type $\ort{b}{\phi}$ allows $e$ to (\emph{at most}) acquire
 any value $v$ that satisfies its qualifier $\phi$.  Conversely, an
 angelic context type $\urt{b}{\phi}$ stipulates that $e$ must
@@ -128,7 +128,7 @@ guarantees when only equipped with reachability assumptions:
   x{:}\urt{\Nat}{\vnu > 4} \vdash x - 3 : \ort{\Nat}{\vnu > 0}\;\judgfail
 \end{align*} %
 The image of $x - 3$ includes a non-positive value under any
-capability containing an environment where $x$ is $4$, and the lower
+capability containing an environment where $x$ is $3$, and the lower
 bound provided by the angelic type of $x$ in the typing judgement
 above does not preclude such an environment.
 
@@ -199,9 +199,10 @@ arbitrary refinements with different modalities: %
   & &\urt{\Nat}{\vnu > 0} \subty \ort{\Nat}{\vnu > 0} \;\judgfail
 \end{align*} %
 \noindent
-It is only possible to switch the modality of a refinement when its
-qualifier is a singleton, or when the resulting refinement type
-trivially holds, i.e., $\ort{b}{\top}$ or $\urt{b}{\bot}$: %
+Furthermore, it is only possible to switch the modality of a
+refinement when its qualifier is a singleton, or when the resulting
+refinement type trivially holds, i.e., $\ort{b}{\top}$ or
+$\urt{b}{\bot}$: %
 \begin{align*}
   &\ort{\Nat}{\vnu = 3} \subty \urt{\Nat}{\vnu =
     3}\;\judgok
@@ -213,9 +214,10 @@ trivially holds, i.e., $\ort{b}{\top}$ or $\urt{b}{\bot}$: %
 When the qualifier is a singleton, safety entails reachability ---
 there is only one possible value, so the demonic constraint (the value
 may only be 3) and the angelic constraint (the value 3 must be
-reachable) make identical demands on the term. Converting to a
-supertype with a trivial qualifier, in contrast, simply throws away
-the bounds on a term entirely.
+reachable) make identical demands on the term. Note that the converse
+direction does not hold, however. Converting to a supertype with a
+trivial qualifier, in contrast, simply throws away the bounds on a
+term entirely.
 %% \SJ{I'm not sure why the following paragraphs are related to subtyping -
 %%   the explanations don't explicitly refer to the subtyping relation, and
 %%   the may/must example seems too complicated at this stage.}
