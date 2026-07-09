@@ -10,7 +10,7 @@
     \eraserf{\ctpers \tau} \doteq \eraserf{\tau}
     \\& \eraserf{\emptyset} \doteq \emptyset \quad \eraserf{x{:}\tau} \doteq x{:}\eraserf{\tau} \quad \eraserf{\Gamma_1 \ctcomma \Gamma_2} \doteq \eraserf{\Gamma_1}, \eraserf{\Gamma_2} \quad \eraserf{\Gamma_1 \ctstar \Gamma_2} \doteq \eraserf{\Gamma_1}, \eraserf{\Gamma_2}  \quad \eraserf{\Gamma_1 \ctoplus \Gamma_2} \doteq \eraserf{\Gamma_1}
  \end{align*}}
-\caption{Type Erasure}
+\caption{Type and Typing Context Erasure}
 \label{fig:type-erasure}
 \end{figure}
 
@@ -162,7 +162,7 @@
        \label{fig:basic-qualifier-type-rules}
    \end{figure}
 
-   
+
 \begin{figure}[ht!]
     {\footnotesize
     {\small
@@ -257,8 +257,11 @@
        \label{fig:basic-refinement-type-rules}
    \end{figure}
 
-The type erasure function is defined in \autoref{fig:type-erasure}.
-The basic typing rules of our core language, qualifiers and refinement types are shown
-in \autoref{fig:basic-type-rules}, \autoref{fig:basic-qualifier-type-rules}, and \autoref{fig:basic-refinement-type-rules}. We use an auxiliary function
-$\Code{BasicTy}$ to provide a basic type for the primitives of our language,
-e.g., constants, built-in operators, and data constructors.
+   The type erasure function is defined in \autoref{fig:type-erasure}.
+   The basic typing rules of our core language, qualifiers and
+   refinement types are shown in \autoref{fig:basic-type-rules},
+   \autoref{fig:basic-qualifier-type-rules}, and
+   \autoref{fig:basic-refinement-type-rules}, resp. We use an
+   auxiliary function $\Code{BasicTy}$ to provide a basic type for the
+   primitives of our language, e.g., constants, built-in operators,
+   and data constructors.

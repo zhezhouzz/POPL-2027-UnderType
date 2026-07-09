@@ -10,7 +10,7 @@
 \\ \
 \begin{prooftree}
 \hypo{op\ \overline{v} \Downarrow v_y }
-\infer1[\textsc{StAppOp}]{ 
+\infer1[\textsc{StAppOp}]{
 \zlet{y}{op\ \overline{v}}{e} \hookrightarrow e[y\mapsto v_y]
 }
 \end{prooftree}
@@ -31,22 +31,22 @@
 \\ \ \\ \ \\
 \begin{prooftree}
 \hypo{}
-\infer1[\textsc{StLetAppLam}]{ 
+\infer1[\textsc{StLetAppLam}]{
 \zlet{y}{\zzlam{x}{e_1}\ v_x}{e_2} \hookrightarrow \zlet{y}{e_1[x\mapsto v_x]}{e_2}
 }
 \end{prooftree}
 \\ \ \\ \ \\
 \begin{prooftree}
 \hypo{}
-\infer1[\textsc{StLetAppFix}]{ 
-\zlet{y}{\zzfix{f}{x}{e_1}\ v_x}{e_2} \hookrightarrow 
+\infer1[\textsc{StLetAppFix}]{
+\zlet{y}{\zzfix{f}{x}{e_1}\ v_x}{e_2} \hookrightarrow
 \zlet{y}{(\zzlam{f}{e_1[x\mapsto v_x]}) \ (\zzfix{f}{x}{e_1})}{e_2}
 }
 \end{prooftree}
 \\ \ \\ \ \\
 \begin{prooftree}
 \hypo{}
-\infer1[\textsc{StMatch}]{ 
+\infer1[\textsc{StMatch}]{
 \match{d_i \ \overline{v_j}} \overline{d_i\ \overline{y_j} \to e_i} \hookrightarrow e_i[\overline{y_j \mapsto v_j}]
 }
 \end{prooftree}
@@ -55,5 +55,7 @@
     \label{fig:semantics}
 \end{figure}
 
-The small-step operational semantics of our core language are shown in
-\autoref{fig:semantics}, which is parameterized by the operator semantics $\primop\; \overline{v} \Downarrow v_y$ defined for each operator.
+The small-step operational semantics of \langname{} are shown in
+\autoref{fig:semantics}. The rules are parameterized over the
+semantics of built-in operators
+$\primop\; \overline{v} \Downarrow v_y$.

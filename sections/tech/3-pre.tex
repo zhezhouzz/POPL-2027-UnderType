@@ -1,8 +1,10 @@
 % !TeX root = ../main.tex
 \newpage
-\section{Formalization Details}\label{sec:formalization-details}
+\section{Semantic Domain}%
+\label{sec:formalization-details}
 
-In this section, we provide the details definition of environment and capability.
+In this section, we provide the complete definitions of environments
+and capability contexts.
 
 \begin{definition}[Environment]\label{def:env}
   Assume $\Var$ and $\Val$ range over variable and value domains,
@@ -16,16 +18,16 @@ In this section, we provide the details definition of environment and capability
     \[
       \mapCompat{\sigma_1}{\sigma_2}
       \doteq
-      \forall x \in \Dom{\sigma_1} \cap \Dom{\sigma_2}.\; \sigma_1(x) = \sigma_2(x).
+      \forall x \in \Dom{\sigma_1} \cap \Dom{\sigma_2}.\; \sigma_1(x) = \sigma_2(x)
     \]
-Note that the concatenation of two environment is defined as a map union
-$\sigma_1 \cup \sigma_2$, which is exchangeable when
-$\mapCompat{\sigma_1}{\sigma_2}$ holds.
+    Note that the concatenation of two environment is defined as a map
+    union $\sigma_1 \cup \sigma_2$, which is defined when
+    $\mapCompat{\sigma_1}{\sigma_2}$ holds.
   \item \emph{Projection}: Fix finite $X \subseteq_{\mathrm{fin}}
     \Var$ and an environment $\sigma$; we write $\projectTo{\sigma}{X}$ for
     the projection of $\sigma$ to $\Dom{\sigma} \cap X$, i.e.,
   \begin{align*}
-    \projectTo{\sigma}{X} \doteq \{ [x\mapsto \sigma(x)] \mid x \in \Dom{\sigma} \cap X \}.
+    \projectTo{\sigma}{X} \doteq \{ [x\mapsto \sigma(x)] \mid x \in \Dom{\sigma} \cap X \}
   \end{align*}
   \item \emph{Refinement}: The projection operation can derive a
     partial order refinement relation. Write $\sigma_1 \sqsubseteq
@@ -46,7 +48,7 @@ A contextual capability $r$ is a \emph{non-empty} set of environments share the 
     \]
   \item \emph{Projection}: The projection operation $\projectTo{r}{X}$ is defined piecewise, i.e.,
   \begin{align*}
-    \projectTo{r}{X} \doteq \{ \projectTo{\sigma}{X} \mid \sigma \in r \}.
+    \projectTo{r}{X} \doteq \{ \projectTo{\sigma}{X} \mid \sigma \in r \}
   \end{align*}
   \item \emph{Refinement}: the refinement relation $r_1 \sqsubseteq r_2$ holds iff $r_1 = \projectTo{r_2}{\Dom{r_1}} $.
 \end{itemize}
@@ -89,16 +91,16 @@ cannot be summed unless they have the same domain.
     commutative semiring without zero} where the carrier set $\Res$ is
   the domain of all contextual capabilities, and the unit
   element $\mathbf{1}$ of product is the singleton capability
-  $\{\emptyset\}$. 
+  $\{\emptyset\}$.
   The following algebraic properties hold:
   \begin{itemize}
   \item Identity: $\forall r \in \Res. r \times \mathbf{1} = \mathbf{1} \times r = r$.
-  \item Commutative (when operations are defined): 
+  \item Commutative (when operations are defined):
   \begin{align*}
     \forall r_1\;r_2 \in \Res. r_1 + r_2 = r_2 + r_1 \\
     \forall r_1\;r_2 \in \Res. r_1 \times r_2 = r_2 \times r_1
   \end{align*}
-  \item Associative (when operations are defined): 
+  \item Associative (when operations are defined):
   \begin{align*}
     \forall r_1\;r_2\;r_3 \in \Res. (r_1 + r_2) + r_3 = r_1 + (r_2 + r_3) \\
     \forall r_1\;r_2\;r_3 \in \Res. (r_1 \times r_2) \times r_3 = r_1 \times (r_2 \times r_3)
@@ -109,7 +111,7 @@ cannot be summed unless they have the same domain.
 % \begin{definition}[Bifunctoriality]\label{def:bifunctoriality}
 %   The refinement relation $\sqsubseteq$ over capabilities satisfies the bifunctoriality property, i.e.,
 %   \begin{align*}
-%     \forall r_1\;r_2\;r_1'\;r_2' \in \Res. r_1 \sqsubseteq r_1' \land r_2 \sqsubseteq r_2' &\implies r_1 \times r_2 \sqsubseteq r_1' \times r_2' 
+%     \forall r_1\;r_2\;r_1'\;r_2' \in \Res. r_1 \sqsubseteq r_1' \land r_2 \sqsubseteq r_2' &\implies r_1 \times r_2 \sqsubseteq r_1' \times r_2'
 %     \\& (\text{when } r_1 \times r_2 \text{ and } r_1' \times r_2' \text{ are defined.})
 %   \end{align*}
 % \end{definition}
