@@ -11,8 +11,8 @@ the use of \emph{types} to specify program behavior, and some
 deductive mechanism for \emph{compositionally verifying} that the
 program is consistent with that specification.  Type systems have
 traditionally targeted \emph{safety} properties, a focus embodied by
-Milner's famous slogan that ``well-typed programs cannot `go
-wrong'''~\cite{Milner+78}. Here, the typing judgement $\Gamma \vdash e
+Milner's famous slogan that ``well-typed programs cannot {`go
+wrong'}''~\cite{Milner+78}. Here, the typing judgement $\Gamma \vdash e
 : \tau$ asserts that $e$ \emph{may} evaluate to many values (under any
 environment consistent with $\Gamma$), but that set of values is
 entirely contained within the ``safe'' region specified by $\tau$.
@@ -30,7 +30,7 @@ which can prove the existence of witnesses of safety violations, with
 a goal of avoiding the high false positive rate reported by typical
 bug detection tools.  The question of how to develop type systems for
 reachability, however, has been largely unexplored.  Recent
-work~\cite{RefinementTypeRefutations, CoverageType, Ill-types} that
+works~\cite{RefinementTypeRefutations, CoverageType, Ill-types} that
 have studied type-based reachability reasoning have either focused on
 a particular property, e.g., checking completeness of test input
 generators~\cite{CoverageType}, or a particular application, e.g.,
@@ -50,7 +50,7 @@ combined within a single type discipline. This model gives rise to a
 type system in which type qualifiers are equipped with a modality
 indicating whether they should be interpreted as an over- or
 under-approximate specification.  The type system naturally supports
-higher-order, deterministic, and nondeterministic programs, captures
+both deterministic and nondeterministic higher-order programs, captures
 both may- and must-style function summaries~\cite{GN+10}, and can be
 applied to a range of verification tasks, including
 incorrectness-style reasoning~\cite{OHP19} and proving completeness of
@@ -65,15 +65,15 @@ Rocq's standard library:
 A client of \ref{ex:div} may want to know that (a) on positive
 inputs, its result is never greater than its first argument (a safety
 property); and (b) for every positive number $n$, there exist positive
-inputs $x$ and $y$ such that \ref{ex:div} $x y = n$ (a reachability
+inputs $x$ and $y$ such that \ref{ex:div} $x~ y = n$ (a reachability
 property). Conventional refinement type systems, which interpret
 refinements as overapproximations, can verify the former, but not the
 latter: e.g., a function that always returns $1$ satisfies
 (a), but not (b). Conversely, an underapproximate interpretation can establish (b),
 but would also admit an implementation that always returns $y$, potentially violating (a). Our
-type system, in contrast, captures both kinds of properties as types\footnote{As we show later,
+type system, in contrast, captures both kinds of properties as types:\footnote{As we show later,
   these two types can be combined via intersection to simultaneously verify both
-  requirements.}:
+  requirements.}
 \begin{align}
   & x{:}\ort{\Nat}{\vnu > 0} \sarr y{:}\ort{\Nat}{\vnu > 0 } \sarr \ort{\Nat}{x \geq \vnu} \tag{$\tau_a$}\label{ex:tauA}\\
   & x{:}\urt{\Nat}{\vnu > 0} \sarr y{:}\urt{\Nat}{\vnu > 0} \sarr \urt{\Nat}{\vnu > 0 } \tag{$\tau_b$}\label{ex:tauB}
@@ -120,7 +120,7 @@ directly applies it to $x$. The type binding for $x$ in the type
 context assumes it can reach every positive number.  Without
 constraining the type of $f$ to account for the free variable $x$ in
 the expression's closure, however, we cannot guarantee that an
-arbitrary function supplied for $f$ will satisfy the reachability
+arbitrary function supplied for $f$ will guarantee the reachability
 requirement of this expression's result.  For example, applying this
 expression to the function $\lambda y.x - y$ yields the constant
 function that always returns $0$.
@@ -137,7 +137,7 @@ argument. Thus, in order to assign $\lambda f. f\;x$ the desired
 result type, the type of $f$ must enforce that its parameter $y$ can
 be chosen independently of $x$. This requires our type system to
 reason explicitly about dependencies between a function's parameters
-and captured variables when both are treated angelically.
+and its captured variables when both are treated angelically.
 
 The previous example showed how dependencies between captured
 variables and function parameters can break compositional reachability
@@ -150,12 +150,12 @@ in a way that also breaks compositional reasoning:
   y{:}\urt{\Nat}{\vnu > 0} \vdash \lambda f. f(f\;y) : f{:}(\urt{\Nat}{\vnu > 0}\sarr \urt{\Nat}{\vnu > 0}) \sarr \urt{\Nat}{\vnu > 0} \quad \judgfail
 \end{align*}\noindent
 A counter-example to the validity of this judgement is given below:
-{ \setlength{\jot}{-2pt} % Tighten line space for just this example
+{ \setlength{\jot}{-1pt} % Tighten line space for just this example
 \begin{align*}
-    &g \doteq \lambda y.\zif{y = 1}{x}{2} \quad
-    \\& \zlet{x}{e_x}{\zlet{y}{e_y}{\boxed{(\lambda f. f\;(f\;y))\;g}}} \;\hookrightarrow^*\;
-    \\& \zlet{x}{e_x}{\boxed{g\;(g\;1)}} \;\hookrightarrow^*\;  \quad
-  \text{\textcolor{gray}{(we assume angelically that $e_y \hookrightarrow^* 1$)}}
+  & \zlet{x}{e_x}{\zlet{y}{e_y}{\boxed{(\lambda f. f\;(f\;y))\;g}}} \;\hookrightarrow^*\;
+  \quad  \text{\hfill\textcolor{gray}{(where $g \doteq \lambda y.\zif{y = 1}{x}{2}$)}}
+  \\& \zlet{x}{e_x}{\boxed{g\;(g\;1)}} \;\hookrightarrow^*\;  \hspace{1.38in}
+  \text{\textcolor{gray}{\hfill(we assume angelically that $e_y \hookrightarrow^* 1$)}}
     \\& \zlet{x}{e_x}{\boxed{g\;x}} \;\hookrightarrow^*\; \zlet{x}{e_x}{\boxed{\zif{x = 1}{x}{2}}} \;\hookrightarrow^*\; \boxed{1 \text{ or } 2}
 \end{align*}
 }
@@ -165,9 +165,9 @@ $x$. This result is then passed to $g$ again, but since $x$ is a
 captured variable rather than a fresh angelic choice, the second
 application $(g\; x)$ can only return 1 or 2, and so the nested
 application fails to reach any positive number greater than 2. Thus,
-although the individual applications of $g$ appear to satisfy its
-reachability specification, their composition does not, again
-invalidating compositional reasoning.
+although the individual applications of $g$ in the original program
+appear to satisfy its reachability specification, their composition
+does not, again invalidating compositional reasoning.
 
 \iffalse
 % Old Intro
@@ -391,9 +391,9 @@ terms of a typed $\lambda$-calculus core language.
 Section~\ref{sec:meta} defines a denotational semantics and metatheory
 for this type system via a bunched implication resource capability
 algebra.  Section~\ref{sec:extension} extends the language with
-nondeterminism, along with supporting modifications to the logic and
-denotational semantics.  Section~\ref{sec:case} presents several case
-studies for which context types are particularly well-aligned.  A
+nondeterminism, and describes supporting modifications to the logic
+and denotational semantics.  Section~\ref{sec:case} presents several
+case studies for which context types are particularly well-aligned.  A
 brief discussion on potential ways to realize effective verification
 tools based on this framework is given in
 Section~\ref{sec:discussion}.  Related work and conclusions follow in
