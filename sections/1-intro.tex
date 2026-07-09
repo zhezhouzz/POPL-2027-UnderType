@@ -27,15 +27,14 @@ also been effectively used to find buggy behaviors~\cite{BMC+03}; for
 example, several recent works~\cite{GOS19,ReverseHoareLogic, OHP19,
   ZDS23} have studied deductive ``incorrectness'' reasoning frameworks
 which can prove the existence of witnesses of safety violations, with
-a goal of avoiding the high false positive rate reported
-by typical bug detection tools.  The question of how to develop type
-systems for reachability properties, however, has been largely
-unexplored.  Recent work~\cite{RefinementTypeRefutations,
-  CoverageType, Ill-types} have studied type-based reachability
-reasoning, but each of these systems has focused on a particular
-property, e.g., checking coverage properties of test input
-generators~\cite{CoverageType}, or application, e.g., generating
-concrete counterexamples refuting refinement type
+a goal of avoiding the high false positive rate reported by typical
+bug detection tools.  The question of how to develop type systems for
+reachability, however, has been largely unexplored.  Recent
+work~\cite{RefinementTypeRefutations, CoverageType, Ill-types} that
+have studied type-based reachability reasoning have either focused on
+a particular property, e.g., checking completeness of test input
+generators~\cite{CoverageType}, or a particular application, e.g.,
+generating concrete counterexamples refuting refinement type
 specifications~\cite{RefinementTypeRefutations} or proving ill-typed
 programs do not evaluate~\cite{Ill-types}, rather than providing a
 general type-based reachability framework.
@@ -74,7 +73,7 @@ latter: e.g., a function that always returns $1$ satisfies
 but would also admit an implementation that always returns $y$, potentially violating (a). Our
 type system, in contrast, captures both kinds of properties as types\footnote{As we show later,
   these two types can be combined via intersection to simultaneously verify both
-  properties.}:
+  requirements.}:
 \begin{align}
   & x{:}\ort{\Nat}{\vnu > 0} \sarr y{:}\ort{\Nat}{\vnu > 0 } \sarr \ort{\Nat}{x \geq \vnu} \tag{$\tau_a$}\label{ex:tauA}\\
   & x{:}\urt{\Nat}{\vnu > 0} \sarr y{:}\urt{\Nat}{\vnu > 0} \sarr \urt{\Nat}{\vnu > 0 } \tag{$\tau_b$}\label{ex:tauB}
