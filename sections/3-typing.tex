@@ -132,11 +132,12 @@ context types ($\Sigma \wfvdash \tau$) and type contexts
   are provided in the supplemental material.}  These standard
 relations require, e.g., a context type to erase ($\eraserf{.}$) to a
 basic type, type qualifiers to be well-typed in the basic type system,
-and variable bindings in a type context to be unique. Importantly, in
-a well-formed entangled pair of contexts, the second context is
-allowed to refer to variables in the first (\textsc{WfComma}), while
-well-formed independent pairs of contexts cannot share any variable
-bindings (\textsc{WfStar}). In order for the type context
+and that any variables that can appear in qualifiers are unique
+(\textsc{WfSingle}).  Importantly, in a well-formed entangled pair of
+contexts, the second context is allowed to refer to variables in the
+first (\textsc{WfComma}), while well-formed independent pairs of
+contexts cannot refer to each other's variable bindings
+(\textsc{WfStar}). In order for the type context
 $\Gamma_0 \ctcomma (\Gamma_1 \ctstar \Gamma_2)$ to be well-formed, for
 example, $\Gamma_0$ must be closed, and $\Gamma_1$ and $\Gamma_2$
 cannot refer to variables in each other.
@@ -254,9 +255,9 @@ let-expressions would require the following type context: %
 \noindent
 Bunched type systems normally include a contraction rule that would
 allow us to obtain such a context by duplicating the binding for $x$
-in our target judgment. Since a context with duplicate bindings is not
-well-formed in our type system, \textsc{T-Let} instead directly
-combines this ``duplicate-then-consume'' pattern:
+in our target judgment. An entangled context with duplicate bindings
+is not well-formed in our type system, so \textsc{T-Let} instead
+directly combines this ``duplicate-then-consume'' pattern:
 \begin{center}
   \begin{prooftree}
     \hypo{
@@ -497,7 +498,7 @@ assumptions accounts for unreachable control flows: \smallskip
   \begin{prooftree}
     \hypo{x{:}\ort{\Nat}{\vnu > 0} \ctsubseteq{\{x\}} x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}}
     \infer[no rule]1{x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}\vdash 5 : \ort{\Nat}{\vnu > 4}}
-    % \infer[no rule]1{x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}\vdash \Code{S}\;y : \ort{\Nat}{\vnu = x} \interty \urt{\Nat}{\vnu = x}}
+    \infer[no rule]1{x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}\vdash \Code{S}\;y : \ort{\Nat}{\vnu = x} \interty \urt{\Nat}{\vnu = x}}
     \infer[no rule]1{x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}\vdash 0 : \ort{\Nat}{\vnu \neq x}}
     \infer1[\textsc{T-Match}]{x{:}\ort{\Nat}{\vnu > 0} \vdash \zmatchNat{x}{3}{y}{5} : \ort{\Nat}{\vnu > 4} \quad \judgok}
     \end{prooftree}
