@@ -49,8 +49,7 @@ in the obvious pointwise way. The refinement relation $\sqsubseteq$
 plays a central role: $r_1 \sqsubseteq r_2$ says that $r_1$ is a
 restriction of $r_2$ to a smaller variable domain, i.e., $r_2$ extends
 the bindings of $r_1$ with additional variables.  This relation will
-serve as the Kripke accessibility relation in our logic
-(Section~\ref{subsec:logic}).
+serve as the Kripke accessibility relation in our logic.
 
 To express variable dependency in refinement type qualifiers, we also
 need the following notion.
@@ -254,10 +253,10 @@ disjoint sub-capabilities.
 The sum $P \choplus Q$ holds at $r$ if $r$ can be split into two
 sub-capabilities $r_1 + r_2 \sqsubseteq r$, one satisfying $P$ and one
 satisfying $Q$.  This supports the context sum type
-$\tau_1 \ctoplus \tau_2$ from in \autoref{sec:context-typing}, which
+$\tau_1 \ctoplus \tau_2$ from \autoref{sec:context-typing}, which
 allows a capability to be partitioned into two subsets. The requirement
 that capabilities be non-empty ensures that neither branch is vacuous:
-both summand must contain at least one environment.
+both summands must contain at least one environment.
 
 \paragraph{Binding Reference Operator}
 The binding reference operator $\forallM{x} P$ expresses how a
@@ -339,7 +338,7 @@ consistent with $x$'s full range.
     \denot{x{:}\tau_x \ctsarr \tau}_\Sigma\;e &\doteq \denot{\tau_x}_\Sigma\;x \chimpl \denot{\tau}_{\Sigma,x{:}\eraserf{\tau_x}}\;(e\;x) \quad \text{($x$ fresh)}  \\
     \denot{x{:}\tau_x \ctwand \tau}_\Sigma\;e &\doteq \denot{\tau_x}_\Sigma\;x \chwand \denot{\tau}_{\Sigma,x{:}\eraserf{\tau_x}}\;(e\;x) \quad \text{($x$ fresh)}  \\
     \denot{\tau_1 \ctinter \tau_2}_\Sigma\;e &\doteq \denot{\tau_1}_\Sigma\;e \chland \denot{\tau_2}_\Sigma\;e  \\
-    \denot{\tau_1 \ctunion \tau_2}_\Sigma\;e &\doteq \denot{\tau_1}_\Sigma\;e \chlor \denot{\tau_2}_\Sigma\;e  \\
+    % \denot{\tau_1 \ctunion \tau_2}_\Sigma\;e &\doteq \denot{\tau_1}_\Sigma\;e \chlor \denot{\tau_2}_\Sigma\;e  \\
     \denot{\tau_1 \ctoplus \tau_2}_\Sigma\;e &\doteq \denot{\tau_1}_\Sigma\;e \choplus \denot{\tau_2}_\Sigma\;e
   \end{align*}
 \end{definition}
@@ -369,8 +368,7 @@ Entangled conjunction ``$\ctcomma$'' maps to additive conjunction
 $\chland$, reflecting that the second context may refer to bindings in
 the first.  Independent conjunction ``$\ctstar$'' maps to
 multiplicative conjunction $\chstar$, requiring the two
-sub-capabilities to be decomposable as a product — i.e., their
-variable bindings are disjoint.
+sub-capabilities to be decomposable as a product.
 
 \begin{figure}[h]
   {

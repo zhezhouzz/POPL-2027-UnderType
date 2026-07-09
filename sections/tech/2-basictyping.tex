@@ -6,6 +6,8 @@
   \begin{align*}
     \text{\textbf{Type erasure}} \quad & \eraserf{\ort{b}{\phi}} \doteq b \quad \eraserf{\urt{b}{\phi}} \doteq b \quad \eraserf{\tau_1 \ctinter \tau_2} \doteq \eraserf{\tau_1}
     \\&\eraserf{\tau_1 \ctoplus \tau_2} \doteq \eraserf{\tau_1} \quad  \eraserf{x{:}\tau_x \ctsarr \tau} \doteq \eraserf{\tau_x} \sarr \eraserf{\tau} \quad
+    \eraserf{x{:}\tau_x \ctwand \tau} \doteq \eraserf{\tau_x} \sarr \eraserf{\tau} \quad
+    \eraserf{\ctpers \tau} \doteq \eraserf{\tau}
     \\& \eraserf{\emptyset} \doteq \emptyset \quad \eraserf{x{:}\tau} \doteq x{:}\eraserf{\tau} \quad \eraserf{\Gamma_1 \ctcomma \Gamma_2} \doteq \eraserf{\Gamma_1}, \eraserf{\Gamma_2} \quad \eraserf{\Gamma_1 \ctstar \Gamma_2} \doteq \eraserf{\Gamma_1}, \eraserf{\Gamma_2}  \quad \eraserf{\Gamma_1 \ctoplus \Gamma_2} \doteq \eraserf{\Gamma_1}
  \end{align*}}
 \caption{Type Erasure}
@@ -43,7 +45,7 @@
    \hypo{\Sigma, f{:}b\sarr s \basicvdash \lambda x{:}b.e : b\sarr s}
    \infer1[\textsc{BtFix}]{
    \Sigma \basicvdash \zfix{f}{b\sarr s}{x}{b}{e}
-   : \eraserf{t_1{\sarr}t_2}
+   : b{\sarr}s
    }
    \end{prooftree}
    \quad
@@ -169,77 +171,84 @@
    \end{flalign*}}
    \begin{prooftree}
    \hypo{\Sigma, \vnu{:}b \basicvdash \phi : \Bool}
-   \infer1[\textsc{BtBaseOver}]{
+   \infer1[\textsc{WfBaseOver}]{
     \Sigma \wfvdash \ort{b}{\phi}
    }
    \end{prooftree}
    \quad
    \begin{prooftree}
     \hypo{\Sigma, \vnu{:}b \basicvdash \phi : \Bool}
-    \infer1[\textsc{BtBaseUnder}]{
+    \infer1[\textsc{WfBaseUnder}]{
      \Sigma \wfvdash \urt{b}{\phi}
     }
     \end{prooftree}
     \\[.8em]
     \begin{prooftree}
         \hypo{\Sigma \wfvdash \tau_x \quad \Sigma, x{:}\eraserf{\tau_x} \wfvdash \tau}
-        \infer1[\textsc{BtArr}]{
-         \Sigma \wfvdash x{:}\tau_x \sarr \tau
+        \infer1[\textsc{WfArr}]{
+         \Sigma \wfvdash x{:}\tau_x \ctsarr \tau
         }
     \end{prooftree}
         \quad
     \begin{prooftree}
         \hypo{\Sigma \wfvdash \tau_x \quad \Sigma \wfvdash \tau}
-        \infer1[\textsc{BtWand}]{
-            \Sigma \wfvdash x{:}\tau_x \wand \tau
+        \infer1[\textsc{WfWand}]{
+            \Sigma \wfvdash x{:}\tau_x \ctwand \tau
+        }
+    \end{prooftree}
+    \quad
+    \begin{prooftree}
+        \hypo{\Sigma \wfvdash \tau}
+        \infer1[\textsc{WfPers}]{
+            \Sigma \wfvdash \ctpers \tau
         }
     \end{prooftree}
     \\[.8em]
     \begin{prooftree}
         \hypo{\Sigma \wfvdash \tau_1 \quad \Sigma \wfvdash \tau_2 \quad \eraserf{\tau_1} = \eraserf{\tau_2}}
-        \infer1[\textsc{BtInter}]{
+        \infer1[\textsc{WfInter}]{
          \Sigma \wfvdash \tau_1 \interty \tau_2
         }
     \end{prooftree}
     \quad
     \begin{prooftree}
         \hypo{\Sigma \wfvdash \tau_1 \quad \Sigma \wfvdash \tau_2 \quad \eraserf{\tau_1} = \eraserf{\tau_2}}
-        \infer1[\textsc{BtSum}]{
+        \infer1[\textsc{WfSum}]{
          \Sigma \wfvdash \tau_1 \ctoplus \tau_2
         }
     \end{prooftree}
     \\[.8em]
     \begin{prooftree}
         \hypo{}
-        \infer1[\textsc{BtEmp}]{
+        \infer1[\textsc{WfEmp}]{
             \Sigma \wfvdash \emptyset
         }
     \end{prooftree}
     \quad
         \begin{prooftree}
-            \hypo{\Sigma \wfvdash \tau_x}
-            \infer1[\textsc{BtSingle}]{
+            \hypo{\Sigma \wfvdash \tau_x \quad x \notin \Dom{\Sigma}}
+            \infer1[\textsc{WfSingle}]{
              \Sigma \wfvdash x{:}\tau_x
             }
         \end{prooftree}
     \\[.8em]
     \begin{prooftree}
         \hypo{\Sigma \wfvdash \Gamma_1 \quad \Sigma, \eraserf{\Gamma_1} \wfvdash \Gamma_2}
-            \infer1[\textsc{BtComma}]{
+            \infer1[\textsc{WfComma}]{
              \Sigma \wfvdash \Gamma_1 \ctcomma \Gamma_2
         }
     \end{prooftree}
     \quad
     \begin{prooftree}
         \hypo{\Sigma \wfvdash \Gamma_1 \quad \Sigma \wfvdash \Gamma_2}
-            \infer1[\textsc{BtStar}]{
+            \infer1[\textsc{WfStar}]{
              \Sigma \wfvdash \Gamma_1 \ctstar \Gamma_2
         }
     \end{prooftree}
-    \quad
+    \\[.8em]
     \begin{prooftree}
         \hypo{\Sigma \wfvdash \Gamma_1 \quad \Sigma \wfvdash \Gamma_2 \quad \eraserf{\Gamma_1} = \eraserf{\Gamma_2}}
-            \infer1[\textsc{BtCtxSum}]{
+            \infer1[\textsc{WfCtxSum}]{
              \Sigma \wfvdash \Gamma_1 \ctoplus \Gamma_2
         }
     \end{prooftree}

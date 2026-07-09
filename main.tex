@@ -171,20 +171,17 @@
   and possibly more. This paper introduces a refinement type system
   for higher-order functional programs where types can capture both
   safety and reachability properties. Simultaneously supporting both
-  kinds of specification is challenging because each confers different
-  reasoning capabilities when they appear in a typing context. We
-  address this challenge by treating typing contexts as a kind of
-  resource that mediates which capabilities are available when typing
-  a program. We formalize these notions by developing a resource
-  algebra of contextual capabilities and a bunched modal context logic
-  over this algebra. We then interpret our type system in this logic,
+  is challenging because each imposes different constraints on how
+  variable bindings in a typing context are interpreted.  We address
+  this challenge by treating typing contexts as a kind of resource
+  that mediates which capabilities are available when typing a
+  program. We formalize this notion by developing a resource algebra
+  of contextual capabilities and a bunched modal context logic over
+  this algebra. We then interpret our type system in this logic,
   establishing soundness with respect to a denotational semantics that
   unifies safety and reachability guarantees within a single typing
   judgement.
-  % We further extend our type system to support nondeterminism by
-  % introducing a persistency modality that governs resource
-  % duplication.
-\end{abstract}
+ \end{abstract}
 
 \maketitle
 

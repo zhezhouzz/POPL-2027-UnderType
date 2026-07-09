@@ -142,11 +142,11 @@ and captured variables when both are treated angelically.
 
 The previous example showed how dependencies between captured
 variables and function parameters can break compositional reachability
-reasoning.  The example given below illustrates a more subtle problem
-that can arise when the result of an intermediate function application
-depends on a captured variable, constraining the angelic choices
-available to subsequent applications in a way that also breaks
-compositional reasoning:
+reasoning.  The example below illustrates how a similar problem can
+arise dynamically, during program execution. When the result of an
+intermediate function application depends on a captured variable, it
+can constrain the angelic choices available to subsequent applications
+in a way that also breaks compositional reasoning:
 \begin{align*}
   y{:}\urt{\Nat}{\vnu > 0} \vdash \lambda f. f(f\;y) : f{:}(\urt{\Nat}{\vnu > 0}\sarr \urt{\Nat}{\vnu > 0}) \sarr \urt{\Nat}{\vnu > 0} \quad \judgfail
 \end{align*}\noindent
@@ -349,7 +349,7 @@ enabling frame-based local reasoning.  For example, to establish that
 the following type signature that provides a more precise version of $\tau_b$
 using $\ctwand$ to make explicit that $x$ and $y$ must be chosen independently:
 \begin{align*}
-  & \vdash \ref{ex:div} ~:~ x{:}\urt{\Nat}{\vnu > 0} \sarr y{:}\urt{\Nat}{\vnu > 0} \ctwand \urt{\Nat}{\vnu > 0} \quad \judgok
+  & \vdash \ref{ex:div} ~:~ x{:}\urt{\Nat}{\vnu > 0} \ctsarr y{:}\urt{\Nat}{\vnu > 0} \ctwand \urt{\Nat}{\vnu > 0} \quad \judgok
 \end{align*}\noindent
 Here, the type constructor ($\ctwand$) requires the arguments for $x$
 and $y$ to be independent, guaranteeing that each angelic choice can
