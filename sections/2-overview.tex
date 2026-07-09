@@ -399,16 +399,16 @@ for $x$, $y$ can no longer be freely chosen. Concretely, the angelic
 guarantee for $y$ under ``$\ctcomma$'' only promises that $y$ can
 reach every value satisfying $\vnu > 1$ \emph{for some fixed
   instantiation of $x$}.  Since the subtyping goal requires producing
-every positive number as $x - y$, and this requires pairing each
-candidate value of $x$ with an independently chosen $y$, a dependent
-context cannot be used to supply such pairs.  This is evidenced by
-$C_{en}$, which always collapses its result to 0, rather than all
-positive numbers.  The ``\ctcomma'' in the context
-$\Gamma\ctcomma \ x{:}\tau_x \ctcomma y{:}\tau_y$ works like additive
-logic conjunction in BI, and both
-$\Gamma\ctcomma \ x{:}\tau_x \ctcomma y{:}\tau_y \vdash x{:}\tau_x$
+every positive number as the difference of $x$ and $y$, $x - y$, and
+this requires pairing each candidate value of $x$ with an
+independently chosen $y$, a dependent context cannot be used to supply
+such pairs.  This is evidenced by $C_{en}$, which always collapses its
+result to 0, rather than all positive numbers.  The ``\ctcomma'' in
+the context $\Gamma \ctcomma x{:}\tau_x \ctcomma y{:}\tau_y$ works
+like additive logic conjunction in BI, and both
+$\Gamma\ctcomma x{:}\tau_x \ctcomma y{:}\tau_y \vdash x{:}\tau_x$
 and
-$\Gamma\ctcomma \ x{:}\tau_x \ctcomma y{:}\tau_y \vdash y{:}\tau_y$
+$\Gamma\ctcomma x{:}\tau_x \ctcomma y{:}\tau_y \vdash y{:}\tau_y$
 are valid. Importantly, however, it does not guarantee that the
 modalities of $x$ and $y$ hold \emph{at the same
   time}. \footnote{Unlike a linear type system, which would
@@ -429,7 +429,7 @@ modalities of $x$ and $y$ hold \emph{at the same
 \end{align*}\noindent
 In these judgements, the context tracks variable dependency,
 specifying that $x$ is independent from $y$ and $z$, while $y$ and $z$
-are dependent on each other.  Specifying independence in this way is
+are entangled with each other.  Specifying independence in this way is
 sufficient to verify reachability for $x - y$ and $x - (z + y)$, since
 $x$ can be angelically chosen independently of both $y$ and $z$.
 However, type-checking $y - z$ against the type $\urt{\Nat}{\vnu > 0}$
@@ -477,7 +477,7 @@ Thus, ($\Code{-}$) can be given the following types:
   &\vdash (-) : x{:}\urt{\Nat}{\vnu > 0} \ctwand y{:}\urt{\Nat}{\vnu > 0} \ctwand \urt{\Nat}{\vnu > 0}
   \\&\vdash (-) : x{:}\urt{\Nat}{\vnu > 0} \ctsarr y{:}\urt{\Nat}{\vnu > 0} \ctwand \urt{\Nat}{\vnu > 0}
 \end{align*}\noindent
-Notably, it cannot have the following type:
+Notably, however, it cannot have the following type:
 \begin{align*}
   &\vdash (-) : x{:}\urt{\Nat}{\vnu > 0} \ctwand y{:}\urt{\Nat}{\vnu > 0} \ctsarr \urt{\Nat}{\vnu > 0}
 \end{align*}\noindent
