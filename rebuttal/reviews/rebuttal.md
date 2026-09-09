@@ -6,17 +6,18 @@ We begin by clarifying the concerns shared by all reviewers, namely, the practic
 
 ## Shared Concern: Motivation and Practicality
 
-We first clarify the main motivation and contribution of this paper. As stated in the title, "Context Types: Bunched Modalities for Unifying Safety and Reachability," our goal is to provide a foundational type theory that unifies safety and reachability verification within a functional language. Combining safety (may-style) and reachability (must-style) reasoning has been explored for many years, and prior work has shown that the two can facilitate each other [4, 17] given a framework that supports both. However, to the best of our knowledge, there is no existing unified framework that supports freely combining safety (the demonic modality) and reachability (the angelic modality) as first-class features. Moreover, while safety and reachability verification have each been studied extensively on their own, there is no foundational type theory that clearly provides the semantics of these two verification modalities.
+We first clarify the main motivation and contribution of this paper. Our primary goal is to provide a foundational type theory that unifies safety and reachability verification within a functional language. Combining safety (may-style) and reachability (must-style) reasoning has been explored for many years, and prior work has shown that the two can facilitate each other [4, 17] given a framework that supports both. However, to the best of our knowledge, there is no existing unified framework that supports freely combining safety (the demonic modality) and reachability (the angelic modality) as first-class features. Moreover, while safety and reachability verification have each been studied extensively on their own, there is no foundational type theory that clearly provides the semantics of these two verification modalities.
 
-Regarding practicality, we agree with the reviewers' concerns. As a unified foundational theory, our paper does not provide a concrete typing algorithm and automated reasoning (as noted by Reviewers A and C), and our subsumption rule is substantially more powerful than those of standard refinement type systems, so that interesting reasoning steps can be hidden by subsumption (Reviewer B). This reflects a trade-off between an elegant unified foundational theory and a more algorithmic tool. That said, this does not mean that our type system is far from practice: as the case studies in Section 6 show, realistic applications can be encoded in our unified theory. Moreover, existing tools (e.g., Coverage Types in the second case study) can be viewed as typing algorithms and automated tools for Context Types under a restricted setting (e.g., function parameter types may only be demonic). Under different restrictions, prior work already shows that corresponding typing algorithms exist for fragments of Context Types. Unifying these existing approaches and developing a more general typing algorithm that recovers the full expressiveness of Context Types is an interesting and challenging direction for future work.
+As our focus is on presenting a unified foundational theory, we do not consider a concrete typing algorithm or mechanisms related to automated reasoning (as noted by Reviewers A and C), as evidenced
+by our subsumption rule, which is substantially more powerful than those of standard refinement type systems (Reviewer B). That said, we believe our type system has a number of practical benefits as the demonstrated by the case studies given in Section 6.  Moreover, prior work such as [50] identifies restricted instantiations of this general framework (e.g. function parameter types may only be demonic) for which efficient typing algorithms exist.  Developing typing algorithms for context types under its full generality is an interesting and challenging direction for future work.
 
 ## Summary of Proposed Changes
 
 Concretely, we propose to implement the following changes in the revision, in order to clarify the issues discussed above and to address the specific criticisms posed by the reviewers below:
 
-- We will add the discussion of motivation and practicality above to Section 7 (all reviewers).
+- We will provide additional discussion related to motivation and practicality to Section 7 (all reviewers).
 
-- We will clarify the explanation of our examples and metatheorems, following the detailed questions (all reviewers). Specifically, we will provide key typing derivations in our case studies (Reviewer B).
+- We will clarify the explanation of our examples and metatheorems, addressing the specific questions raised by the reviewers. Specifically, we will provide key typing derivations in our case studies (Reviewer B).
 
 - We will provide a comparison with Unno et al.'s POPL 2017 paper in Section 8 (Reviewer B); we thank the reviewer for bringing this work to our attention.
 
@@ -40,7 +41,7 @@ We have R1 ⊇ R2 and R1 ⊑ R3 (since the projection of R3 onto the domain of R
 
 - A: As mentioned on line 567, the rule T-Match only types the branches that are *reachable*, instead of all branches. The reachable constraint is `Γ𝑖 ⊢ 𝑑𝑖 (𝑦) : {𝜈: 𝑏 | 𝜈 = 𝑣}⊓[𝜈: 𝑏 | 𝜈 = 𝑣]` on line 481; the unreachable branches are with index `j`, and the combination of `i` and `j` covers all `n` branches (`𝑗 ∈ (𝑖, 𝑛]`). Here the `i` mixes "the index of reachable branches" and "the maximal bound of reachable branches"; the `d_j y_j` has no difference from `d_i(ȳ)`, and we will fix it in the revision.
 
-In this example, notice that the first branch of the program on line 614 is not reachable, since `𝑥:{𝜈: nat | 𝜈 > 0}` requires that `x` cannot be `0`, while the reachability constraint requires `𝑥:{𝜈: nat | 𝜈 > 0} |- 0 : {𝜈: nat | 𝜈 = x}`, which is impossible. Thus, we use the right-hand side type `{𝜈: nat | 𝜈 ≠ x}` to show the unreachability. This is exactly what we want to show from this example: how to type-check unreachable paths. BTW, `y` is not used in this example, although it can be used in general and is required by the typing rule; thus we add it.
+Notice that the first branch of the program on line 614 is not reachable, since `𝑥:{𝜈: nat | 𝜈 > 0}` requires that `x` cannot be `0`, while the reachability constraint requires `𝑥:{𝜈: nat | 𝜈 > 0} |- 0 : {𝜈: nat | 𝜈 = x}`, which is impossible. Thus, we use the right-hand side type `{𝜈: nat | 𝜈 ≠ x}` at L613 to indicate unreachability. The purpose of this example is to demonstrate how context types enable type-checking of unreachable paths.  BTW, `y` is not used in this example, although it can be used in general and is required by the typing rule; thus we add it.
 
 - Q: p. 9, "of base types (b)": what is the type of datatypes such as lists?
 
@@ -72,7 +73,7 @@ In this example, notice that the first branch of the program on line 614 is not 
 
 - Q: p. 13, y:{ν: nat | ν = x − 1}: this type magically appears.
 
-- A: As a declarative typing system, we assume there is an oracle that can magically provide any desirable types for subsumption rules.
+- A: As is typical of declarative typing system, we assume there is an oracle that can manifest any required type for the subsumption rule.
 
 - Q: p. 13, {ν: nat | ν < 4}: why not {ν: nat | ν = 3}?
 
@@ -142,9 +143,9 @@ Thus, Unno's approach cannot distinguish the "entangled" and "independent" conte
 
 The context `{[x = 0; y = 0]}` can satisfy Unno's semantics; however, it is not valid for either the entangled context (`x:{ν : nat | ⊤}, y:{ν : nat | ⊤}`) or the independent context (`x:{ν : nat | ⊤} * y:{ν : nat | ⊤}`).
 
-- Q: Example on 82.
+- Q: Example on L82.
 
-- A: Notice that we don't use the arrow type (i.e., orange arrow) defined in the Context Type language. This example shows a typing judgement that should fail (since we can find the counterexample) but doesn't fail within *an ill-formed type system unifying safety and reachability but not considering entanglement*. You are right, in our Context Type, the function `𝜆𝑦.𝑥 − 𝑦` is not a valid input with respect to `[v:nat∣v>0]→[v:nat∣v>0]`.
+- A: Notice that we don't use the arrow type (i.e., orange arrow) defined in the Context Type language. This example shows a typing judgement that should fail (since we can find the counterexample) but doesn't fail within *an ill-formed type system unifying safety and reachability but not considering entanglement*. Indeed, the function `𝜆𝑦.𝑥 − 𝑦` is not a valid input with respect to `[v:nat∣v>0]→[v:nat∣v>0]`.
 
 - Q: Example on Figure 6(a).
 
@@ -156,7 +157,7 @@ The context `{[x = 0; y = 0]}` can satisfy Unno's semantics; however, it is not 
 
 - Q: Novelty of type system compared with bunched typing, leaving aside the subsumption rules.
 
-- A: The type and context subsumption rules reflect our semantic foundation (e.g., capability algebra), which elegantly supports using bunched typing to deal with variable entanglement. Even without them, we also design a way to combine bunched typing with refinement types by solving the duplicated-variables problem in the context (lines 458 - 462 and lines 491 - 494). A more technical part is about control flow: the T-Match rule distinguishes reachable branches and unreachable branches to unify both safety and reachability verification.
+- A: The type and context subsumption rules reflect our semantic foundation (e.g., capability algebra), which elegantly supports using bunched typing to deal with variable entanglement. Even without them, we also design a way to combine bunched typing with refinement types by solving the duplicated-variables problem in the context (lines 458 - 462 and lines 491 - 494). A more technical issue concerns control flow: the T-Match rule distinguishes reachable branches and unreachable branches to unify both safety and reachability verification.
 
 #### Reviewer C
 
@@ -186,15 +187,15 @@ which is not a counterexample.
 
 - Q: T-Match rule
 
-- A: As mentioned on line 567, the rule T-Match only types the branches that are *reachable*, instead of all branches. The reachable constraint is `Γ𝑖 ⊢ 𝑑𝑖 (𝑦) : {𝜈: 𝑏 | 𝜈 = 𝑣}⊓[𝜈: 𝑏 | 𝜈 = 𝑣]` on line 481; the unreachable branches are with index `j`, and the combination of `i` and `j` covers all `n` branches (`𝑗 ∈ (𝑖, 𝑛]`). Here the `i` mixes "the index of reachable branches" and "the maximal bound of reachable branches"; the `d_j y_j` has no difference from `d_i(ȳ)`, and we will fix it in the revision.
+- A: As mentioned on line 576, the rule T-Match only types the branches that are *reachable*, instead of all branches. The reachable constraint is `Γ𝑖 ⊢ 𝑑𝑖 (𝑦) : {𝜈: 𝑏 | 𝜈 = 𝑣}⊓[𝜈: 𝑏 | 𝜈 = 𝑣]` on line 481; the unreachable branches are with index `j`, and the combination of `i` and `j` covers all `n` branches (`𝑗 ∈ (𝑖, 𝑛]`). Here the `i` mixes "the index of reachable branches" and "the maximal bound of reachable branches"; the `d_j y_j` has no difference from `d_i(ȳ)`, and we will fix it in the revision.
 
-- Q: Γ2​ in the premise of T-Weakning should be Γ1​? L530: "subset" -> "superset"; L889: z -> z+1
+- Q: Γ2​ in the premise of T-Weakning should be Γ1​? L530: "subset" -> "superset"; L885: z -> z+1
 
 - A: You are right, we will fix it in the revision.
 
 - Q: L698: Why do you substitute v for x? I thought Fib(r,[x↦v]) would give x's value.
 
-- A: It is different. Consider `𝑥 ▷ (x < y <= 3)` which means that "for each assignment of x, y in the range `(x, 3]`". Then, we know `{[x = 1; y = 2], [x = 1; y = 3]}` is a capability that models this formula. However, if we don't replace the `x` in `P`, we need to show `{[x = 1; y = 2], [x = 1; y = 3]} |= x < y <= 3`. Notice that `[x = 0; y = 2]` also satisfies `x < y <= 3`, according to the semantics of atom on line 694, the atomic predicate is "neutral" (no overapproximation, no underapproximation), thus `[x = 0; y = 2]` must be included in the capability, which is inconsistent with our original intention. The issue here is that even if `x` in `Fib(r,[x↦v])` is singleton-valued, it still has a complicated Kripke semantics, and cannot be treated as "give x's value" in ordinary logic. Thus, we should directly instantiate `x` in P.
+- A: It is different. Consider `𝑥 ▷ (x < y <= 3)` which means that "for each assignment of x, y is in the range `(x, 3]`". Then, we know `{[x = 1; y = 2], [x = 1; y = 3]}` is a capability that models this formula. However, if we don't replace the `x` in `P`, we need to show `{[x = 1; y = 2], [x = 1; y = 3]} |= x < y <= 3`. Notice that `[x = 0; y = 2]` also satisfies `x < y <= 3`, according to the semantics of atom on line 694, the atomic predicate is "neutral" (no overapproximation, no underapproximation), thus `[x = 0; y = 2]` must be included in the capability, which is inconsistent with our original intention. The issue here is that even if `x` in `Fib(r,[x↦v])` is singleton-valued, it still has a complicated Kripke semantics, and cannot be treated as "give x's value" in ordinary logic. Thus, we should directly instantiate `x` in P.
 
 - Q: L938: ⊕ at the term level hasn't been introduced
 
