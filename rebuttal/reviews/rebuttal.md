@@ -31,6 +31,12 @@ Concretely, we propose to implement the following changes in the revision, in or
 
 - A1: As you note, there are two ways that (non-singleton) angelic types can be added to the context: when typing a function with an angelic parameter or through the application of a random function. In a pure, deterministic language, an angelic type binding is a stand-in for some angelic decision maker that is external to a program, e.g., a tester or a human that can angelically supply the "right" inputs to a pure program.
 
+- Q2: Typing rule for `match`:
+
+- A2: The T-Match rule only types the branches that are *reachable*, instead of all branches (line 567). Under a typing context in which `i` branches are reachable, this rule implicitly reorders the branches so that all the reachable branches come first; the first premise of the constraint then encodes their reachability `Γ𝑖 ⊢ 𝑑𝑖 (𝑦) : {𝜈: 𝑏 | 𝜈 = 𝑣}⊓[𝜈: 𝑏 | 𝜈 = 𝑣]` (line 481). Similarly, the third premise of the rule encodes the  unreachablity of the remaining (n - i) branches, which are indexed by (`𝑗 ∈ (𝑖, 𝑛]`).  Taken together, the combination of both sets of branches cover all `n` constructors/
+
+As an example, notice that the first branch of the program on line 614 is not reachable, since `𝑥:{𝜈: nat | 𝜈 > 0}` requires that `x` cannot be `0`, while the reachability constraint requires `𝑥:{𝜈: nat | 𝜈 > 0} |- 0 : {𝜈: nat | 𝜈 = x}`, which is impossible. Thus, we use the right-hand side type `{𝜈: nat | 𝜈 ≠ x}` at L613 to indicate unreachability. The purpose of this example is to demonstrate how context types enable type-checking of unreachable paths.  BTW, `y` is not used in this example, although it can be used in general and is required by the typing rule; thus we add it.
+
 - Q2a: Is i is free in the third premise of T-Match?
 
 - A2a: Here the `i` mixes "the index of reachable branches" and "the maximal bound of reachable branches"; the `d_j y_j` has no difference from `d_i(ȳ)`, and we will fix it in the revision. (Need to fix)
