@@ -6,18 +6,18 @@ We begin by clarifying the concerns shared by all reviewers, namely, the practic
 
 ## Shared Concern: Motivation and Practicality
 
-We first clarify the main motivation and contribution of this paper. Our primary goal is to provide a foundational type theory that unifies safety and reachability verification within a functional language. Combining safety (may-style) and reachability (must-style) reasoning has been explored for many years, and prior work has shown that the two can facilitate each other [4, 17] given a framework that supports both. However, to the best of our knowledge, there is no existing unified type-based framework that supports freely combining safety (the demonic modality) and reachability (the angelic modality) as first-class features. Moreover, while safety and reachability verification have each been studied extensively on their own, there is no foundational type theory that clearly provides the semantics of these two verification modalities.
+We first clarify the main motivation and contribution of this paper. Our primary goal is to provide a foundational type theory that unifies safety and reachability reasoning within a functional language. Combining safety (may-style) and reachability (must-style) reasoning has been explored for many years, and prior work has shown that each can fruitfully inform the other [4, 17] in a framework that supports both. However, to the best of our knowledge, there is no existing unified type-based framework that supports freely combining safety (the demonic modality) and reachability (the angelic modality) as first-class features. Moreover, while safety and reachability verification have each been studied extensively on their own, there is no *foundational* type theory that cleanly provides an integrated semantics for both modalities.
 
-As our focus is on presenting a unified foundational theory, we do not consider a concrete typing algorithm or mechanisms related to automated reasoning (as noted by Reviewers A and C), as evidenced
-by our subsumption rule, which is substantially more powerful than those of standard refinement type systems (Reviewer B). That said, we believe our type system has a number of practical benefits as the demonstrated by the case studies given in Section 6.  Moreover, prior work such as [50] identifies restricted instantiations of this general framework (e.g. function parameter types may only be demonic) for which efficient typing algorithms exist.  Developing typing algorithms for context types under its full generality is an interesting and challenging direction for future work.
+As the focus of this work is the development of this unified, foundational type theory, we do not consider a concrete typing algorithm or other mechanisms for automated reasoning (noted by Reviewers A and C). This is also evidenced
+by our subsumption rule, which is substantially more powerful than those of standard refinement type systems (Reviewer B). That said, we believe the case studies given in Section 6 demonstrate some of the potential practical benefits of these foundations.  Furthermore, prior work such as [50] has shown that restricted instantiations of this general framework (e.g. function parameter types may only be demonic) admit efficient verification procedures. Identifying other variants which similarly facilitate automated reasoning and developing a typing algorithm for context types in their full generality are interesting (and challenging!) directions for future work.
 
 ## Summary of Proposed Changes
 
 Concretely, we propose to implement the following changes in the revision, in order to clarify the issues discussed above and to address the specific criticisms posed by the reviewers below:
 
-- We will provide additional discussion related to motivation and practicality to Section 7 (all reviewers).
+- We will expand the discussion of the motivation for and practicality of our type system in Section 7 (all reviewers).
 
-- We will clarify the explanation of our examples and metatheorems, addressing the specific questions raised by the reviewers. Specifically, we will provide key typing derivations in our case studies (Reviewer B).
+- We will clarify the explanation of our examples and metatheorems, addressing the specific questions raised by the reviewers, including providing key typing derivations in our case studies (Reviewer B).
 
 - We will provide a comparison with Unno et al.'s POPL 2017 paper in Section 8 (Reviewer B); we thank the reviewer for bringing this work to our attention.
 
@@ -149,7 +149,7 @@ As a further illustration, consider the judgement:
 The context `{[x = 0; y = 0]}` can satisfy Unno's semantics; however, it is not valid for either the entangled context (`x:{ν : nat | ⊤}, y:{ν : nat | ⊤}`) or the independent context (`x:{ν : nat | ⊤} * y:{ν : nat | ⊤}`) because neither permits the angelic choice to collapse to a single environment.
 
 - Q: Example on L82: do the subsumption rules allow dropping the binding for x?
-  
+
 - A: Note first that this example does not use the function type constructors (→ or −∗) defined in our system — it illustrates what goes wrong in a naive system that adds angelic and demonic modalities without bunched context structure. The failing judgement shows that such a system would be unsound, motivating our design.  In other words, this example shows a typing judgement that should fail (since we can find the counterexample) but doesn't fail within *an ill-formed type system unifying safety and reachability but not considering entanglement*.
 
 Within our system, the subsumption rules do not permit dropping x's binding, precisely because the comma context structure prevents it. The context `x:[ ν: nat | ν > 0], f:(...)` evaluates f's type under a scope that includes x (by WfComma), creating a semantic dependency in the capability denotation between f's angelic choices and x's value. Dropping x via T-CtxSub would require a capability projection that loses this dependency, and no such projection satisfies the context subtyping condition CtxSub. This is exactly the work the comma structure is designed to do — distinguishing this failing judgement from one using ∗, where x and f would be independent and the weakening would be valid.
@@ -181,7 +181,7 @@ and f = 𝜆𝑦.𝑥 − 𝑦
 We will have:
 
 ```
-let 𝑥 = 𝑒𝑥 in (𝜆𝑓 .𝑓(𝑓 𝑥)) (𝜆𝑦.𝑥 − 𝑦) →∗ 
+let 𝑥 = 𝑒𝑥 in (𝜆𝑓 .𝑓(𝑓 𝑥)) (𝜆𝑦.𝑥 − 𝑦) →∗
 let 𝑥 = 𝑒𝑥 in (𝜆𝑦.𝑥 − 𝑦) (𝑥 − 𝑥) →∗
 let 𝑥 = 𝑒𝑥 in (𝜆𝑦.𝑥 − 𝑦) 0 →∗
 let 𝑥 = 𝑒𝑥 in 𝑥 →∗ all positive values
