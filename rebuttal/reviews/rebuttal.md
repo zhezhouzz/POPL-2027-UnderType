@@ -61,7 +61,9 @@ As an example, notice that the first branch of the program on line 614 is not re
 
 - A5: As discussed above, the existence of a complete typing algorithm for context types in their full generality is an open question that we plan to explore in future work.
 
-#### Additional Questions:
+#### Presentational Concerns and Additional Questions:
+
+We thank the reviewer for identifying several points of confusion, which we attempt to clarify below. We plan to address all of these presentational concerns in the next version of the paper.
 
 - Q: Why choose ⊑ as the Kripke order instead of ⊆ or ⊇ ?
 
@@ -73,15 +75,9 @@ R1 := {[x = 1], [x = 2]} and R2 := {[x = 1]} and R3 {[x = 1; y = 3], [x = 2; y =
 
 We have R1 ⊇ R2 and R1 ⊑ R3 (since the projection of R3 onto the domain of R1, i.e., `{x}`, is the same as R1). For safety verification, from `R1 |= Over(1 <= x <= 2)`, we can have `R2 |= Over(1 <= x <= 2)` and `R3 |= Over(1 <= x <= 2)` via Kripke monotonicity. However, when we shift to reachability verification, although `R1 |= Under(1 <= x <= 2)` still holds, we cannot derive `R2 |= Under(1 <= x <= 2)` since `x = 2` is not reachable. In this case, reachability verification should choose the ⊆ relation *plus* the ⊑ relation as the Kripke order. On the other hand, the ⊑ relation always holds for both safety and reachability verification, i.e., both `R3 |= Over(1 <= x <= 2)` and `R3 |= Under(1 <= x <= 2)` hold. Thus, we choose the maximal common part of the Kripke orders of safety and reachability verification, i.e., ⊑, to support both of them. The ⊑ relation is called "neutrality", since it doesn't lean toward ⊇ or ⊆.
 
-- Q: Second example on page 13 (also, two detailed questions for section 3, and a later question for p. 10)
-
-- A: As mentioned on line 567, the rule T-Match only types the branches that are *reachable*, instead of all branches. The reachable constraint is `Γ𝑖 ⊢ 𝑑𝑖 (𝑦) : {𝜈: 𝑏 | 𝜈 = 𝑣}⊓[𝜈: 𝑏 | 𝜈 = 𝑣]` on line 481; the unreachable branches are with index `j`, and the combination of `i` and `j` covers all `n` branches (`𝑗 ∈ (𝑖, 𝑛]`). Here the `i` mixes "the index of reachable branches" and "the maximal bound of reachable branches"; the `d_j y_j` has no difference from `d_i(ȳ)`, and we will fix it in the revision.
-
-Notice that the first branch of the program on line 614 is not reachable, since `𝑥:{𝜈: nat | 𝜈 > 0}` requires that `x` cannot be `0`, while the reachability constraint requires `𝑥:{𝜈: nat | 𝜈 > 0} |- 0 : {𝜈: nat | 𝜈 = x}`, which is impossible. Thus, we use the right-hand side type `{𝜈: nat | 𝜈 ≠ x}` at L613 to indicate unreachability. The purpose of this example is to demonstrate how context types enable type-checking of unreachable paths.  BTW, `y` is not used in this example, although it can be used in general and is required by the typing rule; thus we add it.
-
 - Q: p. 9, "of base types (b)": what is the type of datatypes such as lists?
 
-- A: As mentioned on line 399, they are also base types.
+- A: As mentioned on line 399, These are also base types.
 
 - Q: p. 10, Figure 4 header: the relations Γ ⊢ τ <: τ and Γ ≤_X Γ are not defined in this figure.
 
@@ -141,7 +137,7 @@ Notice that the first branch of the program on line 614 is not reachable, since 
 
 - Q: "The base cases (lines 3–4) type-check"
 
-- A: There is a typo where the parameter types on line 1094 and line 1106 should be `sorted(𝜈)` instead of `⊤`, consistent with the explanations given on lines 1113 - 1117. We will fix it in the revision.
+- A: This is indeed a typo: the parameter types on line 1094 and line 1106 should be `sorted(𝜈)` instead of `⊤`. The explanations on lines 1113 - 1117 are consistent with the correct signature (`sorted(𝜈)`). We will fix this in the revision.
 
 - Q: Figure 6 (b)
 
@@ -155,32 +151,32 @@ Notice that the first branch of the program on line 614 is not reachable, since 
 
 	+ Q1a: Example on L82: do the subsumption rules allow dropping the binding for x?
 
-	+ A1a: Note first that this example does not use the function type constructors (→ or −∗) defined in our system — it illustrates what goes wrong in a naive system that adds angelic and demonic modalities without bunched context structure. The failing judgement shows that such a system would be unsound, motivating our design.  In other words, this example shows a typing judgement that should fail (since we can find the counterexample) but doesn't fail within *an ill-formed type system unifying safety and reachability but not considering entanglement*.
+	+ A1a: Note first that this example does not use the function type constructors (→ or −∗) defined in our system — it illustrates what can go wrong in a system that combines angelic and demonic modalities without using a bunched context structure. The failing judgement shows that such a system would be unsound, motivating our design.  In other words, this example shows a typing judgement that should fail (since we can find the counterexample) but doesn't fail within *an hypothetical type system that unifies safety and reachability without considering entanglement*.
 
-	Within our system, the subsumption rules do not permit dropping x's binding, precisely because the comma context structure prevents it. The context `x:[ ν: nat | ν > 0], f:(...)` evaluates f's type under a scope that includes x (by WfComma), creating a semantic dependency in the capability denotation between f's angelic choices and x's value. Dropping x via T-CtxSub would require a capability projection that loses this dependency, and no such projection satisfies the context subtyping condition CtxSub. This is exactly the work the comma structure is designed to do — distinguishing this failing judgement from one using ∗, where x and f would be independent and the weakening would be valid.
+	Within our system, the subsumption rules do not permit dropping `x`'s binding, precisely because the comma context structure prevents it. The context `x:[ ν: nat | ν > 0], f:(...)` evaluates `f`'s type under a scope that includes `x` (by WfComma), creating a semantic dependency in the capability denotation between `f`'s angelic choices and `x`'s value. Dropping `x` via T-CtxSub would require a capability projection that loses this dependency, and no such projection satisfies the context subtyping condition (CtxSub). This is exactly the work the comma structure is designed to do — distinguishing this failing judgement from one that uses  ∗, where `x` and `f` would be independent and the weakening would be valid.
 
-	+ Q1b Example on Figure 6(a).
+	+ Q1b Example in Figure 6(a).
 
-	+ A1b: Notice that the parameter type on line `6` in Figure 6(a) requires `x:[𝜈: int | 𝜈 = 0]` and `y:[𝜈: int | 0 ≤ 𝜈 ≤ 10]`. Here `x` is a singleton proposition, thus there is no space for "entanglement". Thus, when `x = 0`, `y` must reach `10` and also a value less than `10`. In general, the singleton type qualifier can unify entanglement and disjointedness, which is the key intuition we used in Sec. 5 for persistency.
+	+ A1b: Notice that the parameter type on line 6 in Figure 6(a) requires `x:[𝜈: int | 𝜈 = 0]` and `y:[𝜈: int | 0 ≤ 𝜈 ≤ 10]`. Here `x` is a singleton proposition, thus there is no space for "entanglement". Thus, when `x = 0`, `y` must reach `10` and also a value less than `10`. In general, the concepts of entanglement and disjointedness are meaningless for singleton type qualifiers, as they do not contain any choices (dependent or otherwise). This is the key intuition we used in Section 5 for persistency. [BD: I don't see how this intuition relates to persistency; we should either clarify or drop this last sentence].
 
 	+ Q1c: Incorrectness verification case study
 
-	+ A1c: You are right, the constraint on the first parameter can be worked around by the subsumption rule, as we mentioned on line 550. The key typing derivation will be added in our revision.
+	+ A1c: You are right, the constraint on the first parameter can be worked around by the subsumption rule (mentioned on line 550). The next version of the paper will clarify this piece of the typing derivation.
 
 - Q2: Could you explain in a little more detail the novelties of the type system in Figure 4 (e.g. compared to previous work on bunched typing), if we leave aside the subsumption rule?
 
-- A2: The type and context subsumption rules reflect our semantic foundation (e.g., capability algebra), which supports using bunched typing to deal with variable entanglement. Even leaving them aside, our system has several novel elements.  First, we solve the duplicated-variables problem in a bunched context (L458-462, L491-494). Second, the T-Match rule distinguishes reachable branches and unreachable branches to unify both safety and reachability verification in the presence of pattern matching, a non-trivial extension of standard bunched typing.  Third, the binding reference operator x▷P in the context logic (Definition 4.3) is a novel connective needed to handle dependent qualifiers that refer to specific variable bindings in the current capability which has no no obvious counterpart in prior BI-based system.
+- A2: The type and context subsumption rules fundementally depend on our semantic foundations (e.g., capability algebra), which uses bunched typing to deal with variable entanglement. Even leaving them aside, our system has several novel elements.  First, we solve the duplicated-variables problem in a bunched context (L458-462, L491-494). Second, the T-Match rule distinguishes reachable branches and unreachable branches to unify both safety and reachability verification in the presence of pattern matching, a non-trivial extension of standard bunched typing.  Third, the binding reference operator x▷P in the context logic (Definition 4.3) is a novel connective needed to handle dependent qualifiers that refer to specific variable bindings in the current capability which has no no obvious counterpart in prior BI-based system.
 
 - Q3: Could you comment on the relationship of your work with the POPL'17 work of Unno, Satake and Terauchi?
 
-- A3: Unno et al. also combine universal and existential reasoning, but their existential modality (`{v:b∣ϕ}∃∃`) has a different meaning from our angelic refinement (`[v:b∣ϕ]`).  Unno et al.'s existential modality `{v:b|ϕ}∃∃` means "there exists some execution result satisfying ϕ", whereas our angelic refinement [v:b|ϕ] means "every value satisfying ϕ is reachable" — a strictly stronger guarantee. These are different specifications and the former cannot substitute for the latter when full coverage of reachable values is required.  More fundamentally, Unno et al.'s system uses a flat typing context with no mechanism to track independence or entanglement.   For example,
+- A3: Unno et al. also combine universal and existential reasoning, but their existential modality (`{v:b∣ϕ}∃∃`) has a different meaning than our angelic refinement (`[v:b∣ϕ]`).  Unno et al.'s existential modality `{v:b|ϕ}∃∃` means "there exists _some_ execution result satisfying ϕ", whereas our angelic refinement [v:b|ϕ] means "_every_ value satisfying ϕ is reachable" — a strictly stronger guarantee. These are different properties, and the former cannot substitute for the latter when full coverage of reachable values is required.  More fundamentally, Unno et al.'s system uses a flat typing context with no mechanism to track independence or entanglement.   For example,
 
 ```
-x : ∃ nat, y : ∃ nat ⊢ e : {v:b | φ}
+x : ∃ nat, y : ∃ nat ⊢ e : {v:b | φ(x,y)}
 means ∃x. nat(x) ∧ ∃y. nat(y) ∧ φ(x,y)
 ```
 
-Thus, Unno's approach cannot distinguish between "entangled" and "independent" contexts, like `C_en` and `C_dis` on lines 259 - 261. The `C_en` can only be simulated in a precise (no approximation) style: `x : ∃ nat, y : ∀ {ν : nat | ν = x + 1} ⊢ e : σ`. Even `C_dis` cannot be expressed with `x : ∃ nat, y : ∃ nat ⊢ e : σ`, which means "there exists an assignment of `x` and `y` that makes `e : σ` hold". As another example, our introductory `div` example shown at L143 is assigned type:
+Thus, Unno's approach cannot distinguish between "entangled" and "independent" contexts, e.g., `C_en` and `C_dis` on lines 259 - 261. The `C_en` can only be simulated in a precise (no approximation) style: `x : ∃ nat, y : ∀ {ν : nat | ν = x + 1} ⊢ e : σ`. Even `C_dis` cannot be expressed with `x : ∃ nat, y : ∃ nat ⊢ e : σ`, which means "there exists an assignment of `x` and `y` that makes `e : σ` hold". As another example, our introductory `div` example shown at L143 is assigned type:
 
 ```
  ⊢ div : x:[ν: nat | ν > 0] −∗ y:[ν: nat | ν > 0] −∗ [ν: nat | ν > 0]
@@ -192,7 +188,7 @@ As a further illustration, consider the judgement:
   x : ∃ nat, y : ∃ nat ⊢ x - y : {ν : nat | ν = 0}
 ```
 
-The context `{[x = 0; y = 0]}` can satisfy Unno's semantics; however, it is not valid for either the entangled context (`x:{ν : nat | ⊤}, y:{ν : nat | ⊤}`) or the independent context (`x:{ν : nat | ⊤} * y:{ν : nat | ⊤}`) because neither permits the angelic choice to collapse to a single environment.
+While the context `{[x = 0; y = 0]}` [BD: Do we mean 'contextual capability' here?] is consistent with the semantics of Unno et al's typing contexts, it is not a model of either the entangled context (`x:{ν : nat | ⊤}, y:{ν : nat | ⊤}`) or the independent context (`x:{ν : nat | ⊤} * y:{ν : nat | ⊤}`), as neither permits the angelic choice to collapse to a single environment.
 
 #### Additional Questions:
 
