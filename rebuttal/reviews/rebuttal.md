@@ -25,7 +25,37 @@ Concretely, we propose to implement the following changes in the revision, in or
 
 ## Responses to Specific Questions
 
-#### Reviewer A
+### Reviewer A
+
+- Q1: How can angelic types be introduced into the context?
+
+- A1: As you note, there are two ways that (non-singleton) angelic types can be added to the context: when typing a function with an angelic parameter or through the application of a random function. In a pure, deterministic language, an angelic type binding is a stand-in for some angelic decision maker that is external to a program, e.g., a tester or a human that can angelically supply the "right" inputs to a pure program.
+
+- Q2a: Is i is free in the third premise of T-Match?
+
+- A2a: Here the `i` mixes "the index of reachable branches" and "the maximal bound of reachable branches"; the `d_j y_j` has no difference from `d_i(ȳ)`, and we will fix it in the revision. (Need to fix)
+
+- Q2b: In T-Match, it appears that e_i is typecheck without information about y_i, is this ok?
+
+- A2b:
+
+- Q2c: Why is the notation d_j y_j different from d_i(ȳ) (parentheses)?
+
+- A2c: This is a typo; `d_j y_j` and `d_i(ȳ)` both denote [FILL IN HERE]; we will unify the notation in the revision.
+
+- Q3: The substitution of the variable for the value in the type is not clear when the value is a datatype. Could you elaborate this on the practical sense?
+
+- A3: For example, `(::)` can have type `𝑥:{𝜈: nat | ⊤} → 𝑦:{𝜈: nat list | ⊤} → {𝜈: nat list | head(𝜈, x) /\ tail(𝜈, y)} ⊓ [𝜈: nat list | head(𝜈, x) /\ tail(𝜈, y)]` where `head` and `tail` indicate the head element and tail list of a list. When the value is `[x = 1; y = [1;2]]`, the result type qualifier will be `head(𝜈, 1) /\ tail(𝜈, [1;2])`, where `𝜈` is equal to `[1;1;2]`.
+
+- Q4: In Figure 6 (b), to apply x to g you need to prove {ν: int | ⊤} <: [ν: int | ⊤]. Is this true? Section 2 states that the modality can only be switched for singleton qualifiers or in the trivial cases.
+
+- A4: This is a typo: the parameter on line 6 of Figure 6 (b) should gave the angelic type `x:[𝜈: int | ⊤]`; we will fix this typo in the revision.
+
+- Q5: Is the calculus implementable, and if so, what would a syntax-directed version look like?
+
+- A5: As discussed above, the existence of a complete typing algorithm for context types in their full generality is an open question that we plan to explore in future work.
+
+#### Additional Questions:
 
 - Q: Why choose ⊑ as the Kripke order instead of ⊆ or ⊇ ?
 
@@ -107,27 +137,37 @@ Notice that the first branch of the program on line 614 is not reachable, since 
 
 - A: There is a typo where the parameter types on line 1094 and line 1106 should be `sorted(𝜈)` instead of `⊤`, consistent with the explanations given on lines 1113 - 1117. We will fix it in the revision.
 
-- Q: The source of angelic types.
-
-- A: You are right, the source of a true angelic context (non-singleton) must be external in a pure deterministic language. External means "a tester can angelically execute the pure program", or "a human can provide an angelic context to reach the desirable result of a pure program".
-
-- Q: p. 12, substitution with datatype value.
-
-- A: For example, `(::)` can have type `𝑥:{𝜈: nat | ⊤} → 𝑦:{𝜈: nat list | ⊤} → {𝜈: nat list | head(𝜈, x) /\ tail(𝜈, y)} ⊓ [𝜈: nat list | head(𝜈, x) /\ tail(𝜈, y)]` where `head` and `tail` indicate the head element and tail list of a list. When the value is `[x = 1; y = [1;2]]`, the result type qualifier will be `head(𝜈, 1) /\ tail(𝜈, [1;2])`, where `𝜈` is equal to `[1;1;2]`.
-
 - Q: Figure 6 (b)
 
 - A: The parameter type on line 6 of Figure 6 (b) should be the angelic type `x:[𝜈: int | ⊤]`; we will fix this typo in the revision.
 
-#### Reviewer B
+### Reviewer B
 
-- Q: total functions and unary recursive functions constraints.
+- Q1: Could you clarify any misunderstandings that I have with the examples mentioned in my review?
 
-- A: Restricting to total functions follows the setting of other refinement type systems [50]. The reachability of a partial function (e.g., one that diverges) means that `[𝜈: 𝑏 | ⊤]` doesn't cover all situations since divergence is not a value. Although an option type could simulate divergence, this would pollute the type system with complexity orthogonal to our central contribution. Restricting to unary recursive functions is a design choice to keep this foundational theory elegant; the system could also be extended with a well-founded measure function like fixpoint in Rocq, where the measurement can be a ghost parameter.
+- A1:
 
-- Q: relationship with Unno's POPL'2017 paper.
+	+ Q1a: Example on L82: do the subsumption rules allow dropping the binding for x?
 
-- A: Unno et al. also combine universal and existential reasoning, but their existential modality (`{v:b∣ϕ}∃∃`) has a different meaning from our angelic refinement (`[v:b∣ϕ]`).  Unno et al.'s existential modality `{v:b|ϕ}∃∃` means "there exists some execution result satisfying ϕ", whereas our angelic refinement [v:b|ϕ] means "every value satisfying ϕ is reachable" — a strictly stronger guarantee. These are different specifications and the former cannot substitute for the latter when full coverage of reachable values is required.  More fundamentally, Unno et al.'s system uses a flat typing context with no mechanism to track independence or entanglement.   For example,
+	+ A1a: Note first that this example does not use the function type constructors (→ or −∗) defined in our system — it illustrates what goes wrong in a naive system that adds angelic and demonic modalities without bunched context structure. The failing judgement shows that such a system would be unsound, motivating our design.  In other words, this example shows a typing judgement that should fail (since we can find the counterexample) but doesn't fail within *an ill-formed type system unifying safety and reachability but not considering entanglement*.
+
+	Within our system, the subsumption rules do not permit dropping x's binding, precisely because the comma context structure prevents it. The context `x:[ ν: nat | ν > 0], f:(...)` evaluates f's type under a scope that includes x (by WfComma), creating a semantic dependency in the capability denotation between f's angelic choices and x's value. Dropping x via T-CtxSub would require a capability projection that loses this dependency, and no such projection satisfies the context subtyping condition CtxSub. This is exactly the work the comma structure is designed to do — distinguishing this failing judgement from one using ∗, where x and f would be independent and the weakening would be valid.
+
+	+ Q1b Example on Figure 6(a).
+
+	+ A1b: Notice that the parameter type on line `6` in Figure 6(a) requires `x:[𝜈: int | 𝜈 = 0]` and `y:[𝜈: int | 0 ≤ 𝜈 ≤ 10]`. Here `x` is a singleton proposition, thus there is no space for "entanglement". Thus, when `x = 0`, `y` must reach `10` and also a value less than `10`. In general, the singleton type qualifier can unify entanglement and disjointedness, which is the key intuition we used in Sec. 5 for persistency.
+
+	+ Q1c: Incorrectness verification case study
+
+	+ A1c: You are right, the constraint on the first parameter can be worked around by the subsumption rule, as we mentioned on line 550. The key typing derivation will be added in our revision.
+
+- Q2: Could you explain in a little more detail the novelties of the type system in Figure 4 (e.g. compared to previous work on bunched typing), if we leave aside the subsumption rule?
+
+- A2: The type and context subsumption rules reflect our semantic foundation (e.g., capability algebra), which supports using bunched typing to deal with variable entanglement. Even leaving them aside, our system has several novel elements.  First, we solve the duplicated-variables problem in a bunched context (L458-462, L491-494). Second, the T-Match rule distinguishes reachable branches and unreachable branches to unify both safety and reachability verification in the presence of pattern matching, a non-trivial extension of standard bunched typing.  Third, the binding reference operator x▷P in the context logic (Definition 4.3) is a novel connective needed to handle dependent qualifiers that refer to specific variable bindings in the current capability which has no no obvious counterpart in prior BI-based system.
+
+- Q3: Could you comment on the relationship of your work with the POPL'17 work of Unno, Satake and Terauchi?
+
+- A3: Unno et al. also combine universal and existential reasoning, but their existential modality (`{v:b∣ϕ}∃∃`) has a different meaning from our angelic refinement (`[v:b∣ϕ]`).  Unno et al.'s existential modality `{v:b|ϕ}∃∃` means "there exists some execution result satisfying ϕ", whereas our angelic refinement [v:b|ϕ] means "every value satisfying ϕ is reachable" — a strictly stronger guarantee. These are different specifications and the former cannot substitute for the latter when full coverage of reachable values is required.  More fundamentally, Unno et al.'s system uses a flat typing context with no mechanism to track independence or entanglement.   For example,
 
 ```
 x : ∃ nat, y : ∃ nat ⊢ e : {v:b | φ}
@@ -148,28 +188,15 @@ As a further illustration, consider the judgement:
 
 The context `{[x = 0; y = 0]}` can satisfy Unno's semantics; however, it is not valid for either the entangled context (`x:{ν : nat | ⊤}, y:{ν : nat | ⊤}`) or the independent context (`x:{ν : nat | ⊤} * y:{ν : nat | ⊤}`) because neither permits the angelic choice to collapse to a single environment.
 
-- Q: Example on L82: do the subsumption rules allow dropping the binding for x?
+#### Additional Questions:
 
-- A: Note first that this example does not use the function type constructors (→ or −∗) defined in our system — it illustrates what goes wrong in a naive system that adds angelic and demonic modalities without bunched context structure. The failing judgement shows that such a system would be unsound, motivating our design.  In other words, this example shows a typing judgement that should fail (since we can find the counterexample) but doesn't fail within *an ill-formed type system unifying safety and reachability but not considering entanglement*.
+- Q: As far as I know, there is no similar restriction to total functions in other call-by-value refinement type systems, such as Liquid Types.
 
-Within our system, the subsumption rules do not permit dropping x's binding, precisely because the comma context structure prevents it. The context `x:[ ν: nat | ν > 0], f:(...)` evaluates f's type under a scope that includes x (by WfComma), creating a semantic dependency in the capability denotation between f's angelic choices and x's value. Dropping x via T-CtxSub would require a capability projection that loses this dependency, and no such projection satisfies the context subtyping condition CtxSub. This is exactly the work the comma structure is designed to do — distinguishing this failing judgement from one using ∗, where x and f would be independent and the weakening would be valid.
-
-- Q: Example on Figure 6(a).
-
-- A: Notice that the parameter type on line `6` in Figure 6(a) requires `x:[𝜈: int | 𝜈 = 0]` and `y:[𝜈: int | 0 ≤ 𝜈 ≤ 10]`. Here `x` is a singleton proposition, thus there is no space for "entanglement". Thus, when `x = 0`, `y` must reach `10` and also a value less than `10`. In general, the singleton type qualifier can unify entanglement and disjointedness, which is the key intuition we used in Sec. 5 for persistency.
-
-- Q: Incorrectness verification case study
-
-- A: You are right, the constraint on the first parameter can be worked around by the subsumption rule, as we mentioned on line 550. The key typing derivation will be added in our revision.
-
-- Q: Novelty of type system compared with bunched typing, leaving aside the subsumption rules.
-
-- A: The type and context subsumption rules reflect our semantic foundation (e.g., capability algebra), which supports using bunched typing to deal with variable entanglement. Even leaving them aside, our system has several novel elements.  First, we solve the duplicated-variables problem in a bunched context (L458-462, L491-494). Second, the T-Match rule distinguishes reachable branches and unreachable branches to unify both safety and reachability verification in the presence of pattern matching, a non-trivial extension of standard bunched typing.  Third, the binding reference operator x▷P in the context logic (Definition 4.3) is a novel connective needed to handle dependent qualifiers that refer to specific variable bindings in the current capability which has no no obvious counterpart in prior BI-based systems.
-
+- A: Restricting to total functions follows the setting of other refinement type systems [50]. [BD: We should really cite something other than coverage types here (a liquid types paper would be ideal) -- the reviewer acknowledges that coverage types has this restriction.] The reachability of a partial function (e.g., one that diverges) means that `[𝜈: 𝑏 | ⊤]` doesn't cover all situations since divergence is not a value. Although an option type could simulate divergence, this would pollute the type system with complexity orthogonal to our central contribution. Restricting to unary recursive functions is a design choice to keep this foundational theory elegant; the system could also be extended with a well-founded measure function like fixpoint in Rocq, where the measurement can be a ghost parameter.
 
 #### Reviewer C
 
-- Q: L106: How different is this from the example on the previous page
+- Q: L106: How different is this example from the one on the previous page?
 
 - A: The counterexample `f = 𝜆𝑦.𝑥 − 𝑦` does not apply to the nested application, λf.f(f x). Consider:
 
@@ -191,7 +218,7 @@ which is not a counterexample.  Nested application introduces a genuinely differ
 
 - Q: Fig. 4 gives only rules to derive the typing relation (not subtyping).
 
-- A: As mentioned on lines 512 - 514, our declarative type system uses semantic subtyping, where details are provided in Sec. 4.
+- A: Our declarative type system uses semantic subtyping (Lines 512 - 514); the details of this where details are provided in Sec. 4.
 
 - Q: T-Match rule
 
