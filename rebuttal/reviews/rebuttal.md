@@ -33,29 +33,29 @@ Concretely, we propose to implement the following changes in the revision, in or
 
 - Q2: Typing rule for `match`:
 
-- A2: The T-Match rule only types the branches that are *reachable*, instead of all branches (line 567). Under a typing context in which `i` branches are reachable, this rule implicitly reorders the branches so that all the reachable branches come first; the first premise of the constraint then encodes their reachability `Γ𝑖 ⊢ 𝑑𝑖 (𝑦) : {𝜈: 𝑏 | 𝜈 = 𝑣}⊓[𝜈: 𝑏 | 𝜈 = 𝑣]` (line 481). Similarly, the third premise of the rule encodes the  unreachablity of the remaining (n - i) branches, which are indexed by (`𝑗 ∈ (𝑖, 𝑛]`).  Taken together, the combination of both sets of branches cover all `n` constructors/
+- A2: The T-Match rule only types the branches that are *reachable*, instead of all branches (line 567). Under a typing context in which `i` branches are reachable, this rule implicitly reorders the branches so that all the reachable branches come first; the first premise of the constraint then encodes their reachability `Γ𝑖 ⊢ 𝑑𝑖 (𝑦) : {𝜈: 𝑏 | 𝜈 = 𝑣}⊓[𝜈: 𝑏 | 𝜈 = 𝑣]` (line 481). Similarly, the third premise of the rule encodes the  unreachablity of the remaining (n - i) branches, which are indexed by (`𝑗 ∈ (𝑖, 𝑛]`).  Taken together, the combination of both sets of branches cover all `n` constructors.
 
-As an example, notice that the first branch of the program on line 614 is not reachable, since `𝑥:{𝜈: nat | 𝜈 > 0}` requires that `x` cannot be `0`, while the reachability constraint requires `𝑥:{𝜈: nat | 𝜈 > 0} |- 0 : {𝜈: nat | 𝜈 = x}`, which is impossible. Thus, we use the right-hand side type `{𝜈: nat | 𝜈 ≠ x}` at L613 to indicate unreachability. The purpose of this example is to demonstrate how context types enable type-checking of unreachable paths.  BTW, `y` is not used in this example, although it can be used in general and is required by the typing rule; thus we add it.
+As an example, notice that the first branch of the program on line 614 is not reachable, since the binding `𝑥:{𝜈: nat | 𝜈 > 0}` in the context stipulates that `x` cannot be `0`.  To apply T-Match, we implicitly "swap" the two branches, so that the (reachable) `S y` case comes first. We can type this branch using the first premise (line 612), and type the body of the branch under a context extended with a binding for the pattern variable (lines 610-611). The reachability constraint encoded by the first premise (`𝑥:{𝜈: nat | 𝜈 > 0} |- 0 : {𝜈: nat | 𝜈 = x} ⊓ [𝜈: nat | 𝜈 = x]`) cannot be satisfied by the `0` branch, so we use the third premise of T-Match can account for this unreachable branch (`... |- ... : {𝜈: nat | 𝜈 ≠ x}` on L613).
 
 - Q2a: Is i is free in the third premise of T-Match?
 
-- A2a: Here the `i` mixes "the index of reachable branches" and "the maximal bound of reachable branches"; the `d_j y_j` has no difference from `d_i(ȳ)`, and we will fix it in the revision. (Need to fix)
+- A2a: Here, i implicitly ranges over all the reachable branches.
 
 - Q2b: In T-Match, it appears that e_i is typecheck without information about y_i, is this ok?
 
-- A2b:
+- A2b: Each $\Gamma_i$ implicitly includes bindings, ȳ, for the parameters of the ith constructor d_i. This is guaranteed by the first premise of T-match, which types d_i(ȳ). We will explicitly include those bindings in the next iteration of the paper.
 
 - Q2c: Why is the notation d_j y_j different from d_i(ȳ) (parentheses)?
 
-- A2c: This is a typo; `d_j y_j` and `d_i(ȳ)` both denote [FILL IN HERE]; we will unify the notation in the revision.
+- A2c: `d_j ȳ_j` and `d_i(ȳ)` both denote a fully applied datatype constructor; we will unify the notation in the revision.
 
-- Q3: The substitution of the variable for the value in the type is not clear when the value is a datatype. Could you elaborate this on the practical sense?
+- Q3: The substitution of the variable for the value in the type is not clear when the value is a datatype. Could you clarify this?
 
-- A3: For example, `(::)` can have type `𝑥:{𝜈: nat | ⊤} → 𝑦:{𝜈: nat list | ⊤} → {𝜈: nat list | head(𝜈, x) /\ tail(𝜈, y)} ⊓ [𝜈: nat list | head(𝜈, x) /\ tail(𝜈, y)]` where `head` and `tail` indicate the head element and tail list of a list. When the value is `[x = 1; y = [1;2]]`, the result type qualifier will be `head(𝜈, 1) /\ tail(𝜈, [1;2])`, where `𝜈` is equal to `[1;1;2]`.
+- A3: As an example, `(::)` can have the type `𝑥:{𝜈: nat | ⊤} → 𝑦:{𝜈: nat list | ⊤} → {𝜈: nat list | head(𝜈, x) /\ tail(𝜈, y)} ⊓ [𝜈: nat list | head(𝜈, x) /\ tail(𝜈, y)]` where `head` and `tail` are datatype selectors return the head element and tail list of a list, respectively. The type of  `1 :: ([1;2])`, i.e., [1; 1;3],  is thus `{𝜈: nat list | head(𝜈, 1) /\ tail(𝜈, [1;2])`, which is equivalent to `{𝜈: nat list | 𝜈 = [1;1;2]}`.
 
 - Q4: In Figure 6 (b), to apply x to g you need to prove {ν: int | ⊤} <: [ν: int | ⊤]. Is this true? Section 2 states that the modality can only be switched for singleton qualifiers or in the trivial cases.
 
-- A4: This is a typo: the parameter on line 6 of Figure 6 (b) should gave the angelic type `x:[𝜈: int | ⊤]`; we will fix this typo in the revision.
+- A4: This is a typo: the parameter on line 6 of Figure 6 (b) should have the angelic type `x:[𝜈: int | ⊤]`; we will fix this typo in the revision.
 
 - Q5: Is the calculus implementable, and if so, what would a syntax-directed version look like?
 
