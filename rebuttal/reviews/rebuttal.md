@@ -157,7 +157,7 @@ We have R1 ⊇ R2 and R1 ⊑ R3 (since the projection of R3 onto the domain of R
 
 	+ Q1b Example in Figure 6(a).
 
-	+ A1b: Notice that the parameter type on line 6 in Figure 6(a) requires `x:[𝜈: int | 𝜈 = 0]` and `y:[𝜈: int | 0 ≤ 𝜈 ≤ 10]`. Here `x` is a singleton proposition, thus there is no space for "entanglement". Thus, when `x = 0`, `y` must reach `10` and also a value less than `10`. In general, the concepts of entanglement and disjointedness are meaningless for singleton type qualifiers, as they do not contain any choices (dependent or otherwise). This is the key intuition we used in Section 5 for persistency. [BD: I don't see how this intuition relates to persistency; we should either clarify or drop this last sentence].
+	+ A1b: Notice that the parameter type on line 6 in Figure 6(a) requires `x:[𝜈: int | 𝜈 = 0]` and `y:[𝜈: int | 0 ≤ 𝜈 ≤ 10]`. Here `x` is a singleton proposition, thus there is no space for "entanglement". Thus, when `x = 0`, `y` must reach `10` and also a value less than `10`. In general, the concepts of entanglement and disjointedness are meaningless for singleton type qualifiers, as they do not contain any choices (dependent or otherwise).
 
 	+ Q1c: Incorrectness verification case study
 
@@ -188,13 +188,13 @@ As a further illustration, consider the judgement:
   x : ∃ nat, y : ∃ nat ⊢ x - y : {ν : nat | ν = 0}
 ```
 
-While the context `{[x = 0; y = 0]}` [BD: Do we mean 'contextual capability' here?] is consistent with the semantics of Unno et al's typing contexts, it is not a model of either the entangled context (`x:{ν : nat | ⊤}, y:{ν : nat | ⊤}`) or the independent context (`x:{ν : nat | ⊤} * y:{ν : nat | ⊤}`), as neither permits the angelic choice to collapse to a single environment.
+While the contextual capability `{[x = 0; y = 0]}` is consistent with the semantics of Unno et al's typing contexts, it is not a model of either the entangled context (`x:{ν : nat | ⊤}, y:{ν : nat | ⊤}`) or the independent context (`x:{ν : nat | ⊤} * y:{ν : nat | ⊤}`), as neither permits the angelic choice to collapse to a single environment.
 
 #### Additional Questions:
 
 - Q: As far as I know, there is no similar restriction to total functions in other call-by-value refinement type systems, such as Liquid Types.
 
-- A: Restricting to total functions follows the setting of other refinement type systems [50]. [BD: We should really cite something other than coverage types here (a liquid types paper would be ideal) -- the reviewer acknowledges that coverage types has this restriction.] The reachability of a partial function (e.g., one that diverges) means that `[𝜈: 𝑏 | ⊤]` doesn't cover all situations since divergence is not a value. Although an option type could simulate divergence, this would pollute the type system with complexity orthogonal to our central contribution. Restricting to unary recursive functions is a design choice to keep this foundational theory elegant; the system could also be extended with a well-founded measure function like fixpoint in Rocq, where the measurement can be a ghost parameter.
+- A: Restricting to total functions follows the setting of other refinement type systems [43, 55, 50]. The reachability of a partial function (e.g., one that diverges) means that `[𝜈: 𝑏 | ⊤]` doesn't cover all situations since divergence is not a value. Although an option type could simulate divergence, this would pollute the type system with complexity orthogonal to our central contribution. Restricting to unary recursive functions is a design choice to keep this foundational theory elegant; the system could also be extended with a well-founded measure function like fixpoint in Rocq, where the measurement can be a ghost parameter.
 
 #### Reviewer C
 
@@ -237,3 +237,6 @@ which is not a counterexample.  Nested application introduces a genuinely differ
 - Q: L938: ⊕ at the term level hasn't been introduced
 
 - A: As mentioned in the footnote on line 979, it is the nondeterministic choice operator; `𝑒1 ⊕ 𝑒2` is syntactic sugar for `if genbool ( ) then 𝑒1 else 𝑒2`. We will lift it to line 934 in the revision.
+
+
+[55] Niki Vazou, Anish Tondwalkar, Vikraman Choudhury, Ryan G. Scott, Ryan R. Newton, Philip Wadler, and Ranjit Jhala. 2017. Refinement reflection: complete verification with SMT. Proc. ACM Program. Lang. 2, POPL, Article 53 (January 2018), 31 pages. https://doi.org/10.1145/3158141
