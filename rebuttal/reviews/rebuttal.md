@@ -147,7 +147,7 @@ We have R1 ⊇ R2 and R1 ⊑ R3 (since the projection of R3 onto the domain of R
 
 - Q1: Could you clarify any misunderstandings that I have with the examples mentioned in my review?
 
-- A1: Example on L82
+- A1:
 
 	+ Q1a: Example on L82: isn't this judgement provable? do the subsumption rules allow dropping the binding for x?
 
