@@ -85,7 +85,7 @@ We have R1 ⊇ R2 and R1 ⊑ R3 (since the projection of R3 onto the domain of R
 
 - Q: p. 10, T-Fix: what is the relation ν ≺ x, and why is it needed?
 
-- A: As mentioned on lines 545 - 546, it is the "well-founded relation" used to prove the termination of recursive functions, which is used in most refinement type systems.
+- A: As mentioned on lines 545 - 546, it is the "well-founded relation" used to prove the termination of recursive functions, which is used in most refinement type systems [43, 55, 50].
 
 - Q: p. 10, T-Fix: the type of f is missing in fix f.
 
@@ -97,7 +97,7 @@ We have R1 ⊇ R2 and R1 ⊑ R3 (since the projection of R3 onto the domain of R
 
 - Q: p. 11, "we require all well-typed terms to be total": why?
 
-- A: It follows the setting of other refinement type systems [50]. Technically, the reachability of a partial function (e.g., looping forever) means that `[𝜈: 𝑏 | ⊤]` doesn't cover all situations, i.e., divergence. Although we can use an option type to simulate divergence, this option would pollute the whole type system, making it unnecessarily complex, and this complexity is independent of our contribution (unifying safety and reachability verification).
+- A: It follows the setting of other refinement type systems [43, 55, 50]. Technically, the reachability of a partial function (e.g., looping forever) means that `[𝜈: 𝑏 | ⊤]` doesn't cover all situations, i.e., divergence. Although we can use an option type to simulate divergence, this option would pollute the whole type system, making it unnecessarily complex, and this complexity is independent of our contribution (unifying safety and reachability verification).
 
 - Q: the context sum in the rule for match-expressions
 
@@ -109,7 +109,7 @@ We have R1 ⊇ R2 and R1 ⊑ R3 (since the projection of R3 onto the domain of R
 
 - Q: p. 13, {ν: nat | ν < 4}: why not {ν: nat | ν = 3}?
 
-- A: The `{ν: nat | ν < 4}` is the type we want to type-check against from the original example on line 388, where `ν < 4` and `ν > 4` can divide two branches, i.e., returning 3 and 5. In this typing derivation, we can also choose `v = 4`, although it is too precise to show that the safety type is an overapproximation.
+- A: The `{ν: nat | ν < 4}` is the type we want to type-check against from the original example on line 388, where `ν < 4` and `ν > 4` can divide two branches, i.e., returning 3 and 5. In this typing derivation, we can also choose `v = 3`, although it is too precise to show that the safety type is an overapproximation.
 
 - Q: Domain and Compatibility
 
