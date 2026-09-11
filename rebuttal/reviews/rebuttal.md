@@ -33,17 +33,17 @@ Concretely, we propose to implement the following changes in the revision, in or
 
 - Q2: Typing rule for `match`:
 
-- A2: The T-Match rule only types the branches that are *reachable*, instead of all branches (line 567). Under a typing context in which `i` branches are reachable, this rule implicitly reorders the branches so that all the reachable branches come first; the first premise of the constraint then encodes their reachability `Γ𝑖 ⊢ 𝑑𝑖 (𝑦) : {𝜈: 𝑏 | 𝜈 = 𝑣}⊓[𝜈: 𝑏 | 𝜈 = 𝑣]` (line 481). Similarly, the third premise of the rule encodes the  unreachablity of the remaining (n - i) branches, which are indexed by (`𝑗 ∈ (𝑖, 𝑛]`).  Taken together, the combination of both sets of branches cover all `n` constructors.
+- A2: The T-Match rule only types the branches that are *reachable*, instead of all branches (line 567). Under a typing context in which `i` branches are reachable, this rule implicitly reorders the branches so that all the reachable branches come first; the first premise of the constraint then encodes their reachability `Γ𝑖 ⊢ 𝑑𝑖 (𝑦) : {𝜈: 𝑏 | 𝜈 = 𝑣}⊓[𝜈: 𝑏 | 𝜈 = 𝑣]` (line 481). Similarly, the third premise of the rule encodes the unreachability of the remaining (n - i) branches, which are indexed by (`𝑗 ∈ (𝑖, 𝑛]`). Taken together, the combination of both sets of branches covers all `n` constructors.
 
-As an example, notice that the first branch of the program on line 614 is not reachable, since the binding `𝑥:{𝜈: nat | 𝜈 > 0}` in the context stipulates that `x` cannot be `0`.  To apply T-Match, we implicitly "swap" the two branches, so that the (reachable) `S y` case comes first. We can type this branch using the first premise (line 612), and type the body of the branch under a context extended with a binding for the pattern variable (lines 610-611). The reachability constraint encoded by the first premise (`𝑥:{𝜈: nat | 𝜈 > 0} |- 0 : {𝜈: nat | 𝜈 = x} ⊓ [𝜈: nat | 𝜈 = x]`) cannot be satisfied by the `0` branch, so we use the third premise of T-Match can account for this unreachable branch (`... |- ... : {𝜈: nat | 𝜈 ≠ x}` on L613).
+As an example, notice that the first branch of the program on line 614 is not reachable, since the binding `𝑥:{𝜈: nat | 𝜈 > 0}` in the context stipulates that `x` cannot be `0`. To apply T-Match, we implicitly "swap" the two branches, so that the (reachable) `S y` case comes first. We can type this branch using the first premise (line 612), and type the body of the branch under a context extended with a binding for the pattern variable (lines 610-611). The reachability constraint encoded by the first premise (`𝑥:{𝜈: nat | 𝜈 > 0} |- 0 : {𝜈: nat | 𝜈 = x} ⊓ [𝜈: nat | 𝜈 = x]`) cannot be satisfied by the `0` branch, so we use the third premise of T-Match to account for this unreachable branch (`... |- ... : {𝜈: nat | 𝜈 ≠ x}` on L613).
 
-- Q2a: Is i is free in the third premise of T-Match?
+- Q2a: Is i free in the third premise of T-Match?
 
 - A2a: Here, i implicitly ranges over all the reachable branches.
 
-- Q2b: In T-Match, it appears that e_i is typecheck without information about y_i, is this ok?
+- Q2b: In T-Match, it appears that e_i typechecks without information about y_i, is this ok?
 
-- A2b: Each $\Gamma_i$ implicitly includes bindings, ȳ, for the parameters of the ith constructor d_i. This is guaranteed by the first premise of T-match, which types d_i(ȳ). We will explicitly include those bindings in the next iteration of the paper.
+- A2b: Each $\Gamma_i$ implicitly includes bindings, ȳ, for the parameters of the ith constructor d_i. This is guaranteed by the first premise of T-Match, which types d_i(ȳ). We will explicitly include those bindings in the next iteration of the paper.
 
 - Q2c: Why is the notation d_j y_j different from d_i(ȳ) (parentheses)?
 
@@ -51,7 +51,7 @@ As an example, notice that the first branch of the program on line 614 is not re
 
 - Q3: The substitution of the variable for the value in the type is not clear when the value is a datatype. Could you clarify this?
 
-- A3: As an example, `(::)` can have the type `𝑥:{𝜈: nat | ⊤} → 𝑦:{𝜈: nat list | ⊤} → {𝜈: nat list | head(𝜈, x) /\ tail(𝜈, y)} ⊓ [𝜈: nat list | head(𝜈, x) /\ tail(𝜈, y)]` where `head` and `tail` are datatype selectors return the head element and tail list of a list, respectively. The type of  `1 :: ([1;2])`, i.e., [1; 1;3],  is thus `{𝜈: nat list | head(𝜈, 1) /\ tail(𝜈, [1;2])`, which is equivalent to `{𝜈: nat list | 𝜈 = [1;1;2]}`.
+- A3: As an example, `(::)` can have the type `𝑥:{𝜈: nat | ⊤} → 𝑦:{𝜈: nat list | ⊤} → {𝜈: nat list | head(𝜈, x) /\ tail(𝜈, y)} ⊓ [𝜈: nat list | head(𝜈, x) /\ tail(𝜈, y)]` where `head` and `tail` are datatype selectors that return the head element and tail list of a list, respectively. The type of `1 :: ([1;2])`, i.e., [1;1;2], is thus `{𝜈: nat list | head(𝜈, 1) /\ tail(𝜈, [1;2])}`, which is equivalent to `{𝜈: nat list | 𝜈 = [1;1;2]}`.
 
 - Q4: In Figure 6 (b), to apply x to g you need to prove {ν: int | ⊤} <: [ν: int | ⊤]. Is this true? Section 2 states that the modality can only be switched for singleton qualifiers or in the trivial cases.
 
@@ -70,14 +70,14 @@ We thank the reviewer for identifying several points of confusion, which we atte
 - A: For a traditional safety verification framework like refinement types, the ⊇ relation *plus* the ⊑ relation is the corresponding Kripke order. For example, consider the following 3 capabilities (sets of assignments):
 
 ```
-R1 := {[x = 1], [x = 2]} and R2 := {[x = 1]} and R3 {[x = 1; y = 3], [x = 2; y = 4]}
+R1 := {[x = 1], [x = 2]} and R2 := {[x = 1]} and R3 := {[x = 1; y = 3], [x = 2; y = 4]}
 ```
 
 We have R1 ⊇ R2 and R1 ⊑ R3 (since the projection of R3 onto the domain of R1, i.e., `{x}`, is the same as R1). For safety verification, from `R1 |= Over(1 <= x <= 2)`, we can have `R2 |= Over(1 <= x <= 2)` and `R3 |= Over(1 <= x <= 2)` via Kripke monotonicity. However, when we shift to reachability verification, although `R1 |= Under(1 <= x <= 2)` still holds, we cannot derive `R2 |= Under(1 <= x <= 2)` since `x = 2` is not reachable. In this case, reachability verification should choose the ⊆ relation *plus* the ⊑ relation as the Kripke order. On the other hand, the ⊑ relation always holds for both safety and reachability verification, i.e., both `R3 |= Over(1 <= x <= 2)` and `R3 |= Under(1 <= x <= 2)` hold. Thus, we choose the maximal common part of the Kripke orders of safety and reachability verification, i.e., ⊑, to support both of them. The ⊑ relation is called "neutrality", since it doesn't lean toward ⊇ or ⊆.
 
 - Q: p. 9, "of base types (b)": what is the type of datatypes such as lists?
 
-- A: As mentioned on line 399, These are also base types.
+- A: As mentioned on line 399, these are also base types.
 
 - Q: p. 10, Figure 4 header: the relations Γ ⊢ τ <: τ and Γ ≤_X Γ are not defined in this figure.
 
@@ -105,7 +105,7 @@ We have R1 ⊇ R2 and R1 ⊑ R3 (since the projection of R3 onto the domain of R
 
 - Q: p. 13, y:{ν: nat | ν = x − 1}: this type magically appears.
 
-- A: As is typical of declarative typing system, we assume there is an oracle that can manifest any required type for the subsumption rule.
+- A: As is typical of declarative typing systems, we assume there is an oracle that can manifest any required type for the subsumption rule.
 
 - Q: p. 13, {ν: nat | ν < 4}: why not {ν: nat | ν = 3}?
 
@@ -147,11 +147,11 @@ We have R1 ⊇ R2 and R1 ⊑ R3 (since the projection of R3 onto the domain of R
 
 - Q1: Could you clarify any misunderstandings that I have with the examples mentioned in my review?
 
-- A1:
+- A1: Example on L82
 
-	+ Q1a: Example on L82: do the subsumption rules allow dropping the binding for x?
+	+ Q1a: Example on L82: isn't this judgement provable? do the subsumption rules allow dropping the binding for x?
 
-	+ A1a: Note first that this example does not use the function type constructors (→ or −∗) defined in our system — it illustrates what can go wrong in a system that combines angelic and demonic modalities without using a bunched context structure. The failing judgement shows that such a system would be unsound, motivating our design.  In other words, this example shows a typing judgement that should fail (since we can find the counterexample) but doesn't fail within *an hypothetical type system that unifies safety and reachability without considering entanglement*.
+	+ A1a: Note first that this example does not use the function type constructors (→ or −∗) defined in our system — it illustrates what can go wrong in a system that combines angelic and demonic modalities without using a bunched context structure. The failing judgement shows that such a system would be unsound, motivating our design. In other words, this example shows a typing judgement that should fail (since we can find the counterexample) but doesn't fail within *a hypothetical type system that unifies safety and reachability without considering entanglement*.
 
 	Within our system, the subsumption rules do not permit dropping `x`'s binding, precisely because the comma context structure prevents it. The context `x:[ ν: nat | ν > 0], f:(...)` evaluates `f`'s type under a scope that includes `x` (by WfComma), creating a semantic dependency in the capability denotation between `f`'s angelic choices and `x`'s value. Dropping `x` via T-CtxSub would require a capability projection that loses this dependency, and no such projection satisfies the context subtyping condition (CtxSub). This is exactly the work the comma structure is designed to do — distinguishing this failing judgement from one that uses  ∗, where `x` and `f` would be independent and the weakening would be valid.
 
@@ -165,11 +165,11 @@ We have R1 ⊇ R2 and R1 ⊑ R3 (since the projection of R3 onto the domain of R
 
 - Q2: Could you explain in a little more detail the novelties of the type system in Figure 4 (e.g. compared to previous work on bunched typing), if we leave aside the subsumption rule?
 
-- A2: The type and context subsumption rules fundementally depend on our semantic foundations (e.g., capability algebra), which uses bunched typing to deal with variable entanglement. Even leaving them aside, our system has several novel elements.  First, we solve the duplicated-variables problem in a bunched context (L458-462, L491-494). Second, the T-Match rule distinguishes reachable branches and unreachable branches to unify both safety and reachability verification in the presence of pattern matching, a non-trivial extension of standard bunched typing.  Third, the binding reference operator x▷P in the context logic (Definition 4.3) is a novel connective needed to handle dependent qualifiers that refer to specific variable bindings in the current capability which has no no obvious counterpart in prior BI-based system.
+- A2: The type and context subsumption rules fundamentally depend on our semantic foundations (e.g., capability algebra), which uses bunched typing to deal with variable entanglement. Even leaving them aside, our system has several novel elements. First, we solve the duplicated-variables problem in a bunched context (L458-462, L491-494). Second, the T-Match rule distinguishes reachable branches and unreachable branches to unify both safety and reachability verification in the presence of pattern matching, a non-trivial extension of standard bunched typing. Third, the binding reference operator x▷P in the context logic (Definition 4.3) is a novel connective needed to handle dependent qualifiers that refer to specific variable bindings in the current capability which has no obvious counterpart in prior BI-based systems.
 
 - Q3: Could you comment on the relationship of your work with the POPL'17 work of Unno, Satake and Terauchi?
 
-- A3: Unno et al. also combine universal and existential reasoning, but their existential modality (`{v:b∣ϕ}∃∃`) has a different meaning than our angelic refinement (`[v:b∣ϕ]`).  Unno et al.'s existential modality `{v:b|ϕ}∃∃` means "there exists _some_ execution result satisfying ϕ", whereas our angelic refinement [v:b|ϕ] means "_every_ value satisfying ϕ is reachable" — a strictly stronger guarantee. These are different properties, and the former cannot substitute for the latter when full coverage of reachable values is required.  More fundamentally, Unno et al.'s system uses a flat typing context with no mechanism to track independence or entanglement.   For example,
+- A3: Unno et al. also combine universal and existential reasoning, but their existential modality (`{v:b∣ϕ}∃∃`) has a different meaning from our angelic refinement (`[v:b∣ϕ]`). Unno et al.'s existential modality `{v:b|ϕ}∃∃` means "there exists _some_ execution result satisfying ϕ", whereas our angelic refinement [v:b|ϕ] means "_every_ value satisfying ϕ is reachable" — a strictly stronger guarantee. These are different properties, and the former cannot substitute for the latter when full coverage of reachable values is required. More fundamentally, Unno et al.'s system uses a flat typing context with no mechanism to track independence or entanglement. For example,
 
 ```
 x : ∃ nat, y : ∃ nat ⊢ e : {v:b | φ(x,y)}
@@ -181,14 +181,14 @@ Thus, Unno's approach cannot distinguish between "entangled" and "independent" c
 ```
  ⊢ div : x:[ν: nat | ν > 0] −∗ y:[ν: nat | ν > 0] −∗ [ν: nat | ν > 0]
 ```
-The −∗ function type asserts that x and y are chosen independently, which is what enables the reachability guarantee: for every independent pair of positive inputs, div can produce every positive number. Unno et al. have no −∗ constructor — their system has no way to assert that function arguments are independent of the closure context — so this type is simply inexpressible in their framework.
+The −∗ function type asserts that x and y are chosen independently, which is what enables the reachability guarantee: with all independent pairs of positive inputs in hand, div can produce every positive number. Unno et al. have no −∗ constructor — their system has no way to assert that function arguments are independent of the closure context — so this type is simply inexpressible in their framework.
 
 As a further illustration, consider the judgement:
 ```
   x : ∃ nat, y : ∃ nat ⊢ x - y : {ν : nat | ν = 0}
 ```
 
-While the contextual capability `{[x = 0; y = 0]}` is consistent with the semantics of Unno et al's typing contexts, it is not a model of either the entangled context (`x:{ν : nat | ⊤}, y:{ν : nat | ⊤}`) or the independent context (`x:{ν : nat | ⊤} * y:{ν : nat | ⊤}`), as neither permits the angelic choice to collapse to a single environment.
+While the contextual capability `{[x = 0; y = 0]}` is consistent with the semantics of Unno et al.'s typing contexts, it is not a model of either the entangled context (`x:{ν : nat | ⊤}, y:{ν : nat | ⊤}`) or the independent context (`x:{ν : nat | ⊤} * y:{ν : nat | ⊤}`), as neither permits the angelic choice to collapse to a single environment.
 
 #### Additional Questions:
 
@@ -220,11 +220,11 @@ which is not a counterexample.  Nested application introduces a genuinely differ
 
 - Q: Fig. 4 gives only rules to derive the typing relation (not subtyping).
 
-- A: Our declarative type system uses semantic subtyping (Lines 512 - 514); the details of this where details are provided in Sec. 4.
+- A: Our declarative type system uses semantic subtyping (Lines 512 - 514); the details are provided in Sec. 4.
 
 - Q: T-Match rule
 
-- A: As mentioned on line 576, the rule T-Match only types the branches that are *reachable*, instead of all branches. The reachable constraint is `Γ𝑖 ⊢ 𝑑𝑖 (𝑦) : {𝜈: 𝑏 | 𝜈 = 𝑣}⊓[𝜈: 𝑏 | 𝜈 = 𝑣]` on line 481; the unreachable branches are with index `j`, and the combination of `i` and `j` covers all `n` branches (`𝑗 ∈ (𝑖, 𝑛]`); the third premise should be universally quantified over i. Here the `i` mixes "the index of reachable branches" and "the maximal bound of reachable branches"; the `d_j y_j` has no difference from `d_i(ȳ)`, and we will fix it in the revision.
+- A: As mentioned on line 576, the rule T-Match only types the branches that are *reachable*, instead of all branches. The reachable constraint is `Γ𝑖 ⊢ 𝑑𝑖 (𝑦) : {𝜈: 𝑏 | 𝜈 = 𝑣}⊓[𝜈: 𝑏 | 𝜈 = 𝑣]` on line 481; the unreachable branches are indexed by `j`, and the two index ranges together cover all `n` branches (`𝑗 ∈ (𝑖, 𝑛]`); the third premise should be universally quantified over `i`. Here the `i` mixes "the index of reachable branches" and "the maximal bound of reachable branches"; the `d_j y_j` has no difference from `d_i(ȳ)`, and we will fix it in the revision.
 
 - Q: Γ2​ in the premise of T-Weakening should be Γ1​? L530: "subset" -> "superset"; L885: z -> z+1
 
@@ -232,7 +232,7 @@ which is not a counterexample.  Nested application introduces a genuinely differ
 
 - Q: L698: Why do you substitute v for x? I thought Fib(r,[x↦v]) would give x's value.
 
-- A: It is different. Consider `𝑥 ▷ (x < y <= 3)` which means that "for each assignment of x, y is in the range `(x, 3]`". Then, we know `{[x = 1; y = 2], [x = 1; y = 3]}` is a capability that models this formula. However, if we don't replace the `x` in `P`, we need to show `{[x = 1; y = 2], [x = 1; y = 3]} |= x < y <= 3`. Notice that `[x = 0; y = 2]` also satisfies `x < y <= 3`, according to the semantics of atom on line 694, the atomic predicate is "neutral" (no overapproximation, no underapproximation), thus `[x = 0; y = 2]` must be included in the capability, which is inconsistent with our original intention. The issue here is that even if `x` in `Fib(r,[x↦v])` is singleton-valued, it still has a complicated Kripke semantics, and cannot be treated as "give x's value" in ordinary logic. Thus, we should directly instantiate `x` in P.
+- A: It is different. Consider `𝑥 ▷ (x < y <= 3)` which means that "for each assignment of x, y is in the range `(x, 3]`". Then, we know `{[x = 1; y = 2], [x = 1; y = 3]}` is a capability that models this formula. However, if we don't replace the `x` in `P`, we need to show `{[x = 1; y = 2], [x = 1; y = 3]} |= x < y <= 3`. Notice that `[x = 0; y = 2]` also satisfies `x < y <= 3`. According to the semantics of atom on line 694, the atomic predicate is "neutral" (no overapproximation, no underapproximation), so `[x = 0; y = 2]` must be included in the capability, which is inconsistent with our original intention. The issue here is that even if `x` in `Fib(r,[x↦v])` is singleton-valued, it still has a complicated Kripke semantics, and cannot be treated as "give x's value" in ordinary logic. Thus, we should directly instantiate `x` in P.
 
 - Q: L938: ⊕ at the term level hasn't been introduced
 
