@@ -264,6 +264,10 @@ allow us to obtain such a context by duplicating the binding for $x$
 in our target judgment. An entangled context with duplicate bindings
 is not well-formed in our type system, so \textsc{T-Let} instead
 directly combines this ``duplicate-then-consume'' pattern:
+\cbnewadding{In this sense, \textsc{T-Let} simulates ordinary let
+typing within our substructural type system: both the bound expression
+and the body may use the existing context, without introducing
+duplicate bindings into the context syntax.}
 \begin{center}
   \begin{prooftree}
     \hypo{
@@ -355,7 +359,14 @@ to the free variables of a target term and type.
 \end{example}
 
 Similar to other refinement type systems, we require all well-typed
-terms to be total. Thus, when typing the body of a recursive function,
+terms to be total. \cbnewadding{Our angelic types describe values that
+must be reachable, but divergence is not itself a value; consequently,
+an angelic type such as $\urt{b}{\top}$ does not account for a
+diverging execution.  Partiality could be represented by adding an
+explicit outcome (for example, an option type) for divergence, but
+propagating that outcome throughout the type system would introduce
+complexity orthogonal to our treatment of safety and reachability.}
+Thus, when typing the body of a recursive function,
 \textsc{T-Fix} requires that the first argument of any recursive
 application is decreasing according to some well-founded relation
 $\prec$. As a consequence, the first parameter of a recursive function
@@ -433,7 +444,12 @@ Uses of datatype constructors and built-in operations are typed using
 the \textsc{T-AppOp} rule, which is similar to the function
 application rule but relies on the operator typing function $\Code{Ty}$. This
 function uses the intersection of an angelic and demonic refinement to
-assign a precise (singleton) type to operations: %
+assign a precise\cbnewadding{\footnote{This use of precise types also extends to datatype constructors. For example, suppose the list constructor has the result
+qualifier $\Code{head}(\vnu,h) \land \Code{tail}(\vnu,t)$ for
+parameters $h$ and $t$.  Applying it to $1$ and $[1;2]$ substitutes
+these values for the parameters, yielding
+$\Code{head}(\vnu,1) \land \Code{tail}(\vnu,[1;2])$, which precisely
+characterizes the list $[1;1;2]$.}} (singleton) type to operations: %
 \begin{align*}
   \Code{Ty}(\Code{O}) &= \ort{\Nat}{\vnu = 0} \interty \urt{\Nat}{\vnu = 0} \\
   \Code{Ty}(\Code{S}) &= n{:}\ort{\Nat}{\top} \ctsarr \ort{\Nat}{\vnu = n+1} \interty \urt{\Nat}{\vnu = n + 1} \\
@@ -477,6 +493,9 @@ ensures that it is possible for \ref{ex:oplusWeak} to reach some value
 less than $4$. Both branches in \ref{ex:oplusWeak} are reachable, so
 we first partition the type context using \textsc{T-CtxSub} into
 contexts covering each branch:
+\cbnewadding{As usual for a declarative type system, these precise
+intermediate branch contexts may be manifested through semantic
+subsumption; they need not be inferred directly from the term syntax.}
 {\small %
   \begin{align*}
     &x{:}\urt{\Nat}{\top} \ctsubseteq{\{x\}} \\

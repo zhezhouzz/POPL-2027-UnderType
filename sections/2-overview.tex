@@ -495,6 +495,10 @@ following example:
   &x{:}\urt{\Nat}{\vnu > 0} \ctstar y{:}\urt{\Nat}{\vnu > 0} \vdash \zzlam{f}{x - (f\; (f\;y))} :
   \\&\quad  \underbrace{f{:}(\underbrace{y{:}\urt{\Nat}{\vnu > 0} \ctsarr}_\texttt{$y$ can depend on context during application} \urt{\Nat}{\vnu > 0}) \ctwand}_\texttt{$f$ is independent from $x$ and $y$} \urt{\Nat}{\vnu > 0}
 \end{align*}\noindent
+\cbnewadding{The two arrows serve distinct purposes: the inner
+$\ctsarr$ permits the argument of each application of $f$ to depend
+on $f$'s closure, whereas the outer $\ctwand$ keeps $f$ independent
+of the surrounding bindings for $x$ and $y$.}
 To make $x - (f\;(f\;y))$ reach every positive number, $x$ and
 $f\;(f\;y)$ must be independent. To ensure this, one might expect that
 all function arrows in the result type would need to be $\ctwand$, but
@@ -551,8 +555,8 @@ the values a term must reach.
 The typing judgement $\Gamma \vdash e : \tau_1 \ctoplus \tau_2$ states
 that $e$ can be typed with $\tau_1$ and $\tau_2$ in some partitioning
 of $\Gamma$, and that all capabilities consistent with $\Gamma$ are
-accounted for by $\tau_1$ and $\tau_2$ --- no possibility is lost. For
-example: \begin{align*}
+accounted for by $\tau_1$ and $\tau_2$ --- no possibility is lost.
+For example: \begin{align*}
   &x{:}\urt{\Nat}{\vnu < 10} \vdash x + 1 : \ort{\Nat}{odd(\vnu)} \ctoplus
     \ort{\Nat}{even(\vnu)} \;\judgok \notag \\
   &x{:}\urt{\Nat}{\top} \vdash \zif{x == 0}{3}{5} : \ort{\Nat}{\vnu <
@@ -591,6 +595,18 @@ once (and hence discarded), this style allows the type system to
 discard uninteresting branches by weakening them to $\ort{b}{\top}$,
 imposing a precise safety constraint on the branches that a typing
 context guarantees exist while placing no constraint on the others.
+
+\cbnewadding{The same $\ctoplus$ constructor may also combine contexts
+on the left of a typing judgement.  There it records a partition of
+the available environments, just as a sum in the result type records
+the corresponding partition of executions.  For example, context
+sum can partition the angelic binding $x{:}\urt{\Nat}{\top}$ into
+contexts for $x{:}\urt{\Nat}{\vnu = 0}$ and
+$x{:}\urt{\Nat}{\vnu > 0}$.  This partition aligns the context with
+the conditional example above and its summed result type: the first
+context reaches the true branch, whose result has type
+$\ort{\Nat}{\vnu < 4}$, while the second reaches the false branch,
+whose result has type $\ort{\Nat}{\vnu > 4}$.}
 
 % Standard refinement types interpret type
 % contexts in a demonic style, requiring \emph{all} control-flow within
