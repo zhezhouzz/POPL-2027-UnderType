@@ -211,18 +211,24 @@ cannot refer to variables in each other.
   {T-Fix}
   {$\Gamma \vdash \zzfix{f}{x}{e} : x{:}\ort{b}{\phi} \ctsarr \tau$}
   \\[.8em]
+\cbnewadding{
   \begin{prooftree}
-    \hypo{\forall i. \Gamma_i \vdash d_i(\overline{y}) : \ort{b}{\vnu = v} \interty \urt{b}{\vnu = v}}
-    \hypo{\forall i. \Gamma_i \vdash e_i : \tau_i}
-    \infer[no rule]2{\forall j \in (i, n].
-      % \Code{Ty}(d_j) = \overline{y_j{:}\tau_j}\ctsarr \tau_y %
-      % ~~ \land ~~ %
-      \ctbigoplus
-      \overline{\Gamma_i}\ctcomma \overline{y_j : \ort{b_j}{\top}} \vdash d_j\ \overline{y_j} : \ort{b}{\vnu \neq v }}
-    \infer1[\textsc{T-Match}]{\ctbigoplus \overline{\Gamma_i} \vdash
-      \match{v} \overline{d_n\ \overline{y_n} \to e_n}  : \ctbigoplus
-      \overline{\tau_i}}
+    \hypo{I \mathbin{\uplus} J = \{1,\ldots,n\} \quad I \neq \emptyset}
+    \infer[no rule]1{\forall i \in I.\; \{\overline{y_i}\} \subseteq \Dom{\Gamma_i} \quad \text{and} \quad
+      \Gamma_i \vdash
+      d_i\;\overline{y_i} : \ort{b}{\vnu = v} \interty \urt{b}{\vnu = v}
+    \quad \text{and} \quad
+      \Gamma_i \vdash e_i : \tau_i
+      }
+    \infer[no rule]1{\forall j \in J.\;
+      \left(\ctbigoplus_{i \in I} \Gamma_i\right)
+      \ctcomma \overline{y_j{:}\ort{b_j}{\top}} \vdash
+      d_j\;\overline{y_j} : \ort{b}{\vnu \neq v}}
+    \infer1[\textsc{T-Match}]{\left(\ctbigoplus_{i \in I} \Gamma_i\right) \vdash
+      \match{v} d_1\;\overline{y_1} \to e_1 \;\mid \cdots \; \mid \; d_n\;\overline{y_n} \to e_n
+      : \ctbigoplus_{i \in I} \tau_i}
   \end{prooftree}
+  }
 }
   \caption{Declarative typing rules \langname{}}
   \label{fig:declarative-typing-rules}
@@ -440,11 +446,21 @@ The rule for match-expressions requires the target type context to be
 divided into a sum of contexts (e.g., using \textsc{T-CtxSub}),
 corresponding to the \emph{reachable} control flows under which
 individual branches will be executed; the type of the entire
-expression is the sum of the types of these branches. The reachability
-of the $i^\text{th}$ branch is guaranteed by the assumption that
-$\Gamma_i$ can assign the discriminee a type that precisely aligns
-with the branch's pattern; this also ensures that any pattern
-variables $\overline{y}$ have precise types when checking the branch.
+expression is the sum of the types of these branches.
+\cbnewadding{The index set $I$ identifies the reachable branches, while
+its complement $J$ identifies the unreachable branches; no reordering
+of source-level branches is required.  For every $i \in I$, the rule
+requires $\Gamma_i$ to provide types for the pattern variables
+$\overline{y_i}$ introduced by branch $i$.\footnote{To align the
+contexts of the reachable branches and thereby enable their
+combination with $\ctoplus$, each $\Gamma_i$ must additionally provide
+types for the pattern variables introduced by the other reachable
+branches, even when they are not used by branch $i$.  Such variables
+can simply be assigned types with the top qualifier.}  The first premise then
+establishes that $d_i\;\overline{y_i}$ precisely matches the
+discriminee $v$, and the same context types the corresponding branch
+body $e_i$.  For every $j \in J$, the final premise establishes that
+the remaining constructor cannot match $v$.}
 
 \begin{example}[Pattern matching] The first two sets of assumptions of
   \textsc{T-Match} deal with the reachable branches of a
@@ -459,22 +475,28 @@ variables $\overline{y}$ have precise types when checking the branch.
 Here, we want to show that the angelic context $x{:}\urt{\Nat}{\top}$
 ensures that it is possible for \ref{ex:oplusWeak} to reach some value
 less than $4$. Both branches in \ref{ex:oplusWeak} are reachable, so
-we first partition the type context using \textsc{T-CtxSub} % \smallskip
+we first partition the type context using \textsc{T-CtxSub} into
+contexts covering each branch:
 {\small %
   \begin{align*}
     &x{:}\urt{\Nat}{\top} \ctsubseteq{\{x\}} \\
-    & \quad
+    & \;\;
       \underbrace{x{:}\ort{\Nat}{\vnu = 0}\interty \urt{\Nat}{\vnu =
-      0}}_{\Gamma_{\Code{TBranch}}} \ctoplus
-      \underbrace{x{:}\ort{\Nat}{\vnu > 0}\interty \urt{\Nat}{\vnu > 0}
-      \ctcomma y{:}\ort{\Nat}{\vnu = x -
-      1}}_{\Gamma_{\Code{FBranch}}}
+      0} \ctcomma
+      y{:}\ort{\Nat}{\top} }_{\Gamma_{\Code{TBranch}}} \ctoplus
+      \underbrace{x{:}\ort{\Nat}{\vnu > 0}\interty
+      \urt{\Nat}{\vnu > 0} \ctcomma
+      y{:}\ort{\Nat}{\vnu = x - 1} }_{\Gamma_{\Code{FBranch}}}
   \end{align*}}\noindent
-into type contexts covering each branch that satisfy the first set of
-assumptions of \textsc{T-Match}:
+\cbnewadding{In $\Gamma_{\Code{TBranch}}$, the unused pattern variable
+$y$ is assigned a type with the top qualifier.}
+These contexts satisfy the first set of assumptions of
+\textsc{T-Match}:
 \begin{align*}
-  \Gamma_{\Code{TBranch}} \vdash 0 : \ort{\Nat}{\vnu = 0} \interty \urt{\Nat}{\vnu = 0}
-  &\quad & \Gamma_{\Code{FBranch}} \vdash \Code{S}\;y : \ort{\Nat}{\vnu = x} \interty \urt{\Nat}{\vnu = x}
+  &\Gamma_{\Code{TBranch}} \vdash \Code{O} :
+  \ort{\Nat}{\vnu = 0} \interty \urt{\Nat}{\vnu = 0} \\
+  &\Gamma_{\Code{FBranch}} \vdash \Code{S}\;y :
+  \ort{\Nat}{\vnu = x} \interty \urt{\Nat}{\vnu = x}
 \end{align*}
 \noindent
 We can then type each branch under these contexts to show that
@@ -499,15 +521,25 @@ Here, $x{:}\urt{\Nat}{\vnu > 0}$ admits a capability containing
 environments that only reach the false branch, and thus cannot be
 decomposed into two contexts that fully separate both branches.  The
 following example illustrates how \textsc{T-Match}'s last set of
-assumptions accounts for unreachable control flows: \smallskip
+assumptions accounts for unreachable control flows:
+\begin{align*}
+  x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1} \vdash \zmatchNat{x}{3}{y}{5} : \ort{\Nat}{\vnu > 4}
+\end{align*}\noindent
+By \textsc{T-CtxSub} and the fact that
+\begin{align*}
+  x{:}\ort{\Nat}{\vnu > 0} \ctsubseteq{\{x\}}
+      x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}
+\end{align*}\noindent
+it suffices to establish the following derivation using
+\textsc{T-Match}:
+\smallskip
 \begin{center}
   \small
   \begin{prooftree}
-    \hypo{x{:}\ort{\Nat}{\vnu > 0} \ctsubseteq{\{x\}} x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}}
-    \infer[no rule]1{x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}\vdash 5 : \ort{\Nat}{\vnu > 4}}
+    \hypo{x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}\vdash 5 : \ort{\Nat}{\vnu > 4}}
     \infer[no rule]1{x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}\vdash \Code{S}\;y : \ort{\Nat}{\vnu = x} \interty \urt{\Nat}{\vnu = x}}
-    \infer[no rule]1{x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}\vdash 0 : \ort{\Nat}{\vnu \neq x}}
-    \infer1[\textsc{T-Match}]{x{:}\ort{\Nat}{\vnu > 0} \vdash \zmatchNat{x}{3}{y}{5} : \ort{\Nat}{\vnu > 4} \quad \judgok}
+    \infer[no rule]1{x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1} \vdash \Code{O} : \ort{\Nat}{\vnu \neq x}}
+    \infer1[\textsc{T-Match}]{x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1} \vdash \zmatchNat{x}{3}{y}{5} : \ort{\Nat}{\vnu > 4} \quad \judgok}
     \end{prooftree}
   \end{center}\noindent
 \end{example}
