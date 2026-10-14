@@ -140,7 +140,7 @@ capability providing different choices:
   Note that we do not require $r$ to be singleton over its entire
   variable domain, as doing so would violate Kripke monotonicity: if a
   capability $r$ is singleton, then for $r'$ such that
-  $r' \sqsubseteq r$, $r'$ is not always singleton. Instead, we impose
+  $r \sqsubseteq r'$, $r'$ is not always singleton. Instead, we impose
   the more relaxed requirement that there is some
   $\{\sigma\} \sqsubseteq r$, which need only include the variables
   relevant to $P$, i.e. $\projectTo{r}{\Code{FV}(P)}$.

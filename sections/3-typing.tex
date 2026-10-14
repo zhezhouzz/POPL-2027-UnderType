@@ -306,7 +306,14 @@ $\tau_2$ under the denotation of context $\Gamma$. The refinement
 relation between typing contexts, $\Gamma_1 \ctsubseteq{X} \Gamma_2$
 can be understood as ``any term that has type $\tau$ under $\Gamma_2$
 can also be typed with $\tau$ under $\Gamma_1$'', where the comparison
-is confined to a particular set of variables $X$.  For example,
+is confined to a particular set of variables $X$.
+\cbnewadding{Its direction is deliberately opposite to ordinary type
+subtyping because typing contexts occur as assumptions: the semantic
+relation ensures that every capability satisfying $\Gamma_1$ can be
+matched on $X$ by one satisfying $\Gamma_2$.  Hence, a derivation under
+$\Gamma_2$ can be reused under $\Gamma_1$, as \textsc{T-CtxSub}
+states.}
+For example,
 \begin{align*}
   x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\urt{\Nat}{\top}
   \ctsubseteq{\{y\}} y{:}\urt{\Nat}{\vnu > 0} \ctcomma z{:}\urt{\Nat}{\top}
@@ -318,12 +325,12 @@ to the free variables of a target term and type.
   standard substructural rules from \textsc{T-CtxSub}:
   \begin{align*}
     \mprooftr{25mm}
-      {$\Gamma_2 \vdash e : \tau$}
+      {$\Gamma_1 \vdash e : \tau$}
       {T-Frame}
       {$\Gamma_1 \ctstar \Gamma_2 \vdash e : \tau$}
     \quad
     \mprooftr{26mm}
-      {$\Gamma_2 \vdash e : \tau$}
+      {$\Gamma_1 \vdash e : \tau$}
       {T-Weakening}
       {$\Gamma_1 \ctcomma \Gamma_2 \vdash e : \tau$}
     \quad
@@ -336,9 +343,9 @@ to the free variables of a target term and type.
     important.  For example, the framing rule \textsc{T-Frame}
     actually requires that
     $\Gamma_1 \ctstar \Gamma_2 \ctsubseteq{\Code{FV}(e) \cup
-      \Code{FV}(\tau)} \Gamma_2$ holds, which is silently enforced by
-    $\Gamma_2 \vdash e : \tau$, requiring that the domain of
-    $\Gamma_2$ is a subset of $\Code{FV}(e) \cup \Code{FV}(\tau)$.
+      \Code{FV}(\tau)} \Gamma_1$ holds, which is silently enforced by
+    $\Gamma_1 \vdash e : \tau$, requiring that the domain of
+    $\Gamma_1$ is a superset of $\Code{FV}(e) \cup \Code{FV}(\tau)$.
 \end{example}
 
 Similar to other refinement type systems, we require all well-typed
