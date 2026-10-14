@@ -12,6 +12,8 @@ _minted/*
 *.errlog.minted
 /minted.sty
 *.aux
+*.cb
+*.cb2
 *.bbl
 *blg
 *.log
@@ -22,6 +24,7 @@ _minted/*
 _minted-main/
 sections/auto/
 sections/_region_.tex
+/tmp/
 *.nav
 *.snm
 *.toc

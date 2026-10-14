@@ -12,6 +12,8 @@ values of basic type across different executions:
 \begin{align*}
   \primop ::= \quad & \ldots ~|~ \Code{gen}_b ~|~ \ldots
 \end{align*}
+\cbnewadding{We write $e_1 \oplus e_2$ for nondeterministic choice, syntactic sugar
+for $\zif{\Code{gen_{bool} \;()}}{e_1}{e_2}$.}
 Unsurprisingly, the wrinkle introduced by nondeterminism is related to
 dependence: whereas the reachability properties of a \langname{} term
 were fundamentally tied with the environment under which it is
@@ -148,9 +150,7 @@ capability providing different choices:
 $\Gamma \vdash e : \ctpers \tau$ indicates that the typing of $e$ does
 not rely on the capabilities provided by either the bindings in the
 type context $\Gamma$ or \emph{the reduction of the term $e$}. To
-illustrate, consider the following three functions:\footnote{The
-  nondeterministic choice operator $e_1 \oplus e_2$ is syntactic sugar
-  for $\zif{\Code{gen_{bool} \;()}}{e_1}{e_2}$.}
+illustrate, consider the following three functions:
 \begin{align*}
   &z{:}\urt{\Nat}{\top} \vdash \zzlam{x}{z} : \ort{\Nat}{\top}
     \ctsarr \urt{\Nat}{\top} \judgok \\

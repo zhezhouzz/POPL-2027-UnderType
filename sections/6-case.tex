@@ -35,7 +35,7 @@ via three real-world case studies.
 ?$\vdash$? let f (x: int) =
     let a = g x in
     if a > 3 then 5 else 2
-: ?$\Code{x}{:}\ort{\Int}{\top}\ctsarr\ort{\Int}{\vnu = 2} \ctoplus \ort{\Int}{\vnu = 5}$?
+: ?$\Code{x}{:}\urt{\Int}{\top}\ctsarr\ort{\Int}{\vnu = 2} \ctoplus \ort{\Int}{\vnu = 5}$?
 \end{minted}
     \subcaption{Must-analysis helps may-analysis.}
     \label{fig:may-must-inter}
@@ -177,9 +177,9 @@ in Figure~\ref{fig:merge}. When used in a mergesort procedure, this
 function is intended to merge two sorted lists and produce a sorted
 output list:
 \begin{align*}
-  \vdash \Code{merge}~:~\Code{l1}{:}\ort{\List[\Code{nat}]}{\top}
-  \ctsarr \Code{l2}{:}\ort{\List[\Code{nat}]}{\top} \ctsarr
-  \ort{\List[\Code{nat}]}{\I{sorted}(\vnu)} \quad \judgfail
+  \vdash \Code{merge}~:{}&\Code{l1}{:}\ort{\List[\Code{nat}]}{\I{sorted}(\vnu)}
+  \ctsarr \Code{l2}{:}\ort{\List[\Code{nat}]}{\I{sorted}(\vnu)} \\
+  &\qquad \ctsarr \ort{\List[\Code{nat}]}{\I{sorted}(\vnu)} \quad \judgfail
 \end{align*}\noindent
 Verification fails nonetheless. The base cases (lines $3$--$4$)
 type-check, so the failure arises in the recursive case, but the
@@ -199,7 +199,10 @@ execution procedure to discover this counterexample, we can directly
 prove that \Code{merge} operates incorrectly, by type-checking it with
 the following type:
 \begin{align*}
-    &\Code{l1}{:}\urt{\List[\Code{nat}]}{\top} \ctwand \Code{l2}{:}\urt{\List[\Code{nat}]}{\top} \ctwand \ort{\List[\Code{nat}]}{\neg \I{sorted}(\vnu)} \ctoplus \ort{\List[\Code{nat}]}{\top}
+  &\Code{l1}{:}\urt{\List[\Code{nat}]}{\I{sorted}(\vnu)}
+  \ctwand \Code{l2}{:}\urt{\List[\Code{nat}]}{\I{sorted}(\vnu)} \\
+  &\qquad \ctwand \ort{\List[\Code{nat}]}{\neg \I{sorted}(\vnu)}
+  \ctoplus \ort{\List[\Code{nat}]}{\top}
 \end{align*}\noindent
 This type follows the ``affine reachability'' style of
 Section~\ref{sec:overview}: the result type is a sum of the top type

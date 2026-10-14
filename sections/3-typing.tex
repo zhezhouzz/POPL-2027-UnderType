@@ -418,7 +418,7 @@ When $x = 0$, the program always returns $0$; when $x > 0$, $x - 1$ is a valid a
 
 Uses of datatype constructors and built-in operations are typed using
 the \textsc{T-AppOp} rule, which is similar to the function
-application rule but relies on an auxiliary function $\Code{Ty}$. This
+application rule but relies on the operator typing function $\Code{Ty}$. This
 function uses the intersection of an angelic and demonic refinement to
 assign a precise (singleton) type to operations: %
 \begin{align*}

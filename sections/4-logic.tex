@@ -402,10 +402,10 @@ that actually appear in the judgement.
 
 We conclude with the core soundness results.
 
-\begin{definition}[Well-Formed Operator Context] %
+\begin{definition}[Well-Formed Operator Typing Function] %
   \label{thm:well-formed-operator}
-  The operator context $\Phi$ is well-formed iff for all primitive
-  operators $\primop$: {\small\begin{align*} \Phi(\primop) =
+  The operator typing function $\Code{Ty}$ is well-formed iff for all primitive
+  operators $\primop$: {\small\begin{align*} \Code{Ty}(\primop) =
       \overline{x{:}\ort{b_x}{\phi_x}} \ctsarr \ort{b}{\phi} \ctinter
       \urt{b}{\phi} \quad\text{and}\quad \models
       \denot{\overline{x{:}\ort{b_x}{\phi_x}}} \chiff
@@ -415,7 +415,7 @@ We conclude with the core soundness results.
 \end{definition}
 
 Our fundamental theorem and type soundness theorem assume a
-well-formed operator context.
+well-formed operator typing function.
 
 \begin{theorem}[Fundamental Theorem]%
   \label{thm:fundamental}
