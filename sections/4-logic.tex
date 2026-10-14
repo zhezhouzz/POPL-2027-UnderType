@@ -39,13 +39,13 @@ variable binding; a capability with multiple environments encodes the
 range of choices available when reasoning about safety or
 reachability.
 
-We extend the standard notions of environment compatibility
-($r_1 \uparrow r_2$, meaning every environment in $r_1$ is compatible
-with every environment in $r_2$), projection ($\projectTo{r}{X}$, the
-piecewise restriction of $r$ to the variables in a set $X$), and
-refinement ($r_1 \sqsubseteq r_2$, meaning
-$r_1 = \projectTo{r_2}{\Dom{r_1}}$) from environments to capabilities
-in the obvious pointwise way. The refinement relation $\sqsubseteq$
+\cbnewadding{We write $\Dom{r}$ for the common domain of the
+environments in $r$.  The projection $\projectTo{r}{X}$ restricts
+every environment in $r$ to $X \cap \Dom{r}$.  Two capabilities are
+compatible, written $r_1 \uparrow r_2$, if every pair of environments
+drawn from them agrees on the variables shared by their domains.
+Finally, $r_1 \sqsubseteq r_2$ holds when
+$r_1 = \projectTo{r_2}{\Dom{r_1}}$.} The refinement relation $\sqsubseteq$
 plays a central role: $r_1 \sqsubseteq r_2$ says that $r_1$ is a
 restriction of $r_2$ to a smaller variable domain, i.e., $r_2$ extends
 the bindings of $r_1$ with additional variables.  This relation will
@@ -95,15 +95,39 @@ To enable a Kripke semantics for BI-logic, this semiring must be
 equipped with a partial order satisfying bifunctoriality.  The natural
 candidates for this order are the subset ($\subseteq$) and superset
 ($\supseteq$) relations.  However, neither works for both angelic and
-demonic modalities simultaneously: the subset order forces an
-overapproximation semantics (demonic), while the superset order forces
+demonic modalities simultaneously.
+\cbnewadding{Consider the following two possible accessibility steps
+from $r_1$:}
+\begin{equation}
+\label{eq:kripke-neutrality}
+\begin{array}{c @ {\hspace{1em}} c @ {\hspace{1em}} l}
+  \multirow{2}{*}{$\boxed{r_1 \doteq \{[x \mapsto 1], [x \mapsto 2]\}}$}
+  & \subseteq
+  & \boxed{r_2 \doteq \{[x \mapsto 1], [x \mapsto 2], [x \mapsto 3]\}} \\[0.5em]
+  & \sqsubseteq
+  & \boxed{r_3 \doteq \{[x \mapsto 1; y \mapsto 3], [x \mapsto 2; y \mapsto 4]\}}
+\end{array}
+\end{equation}
+\cbnewadding{The qualifier $1 \leq x \leq 2$ holds in $r_1$ under both
+the demonic and angelic readings.  First consider its superset $r_2$.
+Under the angelic reading, both $1$ and $2$ must be available choices
+for $x$, so the qualifier continues to hold in $r_2$.  Under the
+demonic reading, every possible value of $x$ must lie between $1$ and
+$2$, so the additional possibility $x=3$ causes the qualifier to
+fail.  Thus, using the subset relation as the accessibility order
+favors the angelic reading and is not neutral between the two
+modalities.  In contrast, refinement from $r_1$ to $r_3$ adds a
+binding for $y$ while preserving exactly the available choices for
+$x$, so the qualifier continues to hold under both readings.}
+The superset order supports an
+overapproximation semantics (demonic), while the subset order supports
 underapproximation (angelic).  Since we need to support both as
 first-class operators, the Kripke order must be \emph{neutral} with
 respect to approximation.  The refinement relation $\sqsubseteq$ has
-exactly this property: $r_1 \sqsubseteq r_2$ holds if $r_2$ extends
-$r_1$ with additional bindings, while preserving all existing
+exactly this property: $r \sqsubseteq r'$ holds if $r'$ extends
+$r$ with additional bindings, while preserving all existing
 environments, neither adding nor removing possible values for the
-variables already in $r_1$'s domain.  Specifically, $\sqsubseteq$
+variables already in $r$'s domain.  Specifically, $\sqsubseteq$
 satisfies the standard bifunctoriality property required of a
 BI-algebra: $r_1 \sqsubseteq r_1'$ and $r_2 \sqsubseteq r_2'$ implies
 $r_1 \times r_2 \sqsubseteq r_1' \times r_2'$, ensuring that
@@ -211,25 +235,26 @@ environments in $r$.
   contain).
 
   Critically, satisfiability of demonic and angelic modalities is also
-  maintained by the refinement relation $\sqsubseteq$. To illustrate,
-  consider the following set of capabilities
+  maintained by refinement.  Consider the following capabilities:
 \begin{align*}
 \begin{array}{c @{\hspace{1.5em}} c @{\hspace{1.5em}} c}
-  {\boxed{r_x }}
+  {\boxed{r_x \doteq \{[x \mapsto 1], [x \mapsto 2]\}}}
   & \sqsubseteq
-  & {\boxed{r_2 \doteq \{[x \mapsto 1; y \mapsto 2], [x \mapsto 2; y \mapsto 7]\}}} \\[0.6em]
-  \vsubseteq & & \vsubseteq \\[0.6em]
+  & {\boxed{r_2 \doteq \{[x \mapsto 1; y \mapsto 2], [x \mapsto 2; y \mapsto 7]\}}} \\[0.2em]
+  \vsubseteq & & \vsubseteq \\[0.2em]
   {\boxed{r_3 \doteq \{[x \mapsto 1]\}}}
   & \sqsubseteq
   & {\boxed{r_4 \doteq \{[x \mapsto 1; y \mapsto 2]\}}}
 \end{array}
 \end{align*}\noindent
-For any angelic formula $\angelic P$ where $r_3 \models \angelic P$,
-then it is also the case $r_2 \models \angelic P$. We have a similar
-result for the demonic formula $\demonic P$, as
-$r_x \models \demonic P$ implies $r_4 \models \demonic P$.  Under the
-latter modality, the subset relation is reversed; however, the
-refinement relation is not.
+For an angelic formula $\angelic P$, $r_3 \models \angelic P$ implies
+$r_4 \models \angelic P$ by horizontal refinement, and then
+$r_2 \models \angelic P$ by the vertical subset relation.  Dually,
+$r_x \models \demonic P$ implies $r_2 \models \demonic P$ by
+horizontal refinement, and then $r_4 \models \demonic P$ by the
+vertical subset relation.  Thus, the direction of the subset relation
+is reversed between the two modalities, but the direction of
+refinement is unchanged.
 
 Finally, to illustrate how the product operation interacts with the
 logic's two conjunction operators, let
