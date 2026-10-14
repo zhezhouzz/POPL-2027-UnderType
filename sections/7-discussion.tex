@@ -23,15 +23,28 @@ decidability.
 
 A syntax-directed typing algorithm, necessary for any efficient
 implementation, would require additional typing annotations to
-constrain the flexibility of the existing typing rules. By themselves,
-these rules are quite unconstrained: the typing rules for match
-statements and functions, for example, admit multiple valid typings.
-It is impractical, however, to ask users to write function signatures
-that anticipate the requirements imposed by all calling contexts. Even
-putting aside the question of typing annotation burden, type-checking
-programs with unrestricted angelic and demonic modalities in the
-typing context can lead to formulae with quantifier alternations that
-lie outside decidable fragments of first-order logic.
+constrain the flexibility of the existing typing rules.
+\cbnewadding{Several aspects of the declarative system complicate such
+an algorithm.  First, the syntax of a term does not determine the
+bunched structure of its context: rules such as \textsc{T-Let} and
+\textsc{T-LetI} require choosing whether contexts are entangled or
+independent, while rules such as \textsc{T-Match} require constructing
+appropriate context partitions.  Second, the modality of an expected
+result type does not by itself determine the modalities against which
+subterms should be checked.  For example, the parameter type of an
+applied function may require its argument to be checked angelically
+even when the result is checked against a demonic type.  Third,
+\textsc{T-Sub} and \textsc{T-CtxSub} delegate substantial reasoning to
+semantic subsumption.  Whereas the declarative system assumes that
+appropriate intermediate types and contexts can be manifested, an
+algorithm must discover them and discharge the resulting semantic
+inclusions.} It is impractical, however, to ask users to write
+function signatures that anticipate the requirements imposed by all
+calling contexts. Even putting aside the question of typing annotation
+burden, type-checking programs with unrestricted angelic and demonic
+modalities in the typing context can lead to formulae with quantifier
+alternations that lie outside decidable fragments of first-order
+logic.
 
 Similar challenges arise in separation-logic-based verification, with
 initial proposals requiring substantial user-supplied annotations for
@@ -40,10 +53,15 @@ has shown that these costs can be substantially reduced through
 automated inference techniques, e.g., bi-abduction~\cite{CD11}, which
 enables scalable precondition and frame inference, and underpins
 modern automated separation-logic analyzers~\cite{DFLO19}.
-Restricting where angelic and demonic modalities can appear can also
-help guarantee decidable verification conditions, as has been
-demonstrated in related settings~\cite{CoverageType}.  Alternatively,
-rather than pursuing full automation, we might consider providing
+\cbnewadding{The case studies in \autoref{sec:case} illustrate
+potential applications of the general foundation.  Moreover,
+restricting where angelic and demonic modalities can appear can yield
+effective verification procedures: Coverage Types~\cite{CoverageType}
+provide a restricted instance in which function parameters are
+demonic.  Identifying other useful restrictions and investigating
+typing algorithms for context types in their full generality are
+important directions for future work.} Alternatively, rather than
+pursuing full automation, we might consider providing
 support for context types within an interactive mechanized
 verification system like Rocq in the spirit of frameworks like
 Iris~\cite{Iris} or VST~\cite{AD+14}.  In this setting, users would
