@@ -26,6 +26,24 @@ approach~\cite{RamsayIncorType} that internalizes negation directly as
 a complement operator on types to support incorrectness reasoning.
 Coverage types~\cite{CoverageType} underapproximate
 test-input-generator behavior to establish coverage completeness.
+\cbnewadding{\citet{UnnoST18} also combine universal and existential
+reasoning in a refinement type system for nondeterministic higher-order
+programs.  Their existential type
+$\{\vnu{:}b \mid \phi\}^{\exists\exists}$ states that some execution
+produces a value satisfying $\phi$, whereas our angelic refinement
+$\urt{b}{\phi}$ guarantees that every value satisfying $\phi$ is
+reachable, which is a strictly stronger guarantee.  Moreover, their
+flat typing environments do not record
+whether existentially quantified bindings are entangled or independent.
+For example, existential bindings for both $x$ and $y$ cannot
+distinguish the contexts $\Gamma_{\mathit{en}}$ and
+$\Gamma_{\mathit{dis}}$ in \autoref{eqn:Ctxen} and
+\autoref{eqn:Ctxdis}: they assert
+the existence of suitable witnesses, but not that all independent
+combinations of those witnesses are available.  Consequently, their
+system has no counterpart of the independent arrow in the type of
+\ref{ex:div}, which requires the choices for its second argument to be
+independent of those for its first.}
 While these efforts emphasize an algorithmic characterization of
 reachability within a type system, they do not consider the logical
 underpinning that relates reachability and safety claims as we do
