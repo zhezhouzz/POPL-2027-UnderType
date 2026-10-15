@@ -18,7 +18,7 @@ via three real-world case studies.
 ?$\vdash$? let f (x: int) (y: int) =
     if y > 10 then (g x) + 1
     else x + 1
-    : ?$\Code{x}{:}\ \urt{\Int}{\vnu = 0} \ctsarr \Code{y}{:}\urt{\Int}{0 \leq \vnu \leq 10} \ctsarr$?
+    : ?$\Code{x}{:}\ \urt{\Int}{\vnu = 0} \ctsarr \Code{y}{:}\urt{\Int}{0 \leq \vnu \leq 10} \ctwand$?
         ?$\urt{\Int}{\vnu = 1}$?
 \end{minted}
     \subcaption{May-analysis helps must-analysis.}
@@ -58,15 +58,15 @@ correspond to must-analysis summaries (reachability).
 
 Figure~\ref{fig:may-must-analysis}~(a) illustrates how a may-analysis
 result on $\Code{g}$ enables a must-analysis result on
-$\Code{f}$. $\Code{f}$'s type asserts that it must return 1, given
-that $\Code{x}$ can be 0 and $\Code{y}$ can be any value in
-[0,10]. The true branch ($\Code{y} > 10$) would require
-$\Code{g}\;\Code{x} = 0$, but $\Code{g}$'s demonic type precludes
-this.  The true branch will therefore never provide a valid witness
-for $\Code{f}$'s reachability guarantee. Focusing on the false branch
-instead by angelically choosing $\Code{y} \in [0, 10]$, reveals that
-calling $f$ with $\Code{x = 0}$ causes it to return
-$\Code{x} + 1 = 1$, and justifying the target type.
+$\Code{f}$. \cbnewadding{$\Code{f}$'s type asserts that it must return
+1 when $\Code{x}$ can be 0 and, independently, $\Code{y}$ can be any
+value in $[0,10]$.  The independent arrow ensures that these
+witnesses occur together: $\Code{x}=0$ can be paired with every
+witness for $\Code{y}\in[0,10]$.  Under these joint witnesses, the
+false branch returns $\Code{x}+1=1$.  Meanwhile, the true branch would
+require $\Code{g}\;\Code{x}=0$ to return 1, which $\Code{g}$'s demonic
+type precludes; its may-analysis summary therefore rules out that
+branch as a source of witnesses for the must-analysis result.}
 
 Figure~\ref{fig:may-must-analysis}~(b) illustrates how a must-analysis
 result on $\Code{g}$ enables a \emph{tight} may-analysis result on
