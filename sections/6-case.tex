@@ -16,7 +16,7 @@ via three real-world case studies.
   val g : ?$\Code{i}{:}\ort{\Int}{\top}\ctsarr\ort{\Int}{\vnu \neq 0}$?
 
 ?$\vdash$? let f (x: int) (y: int) =
-    if y > 10 then (g x) + 1
+    if y >= 10 then (g x) + 1
     else x + 1
     : ?$\Code{x}{:}\ \urt{\Int}{\vnu = 0} \ctsarr \Code{y}{:}\urt{\Int}{0 \leq \vnu \leq 10} \ctwand$?
         ?$\urt{\Int}{\vnu = 1}$?
@@ -62,11 +62,19 @@ $\Code{f}$. \cbnewadding{$\Code{f}$'s type asserts that it must return
 1 when $\Code{x}$ can be 0 and, independently, $\Code{y}$ can be any
 value in $[0,10]$.  The independent arrow ensures that these
 witnesses occur together: $\Code{x}=0$ can be paired with every
-witness for $\Code{y}\in[0,10]$.  Under these joint witnesses, the
-false branch returns $\Code{x}+1=1$.  Meanwhile, the true branch would
-require $\Code{g}\;\Code{x}=0$ to return 1, which $\Code{g}$'s demonic
-type precludes; its may-analysis summary therefore rules out that
-branch as a source of witnesses for the must-analysis result.}
+witness for $\Code{y}\in[0,10]$.
+The context can then be divided into the following two parts, aligned
+with the control flow of the program:
+{\small\begin{align*}
+  \Code{x}{:}\urt{\Int}{\vnu = 0}\ctstar\Code{y}{:}\urt{\Int}{0 \leq \vnu \leq 10} \ctsubseteq{\{\Code{x,y}\}} &\Code{x}{:}\urt{\Int}{\vnu = 0}\ctstar\Code{y}{:}\urt{\Int}{\vnu = 10} \interty \ort{\Int}{\vnu \geq 10}
+  \\ & \ctoplus  \Code{x}{:}\urt{\Int}{\vnu = 0}\ctstar\Code{y}{:}\urt{\Int}{0 \leq \vnu < 10} \interty \ort{\Int}{\vnu < 10}
+\end{align*}}\noindent
+Because $x$ is independent of $y$, its angelic guarantee is preserved
+in both the true and false branches.  The true branch could return 1
+only if $\Code{g}\;\Code{x}=0$, which $\Code{g}$'s demonic type
+precludes.  Its may-analysis summary therefore rules out that branch
+as a source of witnesses, while the false branch establishes that the
+program returns $\Code{x}+1=1$.}
 
 Figure~\ref{fig:may-must-analysis}~(b) illustrates how a must-analysis
 result on $\Code{g}$ enables a \emph{tight} may-analysis result on
@@ -215,7 +223,7 @@ Without this disjointness, a carefully crafted context can hide the
 bug, as shown below. Here $\Code{l1}$ and $\Code{l2}$ each
 \begin{wrapfigure}{l}{.4\textwidth}
   \begin{center}
-    \vspace*{-.1in}
+    \vspace*{-.17in}
 \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
   let l1 = sorted_list_gen () in
   let l2 = match l1 with
@@ -224,12 +232,32 @@ bug, as shown below. Here $\Code{l1}$ and $\Code{l2}$ each
   merge l1 l2
 \end{minted}
 \end{center}
+\vspace*{-.1in}
 \end{wrapfigure}
 range over all sorted lists, given by $\Code{sorted\_list\_gen}$, yet
 they cannot both be non-empty simultaneously.  Under this environment,
 the bug in \Code{merge} cannot be triggered, since the case where both inputs
 are non-empty (line $5$) is never reached.
 
+\cbnewadding{To establish in our context type system that \Code{merge}
+can produce an unsorted result, we can first use \textsc{T-Fix} to
+assign it the following precise type:
+\begin{align*}
+  &\Code{l1}{:}\ort{\List[\Code{nat}]}{\I{sorted}(\vnu)}
+  \ctsarr \Code{l2}{:}\ort{\List[\Code{nat}]}{\I{sorted}(\vnu)} \ctsarr \ort{\List[\Code{nat}]}{\vnu = R_{\Code{merge}}(l_1, l_2)}
+\end{align*}\noindent
+where $R_{\Code{merge}}$ exactly characterizes the result of the merge
+function.  Semantic subsumption then yields the original type.  A full
+characterization of \Code{merge}, however, is unnecessary; the
+following type suffices:
+\begin{align*}
+  &\Code{l1}{:}\ort{\List[\Code{nat}]}{\I{sorted}(\vnu)}
+  \ctsarr \Code{l2}{:}\ort{\List[\Code{nat}]}{\I{sorted}(\vnu)} \\
+  &\qquad \ctsarr \textcolor{magenta}{\mbox{\rm\textbf{\{}}} \vnu{:}\;\List[\Code{nat}] \;|\; (l_1 = [] \land l_2 = [] \impl \vnu = []) \land (l_1 = [2] \land l_2 = [4] \impl \vnu = [2;4]) \land
+  \\&\qquad\qquad (l_1 = [1;2] \land l_2 = [3;4] \impl \vnu = [1;3;2;4])  \textcolor{magenta}{\mbox{\rm\textbf{\}}}}
+\end{align*}\noindent
+This qualifier records exactly the recursive execution trace needed
+for the counterexample above.}
 
 %% %% We illustrate the expressiveness of context types with three
 %% %% case studies: compositional may- and must-style reasoning
