@@ -12,8 +12,9 @@ values of basic type across different executions:
 \begin{align*}
   \primop ::= \quad & \ldots ~|~ \Code{gen}_b ~|~ \ldots
 \end{align*}
-\cbnewadding{We write $e_1 \oplus e_2$ for nondeterministic choice, syntactic sugar
-for $\zif{\Code{gen_{bool} \;()}}{e_1}{e_2}$.}
+\cbnewadding{Using $\Code{gen}$, we can define a nondeterministic
+  choice operator
+  $e_1 \oplus e_2 \triangleq \zif{\Code{gen_{bool} \;()}}{e_1}{e_2}$.}
 Unsurprisingly, the wrinkle introduced by nondeterminism is related to
 dependence: whereas the reachability properties of a \langname{} term
 were fundamentally tied with the environment under which it is

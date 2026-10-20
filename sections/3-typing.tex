@@ -315,21 +315,20 @@ the denotation of $\tau_1$ are also inhabitants of the denotation of
 $\tau_2$ under the denotation of context $\Gamma$. The refinement
 relation between typing contexts, $\Gamma_1 \ctsubseteq{X} \Gamma_2$
 can be understood as ``any term that has type $\tau$ under $\Gamma_2$
-can also be typed with $\tau$ under $\Gamma_1$'', where the comparison
-is confined to a particular set of variables $X$.
-\cbnewadding{Its direction is deliberately opposite to ordinary type
-subtyping because typing contexts occur as assumptions: the semantic
-relation ensures that every capability satisfying $\Gamma_1$ can be
-matched on $X$ by one satisfying $\Gamma_2$.  Hence, a derivation under
-$\Gamma_2$ can be reused under $\Gamma_1$, as \textsc{T-CtxSub}
-states.}
-For example,
+can also be typed with $\tau$ under $\Gamma_1$''. The comparison is
+confined to a particular set of variables $\textcolor{CBOrange}{X}$;
+\textsc{T-CtxSub} restricts $\ctsubseteqA{}$ to the free variables of
+a target term and type.  For example,
 \begin{align*}
   x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\urt{\Nat}{\top}
   \ctsubseteq{\{y\}} y{:}\urt{\Nat}{\vnu > 0} \ctcomma z{:}\urt{\Nat}{\top}
 \end{align*}
-The \textsc{T-CtxSub} rule restricts the context refinement relation
-to the free variables of a target term and type.
+\cbnewadding{The direction of the relation is deliberately opposite to
+  ordinary type subtyping because typing contexts occur as
+  assumptions: the semantic relation ensures that every capability
+  satisfying $\Gamma_1$ can be matched on $X$ by one satisfying
+  $\Gamma_2$.  Hence, a typing derivation under $\Gamma_2$ can be
+  reused under $\Gamma_1$ by applying \textsc{T-CtxSub}.}
 
 \begin{example}[Substructural rules] We can derive the following
   standard substructural rules from \textsc{T-CtxSub}:
@@ -359,20 +358,30 @@ to the free variables of a target term and type.
 \end{example}
 
 Similar to other refinement type systems, we require all well-typed
-terms to be total. \cbnewadding{Our angelic types describe values that
-must be reachable, but divergence is not itself a value; consequently,
-an angelic type such as $\urt{b}{\top}$ does not account for a
-diverging execution.  Partiality could be represented by adding an
-explicit outcome (for example, an option type) for divergence, but
-propagating that outcome throughout the type system would introduce
-complexity orthogonal to our treatment of safety and reachability.}
-Thus, when typing the body of a recursive function,
-\textsc{T-Fix} requires that the first argument of any recursive
-application is decreasing according to some well-founded relation
-$\prec$. As a consequence, the first parameter of a recursive function
-needs to be a base type and cannot have an angelic refinement.  To see
-why, observe that if we relaxed this restriction, the recursive
-argument $v_{\Code{arg}}$ could have the following type: %
+terms to be total. \cbnewadding{Note that an angelic type does not say
+  anything about whether a term diverges: a term of type
+  $\urt{nat}{\vnu < 2}$ may diverge, as long as it can also evaluate
+  to $\Code{0}$ and $\Code{1}$. This is consistent with our
+  interpretation of of angelic types as underapproximations of program
+  behavior.\footnote{While we could extend our type system so that
+    angelic types could explicitly account for diverging behaviors,
+    doing so would complicate the system in a way that is orthogonal
+    to our treatment of safety and reachability.}}
+% BD: Original note: \cbnewadding{Our angelic types describe values that
+% must be reachable, but divergence is not itself a value; consequently,
+% an angelic type such as $\urt{b}{\top}$ does not account for a
+% diverging execution.  Partiality could be represented by adding an
+% explicit outcome (for example, an option type) for divergence, but
+% propagating that outcome throughout the type system would introduce
+% complexity orthogonal to our treatment of safety and reachability.}
+Thus, when typing the body of a recursive function, \textsc{T-Fix}
+uses a demonic refinement to require that the first argument of any
+recursive application decreases according to some well-founded
+relation $\prec$. As a consequence, the first parameter of a recursive
+function needs to be a base type and cannot have an angelic
+refinement.  To see why, observe that if we relaxed this restriction,
+the recursive argument $v_{\Code{arg}}$ could have the following
+type: %
 \begin{align*}
   x{:}\urt{b}{\phi} \vdash v_{\Code{arg}} : \urt{b}{\phi} \interty
   \ort{b}{\vnu \prec x}
@@ -440,43 +449,42 @@ afterwards, provided the subtyping relation holds.
 When $x = 0$, the program always returns $0$; when $x > 0$, $x - 1$ is a valid argument for the type of $\Code{sub}$, with the well-foundedness constraint $\vnu \prec x$ satisfied. Moreover, when $y$ can cover all values less than or equal to $x$, $y - 1$ can cover all values less than or equal to $x - 1$.
   \end{example}
 
-Uses of datatype constructors and built-in operations are typed using
-the \textsc{T-AppOp} rule, which is similar to the function
-application rule but relies on the operator typing function $\Code{Ty}$. This
-function uses the intersection of an angelic and demonic refinement to
-assign a precise\cbnewadding{\footnote{This use of precise types also extends to datatype constructors. For example, suppose the list constructor has the result
-qualifier $\Code{head}(\vnu,h) \land \Code{tail}(\vnu,t)$ for
-parameters $h$ and $t$.  Applying it to $1$ and $[1;2]$ substitutes
-these values for the parameters, yielding
-$\Code{head}(\vnu,1) \land \Code{tail}(\vnu,[1;2])$, which precisely
-characterizes the list $[1;1;2]$.}} (singleton) type to operations: %
+  Uses of datatype constructors and built-in operations are typed
+  using the \textsc{T-AppOp} rule, which is similar to the function
+  application rule but relies on the operator typing function
+  $\Code{Ty}$. This function uses the intersection of an angelic and
+  demonic refinement to assign a precise (i.e., singleton) type to
+  operations: %
 \begin{align*}
   \Code{Ty}(\Code{O}) &= \ort{\Nat}{\vnu = 0} \interty \urt{\Nat}{\vnu = 0} \\
   \Code{Ty}(\Code{S}) &= n{:}\ort{\Nat}{\top} \ctsarr \ort{\Nat}{\vnu = n+1} \interty \urt{\Nat}{\vnu = n + 1} \\
   \Code{Ty}(+) &= x{:}\ort{\Nat}{\top} \ctsarr y{:}\ort{\Nat}{\top} \ctsarr \ort{\Nat}{\vnu = x+y} \interty \urt{\Nat}{\vnu = x + y}
 \end{align*}
-These sorts of precise types allow the rule \textsc{T-AppOp} to
-forward-infer constraints from operator application results.
+\cbnewadding{Datatype constructors are similarly equipped with precise
+  types. As an example, suppose that \Code{Cons} has the result
+  qualifier $\Code{head}(\vnu,h) \land \Code{tail}(\vnu,t)$ for
+  parameters $h$ and $t$. Applying it to $1$ and $[1;2]$ substitutes
+  these values for the parameters, yielding
+  $\Code{head}(\vnu,1) \land \Code{tail}(\vnu,[1;2])$, which precisely
+  characterizes the list $[1;1;2]$.} These sorts of precise types
+allow the rule \textsc{T-AppOp} to forward-infer constraints from
+operator application results.
 
 The rule for match-expressions requires the target type context to be
-divided into a sum of contexts (e.g., using \textsc{T-CtxSub}),
-corresponding to the \emph{reachable} control flows under which
+divided into a sum of contexts (e.g., using \textsc{T-CtxSub}) that
+correspond to the \emph{reachable} control flows under which
 individual branches will be executed; the type of the entire
 expression is the sum of the types of these branches.
-\cbnewadding{The index set $I$ identifies the reachable branches, while
-its complement $J$ identifies the unreachable branches; no reordering
-of source-level branches is required.  For every $i \in I$, the rule
-requires $\Gamma_i$ to provide types for the pattern variables
-$\overline{y_i}$ introduced by branch $i$.\footnote{To align the
-contexts of the reachable branches and thereby enable their
-combination with $\ctoplus$, each $\Gamma_i$ must additionally provide
-types for the pattern variables introduced by the other reachable
-branches, even when they are not used by branch $i$.  Such variables
-can simply be assigned types with the top qualifier.}  The first premise then
-establishes that $d_i\;\overline{y_i}$ precisely matches the
-discriminee $v$, and the same context types the corresponding branch
-body $e_i$.  For every $j \in J$, the final premise establishes that
-the remaining constructor cannot match $v$.}
+\cbnewadding{\textsc{T-Match} uses a pair of (disjoint) index sets $I$
+  and $J$ to identify the reachable and unreachable branches. For
+  every $i \in I$, the rule requires a) a type context, $\Gamma_i$,
+  that provides types for the pattern variables $\overline{y_i}$ of
+  the $i$th branch, b) that $d_i\;\overline{y_i}$ \emph{precisely}
+  matches the discriminee $v$ under $\Gamma_i$, and c) that the
+  corresponding branch body $e_i$ can also be typed under $\Gamma_i$.
+  Conversely, for every $j \in J$, the final premise of
+  \textsc{T-Match} establishes that the remaining constructor cannot
+  match $v$.}
 
 \begin{example}[Pattern matching] The first two sets of assumptions of
   \textsc{T-Match} deal with the reachable branches of a
@@ -489,13 +497,20 @@ the remaining constructor cannot match $v$.}
   x{:}\urt{\Nat}{\top} \vdash \zmatchNat{x}{3}{y}{5} : \ort{\Nat}{\vnu < 4} \ctoplus \ort{\Nat}{\top}
 \end{align*}
 Here, we want to show that the angelic context $x{:}\urt{\Nat}{\top}$
-ensures that it is possible for \ref{ex:oplusWeak} to reach some value
-less than $4$. Both branches in \ref{ex:oplusWeak} are reachable, so
+ensures that it is possible for this term to reach some value less
+than $\Code{4}$. Both branches in \ref{ex:oplusWeak} are reachable, so
 we first partition the type context using \textsc{T-CtxSub} into
-contexts covering each branch:
-\cbnewadding{As usual for a declarative type system, these precise
-intermediate branch contexts may be manifested through semantic
-subsumption; they need not be inferred directly from the term syntax.}
+contexts covering each branch: \cbnewadding{Since this is a
+  declarative type system, we can freely manifest the precise
+  intermediate contexts needed by each branch via the context
+  refinement relation; they need not be inferred directly from the
+  syntax of \ref{ex:oplusWeak}.  \footnote{To ensure that these typing
+    contexts can be combined via $\ctoplus$, each $\Gamma_i$ must also
+    provide bindings for the pattern variables used by the other
+    reachable branches, even though they are not used by the $i$th
+    branch.  These variables can simply be assigned types with the top
+    qualifier, as $\Gamma_{\Code{TBranch}}$ does for the unused
+    pattern variable $y$.}} %
 {\small %
   \begin{align*}
     &x{:}\urt{\Nat}{\top} \ctsubseteq{\{x\}} \\
@@ -507,8 +522,6 @@ subsumption; they need not be inferred directly from the term syntax.}
       \urt{\Nat}{\vnu > 0} \ctcomma
       y{:}\ort{\Nat}{\vnu = x - 1} }_{\Gamma_{\Code{FBranch}}}
   \end{align*}}\noindent
-\cbnewadding{In $\Gamma_{\Code{TBranch}}$, the unused pattern variable
-$y$ is assigned a type with the top qualifier.}
 These contexts satisfy the first set of assumptions of
 \textsc{T-Match}:
 \begin{align*}
