@@ -58,23 +58,34 @@ correspond to must-analysis summaries (reachability).
 
 Figure~\ref{fig:may-must-analysis}~(a) illustrates how a may-analysis
 result on $\Code{g}$ enables a must-analysis result on
-$\Code{f}$. \cbnewadding{$\Code{f}$'s type asserts that it must return
-1 when $\Code{x}$ can be 0 and, independently, $\Code{y}$ can be any
-value in $[0,10]$.  The independent arrow ensures that these
-witnesses occur together: $\Code{x}=0$ can be paired with every
-witness for $\Code{y}\in[0,10]$.
-The context can then be divided into the following two parts, aligned
-with the control flow of the program:
-{\small\begin{align*}
-  \Code{x}{:}\urt{\Int}{\vnu = 0}\ctstar\Code{y}{:}\urt{\Int}{0 \leq \vnu \leq 10} \ctsubseteq{\{\Code{x,y}\}} &\Code{x}{:}\urt{\Int}{\vnu = 0}\ctstar\Code{y}{:}\urt{\Int}{\vnu = 10} \interty \ort{\Int}{\vnu \geq 10}
-  \\ & \ctoplus  \Code{x}{:}\urt{\Int}{\vnu = 0}\ctstar\Code{y}{:}\urt{\Int}{0 \leq \vnu < 10} \interty \ort{\Int}{\vnu < 10}
-\end{align*}}\noindent
-Because $x$ is independent of $y$, its angelic guarantee is preserved
-in both the true and false branches.  The true branch could return 1
-only if $\Code{g}\;\Code{x}=0$, which $\Code{g}$'s demonic type
-precludes.  Its may-analysis summary therefore rules out that branch
-as a source of witnesses, while the false branch establishes that the
-program returns $\Code{x}+1=1$.}
+$\Code{f}$. \cbnewadding{$\Code{f}$'s target type asserts that it can
+  return $\Code{1}$ when $\Code{x}$ can be $\Code{0}$ and $\Code{y}$
+  can be any value between $\Code{0}$ and $\Code{10}$.  The
+  independent arrow ensures that each input can be chosen freely from
+  the other, i.e., $\Code{x}\mapsto \Code{0}$ can be paired with every
+  $\Code{y}\in \Code{[0,10}]$.  The context used to type the body of
+  $\Code{f}$ can thus be divided into the following partitions, each
+  corresponding to one of the control flows of the function: %
+  {\small
+    \begin{align*}
+      \Code{x}{:}\urt{\Int}{\vnu = 0}\ctstar\Code{y}{:}\urt{\Int}{0
+        \leq \vnu \leq 10} \ctsubseteq{\{\Code{x,y}\}}
+      &\Code{x}{:}\urt{\Int}{\vnu =
+        0}\ctstar\Code{y}{:}\urt{\Int}{\vnu = 10} \interty
+      \ort{\Int}{\vnu \geq 10} \\ & \ctoplus
+      \Code{x}{:}\urt{\Int}{\vnu = 0}\ctstar\Code{y}{:}\urt{\Int}{0
+        \leq \vnu < 10} \interty \ort{\Int}{\vnu < 10}
+    \end{align*}
+  }
+  \noindent
+  Since $x$ is independent of $y$, its angelic guarantee is preserved
+  in both contexts.  Observe that the $\Code{then}$ branch can only
+  return $\Code{1}$ when $\Code{g}\;\Code{x}=\Code{0}$, a possibility
+  precluded by $\Code{g}$'s demonic result type. This may-analysis
+  summary therefore allows us to rule out the $\Code{then}$ branch as
+  a source of witnesses.  This in turn helps us focus our efforts on
+  the $\Code{else}$ branch, which is able witness that $\Code{f}$ can
+  return $\Code{1}$.}
 
 Figure~\ref{fig:may-must-analysis}~(b) illustrates how a must-analysis
 result on $\Code{g}$ enables a \emph{tight} may-analysis result on

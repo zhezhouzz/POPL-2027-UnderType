@@ -1,16 +1,16 @@
 \section{Discussion}%
 \label{sec:discussion}
 
-\cbnewadding{This paper is primarily foundational: our goal is to
-develop a unified type theory and semantic account of safety and
-reachability reasoning in a functional language.  Context types make
-demonic and angelic modalities first-class and allow them to be
-freely combined within the same type, context, and typing judgement,
-while bunched contexts record whether the choices associated with
-different variables are entangled or independent.  We therefore
-prioritize the expressiveness and semantic foundations of the type
-system over the design of a concrete typing algorithm or practical
-verification tool.}
+\cbnewadding{The motivations for our type system are primarily
+  foundational: our goal is to provide a unified framework for safety
+  and reachability reasoning in a functional language. We have
+  therefore prioritized the semantic expressivity of the system over
+  the design of a concrete typing algorithm or practical verification
+  tool. As a consequence, our system allows demonic and angelic
+  modalities to be freely combined within the same type, context, and
+  typing judgement, relying on bunched contexts to record whether the
+  choices associated with different variables are entangled or
+  independent.  }
 
 Our context type system combines the strengths of refinement type
 systems and BI-logic-based verification approaches, enabling
@@ -24,27 +24,28 @@ decidability.
 A syntax-directed typing algorithm, necessary for any efficient
 implementation, would require additional typing annotations to
 constrain the flexibility of the existing typing rules.
-\cbnewadding{Several aspects of the declarative system complicate such
-an algorithm.  First, the syntax of a term does not determine the
-bunched structure of its context: rules such as \textsc{T-Let} and
-\textsc{T-LetI} require choosing whether contexts are entangled or
-independent, while rules such as \textsc{T-Match} require constructing
-appropriate context partitions.  Second, the modality of an expected
-result type does not by itself determine the modalities against which
-subterms should be checked.  For example, the parameter type of an
-applied function may require its argument to be checked angelically
-even when the result is checked against a demonic type.  Third,
-\textsc{T-Sub} and \textsc{T-CtxSub} delegate substantial reasoning to
-semantic subsumption.  Whereas the declarative system assumes that
-appropriate intermediate types and contexts can be manifested, an
-algorithm must discover them and discharge the resulting semantic
-inclusions.} It is impractical, however, to ask users to write
-function signatures that anticipate the requirements imposed by all
-calling contexts. Even putting aside the question of typing annotation
-burden, type-checking programs with unrestricted angelic and demonic
-modalities in the typing context can lead to formulae with quantifier
-alternations that lie outside decidable fragments of first-order
-logic.
+\cbnewadding{Several aspects of the declarative system presented here
+  complicate such an algorithm. First, the syntax of a term does not
+  determine the bunched structure of its context: let expressions, for
+  example, can be typed using either the \textsc{T-Let} and
+  \textsc{T-LetI} rules, and the choice dictates whether the contexts
+  are entangled or independent. Similarly, rules such as
+  \textsc{T-Match} require constructing appropriate context partitions
+  for each reachable branch. Next, the modality of a target result
+  type does not by itself determine the modalities against which
+  subterms should be checked: the parameter type of an applied
+  function, for example, may require its argument to be checked
+  angelically even when the result is checked against a demonic type.}
+It is impractical, however, to ask users to write function signatures
+that anticipate the requirements imposed by all calling
+contexts. \cbnewadding{Even putting aside the question of typing
+  annotation burden, the \textsc{T-Sub} and \textsc{T-CtxSub} rules
+  delegate substantial reasoning to semantic subsumption relations;
+  any type-checking procedure must be able to automatically discharge
+  any obligations that arise from these rules.} Allowing unrestricted
+angelic and demonic modalities in the typing context can furthermore
+lead to formulae with quantifier alternations that lie outside
+decidable fragments of first-order logic.
 
 Similar challenges arise in separation-logic-based verification, with
 initial proposals requiring substantial user-supplied annotations for
@@ -53,21 +54,21 @@ has shown that these costs can be substantially reduced through
 automated inference techniques, e.g., bi-abduction~\cite{CD11}, which
 enables scalable precondition and frame inference, and underpins
 modern automated separation-logic analyzers~\cite{DFLO19}.
-\cbnewadding{The case studies in \autoref{sec:case} illustrate
-potential applications of the general foundation.  Moreover,
-restricting where angelic and demonic modalities can appear can yield
-effective verification procedures: Coverage Types~\cite{CoverageType}
-provide a restricted instance in which function parameters are
-demonic.  Identifying other useful restrictions and investigating
-typing algorithms for context types in their full generality are
-important directions for future work.} Alternatively, rather than
-pursuing full automation, we might consider providing
-support for context types within an interactive mechanized
-verification system like Rocq in the spirit of frameworks like
-Iris~\cite{Iris} or VST~\cite{AD+14}.  In this setting, users would
-retain fine-grained control over typing choices, with specialized
-context type-aware tactics used to facilitate local type inference,
-search, and backtracking.
+\cbnewadding{The case studies of \autoref{sec:case} illustrate
+  potential applications of the general foundation developed in this
+  work.  Moreover, restricting where angelic and demonic modalities
+  can appear has previously been shown to yield effective verification
+  procedures: Coverage Types~\cite{CoverageType} provide a restricted
+  instance in which function parameters are demonic.  Identifying
+  other useful restrictions and investigating typing algorithms for
+  context types in their full generality are important directions for
+  future work.}  Alternatively, rather than pursuing full automation,
+we might consider providing support for context types within an
+interactive mechanized verification system like Rocq in the spirit of
+frameworks like Iris~\cite{Iris} or VST~\cite{AD+14}.  In this
+setting, users would retain fine-grained control over typing choices,
+with specialized context type-aware tactics used to facilitate local
+type inference, search, and backtracking.
 
 
 
