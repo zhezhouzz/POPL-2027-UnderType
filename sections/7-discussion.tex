@@ -1,16 +1,15 @@
 \section{Discussion}%
 \label{sec:discussion}
 
-\cbnewadding{The motivations for our type system are primarily
+\cbnewadding{The motivation for our type system is primarily
   foundational: our goal is to provide a unified framework for safety
-  and reachability reasoning in a functional language. We have
-  therefore prioritized the semantic expressivity of the system over
-  the design of a concrete typing algorithm or practical verification
-  tool. As a consequence, our system allows demonic and angelic
-  modalities to be freely combined within the same type, context, and
-  typing judgement, relying on bunched contexts to record whether the
-  choices associated with different variables are entangled or
-  independent.  }
+  and reachability reasoning in a functional language. Consequently,
+  we have prioritized issues related to semantic expressivity over
+  more practical considerations. By doing so, our type system allows
+  demonic and angelic modalities to be freely combined within the same
+  type, context, and typing judgement, relying on bunched contexts to
+  record whether the choices associated with different variables are
+  entangled or independent.  }
 
 Our context type system combines the strengths of refinement type
 systems and BI-logic-based verification approaches, enabling
@@ -21,17 +20,17 @@ systems, including the need for some form of user-provided guidance
 and the inherent tension between richness of specification and
 decidability.
 
-A syntax-directed typing algorithm, necessary for any efficient
-implementation, would require additional typing annotations to
-constrain the flexibility of the existing typing rules.
+For example, a syntax-directed typing algorithm, necessary for any
+efficient implementation, would require additional typing annotations
+to constrain the flexibility of the existing typing rules.
 \cbnewadding{Several aspects of the declarative system presented here
   complicate such an algorithm. First, the syntax of a term does not
   determine the bunched structure of its context: let expressions, for
-  example, can be typed using either the \textsc{T-Let} and
+  example, can be typed using either the \textsc{T-Let} or
   \textsc{T-LetI} rules, and the choice dictates whether the contexts
   are entangled or independent. Similarly, rules such as
   \textsc{T-Match} require constructing appropriate context partitions
-  for each reachable branch. Next, the modality of a target result
+  for each reachable branch. Second, the modality of a target result
   type does not by itself determine the modalities against which
   subterms should be checked: the parameter type of an applied
   function, for example, may require its argument to be checked
@@ -42,33 +41,34 @@ contexts. \cbnewadding{Even putting aside the question of typing
   annotation burden, the \textsc{T-Sub} and \textsc{T-CtxSub} rules
   delegate substantial reasoning to semantic subsumption relations;
   any type-checking procedure must be able to automatically discharge
-  any obligations that arise from these rules.} Allowing unrestricted
+  the obligations that arise from these rules.} Allowing unrestricted
 angelic and demonic modalities in the typing context can furthermore
 lead to formulae with quantifier alternations that lie outside
 decidable fragments of first-order logic.
 
-Similar challenges arise in separation-logic-based verification, with
-initial proposals requiring substantial user-supplied annotations for
-tasks such as frame inference and invariant discovery. Subsequent work
-has shown that these costs can be substantially reduced through
-automated inference techniques, e.g., bi-abduction~\cite{CD11}, which
-enables scalable precondition and frame inference, and underpins
-modern automated separation-logic analyzers~\cite{DFLO19}.
-\cbnewadding{The case studies of \autoref{sec:case} illustrate
-  potential applications of the general foundation developed in this
-  work.  Moreover, restricting where angelic and demonic modalities
-  can appear has previously been shown to yield effective verification
-  procedures: Coverage Types~\cite{CoverageType} provide a restricted
-  instance in which function parameters are demonic.  Identifying
-  other useful restrictions and investigating typing algorithms for
-  context types in their full generality are important directions for
-  future work.}  Alternatively, rather than pursuing full automation,
-we might consider providing support for context types within an
-interactive mechanized verification system like Rocq in the spirit of
-frameworks like Iris~\cite{Iris} or VST~\cite{AD+14}.  In this
-setting, users would retain fine-grained control over typing choices,
-with specialized context type-aware tactics used to facilitate local
-type inference, search, and backtracking.
+We note that similar challenges arise in separation logic-based
+verification tools, with initial proposals requiring substantial
+user-supplied annotations for tasks such as frame inference and
+invariant discovery. Subsequent work has shown that these costs can be
+substantially reduced through automated inference techniques, e.g.,
+bi-abduction~\cite{CD11}, which enables scalable precondition and
+frame inference, and that underpin modern automated separation logic
+analyzers~\cite{DFLO19}.  \cbnewadding{The case studies of
+  \autoref{sec:case} illustrate potential applications of the general
+  foundation developed in this work.  Moreover, restricting where
+  angelic and demonic modalities can appear has previously been shown
+  to yield effective verification procedures: for example, Coverage
+  Types~\cite{CoverageType} provide a restricted instance in which
+  function parameters must be demonic.  Identifying other useful
+  restrictions and investigating typing algorithms for context types
+  in their full generality are important directions for future work.}
+Alternatively, rather than pursuing full automation, we might consider
+providing support for context types within an interactive mechanized
+verification system like Rocq in the spirit of frameworks like
+Iris~\cite{Iris} or VST~\cite{AD+14}.  In this setting, users would
+retain fine-grained control over typing choices, with specialized
+context type-aware tactics used to facilitate local type inference,
+search, and backtracking.
 
 
 

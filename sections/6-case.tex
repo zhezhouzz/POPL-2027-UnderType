@@ -256,7 +256,7 @@ they cannot both be non-empty simultaneously.  Under this environment,
 the bug in \Code{merge} cannot be triggered, since the case where both inputs
 are non-empty (line $5$) is never reached.
 
-\cbnewadding{To establish in our context type system that \Code{merge}
+\cbnewadding{To establish that \Code{merge}
 can produce an unsorted result, we first typecheck it against the following type:
 \begin{align*}
   &\Code{l1}{:}\ort{\List[\Code{nat}]}{\I{sorted}(\vnu)}
