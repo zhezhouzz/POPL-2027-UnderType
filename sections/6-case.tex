@@ -40,9 +40,11 @@ via three real-world case studies.
     \subcaption{Must-analysis helps may-analysis.}
     \label{fig:may-must-inter}
 \end{subfigure}
+\vspace*{-.1in}
 \caption{Compositional may- and must-style reasoning with context
   types.}
 \label{fig:may-must-analysis}
+\vspace*{-.1in}
 % BD: I changed the signature of the second example to use the sum
 % operator, in order to emphasize that it now has a precise may-type.
 \end{figure}
@@ -118,6 +120,7 @@ else Leaf ?$\oplus$?
   let right = bst_gen (r - r') (lo + r') range in
   Node (lo + r') left right
 \end{minted}
+\vspace*{-.1in}
 \caption{A BST generator adapted from~\cite{CoverageType}.}
   \label{fig:bst}
 \vspace*{-.1in}
@@ -168,6 +171,7 @@ sequence of generator choices.
 \label{subsec:disprove}
 \begin{figure}[h!]
   \centering
+\vspace*{-.15in}
 \begin{minted}[xleftmargin=5pt, numbersep=4pt, linenos = true, fontsize = \footnotesize, escapeinside=??]{OCaml}
     let rec merge (l1: nat list) (l2: nat list) : nat list =
         match l1, l2 with
@@ -179,10 +183,12 @@ sequence of generator choices.
             else if h1 > h2 then h2 :: h1 :: t
             else h1 :: t
 \end{minted}
+\vspace*{-.1in}
 \caption{A function that merges two sorted lists. If either of
 the input lists are empty, \Code{merge} returns the other (lines
 $3-4$). Otherwise, the function merges the tails of the two inputs and appends the two top elements ahead of the merged result. }
 \label{fig:merge}
+\vspace*{-.1in}
 \end{figure}
 When a refinement type system fails to prove a safety property, the
 target program is not necessarily incorrect: may-style
@@ -251,24 +257,23 @@ the bug in \Code{merge} cannot be triggered, since the case where both inputs
 are non-empty (line $5$) is never reached.
 
 \cbnewadding{To establish in our context type system that \Code{merge}
-can produce an unsorted result, we can first use \textsc{T-Fix} to
-assign it the following precise type:
-\begin{align*}
-  &\Code{l1}{:}\ort{\List[\Code{nat}]}{\I{sorted}(\vnu)}
-  \ctsarr \Code{l2}{:}\ort{\List[\Code{nat}]}{\I{sorted}(\vnu)} \ctsarr \ort{\List[\Code{nat}]}{\vnu = R_{\Code{merge}}(l_1, l_2)}
-\end{align*}\noindent
-where $R_{\Code{merge}}$ exactly characterizes the result of the merge
-function.  Semantic subsumption then yields the original type.  A full
-characterization of \Code{merge}, however, is unnecessary; the
-following type suffices:
+can produce an unsorted result, we first typecheck it against the following type:
 \begin{align*}
   &\Code{l1}{:}\ort{\List[\Code{nat}]}{\I{sorted}(\vnu)}
   \ctsarr \Code{l2}{:}\ort{\List[\Code{nat}]}{\I{sorted}(\vnu)} \\
-  &\qquad \ctsarr \textcolor{magenta}{\mbox{\rm\textbf{\{}}} \vnu{:}\;\List[\Code{nat}] \;|\; (l_1 = [] \land l_2 = [] \impl \vnu = []) \land (l_1 = [2] \land l_2 = [4] \impl \vnu = [2;4]) \land
-  \\&\qquad\qquad (l_1 = [1;2] \land l_2 = [3;4] \impl \vnu = [1;3;2;4])  \textcolor{magenta}{\mbox{\rm\textbf{\}}}}
+  &\qquad \ctwand \textcolor{magenta}{\mbox{\rm\textbf{\{}}} \vnu{:}\;\List[\Code{nat}] \;|\; (l_1 = [1;2] \land l_2 = [3;4] \impl \vnu = [1;3;2;4]) \textcolor{magenta}{\mbox{\rm\textbf{\}}}}
+  \\&\qquad\qquad \ctoplus \textcolor{magenta}{\mbox{\rm\textbf{\{}}} \vnu{:}\;\List[\Code{nat}] \;|\; (l_1 = [] \land l_2 = [] \impl \vnu = []) \land (l_1 = [2] \land l_2 = [4] \impl \vnu = [2;4]) \textcolor{magenta}{\mbox{\rm\textbf{\}}}}
 \end{align*}\noindent
-This qualifier records exactly the recursive execution trace needed
-for the counterexample above.}
+Its demonic parameters allow us to establish the function's behavior
+for arbitrary sorted inputs, facilitating the use of \textsc{T-Fix}
+and the typing of recursive calls within the function body.
+The left result summand captures the counterexample above and
+establishes the target unsorted refinement when the context selects
+those inputs. The right result summand records the input-output
+relationships needed for the recursive calls and can be weakened to
+$\ort{\List[\Code{nat}]}{\top}$. Semantic subsumption then yields
+the original type.
+}
 
 %% %% We illustrate the expressiveness of context types with three
 %% %% case studies: compositional may- and must-style reasoning
