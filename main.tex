@@ -233,12 +233,15 @@ paper are available at \url{https://zenodo.org/records/23293018}.
 % \citestyle{acmauthoryear}
 % \bibliography{bibliography}
 
+\ifdefined\paperonly
+\else
 \newpage
 \appendix
 \subfile{sections/tech/outline}
 \subfile{sections/tech/1-semantics}
 \subfile{sections/tech/2-basictyping}
 \subfile{sections/tech/3-pre}
+\fi
 
 \end{document}
 \endinput

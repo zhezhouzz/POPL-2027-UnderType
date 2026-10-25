@@ -25,6 +25,7 @@ _minted-main/
 sections/auto/
 sections/_region_.tex
 /tmp/
+/revision-package/
 *.nav
 *.snm
 *.toc

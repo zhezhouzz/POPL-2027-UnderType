@@ -116,7 +116,11 @@
     },
   }
 
-\newcommand{\diffmode}{true}
+% Direct compilation retains revision highlighting; clean builds opt out.
+\ifdefined\cleanversion
+\else
+\providecommand{\diffmode}{true}
+\fi
 % \newcommand{\submissionMode}{true}
 
 \ifdefined\diffmode
