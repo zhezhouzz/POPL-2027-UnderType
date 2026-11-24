@@ -251,14 +251,14 @@ bindings.
 
 \begin{example}[Typing Let-Expressions]
   To see why, consider the following let-expression:
-\vspace{-0.15em}
+\vspace{-0.2em}
 \begin{align*}
     x{:}\ort{\Nat}{\vnu < 10} \vdash \zlet{y}{x - 3}{x - y} : \ort{\Nat}{\vnu \leq 3}
 \end{align*}\noindent
 Here, both the bound term $x - 3$ and the let-body $x - y$ refer to
 the variable $x$. Applying the standard bunched typing rule for
 let-expressions would require the following type context: %
-\vspace{-0.15em}
+\vspace{-0.2em}
 \begin{align*}
   &\underbrace{x{:}\ort{\Nat}{\vnu < 10}}_{\texttt{for $x - 3$}} \ctcomma \underbrace{x{:}\ort{\Nat}{\vnu < 10}}_{\texttt{for $x - y$}} \vdash \zlet{y}{x - 3}{x - y} : \ort{\Nat}{\vnu \leq 3}
 \end{align*} %
@@ -323,7 +323,7 @@ can also be typed with $\tau$ under $\Gamma_1$''. The comparison is
 confined to a particular set of variables $\textcolor{CBOrange}{X}$;
 \textsc{T-CtxSub} restricts $\ctsubseteqA{}$ to the free variables of
 a target term and type.  For example,
-\vspace{-0.15em}
+\vspace{-0.2em}
 \begin{align*}
   x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\urt{\Nat}{\top}
   \ctsubseteq{\{y\}} y{:}\urt{\Nat}{\vnu > 0} \ctcomma z{:}\urt{\Nat}{\top}
@@ -337,7 +337,7 @@ a target term and type.  For example,
 
 \begin{example}[Substructural rules] We can derive the following
   standard substructural rules from \textsc{T-CtxSub}:
-  \vspace{-0.15em}
+  \vspace{-0.2em}
   \begin{align*}
     \mprooftr{25mm}
       {$\Gamma_1 \vdash e : \tau$}
@@ -388,7 +388,7 @@ function needs to be a base type and cannot have an angelic
 refinement.  To see why, observe that if we relaxed this restriction,
 the recursive argument $v_{\Code{arg}}$ could have the following
 type: %
-\vspace{-0.15em}
+\vspace{-0.2em}
 \begin{align*}
   x{:}\urt{b}{\phi} \vdash v_{\Code{arg}} : \urt{b}{\phi} \interty
   \ort{b}{\vnu \prec x}
@@ -443,13 +443,13 @@ afterwards, provided the subtyping relation holds.
 
   \begin{example}[Fixpoint Function] The following recursive function
     defines Peano subtraction.
-\vspace{-0.15em}
+\vspace{-0.2em}
 \begin{align*}
     \vdash &\zzfix{\Code{sub}}{x}{\zzlam{y}{\zif{x = 0}{0}{\zif{y = 0}{x}{\Code{sub}\;(x - 1)\;(y - 1)}}}}
     \\& : x{:}\ort{\Nat}{\top} \ctsarr y{:}\urt{\Nat}{\vnu \leq x} \ctsarr \urt{\Nat}{\vnu \leq x}
   \end{align*}\noindent
   According to \textsc{T-Fix}, we need to show that
-\vspace{-0.15em}
+\vspace{-0.2em}
 \begin{align*}
   &x{:}\ort{\Nat}{\top} \ctcomma \Code{sub}{:} (x{:}\ort{\Nat}{\vnu \prec x} \ctsarr y{:}\urt{\Nat}{\vnu \leq x} \ctsarr \urt{\Nat}{\vnu \leq x})  \vdash
   \\ &\quad \zzlam{y}{\zif{x = 0}{0}{\zif{y = 0}{x}{\Code{sub}\;(x - 1)\;(y - 1)}}}
@@ -464,7 +464,7 @@ When $x = 0$, the program always returns $0$; when $x > 0$, $x - 1$ is a valid a
   $\Code{Ty}$. This function uses the intersection of an angelic and
   demonic refinement to assign a precise (i.e., singleton) type to
   operations: %
-\vspace{-0.15em}
+\vspace{-0.2em}
 \begin{align*}
   \Code{Ty}(\Code{O}) &= \ort{\Nat}{\vnu = 0} \interty \urt{\Nat}{\vnu = 0} \\
   \Code{Ty}(\Code{S}) &= n{:}\ort{\Nat}{\top} \ctsarr \ort{\Nat}{\vnu = n+1} \interty \urt{\Nat}{\vnu = n + 1} \\
@@ -503,7 +503,7 @@ expression is the sum of the types of these branches.
   the first two assumptions work, consider the typing of
   \ref{ex:oplusWeak} from the previous section, once we have desugared
   its $\mykw{if}$ expression.
-\vspace{-0.15em}
+\vspace{-0.2em}
 \begin{align*}
   x{:}\urt{\Nat}{\top} \vdash \zmatchNat{x}{3}{y}{5} : \ort{\Nat}{\vnu < 4} \ctoplus \ort{\Nat}{\top}
 \end{align*}
@@ -523,7 +523,7 @@ contexts covering each branch: \cbnewadding{Since this is a
     qualifier, as $\Gamma_{\Code{TBranch}}$ does for the unused
     pattern variable $y$.}} %
 {\small %
-  \vspace{-0.15em}
+  \vspace{-0.2em}
   \begin{align*}
     &x{:}\urt{\Nat}{\top} \ctsubseteq{\{x\}} \\
     & \;\;
@@ -536,7 +536,7 @@ contexts covering each branch: \cbnewadding{Since this is a
   \end{align*}}\noindent
 These contexts satisfy the first set of assumptions of
 \textsc{T-Match}:
-\vspace{-0.15em}
+\vspace{-0.2em}
 \begin{align*}
   &\Gamma_{\Code{TBranch}} \vdash \Code{O} :
   \ort{\Nat}{\vnu = 0} \interty \urt{\Nat}{\vnu = 0} \\
@@ -558,7 +558,7 @@ both branches, the third set of assumptions trivially holds):\smallskip
 \end{center}\smallskip\noindent
 Observe we are unable to check \ref{ex:oplusWeak} against this type
 under a weaker typing context:
-\vspace{-0.15em}
+\vspace{-0.2em}
 \begin{align*}
   x{:}\urt{\Nat}{\vnu > 0} \vdash \zmatchNat{x}{3}{y}{5} :
   \ort{\Nat}{\vnu < 4} \ctoplus \ort{\Nat}{\top} \quad \judgfail
@@ -568,12 +568,12 @@ environments that only reach the false branch, and thus cannot be
 decomposed into two contexts that fully separate both branches.  The
 following example illustrates how \textsc{T-Match}'s last set of
 assumptions accounts for unreachable control flows:
-\vspace{-0.15em}
+\vspace{-0.2em}
 \begin{align*}
   x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1} \vdash \zmatchNat{x}{3}{y}{5} : \ort{\Nat}{\vnu > 4}
 \end{align*}\noindent
 By \textsc{T-CtxSub} and the fact that
-\vspace{-0.15em}
+\vspace{-0.2em}
 \begin{align*}
   x{:}\ort{\Nat}{\vnu > 0} \ctsubseteq{\{x\}}
       x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1}

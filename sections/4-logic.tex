@@ -145,7 +145,7 @@ the current capability.
 
 \begin{definition}[Context Logic]\label{def:context-logic}
   The syntax of our context logic is:
-  \vspace{-0.15em}
+  \vspace{-0.2em}
   \begin{align*}
     P, Q \;::=\; &\chtrue \mid \chfalse \mid P \chland Q \mid P \chlor Q \mid P \chimpl Q \mid P \chstar Q \mid P \chwand Q
     \\& \mid \chforall x.\, P \mid \chexists x.\, P \mid \Code{Atom}(\phi)
@@ -220,7 +220,7 @@ environments in $r$.
 \begin{example}%[Modalities as Lower- and Upper-Bounds]%
   \label{ex-approximation-modalities}
   Let $r_x$ be $\{[x \mapsto 1], [x \mapsto 2]\}$. The following hold:
-  \vspace{-0.15em}
+  \vspace{-0.2em}
   \begin{align*}
     &r_x \models \demonic\,\Code{Atom}(x = 1) \;\judgfail \quad
     &&r_x \models \demonic\,\Code{Atom}(0 \leq x \leq 4) \;\judgok \\
@@ -238,7 +238,7 @@ environments in $r$.
 
   Critically, satisfiability of demonic and angelic modalities is also
   maintained by refinement.  Consider the following capabilities:
-\vspace{-0.15em}
+\vspace{-0.2em}
 \begin{align*}
 \begin{array}{c @{\hspace{1.5em}} c @{\hspace{1.5em}} c}
   {\boxed{r_x \doteq \{[x \mapsto 1], [x \mapsto 2]\}}}
@@ -264,7 +264,7 @@ logic's two conjunction operators, let
 $r_y \doteq \{[y \mapsto 3], [y \mapsto 4]\}$ and
 $r_{xy} \doteq \{[x \mapsto 1, y \mapsto 3], [x \mapsto 2, y \mapsto
 4]\}$.  Then:
-\vspace{-0.15em}
+\vspace{-0.2em}
 \begin{align*}
 &r_x \times r_y \models (\angelic\,\Code{Atom}(1 \leq x \leq 2)) \chstar (\angelic\,\Code{Atom}(3 \leq y \leq 4)) \;\judgok \\
 &r_{xy} \models (\angelic\,\Code{Atom}(1 \leq x \leq 2)) \chland (\angelic\,\Code{Atom}(3 \leq y \leq 4)) \;\judgok \\
@@ -339,7 +339,7 @@ context.
 As is customary in other refinement types, we require terms to be
 total and well-typed in the basic type system.  We encode these side
 conditions into the logic via a guard formula:
-\vspace{-0.15em}
+\vspace{-0.2em}
 \begin{align*}
   P_{\Code{guard}} \doteq \forallM{\Dom{\Sigma}}\,\Code{Atom}(\Code{Total}(e) \land \Sigma \vdash_s e : \eraserf{\tau} \land \Sigma \vdash_{\Code{WF}} \tau).
 \end{align*}
@@ -351,7 +351,7 @@ this guard, which we omit for brevity.
 
 The denotation of a term $e$ under capability $r$ captures the image
 of $e$ under all environments in $r$ via a variable $x$:
-\vspace{-0.15em}
+\vspace{-0.2em}
 \begin{align*}
   \denot{\mstep{e}{x}}_\Sigma &\doteq \forallM{\Dom{\Sigma}}\,\Code{Atom}(\mstep{e}{x}).
 \end{align*}
@@ -363,7 +363,7 @@ rather than requiring the capability to contain all environments
 consistent with $x$'s full range.
 
 \begin{definition}[Type Denotation]\label{def:type-denotation}
-  \vspace{-0.15em}
+  \vspace{-0.2em}
   \begin{align*}
     \denot{\ort{b}{\phi}}_\Sigma\;e &\doteq \denot{\mstep{e}{\vnu}}_\Sigma \chimpl \forallM{(\Code{FV}(\phi)-\{\vnu\})}\,\demonic\,\Code{Atom}(\phi) \quad \text{($\vnu$ fresh)}  \\
     \denot{\urt{b}{\phi}}_\Sigma\;e &\doteq \denot{\mstep{e}{\vnu}}_\Sigma \chimpl \forallM{(\Code{FV}(\phi)-\{\vnu\})}\,\angelic\,\Code{Atom}(\phi) \quad \text{($\vnu$ fresh)}  \\
@@ -387,7 +387,7 @@ $\ctwand$ uses multiplicative implication (the parameter binding is
 disjoint from the closure context).
 
 \begin{definition}[Type Context Denotation]\label{def:context-denotation}
-  \vspace{-0.15em}
+  \vspace{-0.2em}
   \begin{align*}
     \denot{\emptyset}_\Sigma & \doteq \chtrue \quad
     & \denot{\Gamma_1 \ctcomma \Gamma_2}_\Sigma & \doteq \denot{\Gamma_1}_\Sigma \chland \denot{\Gamma_2}_{(\Sigma,\,\eraserf{\Gamma_1})}
@@ -438,7 +438,7 @@ We conclude with the core soundness results.
 \begin{definition}[Well-Formed Operator Typing Function] %
   \label{thm:well-formed-operator}
   The operator typing function $\Code{Ty}$ is well-formed iff for all primitive
-  operators $\primop$: {\small\vspace{-0.15em}
+  operators $\primop$: {\small\vspace{-0.2em}
   \begin{align*} \Code{Ty}(\primop) =
       \overline{x{:}\ort{b_x}{\phi_x}} \ctsarr \ort{b}{\phi} \ctinter
       \urt{b}{\phi} \quad\text{and}\quad \models

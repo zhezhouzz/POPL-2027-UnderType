@@ -5,7 +5,19 @@
 \fi
 \settopmatter{printfolios=true,printccs=true,printacmref=true}
 
-\setcopyright{none}
+% Publication information supplied by Conference Publishing.
+\setcopyright{cc}
+\setcctype{by}
+\acmDOI{10.1145/3871711}
+\acmYear{2027}
+\acmJournal{PACMPL}
+\acmVolume{11}
+\acmNumber{POPL}
+\acmArticle{9}
+\acmMonth{1}
+\acmSubmissionID{popl27main-p106-p}
+\received{2026-07-09}
+\received[accepted]{2026-10-05}
 
 %% NOTE that a single column version is required for
 %% submission and peer review. This can be done by changing
@@ -95,6 +107,11 @@
 \newcommand\mycommfont[1]{\footnotesize\ttfamily\textcolor{DeepGreen}{#1}}
 \SetCommentSty{mycommfont}
 \usepackage{graphicx}
+% acmart 2.21 uses this key for its CC license icon; older graphicx
+% versions do not define it. It has no effect in this untagged PDF build.
+\makeatletter
+\@ifundefined{KV@Gin@artifact}{\define@key{Gin}{artifact}[]{}}{}
+\makeatother
 \urlstyle{same}
 \usepackage{minted}
 \usemintedstyle{borland}
@@ -145,9 +162,10 @@
   \city{Beijing}          %% 
   \country{China}                    %% 
 }
-% \email{first1.last1@inst1.edu}          %% \email is recommended
+\email{zhouzhe956@pku.edu.cn}
 
 \author{Benjamin Delaware}
+\correspondingauthor
 \orcid{0000-0002-1016-6261}
 \affiliation{%
   \institution{Purdue University}

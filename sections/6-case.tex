@@ -69,7 +69,7 @@ $\Code{f}$. \cbnewadding{$\Code{f}$'s target type asserts that it can
   $\Code{f}$ can thus be divided into the following partitions, each
   corresponding to one of the control flows of the function: %
   {\small
-    \vspace{-0.15em}
+    \vspace{-0.2em}
     \begin{align*}
       \Code{x}{:}\urt{\Int}{\vnu = 0}\ctstar\Code{y}{:}\urt{\Int}{0
         \leq \vnu \leq 10} &\ctsubseteq{\{\Code{x,y}\}}
@@ -136,7 +136,7 @@ $(\Code{lo}, \Code{lo}+r]$:\footnote{In the type for
     predicate}, i.e., an uninterpreted function used to encode
   properties of algebraic data types like trees, in this case a tree
   membership property.}
-\vspace{-0.15em}
+\vspace{-0.2em}
 \begin{align*}
   \mykw{val}\;\Code{bst\_gen} : \ctpers(&
     \Code{r}{:}\ort{\Nat}{\top} \ctsarr \Code{lo}{:}\ort{\Nat}{\top} \ctsarr
@@ -154,7 +154,7 @@ In our setting, input generators always introduce fresh angelic
 capabilities at each invocation, independently of the surrounding
 context, for \emph{arbitrary} input parameters. Input generators thus
 have context types of the following shape:
-\vspace{-0.15em}
+\vspace{-0.2em}
 \begin{align*}
     \overbrace{\ctpers (\quad \underbrace{\overline{x{:}\ort{b_x}{\phi_x}\ctsarr}}_{\texttt{demonic parameters}} \quad \underbrace{\urt{b}{\phi}}_{\texttt{angelic result}} \quad )}^{\texttt{duplicatable}}
 \end{align*}\noindent
@@ -204,7 +204,7 @@ counterexamples directly.  Consider the $\Code{merge}$ function shown
 in Figure~\ref{fig:merge}. When used in a mergesort procedure, this
 function is intended to merge two sorted lists and produce a sorted
 output list:
-\vspace{-0.15em}
+\vspace{-0.2em}
 \begin{align*}
   \vdash \Code{merge}~:{}&\Code{l1}{:}\ort{\List[\Code{nat}]}{\I{sorted}(\vnu)}
   \ctsarr \Code{l2}{:}\ort{\List[\Code{nat}]}{\I{sorted}(\vnu)} \\
@@ -216,7 +216,7 @@ refinement type system offers little guidance on the underlying fault,
 since it cannot identify which execution branch leads to the unsorted
 output.  A symbolic execution engine might identify the following
 concrete counterexample:
-\vspace{-0.15em}
+\vspace{-0.2em}
 \begin{align*}
     \texttt{Counterexample:}&\quad  \text{ when } \Code{l1} = [1;2] \text{ and } \Code{l2} = [3;4] \text{ then } \mstep{\Code{merge}\;[1;2]\;[3;4]}{[1;3;2;4]}
 \end{align*}\noindent
@@ -228,7 +228,7 @@ breaking sortedness.  Rather than appealing to a separate symbolic
 execution procedure to discover this counterexample, we can directly
 prove that \Code{merge} operates incorrectly, by type-checking it with
 the following type:
-\vspace{-0.15em}
+\vspace{-0.2em}
 \begin{align*}
   &\Code{l1}{:}\urt{\List[\Code{nat}]}{\I{sorted}(\vnu)}
   \ctwand \Code{l2}{:}\urt{\List[\Code{nat}]}{\I{sorted}(\vnu)} \\

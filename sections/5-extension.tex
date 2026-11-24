@@ -9,7 +9,7 @@ type programs like \ref{ex:DisjCon} from
 \autoref{sec:overview}. Concretely, \langNDname{} extends \langname{}
 with nondeterministic \emph{generators} that can produce multiple
 values of basic type across different executions:
-\vspace{-0.15em}
+\vspace{-0.2em}
 \begin{align*}
   \primop ::= \quad & \ldots ~|~ \Code{gen}_b ~|~ \ldots
 \end{align*}
@@ -51,7 +51,7 @@ capabilities. For example, every inhabitant of
 $\ort{\Unit}{\top} \ctsarr \urt{\Nat}{\vnu > 0}$ in \langname{} must
 capture some variable with an angelic binding that provides the
 witnesses needed to construct every positive number:
-\vspace{-0.15em}
+\vspace{-0.2em}
 \begin{align*}
   z{:}\urt{\Nat}{\top} \vdash \zzlam{x}{z + 1} : \ort{\Unit}{\top} \ctsarr
   \urt{\Nat}{0 < \vnu}
@@ -108,13 +108,13 @@ Successive applications of a nondeterministic generator like
 $\Code{gen_{nat}\; ()}$, however, can produce genuinely independent
 values. In order to accurately capture the behavior of such functions,
 \langNDname{} introduces a \emph{persistent} type operator, $\ctpers$:
-\vspace{-0.15em}
+\vspace{-0.2em}
 \begin{align*}
   \Code{gen_{nat}} : \ctpers (\ort{\Unit}{\top} \ctsarr \urt{\Nat}{\top})
 \end{align*}
 Persistence allows a binding in the type context to be duplicated,
 e.g.,
-\vspace{-0.15em}
+\vspace{-0.2em}
 \begin{align*}
   x{:}\ctpers \tau \; \ctsubseteq{\{x\}} \; x{:}\ctpers \tau \ctstar x{:}\ctpers \tau
 \end{align*}\noindent
@@ -139,7 +139,7 @@ capability providing different choices:
 
 \begin{definition}[Persistent Modality] We introduce a persistence
   modality $\chpers P$ to our context logic such that:
-  \vspace{-0.15em}
+  \vspace{-0.2em}
   \begin{align*}
     r \models \chpers P \text{ iff } \exists \sigma. \{\sigma\} \sqsubseteq r \land \{\sigma\} \models P
   \end{align*}\noindent
@@ -157,7 +157,7 @@ $\Gamma \vdash e : \ctpers \tau$ indicates that the typing of $e$ does
 not rely on the capabilities provided by either the bindings in the
 type context $\Gamma$ or \emph{the reduction of the term $e$}. To
 illustrate, consider the following three functions:
-\vspace{-0.15em}
+\vspace{-0.2em}
 \begin{align*}
   &z{:}\urt{\Nat}{\top} \vdash \zzlam{x}{z} : \ort{\Nat}{\top}
     \ctsarr \urt{\Nat}{\top} \judgok \\
@@ -173,7 +173,7 @@ depends on the binding $z$ in the type context, while the reachability
 properties of the third \emph{depend on how it is reduced}. To see
 how, consider the following type judgment, which is semantically
 invalid under \langNDname{}'s call-by-value reduction strategy:
-\vspace{-0.15em}
+\vspace{-0.2em}
 \begin{align*}
   \emptyset \vdash \zlet{f}{\zzlam{x}{0} \oplus
   \zzlam{x}{\Code{gen_{nat} \;() + 1}}}{\zif{f\;() = 0}{f\;()}{0}} : \urt{\Nat}{\top} \quad \judgfail
@@ -187,7 +187,7 @@ persistent.
 
 \begin{definition}[Persistent Type Denotation]
   The denotation of $\ctpers \tau$ is:
-  \vspace{-0.15em}
+  \vspace{-0.2em}
   \begin{align*}
     \denot{\ctpers \tau}_\Sigma\;e \doteq \forall x.\denot{\mstep{e}{x}} \chimpl \chpers (\denot{\tau}_{\Sigma,x{:}\eraserf{\tau}}\;x) \quad (\text{fresh $x$})
   \end{align*}\noindent
@@ -203,7 +203,7 @@ persistent.
 
 \paragraph{Typing Rules for $\ctpers$} The typing rules for persistent
 types are:
-\vspace{-0.15em}
+\vspace{-0.2em}
 \begin{align*}
 \mprooftr{20mm}
       {$\Gamma \vdash e : \ctpers \tau$}
@@ -270,7 +270,7 @@ empty context, which clearly never happens!
 A similar issue arises with the original denotation of function
 types. The fix to both issues is to ``lift'' the extra capability
 provided by a nondeterministic term into the capability context:
-\vspace{-0.15em}
+\vspace{-0.2em}
 \begin{align*}
   \denot{x{:}\tau_x \ctsarr \tau}_\Sigma\;e
     &\doteq \forall f.\; \denot{\mstep{e}{f}}_\Sigma \chimpl
@@ -294,7 +294,7 @@ when $e$ is deterministic.
 This new denotation allows us to lift $\Code{gen_{bool} \;()}$'s
 nondeterminism into the context via the fresh variable $x$, allowing
 the sum operator to partition it across the two branches as before:
-\vspace{-0.15em}
+\vspace{-0.2em}
 \begin{align*}
   &\denot{\ort{\Bool}{\vnu = \true} \ctoplus
           \ort{\Bool}{\vnu = \false}}\;\Code{gen_{bool} \;()}
