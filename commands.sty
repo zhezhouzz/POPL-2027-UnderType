@@ -27,13 +27,6 @@
 \def\algorithmautorefname{Algorithm}
 \def\figureautorefname{Figure}
 
-\hypersetup{
-    colorlinks=true,
-    linkcolor=blue,
-    filecolor=magenta,
-    urlcolor=cyan,
-}
-
 \newcommand*{\fullref}[1]{\hyperref[{#1}]{\autoref*{#1}}}
 
 % Algorithm setup:
@@ -116,11 +109,7 @@
     },
   }
 
-% Direct compilation retains revision highlighting; clean builds opt out.
-\ifdefined\cleanversion
-\else
-\providecommand{\diffmode}{true}
-\fi
+% The arXiv version is clean by default; revision builds opt in to diffmode.
 % \newcommand{\submissionMode}{true}
 
 \ifdefined\diffmode

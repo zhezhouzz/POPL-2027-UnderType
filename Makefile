@@ -1,4 +1,5 @@
 JOBNAME      ?= context-type
+.DEFAULT_GOAL := paper
 LATEXMK      ?= latexmk
 LATEXMKFLAGS ?= -pdf -interaction=nonstopmode -halt-on-error -shell-escape
 PACKAGE_DIR  ?= revision-package
@@ -22,17 +23,17 @@ all: paper diff full
 # Clean main paper, including references but excluding the appendix.
 paper:
 	$(LATEXMK) $(LATEXMKFLAGS) -jobname=$(JOBNAME) \
-	  -usepretex='\def\cleanversion{1}\def\paperonly{1}' main.tex
+	  -usepretex='\def\cleanversion{1}' main.tex
 
 # Main paper with the existing blue revision highlights and change bars.
 diff:
 	$(LATEXMK) $(LATEXMKFLAGS) -jobname=$(JOBNAME)-diff \
-	  -usepretex='\def\paperonly{1}' main.tex
+	  -usepretex='\def\diffmode{1}' main.tex
 
 # Clean paper with the supplemental appendix.
 full:
 	$(LATEXMK) $(LATEXMKFLAGS) -jobname=$(JOBNAME)-sm-full \
-	  -usepretex='\def\cleanversion{1}' main.tex
+	  -usepretex='\def\cleanversion{1}\def\fullversion{1}' main.tex
 
 package: all
 	mkdir -p "$(PACKAGE_DIR)"

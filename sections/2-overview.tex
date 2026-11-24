@@ -51,6 +51,7 @@ angelic context type $\urt{b}{\phi}$ stipulates that $e$ must
 To illustrate this difference, consider the following typing
 judgements which ascribe different context types to the constant term
 $1$:
+\vspace{-0.15em}
 \begin{align*}
   &\vdash 1 : \ort{\Nat}{\top}\;\judgok
   && \vdash 1 : \urt{\Nat}{\top}\;\judgfail
@@ -93,6 +94,7 @@ illustrate, % these
 % bounds manifest in the guarantees provided by our type system,
 consider the following typing judgements involving non-singleton
 reachability properties: %
+\vspace{-0.15em}
 \begin{align*}
   x{:}\urt{\Nat}{\vnu > 3} \vdash x - 3 : \urt{\Nat}{\vnu >
   0}\;\judgok \quad & \quad
@@ -113,6 +115,7 @@ these bounds, thereby restricting the set of assignments to $x$ that
 are impossible. As a consequence, the reachability guarantees that our
 type system can provide about deterministic terms involving only
 demonically qualified variables are somewhat limited:
+\vspace{-0.15em}
 \begin{align*}
   x{:}\ort{\Nat}{\vnu > 2} \vdash x - 3 : \urt{\Nat}{\vnu > 0}\;\judgfail % \\
   % x{:}\ort{\Nat}{\vnu > 4} \vdash x - 3 : \urt{\Nat}{\vnu > 0}\;\judgfail
@@ -124,6 +127,7 @@ $x - 3$ can only reach a single result value under such a capability!
 % all, there's little we can say about the values that $x-3$ can reach!
 Similarly, our type system can provide somewhat limited safety
 guarantees when only equipped with reachability assumptions:
+\vspace{-0.15em}
 \begin{align*}
   x{:}\urt{\Nat}{\vnu > 4} \vdash x - 3 : \ort{\Nat}{\vnu > 0}\;\judgfail
 \end{align*} %
@@ -184,6 +188,7 @@ which can reach all positive numbers can also reach all numbers
 greater than 1, while a term that always safely evaluates to a number
 greater than 1 is also guaranteed to always evaluate to a positive
 number.
+\vspace{-0.15em}
 \begin{align*}
   &\ort{\Nat}{\vnu > 1} \subty \ort{\Nat}{\vnu > 0}\;\judgok
   &&\urt{\Nat}{\vnu > 1} \subty \urt{\Nat}{\vnu > 0} \;\judgfail \\
@@ -194,6 +199,7 @@ number.
 The subtyping relationship between angelic and demonic refinement
 types is more nuanced. No subtyping relationship exists between two
 arbitrary refinements with different modalities: %
+\vspace{-0.15em}
 \begin{align*}
   &\ort{\Nat}{\vnu > 0} \subty \urt{\Nat}{\vnu > 0}\;\judgfail
   & &\urt{\Nat}{\vnu > 0} \subty \ort{\Nat}{\vnu > 0} \;\judgfail
@@ -203,6 +209,7 @@ Furthermore, it is only possible to switch the modality of a
 refinement when its qualifier is a singleton, or when the resulting
 refinement type trivially holds, i.e., $\ort{b}{\top}$ or
 $\urt{b}{\bot}$: %
+\vspace{-0.15em}
 \begin{align*}
   &\ort{\Nat}{\vnu = 3} \subty \urt{\Nat}{\vnu =
     3}\;\judgok
@@ -357,6 +364,7 @@ program \ref{ex:DisjCon}[$x - y$].  This is not true of
 \ref{ex:EnCon}[$x - y$], however, because the values of $x$ and $y$ in
 this program are \emph{entangled} since the values $y$ can yield are
 tied to $x$'s.
+\vspace{-0.15em}
 \begin{align*}
   &\emptyset \vdash \text{\ref{ex:DisjCon}}[x] : \urt{\Nat}{\vnu > 0}
     \;\judgok \quad
@@ -382,6 +390,7 @@ choices afforded by $\Gamma_2$ may be constrained by choices for
 variables in $\Gamma_1$.  Consider the following two subtyping
 judgments reflecting the typing of $\square $ in $C_{\mathit{dis}}$
 and $C_{\mathit{en}}$, resp:
+\vspace{-0.15em}
 \begin{align*}
   &x{:}\urt{\Nat}{\vnu \geq 0} \ctstar y{:}\urt{\Nat}{\vnu \geq 1}
     \vdash \urt{\Nat}{\vnu = x - y} \subty \urt{\Nat}{\vnu > 0}
@@ -421,6 +430,7 @@ modalities of $x$ and $y$ hold \emph{at the same
     % appreciate this difference unless they have a better intuition of
     % the capabilities afforded by $\ctcomma$.}
 }  For example,
+\vspace{-0.15em}
 \begin{align*}
   &x{:}\urt{\Nat}{\vnu > 0} \ctstar (y{:}\urt{\Nat}{\vnu > 0} \ctcomma z{:}\urt{\Nat}{\vnu > 0}) \vdash x - y : \urt{\Nat}{\vnu > 0} \;\judgok
   \\&x{:}\urt{\Nat}{\vnu > 0} \ctstar (y{:}\urt{\Nat}{\vnu > 0}
@@ -439,6 +449,7 @@ simultaneously make their difference reach every positive number.
 Notably, angelic and demonic refinements can also be entangled in a
 way that impacts the capabilities afforded by a type context, as the
 following pair of judgments illustrate:
+\vspace{-0.15em}
 \begin{align*}
   &x{:}\urt{\Nat}{\vnu \geq 0} \ctcomma y{:}\ort{\Nat}{\vnu \geq 1} \vdash x - y : \urt{\Nat}{\I{even}(\vnu)} \;\judgfail
   \\&x{:}\urt{\Nat}{\vnu \geq 0} \ctstar y{:}\ort{\Nat}{\vnu \geq 1} \vdash x - y : \urt{\Nat}{\I{even}(\vnu)} \;\judgok
@@ -468,20 +479,24 @@ reach that number.
 Entangled ($\ctsarr$) and independent
 function types ($\ctwand$) are adjunctions of the corresponding type
 context composition operators:
+\vspace{-0.15em}
 \begin{align*}
   \Gamma \vdash e_f : x{:}\tau_x \ctsarr \tau \quad &\text{ iff } \quad \Gamma \ctcomma x{:}\tau_x \vdash (e_f\;x) : \tau
   \\\Gamma \vdash e_f : x{:}\tau_x \ctwand \tau \quad &\text{ iff } \quad \Gamma \ctstar x{:}\tau_x \vdash (e_f\;x) : \tau
 \end{align*}\noindent
 Thus, ($\Code{-}$) can be given the following types:
+\vspace{-0.15em}
 \begin{align*}
   &\vdash (-) : x{:}\urt{\Nat}{\vnu > 0} \ctwand y{:}\urt{\Nat}{\vnu > 0} \ctwand \urt{\Nat}{\vnu > 0}
   \\&\vdash (-) : x{:}\urt{\Nat}{\vnu > 0} \ctsarr y{:}\urt{\Nat}{\vnu > 0} \ctwand \urt{\Nat}{\vnu > 0}
 \end{align*}\noindent
 Notably, however, it cannot have the following type:
+\vspace{-0.15em}
 \begin{align*}
   &\vdash (-) : x{:}\urt{\Nat}{\vnu > 0} \ctwand y{:}\urt{\Nat}{\vnu > 0} \ctsarr \urt{\Nat}{\vnu > 0}
 \end{align*}\noindent
 Doing so would require proving the following type judgement:
+\vspace{-0.15em}
 \begin{align*}
   &\emptyset \ctstar x{:}\urt{\Nat}{\vnu > 0} \ctcomma y{:}\urt{\Nat}{\vnu > 0} \vdash x - y : \urt{\Nat}{\vnu > 0} \;\judgfail
 \end{align*}\noindent
@@ -491,6 +506,7 @@ establishing that $x - y$ can produce every positive number.
 
 Higher-order functions introduce additional complexity. Consider the
 following example:
+\vspace{-0.15em}
 \begin{align*}
   &x{:}\urt{\Nat}{\vnu > 0} \ctstar y{:}\urt{\Nat}{\vnu > 0} \vdash \zzlam{f}{x - (f\; (f\;y))} :
   \\&\quad  \underbrace{f{:}(\underbrace{y{:}\urt{\Nat}{\vnu > 0} \ctsarr}_\texttt{$y$ can depend on context during application} \urt{\Nat}{\vnu > 0}) \ctwand}_\texttt{$f$ is independent from $x$ and $y$} \urt{\Nat}{\vnu > 0}
@@ -519,6 +535,7 @@ can now depend on $f$'s closure, accommodating the nested
 application. The function itself is then typed with $\ctwand$,
 ensuring $f$'s body is not entangled with either $x$ or $y$ in the
 outer context. By adjunction, this yields:
+\vspace{-0.15em}
 \begin{align*}
   &x{:}\urt{\Nat}{\vnu > 0} \ctstar
   \\&\quad (y{:}\urt{\Nat}{\vnu > 0} \ctstar
@@ -556,7 +573,8 @@ The typing judgement $\Gamma \vdash e : \tau_1 \ctoplus \tau_2$ states
 that $e$ can be typed with $\tau_1$ and $\tau_2$ in some partitioning
 of $\Gamma$, and that all capabilities consistent with $\Gamma$ are
 accounted for by $\tau_1$ and $\tau_2$ --- no possibility is lost.
-For example: \begin{align*}
+For example: \vspace{-0.15em}
+\begin{align*}
   &x{:}\urt{\Nat}{\vnu < 10} \vdash x + 1 : \ort{\Nat}{odd(\vnu)} \ctoplus
     \ort{\Nat}{even(\vnu)} \;\judgok \notag \\
   &x{:}\urt{\Nat}{\top} \vdash \zif{x == 0}{3}{5} : \ort{\Nat}{\vnu <
@@ -583,6 +601,7 @@ $4$.\footnote{In this
   monoid disjunction in Outcome Logic~\cite{ZDS23}.} This ability also
 allows us to focus on the safety properties of one particular feasible
 program path, assigning all remaining paths the $\top$ type: %
+\vspace{-0.15em}
 \begin{align*}
   &x{:}\urt{\Nat}{\top} \vdash \zif{x > 0}{5}{3} : \ort{\Nat}{\vnu >
     4} \ctoplus \ort{\Nat}{\top} \quad \judgok
