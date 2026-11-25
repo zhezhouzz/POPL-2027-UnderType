@@ -1,3 +1,9 @@
+\section{Context Type System}
+\label{sec:context-typing}
+% In this section, we introduce the core language and the context type system for it.
+
+% \subsection{Core Language}
+
 \begin{figure}[!t]
   {\small
     \begin{alignat*}{2}
@@ -15,14 +21,8 @@
   \vspace{-18pt}
   \caption{Syntax of \langname{}}
   \label{fig:core-lang-syntax}
-  \vspace{-6pt}
+  % \vspace{-6pt}
   \end{figure}
-
-\section{Context Type System}
-\label{sec:context-typing}
-% In this section, we introduce the core language and the context type system for it.
-
-% \subsection{Core Language}
 
   % \paragraph{Terms, basic types, and basic type contexts}
 We formalize our proposed context type system for the core language
@@ -131,7 +131,7 @@ Our type system depends on a pair of well-formedness relations for
 context types ($\Sigma \wfvdash \tau$) and type contexts
 ($\Sigma \wfvdash \Gamma$); select rules are shown in
 \autoref{fig:auxiliary-rules}.\footnote{The full set of definitions
-  are provided in the supplemental material.}  These standard
+  is provided in the supplemental material.}  These standard
 relations require, e.g., a context type to erase ($\eraserf{.}$) to a
 basic type, type qualifiers to be well-typed in the basic type system,
 and that any variables that can appear in qualifiers are unique
@@ -232,7 +232,7 @@ cannot refer to variables in each other.
   \end{prooftree}
   }
 }
-  \caption{Declarative typing rules \langname{}}
+  \caption{Declarative typing rules for \langname{}}
   \label{fig:declarative-typing-rules}
   \vspace*{-.1in}
 \end{figure}
@@ -249,6 +249,7 @@ context. Instead, \textsc{T-Let} directly entangles the new variable
 binding with the existing context, without duplicating or removing
 bindings.
 
+\vspace{.2em}
 \begin{example}[Typing Let-Expressions]
   To see why, consider the following let-expression:
 \vspace{-0.2em}
@@ -265,24 +266,25 @@ let-expressions would require the following type context: %
 \noindent
 Bunched type systems normally include a contraction rule that would
 allow us to obtain such a context by duplicating the binding for $x$
-in our target judgment. An entangled context with duplicate bindings
+in our target judgement. An entangled context with duplicate bindings
 is not well-formed in our type system, so \textsc{T-Let} instead
 directly combines this ``duplicate-then-consume'' pattern:
-\cbnewadding{In this sense, \textsc{T-Let} simulates ordinary let
-typing within our substructural type system: both the bound expression
-and the body may use the existing context, without introducing
-duplicate bindings into the context syntax.}
 \begin{center}
+  \vspace{4pt}
   \begin{prooftree}
     \hypo{
-      x{:}\ort{\Nat}{\vnu < 10} \vdash x - 3 : \ort{\Nat}{\vnu <
-        7}}
-    \infer[no rule]1{x{:}\ort{\Nat}{\vnu < 10} \ctcomma y{:}\ort{\Nat}{\vnu
-        < 7} \vdash x - y : \ort{\Nat}{\vnu \leq 3}}
+      x{:}\ort{\Nat}{\vnu < 10} \vdash x - 3 : \ort{\Nat}{\vnu = x - 3}}
+    \infer[no rule]1{x{:}\ort{\Nat}{\vnu < 10} \ctcomma
+      y{:}\ort{\Nat}{\vnu = x - 3} \vdash x - y : \ort{\Nat}{\vnu \leq 3}}
   \infer1[{\small \textsc{T-Let}}]{x{:}\ort{\Nat}{\vnu < 10} \vdash \zlet{y}{x - 3}{x - y} :
     \ort{\Nat}{\vnu \leq 3}}
-  \end{prooftree}
+\end{prooftree}
+\vspace{4pt}
 \end{center}
+In this sense, \textsc{T-Let} simulates ordinary let
+typing within our substructural type system: both the bound expression
+and the body may use the existing context, without introducing
+duplicate bindings into the context syntax.
 \end{example}
 
 % Unlike
@@ -317,7 +319,7 @@ in \autoref{sec:meta}. The intuition behind the subtyping relation
 $\Gamma \vdash\tau_1 \subty \tau_2$ is standard, i.e., inhabitants of
 the denotation of $\tau_1$ are also inhabitants of the denotation of
 $\tau_2$ under the denotation of context $\Gamma$. The refinement
-relation between typing contexts, $\Gamma_1 \ctsubseteq{X} \Gamma_2$
+relation between typing contexts, $\Gamma_1 \ctsubseteq{X} \Gamma_2$,
 can be understood as ``any term that has type $\tau$ under $\Gamma_2$
 can also be typed with $\tau$ under $\Gamma_1$''. The comparison is
 confined to a particular set of variables $\textcolor{CBOrange}{X}$;
@@ -335,9 +337,8 @@ a target term and type.  For example,
   $\Gamma_2$.  Hence, a typing derivation under $\Gamma_2$ can be
   reused under $\Gamma_1$ by applying \textsc{T-CtxSub}.}
 
-\begin{example}[Substructural rules] We can derive the following
-  standard substructural rules from \textsc{T-CtxSub}:
-  \vspace{-0.2em}
+\begin{example}[Substructural rules] We can derive the standard
+  substructural rules from \textsc{T-CtxSub}: \vspace{-0.4em}
   \begin{align*}
     \mprooftr{25mm}
       {$\Gamma_1 \vdash e : \tau$}
@@ -366,9 +367,9 @@ a target term and type.  For example,
 Similar to other refinement type systems, we require all well-typed
 terms to be total. \cbnewadding{Note that an angelic type does not say
   anything about whether a term diverges: a term of type
-  $\urt{nat}{\vnu < 2}$ may diverge, as long as it can also evaluate
+  $\urt{\Nat}{\vnu < 2}$ may diverge, as long as it can also evaluate
   to $\Code{0}$ and $\Code{1}$. This is consistent with our
-  interpretation of of angelic types as underapproximations of program
+  interpretation of angelic types as underapproximations of program
   behavior.\footnote{While we could extend our type system so that
     angelic types could explicitly account for diverging behaviors,
     doing so would complicate the system in a way that is orthogonal
@@ -442,14 +443,14 @@ afterwards, provided the subtyping relation holds.
 %%   la IL's loop iteration rules.}
 
   \begin{example}[Fixpoint Function] The following recursive function
-    defines Peano subtraction.
+    defines Peano subtraction:
 \vspace{-0.2em}
 \begin{align*}
     \vdash &\zzfix{\Code{sub}}{x}{\zzlam{y}{\zif{x = 0}{0}{\zif{y = 0}{x}{\Code{sub}\;(x - 1)\;(y - 1)}}}}
     \\& : x{:}\ort{\Nat}{\top} \ctsarr y{:}\urt{\Nat}{\vnu \leq x} \ctsarr \urt{\Nat}{\vnu \leq x}
-  \end{align*}\noindent
-  According to \textsc{T-Fix}, we need to show that
-\vspace{-0.2em}
+\end{align*}
+  \noindent To type \Code{sub} against this signature using
+  \textsc{T-Fix}, we need to show: \vspace{-0.2em}
 \begin{align*}
   &x{:}\ort{\Nat}{\top} \ctcomma \Code{sub}{:} (x{:}\ort{\Nat}{\vnu \prec x} \ctsarr y{:}\urt{\Nat}{\vnu \leq x} \ctsarr \urt{\Nat}{\vnu \leq x})  \vdash
   \\ &\quad \zzlam{y}{\zif{x = 0}{0}{\zif{y = 0}{x}{\Code{sub}\;(x - 1)\;(y - 1)}}}
@@ -498,7 +499,7 @@ expression is the sum of the types of these branches.
 
 \begin{example}[Pattern matching] The first two sets of assumptions of
   \textsc{T-Match} deal with the reachable branches of a
-  $\mykw{match}$ statement; the last set deals with any branches that
+  $\mykw{match}$-expression; the last set deals with any branches that
   are unreachable under the current typing context. To illustrate how
   the first two assumptions work, consider the typing of
   \ref{ex:oplusWeak} from the previous section, once we have desugared
@@ -511,17 +512,7 @@ Here, we want to show that the angelic context $x{:}\urt{\Nat}{\top}$
 ensures that it is possible for this term to reach some value less
 than $\Code{4}$. Both branches in \ref{ex:oplusWeak} are reachable, so
 we first partition the type context using \textsc{T-CtxSub} into
-contexts covering each branch: \cbnewadding{Since this is a
-  declarative type system, we can freely manifest the precise
-  intermediate contexts needed by each branch via the context
-  refinement relation; they need not be inferred directly from the
-  syntax of \ref{ex:oplusWeak}.  \footnote{To ensure that these typing
-    contexts can be combined via $\ctoplus$, each $\Gamma_i$ must also
-    provide bindings for the pattern variables used by the other
-    reachable branches, even though they are not used by the $i$th
-    branch.  These variables can simply be assigned types with the top
-    qualifier, as $\Gamma_{\Code{TBranch}}$ does for the unused
-    pattern variable $y$.}} %
+contexts covering each branch: %
 {\small %
   \vspace{-0.2em}
   \begin{align*}
@@ -534,6 +525,18 @@ contexts covering each branch: \cbnewadding{Since this is a
       \urt{\Nat}{\vnu > 0} \ctcomma
       y{:}\ort{\Nat}{\vnu = x - 1} }_{\Gamma_{\Code{FBranch}}}
   \end{align*}}\noindent
+\cbnewadding{Since this is a
+  declarative type system, we can freely manifest the precise
+  intermediate contexts needed by each branch; they need not be inferred directly from the
+  syntax of \ref{ex:oplusWeak}.\footnote{To ensure that these typing
+    contexts can be combined via $\ctoplus$, each $\Gamma_i$ must also
+    provide bindings for the pattern variables used by the other
+    reachable branches, even though they are not used by the $i$th
+    branch.  These variables can simply be assigned types with the top
+    qualifier, as $\Gamma_{\Code{TBranch}}$ does for the unused
+    pattern variable $y$.}}
+
+\vspace{0.2em}
 These contexts satisfy the first set of assumptions of
 \textsc{T-Match}:
 \vspace{-0.2em}
@@ -543,6 +546,7 @@ These contexts satisfy the first set of assumptions of
   &\Gamma_{\Code{FBranch}} \vdash \Code{S}\;y :
   \ort{\Nat}{\vnu = x} \interty \urt{\Nat}{\vnu = x}
 \end{align*}
+\vspace{0.2em}
 \noindent
 We can then type each branch under these contexts to show that
 \ref{ex:oplusWeak} has the target type (since we have accounted for
@@ -556,7 +560,7 @@ both branches, the third set of assumptions trivially holds):\smallskip
       \ort{\Nat}{\top}}
     \end{prooftree}
 \end{center}\smallskip\noindent
-Observe we are unable to check \ref{ex:oplusWeak} against this type
+Observe that we are unable to check \ref{ex:oplusWeak} against this type
 under a weaker typing context:
 \vspace{-0.2em}
 \begin{align*}
@@ -565,12 +569,12 @@ under a weaker typing context:
 \end{align*}\noindent
 Here, $x{:}\urt{\Nat}{\vnu > 0}$ admits a capability containing
 environments that only reach the false branch, and thus cannot be
-decomposed into two contexts that fully separate both branches.  The
-following example illustrates how \textsc{T-Match}'s last set of
-assumptions accounts for unreachable control flows:
-\vspace{-0.2em}
+decomposed into two contexts that fully separate both branches.
+
+The following example illustrates how \textsc{T-Match}'s last set of
+assumptions accounts for unreachable control flows: \vspace{-0.2em}
 \begin{align*}
-  x{:}\ort{\Nat}{\vnu > 0} \ctcomma y{:}\ort{\Nat}{\vnu = x - 1} \vdash \zmatchNat{x}{3}{y}{5} : \ort{\Nat}{\vnu > 4}
+  x{:}\ort{\Nat}{\vnu > 0} \vdash \zmatchNat{x}{3}{y}{5} : \ort{\Nat}{\vnu > 4}
 \end{align*}\noindent
 By \textsc{T-CtxSub} and the fact that
 \vspace{-0.2em}

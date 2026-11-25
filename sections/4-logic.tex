@@ -80,7 +80,7 @@ a pre-order satisfying bifunctoriality.  We equip contextual
 capabilities with two operations: a \emph{product} that composes
 disjoint variable bindings, and a \emph{sum} that merges capabilities
 over the same domain to support control-flow reasoning. The
-\emph{product} $r_1 \times r_2$ operation, defined when
+\emph{product} operation $r_1 \times r_2$, defined when
 $r_1 \uparrow r_2$, is the set of all pairwise unions
 $\sigma_1 \cup \sigma_2$ with $\sigma_1 \in r_1$ and
 $\sigma_2 \in r_2$.
@@ -116,7 +116,7 @@ demonic modalities simultaneously.  \cbnewadding{To see why, consider
   does not satisfy the demonic interpretation.  Intuitively, adopting
   $\subseteq$ as our accessibility order would favor an angelic
   reading over a demonic one.  A similar argument applies to
-  $\supseteq$. In contrast, the environment $r_3$ adds a binding for
+  $\supseteq$. In contrast, the capability $r_3$ adds a binding for
   $y$ while precisely preserving the available choices for $x$, and is
   neutral with respect to both readings: the predicate continues to
   hold under both interpretations.}  As this example illustrates, the superset order supports an
@@ -137,12 +137,12 @@ $(\Res, +, \times, \mathbf{1}, \sqsubseteq)$ forms a BI-algebra.
 \subsection{Context Logic} %
 \label{subsec:logic}
 
-We now define a logic over our capability algebra.  The logic is a BI
-logic extended with demonic and angelic modalities, a sum operator for
+We now define a logic over our capability algebra.  The logic is a BI-logic extended with demonic and angelic modalities, a sum operator for
 control-flow reasoning, and a \emph{binding reference operator} that
 expresses how a qualifier may depend on specific variable bindings in
 the current capability.
 
+\vspace{0.2em}
 \begin{definition}[Context Logic]\label{def:context-logic}
   The syntax of our context logic is:
   \vspace{-0.2em}
@@ -170,7 +170,7 @@ We extend the binding operator to sets of variables by iterated
 application: for a finite set $X = \{x_1, \ldots, x_n\}$,
 we write $\forallM{X}\, P$ as shorthand
 for
-$\forallM{x_1}\,\forallM{x_2}\,\cdots\,\forallM{x_n}\,P$
+$\forallM{x_1}\,\forallM{x_2}\,\cdots\,\forallM{x_n}\,P$.
 In particular,
 $\forallM{\Dom{\Sigma}}\, P$ binds all
 variables in the domain of the current basic type context $\Sigma$
@@ -262,7 +262,7 @@ refinement is unchanged.
 Finally, to illustrate how the product operation interacts with the
 logic's two conjunction operators, let
 $r_y \doteq \{[y \mapsto 3], [y \mapsto 4]\}$ and
-$r_{xy} \doteq \{[x \mapsto 1, y \mapsto 3], [x \mapsto 2, y \mapsto
+$r_{xy} \doteq \{[x \mapsto 1; y \mapsto 3], [x \mapsto 2; y \mapsto
 4]\}$.  Then:
 \vspace{-0.2em}
 \begin{align*}
@@ -313,16 +313,17 @@ refer to specific variable bindings in the capability.
     = \angelic\,(1 \leq x \leq 2) \chland \forallM{x}\,\angelic\,(0 \leq y < x).
   \]
   The operation $\forallM{x}\,\angelic\,(0 \leq y < x)$ fixes the
-  binding of $x$ before evaluating $\angelic\,(0 \leq y < x)$, so
-  $y$'s required range is determined separately for each value of $x$.
-  Capabilities that model this formula include
-  $\{[x \mapsto 1;\, y \mapsto 0]\}$ and
-  $\{[x \mapsto 2;\, y \mapsto 0];\, [x \mapsto 2;\, y \mapsto 1]\}$,
-  as well as their sum. Omitting $\forallM{x}$ from the right conjunct
-  would require a satisfying capability to include an environment with
-  a mapping for \emph{every} pair of $x$ and $y$ where $0 \leq y < x$:
-  $[x \mapsto 3;\, y \mapsto 0], [x \mapsto 4;\, y \mapsto 1],
-  \ldots$
+  binding of $x$ before evaluating $\angelic\,(0 \leq y < x)$,
+  allowing the required range of $y$ to be determined separately for
+  each value of $x$.  Thus, the capability %
+  \mbox{$\{[x \mapsto 1;\, y \mapsto 0], [x \mapsto 2;\, y \mapsto
+    0],\, [x \mapsto 2;\, y \mapsto 1]\}$} models this formula, as
+  does a version extended with the environment %
+  \mbox{$[x \mapsto 1;\, y \mapsto 1]$}.  Omitting $\forallM{x}$ from
+  the right conjunct would require a satisfying capability to include
+  an environment with a mapping for \emph{every} pair of $x$ and $y$
+  where $0 \leq y < x$:
+  $[x \mapsto 3;\, y \mapsto 0], [x \mapsto 4;\, y \mapsto 1], \ldots$
 \end{example}
 
 \subsection{Type Denotation and Soundness}%
@@ -336,10 +337,9 @@ $r \models \denot{\tau}_\Sigma\;e$ to mean that $e$ inhabits type
 $\tau$ under capability $r$.  We omit $\Sigma$ when it is clear from
 context.
 
-As is customary in other refinement types, we require terms to be
-total and well-typed in the basic type system.  We encode these side
-conditions into the logic via a guard formula:
-\vspace{-0.2em}
+As is customary in other refinement type systems, we require terms to
+be total and well-typed in the basic type system.  We encode these
+side conditions into the logic via a guard formula: \vspace{-0.2em}
 \begin{align*}
   P_{\Code{guard}} \doteq \forallM{\Dom{\Sigma}}\,\Code{Atom}(\Code{Total}(e) \land \Sigma \vdash_s e : \eraserf{\tau} \land \Sigma \vdash_{\Code{WF}} \tau).
 \end{align*}

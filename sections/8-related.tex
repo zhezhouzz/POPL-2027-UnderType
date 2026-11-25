@@ -21,33 +21,33 @@ unifying mechanism for safety and reachability.
 \paragraph{Reachability Verification.}
 Recent work on reachability verification in type systems includes
 two-sided type systems~\cite{Ill-types} which refute typing formulas
-to show that ill-formed programs do not evaluate, and a complementary
+to show that ill-typed programs do not evaluate, and a complementary
 approach~\cite{RamsayIncorType} that internalizes negation directly as
 a complement operator on types to support incorrectness reasoning.
-Coverage types~\cite{CoverageType} underapproximate
+Coverage Types~\cite{CoverageType} underapproximate
 test-input-generator behavior to establish coverage completeness.
 \cbnewadding{\citet{UnnoST18} also combine universal and existential
   reasoning in a refinement type system for nondeterministic
-  higher-order programs.  Their existential type $\{\vnu{:}b \mid
-  \phi\}^{\exists\exists}$ states that some execution produces a value
-  satisfying $\phi$, whereas our angelic refinement $\urt{b}{\phi}$
-  guarantees that every value satisfying $\phi$ is reachable, a
-  strictly stronger guarantee.  Moreover, their flat typing
-  environments do not record whether existentially quantified bindings
-  are entangled or independent.  For example, existential bindings for
-  both $x$ and $y$ cannot distinguish the contexts
-  $\Gamma_{\mathit{en}}$ and $\Gamma_{\mathit{dis}}$ in
-  \autoref{eqn:Ctxen} and \autoref{eqn:Ctxdis}: they assert the
-  existence of suitable witnesses, but not that all independent
-  combinations of those witnesses are available.  Consequently, their
-  system has no counterpart of the independent arrow in the type of
-  \ref{ex:div}, which requires the choices for its second argument to
-  be independent of those for its first.}  To summarize, while these
-prior efforts emphasize an algorithmic characterization of
-reachability within a type system, they do not consider the logical
-underpinning that relates reachability and safety claims as we do
-here, and instead treat reachability properties independently of other
-safety considerations.
+  higher-order programs.  Their existential type
+  $\{\vnu{:}b \mid \phi\}^{\exists\exists}$ states that some execution
+  produces a value satisfying $\phi$, whereas our angelic refinement
+  $\urt{b}{\phi}$ guarantees that every value satisfying $\phi$ is
+  reachable, a strictly stronger guarantee.  Moreover, their flat
+  typing environments do not record whether existentially quantified
+  bindings are entangled or independent.  For example, existential
+  bindings for both $x$ and $y$ cannot distinguish between the
+  contexts \ref{eqn:Ctxen} and \ref{eqn:Ctxdis} from
+  Section~\ref{sec:overview}: they assert the existence of suitable
+  witnesses, but not that all independent combinations of those
+  witnesses are available.  Consequently, their system has no
+  counterpart to the independent arrow in the type of \ref{ex:div},
+  which requires the choices for its second argument to be independent
+  of those for its first.}  To summarize, while these prior efforts
+emphasize an algorithmic characterization of reachability within a
+type system, they do not consider the logical underpinning that
+relates reachability and safety claims as we do here, and instead
+treat reachability properties independently of other safety
+considerations.
 
 We note that contemporary work on \emph{Reachability
   Types}~\cite{ReachabilityTypes, WBJBR+24} uses ``reachability'' in a
@@ -76,14 +76,14 @@ these efforts relate distinct program logics to one another
 externally, whereas our type system internalizes both approximation
 directions into a single reasoning framework.
 
-Like us, outcome logic~\cite{ZDS23, Zil25TOPLAS} also unifies safety
+Like us, Outcome Logic~\cite{ZDS23, Zil25TOPLAS} also unifies safety
 and reachability through branch composition $\varphi \oplus \psi$, and
 its $\oplus$ adjoins control-flow alternatives like our $\ctoplus$.
-But, mixing angelic and demonic constraints within a single outcome
-logic judgement requires an \emph{a priori} partitioning of outcomes
+Mixing angelic and demonic constraints within a single Outcome
+Logic judgement requires an \emph{a priori} partitioning of outcomes
 via $\oplus$, whereas our type system determines valid angelic choices
 compositionally, without requiring such a partition to be specified
-upfront. Outcome logic has since been extended to support
+upfront. Outcome Logic has since been extended to support
 separation logic-style local reasoning~\cite{ZSS+24} and programs
 featuring adversarially resolved nondeterminism~\cite{ZKST+25}. In
 these extensions, however, ``demonic'' and ``angelic'' characterize
@@ -95,7 +95,7 @@ and may be mixed freely within a single type judgement.
 \paragraph{May- and Must-Style Program Analysis.}
 There has been significant prior work on combining may- and must-style
 reasoning within a program analysis~\cite{GHK+06,GN+10,NYC+12,BVR+08}.
-For example,~\citet{GN+10} alternates overapproximate may-summaries
+For example,~\citet{GN+10} alternate overapproximate may-summaries
 with underapproximate must-summaries so that callee information can
 inform caller analysis.
 

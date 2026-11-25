@@ -17,9 +17,9 @@ While the may-style interpretation following the style of standard refinement ty
 \begin{align*}
   x{:}\urt{\Nat}{\top} \vdash x - 3 : \urt{\Nat}{\vnu > 0}\;\judgok
 \end{align*}\noindent
-As shown above, the $x - 3$ can reach all positive numbers since the corresponding type context $x{:}\urt{\Nat}{\top}$ that assumes the assignment of variable $x$ can reach all natural numbers. Alternatively, we can say the type context is angelic, which smartly choose the desiable assignment of $x$ that depends which positive number the right-hand-side type want to reach; e.g., in order to reach $n$, the assignment of $x$ should be $n + 3$. 
+As shown above, the $x - 3$ can reach all positive numbers since the corresponding type context $x{:}\urt{\Nat}{\top}$ that assumes the assignment of variable $x$ can reach all natural numbers. Alternatively, we can say the type context is angelic, which smartly choose the desiable assignment of $x$ that depends which positive number the right-hand-side type want to reach; e.g., in order to reach $n$, the assignment of $x$ should be $n + 3$.
 Similar with IO monad, the our context type system assume there is a potentail \emph{external impure environment} that can make smart or non-deterministic inputs to our program in pure functional language.
-Reader can imagine that there is a outside test generator provides the assignment of $x$ randomly in testing setting, or an human or artificial intelligence agent provides the assignment of $x$ to validate the reachability property. 
+Reader can imagine that there is a outside test generator provides the assignment of $x$ randomly in testing setting, or an human or artificial intelligence agent provides the assignment of $x$ to validate the reachability property.
 
 \paragraph{Context-based view} With the help of the angelic context, we can do compositional reachability reasoning.
 \begin{align*}
@@ -52,7 +52,7 @@ As shown above, the conversion success when the qualifier is trivially false ($\
 \end{align*}\noindent
 Note that $x{:}\urt{\Nat}{\vnu > 0}$ allows the context assigns $1$ to $x$, which cannot be treated as an valid assignment for demonic context that requires $x$ must be greater than $1$.
 
-\paragraph{Control Flow and Context Sum} Readers may believe that the example above is contra-intuitive, since one strightforward interpretation of judgement above is ``there exists a positive number for $x$, which makes $x$ greater than $1$''. However, the angelic context $x{:}\urt{\Nat}{\vnu > 0}$ has slight different semantics from simply treating the context as existential quantified. 
+\paragraph{Control Flow and Context Sum} Readers may believe that the example above is contra-intuitive, since one strightforward interpretation of judgement above is ``there exists a positive number for $x$, which makes $x$ greater than $1$''. However, the angelic context $x{:}\urt{\Nat}{\vnu > 0}$ has slight different semantics from simply treating the context as existential quantified.
 % Consider a type judgement:
 % \begin{align*}
 %   &x{:}\urt{\Nat}{\vnu > 0} \vdash \zlet{y:\ort{\Nat}{\vnu > 1}}{x}{x} : \urt{\Nat}{\vnu = 0 }
@@ -63,7 +63,7 @@ With ``existential'' interpretation, the following two judgements holds:
   &x{:}\urt{\Nat}{\vnu > 0} \vdash \zif{x > 1}{3}{4} : \ort{\Nat}{\vnu = 3}
   \\&x{:}\urt{\Nat}{\vnu > 0} \vdash \zif{x > 1}{3}{4} : \ort{\Nat}{\vnu = 4}
 \end{align*}\noindent
-Note that the $x$ in the first judgement can reach value greater than $1$, which means the first branch is reachable. Similarly, the second branch is also reachable since $x$ can reach value equal to $1$. However, in general $\Gamma \vdash e : \ort{\Nat}{\vnu = 3}$ and $\Gamma \vdash e : \ort{\Nat}{\vnu = 4}$ cannot hold at the same time, which violates the notion of safety verification. The point is that angelic context cannot be treated as an existential quantification that ``drop'' the possiblility of ``potential unless capabilities'' (e.g., $x = 1$) at one branch which is important for safety verification for another branch. In order to remember all possibility for further safety verification but still enable ``existential-like'' interpretation of angelic context, we introduce the ``context sum'' operation $\ctoplus$ which explicitly express the expected control flows. The type judgement $\Gamma \vdash e : \tau_1 \ctoplus \tau_2$ means that $e$ can be type checked with $\tau_1$ and $\tau_2$ in some part of situations of $\Gamma$; moreover, all possibility of $\Gamma$ are considered by $\tau_1$ and $\tau_2$ (i.e., no possibility is lost). 
+Note that the $x$ in the first judgement can reach value greater than $1$, which means the first branch is reachable. Similarly, the second branch is also reachable since $x$ can reach value equal to $1$. However, in general $\Gamma \vdash e : \ort{\Nat}{\vnu = 3}$ and $\Gamma \vdash e : \ort{\Nat}{\vnu = 4}$ cannot hold at the same time, which violates the notion of safety verification. The point is that angelic context cannot be treated as an existential quantification that ``drop'' the possiblility of ``potential unless capabilities'' (e.g., $x = 1$) at one branch which is important for safety verification for another branch. In order to remember all possibility for further safety verification but still enable ``existential-like'' interpretation of angelic context, we introduce the ``context sum'' operation $\ctoplus$ which explicitly express the expected control flows. The type judgement $\Gamma \vdash e : \tau_1 \ctoplus \tau_2$ means that $e$ can be type-checked with $\tau_1$ and $\tau_2$ in some part of situations of $\Gamma$; moreover, all possibility of $\Gamma$ are considered by $\tau_1$ and $\tau_2$ (i.e., no possibility is lost).
 \begin{align*}
   &x{:}\urt{\Nat}{\vnu > 0} \vdash x : \ort{\Nat}{\vnu > 1}\ctoplus \ort{\Nat}{\vnu = 1} \;\judgok
   \\&x{:}\urt{\Nat}{\vnu > 0} \vdash \zif{x > 1}{3}{4} : \ort{\Nat}{\vnu = 3}\ctoplus \ort{\Nat}{\vnu = 4} \;\judgok
@@ -79,10 +79,10 @@ Coverage types use ``overapproximated parameters'' with an ``underapproximated r
 However, these systems usually treat each curried premise as uniformly ``purely over'' or ``purely under'' in isolation, which loses the ability to mix over- and underapproximation modalities in arbitrary ways.
 For instance, consider a curried refinement type whose argument positions interchange over- and underapproximate qualifiers:
 \begin{align*}
-    \vdash \Code{existsElem} : n{:}\ort{\Nat}{\top} \sarr \urt{\List[\Nat]}{\top} \sarr \urt{\Bool}{\vnu = \true} 
+    \vdash \Code{existsElem} : n{:}\ort{\Nat}{\top} \sarr \urt{\List[\Nat]}{\top} \sarr \urt{\Bool}{\vnu = \true}
 \end{align*}\noindent
 The first parameter is overapproximated (colored in pink), while the second parameter and return type are underapproximated (colored in blue).
-This specification says: ``\textcolor{magenta}{\emph{for any}} element $n$, if the second parameter \textcolor{CobaltBlue}{\emph{covers}} all possible lists, a desired \Code{existsElem} function \textcolor{CobaltBlue}{\emph{must}} be able to return $\true$.'' 
+This specification says: ``\textcolor{magenta}{\emph{for any}} element $n$, if the second parameter \textcolor{CobaltBlue}{\emph{covers}} all possible lists, a desired \Code{existsElem} function \textcolor{CobaltBlue}{\emph{must}} be able to return $\true$.''
 This function type mixes modality patterns along the spine rather than collapsing either side of the arrow to a uniform over- or underapproximate reading.
 Hence the design goal goes beyond attaching one extra modality tag to overapproximation: a unified system must
 \emph{compositionally reconcile} arbitrary modality regimes throughout higher-order pipelines.
@@ -122,12 +122,12 @@ Whether a higher-order function is ``duplicatable'' is therefore another feature
 idea: list contains a sequence of resources. pattern matching devides the list into two parts (two resources), the recursive call consume the second part, and the first part is used later.
 
 \begin{align*}
-  &\overtext{\forall \Code{l1}. \I{sorted}(\Code{l1}) \land P_1(\Code{l1})} \impl \overtext{\forall \Code{l2}. \I{sorted}(\Code{l2}) \land P_2(\Code{l1}, \Code{l2})} \impl \overtext{\neg \I{sorted}(\Code{merge\;l1\;l2})} 
+  &\overtext{\forall \Code{l1}. \I{sorted}(\Code{l1}) \land P_1(\Code{l1})} \impl \overtext{\forall \Code{l2}. \I{sorted}(\Code{l2}) \land P_2(\Code{l1}, \Code{l2})} \impl \overtext{\neg \I{sorted}(\Code{merge\;l1\;l2})}
 \end{align*}
 
 
 \begin{align*}
-  &\overtext{\forall \Code{l1}. \I{sorted}(\Code{l1}) \land 2 \leq \I{len}(\Code{l1})} \impl \undertext{\exists \Code{l2}. \I{sorted}(\Code{l2})} \land \overtext{\neg \I{sorted}(\Code{merge\;l1\;l2})} 
+  &\overtext{\forall \Code{l1}. \I{sorted}(\Code{l1}) \land 2 \leq \I{len}(\Code{l1})} \impl \undertext{\exists \Code{l2}. \I{sorted}(\Code{l2})} \land \overtext{\neg \I{sorted}(\Code{merge\;l1\;l2})}
 \end{align*}
 
 
@@ -147,7 +147,7 @@ The specificatin treats the context in a demonic style, which means that
 \end{align*}\noindent
 The context chooses arbirary two sorted lists, then we expected the merged lists is still sorted. However, the refinement type system will raise a type failure which can means the program is indeed buggy or the specification is too weak (e.g., need also include membership perserving property). Then, an incorrectness reasoning can help us to narrow down the witnesses and localizes specification or implementation defects. Formally, the incorrectness question is ``do there exists two sorted lists that makes the merged lists unsorted?''
 \begin{align*}
-    &\undertext{\exists \Code{l1}. \I{sorted}(\Code{l1})} \land \undertext{\exists \Code{l2}. \I{sorted}(\Code{l2})} \land \neg \I{sorted}(\Code{merge\;l1\;l2}) 
+    &\undertext{\exists \Code{l1}. \I{sorted}(\Code{l1})} \land \undertext{\exists \Code{l2}. \I{sorted}(\Code{l2})} \land \neg \I{sorted}(\Code{merge\;l1\;l2})
 \end{align*}\noindent
 As shown above, this is an angelic context which can smartly choose the desiable inputs. For this question, symbolic execution or even an concrete counterexample can help:
 \begin{align*}
@@ -159,7 +159,7 @@ As shown above, this is an angelic context which can smartly choose the desiable
 \begin{align*}
   &x{:}\urt{\Nat}{\top} \vdash x : \ort{\Nat}{\vnu > 3} \quad \text{exists $x$ that is grater than $3$}
   \\&x{:}\urt{\Nat}{\top} \vdash x : \ort{\Nat}{\vnu \leq 3} \quad \text{exists $x$ that is less equal to $3$}
-  \\&x{:}\urt{\Nat}{\top} \vdash x : \ort{\Nat}{\vnu > 3} \interty \ort{\Nat}{\vnu 
+  \\&x{:}\urt{\Nat}{\top} \vdash x : \ort{\Nat}{\vnu > 3} \interty \ort{\Nat}{\vnu
   \leq 3} \quad ??
 \end{align*}\noindent
 Ideally we want the type-level intersection is indeed a logical conjunction of the two types, which means
@@ -172,7 +172,7 @@ The problem is that the ``exists'' semantics is ``affine'', which means that it 
 \end{align*}\noindent
 where we explicitly drop the possibility of $x \leq 3$ into right branch. Similarly, we have:
 \begin{align*}
-  &x{:}\urt{\Nat}{\top} \vdash x : \ort{\Nat}{\top} \ctoplus \ort{\Nat}{\vnu \leq 3} 
+  &x{:}\urt{\Nat}{\top} \vdash x : \ort{\Nat}{\top} \ctoplus \ort{\Nat}{\vnu \leq 3}
 \end{align*}\noindent
 The intersection of these two types is not conflicting now:
 \begin{align*}
@@ -212,7 +212,7 @@ The traditional refinement types give an overapproximate interpretation to both 
 ``on every possible execution, the program does not go wrong.''
 Recent \emph{coverage types}~\cite{CoverageType} instead interpret the
 \emph{return} type of a function underapproximately, which supports reasoning about
-\emph{coverage completeness} of input generators. For example, the type $x{:}\ort{\Int}{\vnu \geq 0} \sarr \urt{\List[\Int]}{\I{len}(\vnu) = x}$ indicates a sized list generator that must produce all lists of length $x$. 
+\emph{coverage completeness} of input generators. For example, the type $x{:}\ort{\Int}{\vnu \geq 0} \sarr \urt{\List[\Int]}{\I{len}(\vnu) = x}$ indicates a sized list generator that must produce all lists of length $x$.
 The combination of overapproximate parameter and underapproximate return provides a way to do must-style reasoning and yields a lower-bound guarantee on the outputs of a nondeterministic program.
 
 \subsection{Under- and Over-approximation Typing for Functional Programs}
@@ -483,10 +483,10 @@ Function types for $f$ that induce these three contexts can be expressed using t
 When we have function parameters, the thing goes more complicated since a function type is allowed to mixed these two modalities in our setting. Moreover, even for the same function types, the case that allowed to be used for multiple times or not are still coexisting. Consider the following example:
 \begin{align*}
   &x{:}\urt{\Bool}{\top} \vdash f_1 \doteq \lambda ().(\true \oplus \false) : \Unit\sarr\urt{\Bool}{\top} \quad \judgok
-  \\&x{:}\urt{\Bool}{\top} \vdash f_2 \doteq \lambda ().\true \oplus \lambda ().\false : \Unit\sarr\urt{\Bool}{\top} \quad \judgok 
+  \\&x{:}\urt{\Bool}{\top} \vdash f_2 \doteq \lambda ().\true \oplus \lambda ().\false : \Unit\sarr\urt{\Bool}{\top} \quad \judgok
   \\&x{:}\urt{\Bool}{\top} \vdash f_3 \doteq \lambda ().x : \Unit\sarr\urt{\Bool}{\top} \quad \judgok
 \end{align*}\noindent
-The three functions $f_1$, $f_2$, and $f_3$ above both has type $\Unit\sarr\urt{\Bool}{\top}$, which means that they must non-deterministically returns all boolean values. The difference is that $f_1$ encapsulates the non-determinism into its function body, $f_2$ exposes the non-determinism to top level, where $f_3$ is depends on non-determinitsm from context (i.e., $\zlet{x}{\Code{int\_gen()}}{f_3}$). These three functions looks similar, while only $f_1$ can be used for multiple times. Consider the following use case 
+The three functions $f_1$, $f_2$, and $f_3$ above both has type $\Unit\sarr\urt{\Bool}{\top}$, which means that they must non-deterministically returns all boolean values. The difference is that $f_1$ encapsulates the non-determinism into its function body, $f_2$ exposes the non-determinism to top level, where $f_3$ is depends on non-determinitsm from context (i.e., $\zlet{x}{\Code{int\_gen()}}{f_3}$). These three functions looks similar, while only $f_1$ can be used for multiple times. Consider the following use case
 \begin{align*}
   &x{:}\urt{\Bool}{\top} \vdash g \doteq \lambda f.(f\;() == f\;()) : f{:}(\Unit\sarr\urt{\Bool}{\top})\sarr\urt{\Bool}{\vnu = \false} \quad \textbf{\textcolor{red}{???}}
 \end{align*}
@@ -494,7 +494,7 @@ The higher-order function $g$ takes a function and applies it for twices, and ex
 \begin{align*}
   g\;f_1 &\hookrightarrow^* \true == \true \text{  or  } \true == \false \text{  or  } \false == \true \text{  or  } \false == \false \quad \judgok
   \\&\hookrightarrow^* \true \text{  or  } \false \quad \judgfail
-  \\g\;f_2 &\hookrightarrow^* \true == \true \text{  or  } \false == \false \hookrightarrow^* \true 
+  \\g\;f_2 &\hookrightarrow^* \true == \true \text{  or  } \false == \false \hookrightarrow^* \true
   \\g\;f_3 &\hookrightarrow^* x == x \hookrightarrow^* \true \quad \judgfail
 \end{align*}
 As shown above, only $g\;f_1$ can result to the value $\false$, and two other cases can only result to the value $\true$. The intuition here is that only the non-determinism that is encapsulated in function body are duplicatable, since it is independent from the decision of external context of operational semantics.

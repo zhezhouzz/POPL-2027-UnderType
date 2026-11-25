@@ -53,7 +53,7 @@ capture some variable with an angelic binding that provides the
 witnesses needed to construct every positive number:
 \vspace{-0.2em}
 \begin{align*}
-  z{:}\urt{\Nat}{\top} \vdash \zzlam{x}{z + 1} : \ort{\Unit}{\top} \ctsarr
+  z{:}\urt{\Nat}{\top} \vdash \zzlam{x}{\, z + 1} : \ort{\Unit}{\top} \ctsarr
   \urt{\Nat}{0 < \vnu}
 \end{align*}\noindent
 Two successive calls to a \langname{} function with this signature
@@ -61,7 +61,7 @@ Two successive calls to a \langname{} function with this signature
 independent arguments:
 \begin{align}
   z{:}\urt{\Nat}{\top} \vdash
-  \zlet{f}{\zzlam{x}{z}}{\zlet{y_1}{f\;()}{\zlet{y_2}{f\;()}{y_1 -
+  \zlet{f}{\zzlam{x}{\, z}}{\zlet{y_1}{f\;()}{\zlet{y_2}{f\;()}{y_1 -
   y_2}}} : \urt{\Nat}{\top} \quad \judgfail
   \tag{$\Code{e_{ND}}$}\label{ex:nondet}
 \end{align}\noindent
@@ -137,7 +137,7 @@ containing exactly one environment. Following this idea, we define the
 persistent modality to hold on formulas that do not depend on a
 capability providing different choices:
 
-\begin{definition}[Persistent Modality] We introduce a persistence
+\begin{definition}[Persistent Modality] We introduce a persistent
   modality $\chpers P$ to our context logic such that:
   \vspace{-0.2em}
   \begin{align*}
@@ -149,7 +149,7 @@ capability providing different choices:
   $r \sqsubseteq r'$, $r'$ is not always singleton. Instead, we impose
   the more relaxed requirement that there is some
   $\{\sigma\} \sqsubseteq r$, which need only include the variables
-  relevant to $P$, i.e. $\projectTo{r}{\Code{FV}(P)}$.
+  relevant to $P$, i.e., $\projectTo{r}{\Code{FV}(P)}$.
 \end{definition}
 
 \paragraph{Persistent Type} The persistent type
@@ -159,28 +159,28 @@ type context $\Gamma$ or \emph{the reduction of the term $e$}. To
 illustrate, consider the following three functions:
 \vspace{-0.2em}
 \begin{align*}
-  &z{:}\urt{\Nat}{\top} \vdash \zzlam{x}{z} : \ort{\Nat}{\top}
+  &z{:}\urt{\Nat}{\top} \vdash \zzlam{x}{\, z} : \ort{\Unit}{\top}
     \ctsarr \urt{\Nat}{\top} \judgok \\
-  &\emptyset \vdash \zzlam{x}{\Code{gen_{nat} \;()}} : \ort{\Unit}{\top}
+  &\emptyset \vdash \zzlam{x}{\, \Code{gen_{nat} \;()}} : \ort{\Unit}{\top}
     \ctsarr \urt{\Nat}{\top}  \judgok \\
-  &\emptyset \vdash \zzlam{x}{0} \oplus
-    \zzlam{x}{\Code{gen_{nat} \;() + 1}} : \ort{\Unit}{\top} \ctsarr
+  &\emptyset \vdash \zzlam{x}{\, 0} \oplus
+    \zzlam{x}{\, \Code{gen_{nat} \;() + 1}} : \ort{\Unit}{\top} \ctsarr
     \urt{\Nat}{\top}  \judgok
 \end{align*}\noindent
 Of these three terms, only the second can also be assigned a
 persistent modality. The first is obviously not persistent since it
 depends on the binding $z$ in the type context, while the reachability
 properties of the third \emph{depend on how it is reduced}. To see
-how, consider the following type judgment, which is semantically
+how, consider the following type judgement, which is semantically
 invalid under \langNDname{}'s call-by-value reduction strategy:
 \vspace{-0.2em}
 \begin{align*}
-  \emptyset \vdash \zlet{f}{\zzlam{x}{0} \oplus
-  \zzlam{x}{\Code{gen_{nat} \;() + 1}}}{\zif{f\;() = 0}{f\;()}{0}} : \urt{\Nat}{\top} \quad \judgfail
+  \emptyset \vdash \zlet{f}{\zzlam{x}{\, 0} \oplus
+  \zzlam{x}{\, \Code{gen_{nat} \;() + 1}}}{\zif{f\;() = 0}{f\;()}{0}} : \urt{\Nat}{\top} \quad \judgfail
 \end{align*}\noindent
 This term can only reach the value $0$: since $f$ is bound to either
-$\zzlam{x}{0}$ or $\zzlam{x}{\Code{gen_{nat} \;() + 1}}$ when the
-first let expression is reduced, two applications of $f\;()$ will
+$\zzlam{x}{\, 0}$ or $\zzlam{x}{\, \Code{gen_{nat} \;() + 1}}$ when the
+first let-expression is reduced, two applications of $f\;()$ will
 either both reduce to $0$ or some positive number. In other words, the
 two applications of $f$ are indeed dependent, and $f$ is not
 persistent.
@@ -194,7 +194,7 @@ persistent.
   Note that if we had instead defined the type denotation as
   $\chpers (\denot{\tau}_{\Sigma}\;e)$, it would (incorrectly) contain
   inhabitants like
-  $\zzlam{x}{0} \oplus \zzlam{x}{\Code{gen_{nat} \;() + 1}}$. To
+  $\zzlam{x}{\, 0} \oplus \zzlam{x}{\, \Code{gen_{nat} \;() + 1}}$. To
   ensure that $e$ is single-valued, we introduce a universally
   quantified fresh variable $x$ that ranges over all possible
   reduction results of $e$; the persistent modality then ensures both
@@ -250,7 +250,7 @@ To illustrate, consider the following typing derivation: \smallskip
 \begin{prooftree}
   \hypo{\emptyset \vdash \Code{gen_{bool} \;()}  : \urt{\Bool}{\top}}
   \hypo{\emptyset \vdash \urt{\Bool}{\top} \subty \ort{\Bool}{\vnu = \true} \ctoplus \ort{\Bool}{\vnu = \false}}
-  \infer2[T-CtxSub]{\emptyset \vdash \Code{gen_{bool} \;()} : \ort{\Bool}{\vnu =
+  \infer2[\textsc{T-Sub}]{\emptyset \vdash \Code{gen_{bool} \;()} : \ort{\Bool}{\vnu =
       \true} \ctoplus \ort{\Bool}{\vnu = \false}}
 \end{prooftree}
 \end{center}\smallskip

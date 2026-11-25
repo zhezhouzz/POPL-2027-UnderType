@@ -158,9 +158,9 @@
                                         %% can be repeated if necessary
 \orcid{0000-0003-3900-7501}
 \affiliation{
-  \institution{Peking University}  
-  \city{Beijing}          %% 
-  \country{China}                    %% 
+  \institution{Peking University}
+  \city{Beijing}          %%
+  \country{China}                    %%
 }
 \email{zhouzhe956@pku.edu.cn}
 
@@ -201,7 +201,7 @@
   judgement $e : \tau$ holds if $e$ \emph{may} evaluate to any value
   contained in the denotation of $\tau$, but nothing more. More recent
   type systems have considered the complementary class of reachability
-  properties: in these systems, the typing judgment holds if $e$
+  properties: in these systems, the typing judgement holds if $e$
   \emph{must} be able to evaluate to every value denoted by $\tau$,
   and possibly more. This paper introduces a refinement type system
   for higher-order functional programs where types can capture both
@@ -251,15 +251,6 @@
 \subfile{sections/9-conclusion}
 % \subfile{sections/3-rules}
 
-\ifdefined\fullversion
-\newpage
-\appendix
-\subfile{sections/tech/outline}
-\subfile{sections/tech/1-semantics}
-\subfile{sections/tech/2-basictyping}
-\subfile{sections/tech/3-pre}
-\fi
-
 \section*{Disclosure of Use of AI in Research}
 All definitions and theorem statements in the accompanying Rocq
 artifact were written by the authors. The authors used OpenAI Codex to
@@ -272,15 +263,28 @@ correctness of the definitions, theorem statements, proofs, and
 artifact.
 
 \section*{Data Availability Statement}
-The complete Rocq formalization and mechanized proofs accompanying this
-paper are available on Zenodo~\cite{zhe_zhou_2026_23293018}.
+A complete Rocq formalization of context types and their metatheory
+is available on Zenodo~\cite{zhe_zhou_2026_23293018}.
 
 \begin{acks}
-This work was supported by the National Science Foundation under grants SHF-CCF 2615892 and SHF-Small 2321680, and by NSF CAREER Award No. 2542188. We thank the anonymous reviewers for their helpful comments. We thank Xiaoyang Lu for discussions during the development of this type system, and Jiayi Zhuang for validating the artifact.
+This work was supported by the National Science Foundation under
+grants SHF-CCF 2615892 and SHF-Small 2321680, and by NSF CAREER Award
+No. 2542188. We thank the anonymous reviewers for their helpful
+comments. We thank Xiaoyang Lu for discussions during the development
+of this type system, and Jiayi Zhuang for help validating the artifact.
 \end{acks}
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{bibliography}
+
+\ifdefined\fullversion
+\newpage
+\appendix
+\subfile{sections/tech/outline}
+\subfile{sections/tech/1-semantics}
+\subfile{sections/tech/2-basictyping}
+\subfile{sections/tech/3-pre}
+\fi
 
 
 

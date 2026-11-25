@@ -13,7 +13,7 @@ reachability reasoning.
 \paragraph{Demonic and Angelic Modalities}
 % BD: The goal of this subsection is to equip the reader with the
 % right intuitions of what the modalities mean when ascribed to types
-% and when used in the typing context of a typing judgment. I'm
+% and when used in the typing context of a typing judgement. I'm
 % currently of the opinion that the lower / upper bound framing is the
 % right intuition (particularly for the type context case), as opposed
 % to the angelic / demonic one.
@@ -388,8 +388,8 @@ other context.  Dually, $\Gamma_1 \ctcomma \Gamma_2$ means that the
 capabilities of $\Gamma_1$ and $\Gamma_2$ are dependent; the angelic
 choices afforded by $\Gamma_2$ may be constrained by choices for
 variables in $\Gamma_1$.  Consider the following two subtyping
-judgments reflecting the typing of $\square $ in $C_{\mathit{dis}}$
-and $C_{\mathit{en}}$, resp:
+judgements reflecting the typing of $\square $ in \ref{ex:DisjCon}
+and \ref{ex:EnCon}, resp.:
 \vspace{-0.2em}
 \begin{align*}
   &x{:}\urt{\Nat}{\vnu \geq 0} \ctstar y{:}\urt{\Nat}{\vnu \geq 1}
@@ -406,12 +406,12 @@ possible values we can choose for $x$ and $y$ are constrained by the
 \emph{entangled} conjunction, ``$\ctcomma$'': once a value is chosen
 for $x$, $y$ can no longer be freely chosen. Concretely, the angelic
 guarantee for $y$ under ``$\ctcomma$'' only promises that $y$ can
-reach every value satisfying $\vnu > 1$ \emph{for some fixed
+reach every value satisfying $\vnu \geq 1$ \emph{for some fixed
   instantiation of $x$}.  Since the subtyping goal requires producing
 every positive number as the difference of $x$ and $y$, $x - y$, and
 this requires pairing each candidate value of $x$ with an
 independently chosen $y$, a dependent context cannot be used to supply
-such pairs.  This is evidenced by $C_{en}$, which always collapses its
+such pairs.  This is evidenced by \ref{ex:EnCon}, which always collapses its
 result to 0, rather than all positive numbers.  The ``\ctcomma'' in
 the context $\Gamma \ctcomma x{:}\tau_x \ctcomma y{:}\tau_y$ works
 like additive logic conjunction in BI, and both
@@ -448,7 +448,7 @@ simultaneously make their difference reach every positive number.
 
 Notably, angelic and demonic refinements can also be entangled in a
 way that impacts the capabilities afforded by a type context, as the
-following pair of judgments illustrate:
+following pair of judgements illustrates:
 \vspace{-0.2em}
 \begin{align*}
   &x{:}\urt{\Nat}{\vnu \geq 0} \ctcomma y{:}\ort{\Nat}{\vnu \geq 1} \vdash x - y : \urt{\Nat}{\I{even}(\vnu)} \;\judgfail
@@ -479,12 +479,12 @@ reach that number.
 Entangled ($\ctsarr$) and independent
 function types ($\ctwand$) are adjunctions of the corresponding type
 context composition operators:
-\vspace{-0.2em}
+%\vspace{-0.2em}
 \begin{align*}
   \Gamma \vdash e_f : x{:}\tau_x \ctsarr \tau \quad &\text{ iff } \quad \Gamma \ctcomma x{:}\tau_x \vdash (e_f\;x) : \tau
   \\\Gamma \vdash e_f : x{:}\tau_x \ctwand \tau \quad &\text{ iff } \quad \Gamma \ctstar x{:}\tau_x \vdash (e_f\;x) : \tau
-\end{align*}\noindent
-Thus, ($\Code{-}$) can be given the following types:
+\end{align*}
+\noindent Thus, ($\Code{-}$) can be given the following types:
 \vspace{-0.2em}
 \begin{align*}
   &\vdash (-) : x{:}\urt{\Nat}{\vnu > 0} \ctwand y{:}\urt{\Nat}{\vnu > 0} \ctwand \urt{\Nat}{\vnu > 0}
@@ -512,13 +512,13 @@ following example:
   \\&\quad  \underbrace{f{:}(\underbrace{y{:}\urt{\Nat}{\vnu > 0} \ctsarr}_\texttt{$y$ can depend on context during application} \urt{\Nat}{\vnu > 0}) \ctwand}_\texttt{$f$ is independent from $x$ and $y$} \urt{\Nat}{\vnu > 0}
 \end{align*}\noindent
 \cbnewadding{The two arrows serve distinct purposes: the inner
-$\ctsarr$ permits the argument of each application of $f$ to depend
-on $f$'s closure, whereas the outer $\ctwand$ keeps $f$ independent
-of the surrounding bindings for $x$ and $y$.}
-To make $x - (f\;(f\;y))$ reach every positive number, $x$ and
-$f\;(f\;y)$ must be independent. To ensure this, one might expect that
-all function arrows in the result type would need to be $\ctwand$, but
-this would be incorrect. If $f$ had the fully independent type
+  $\ctsarr$ permits the argument of each application of $f$ to depend
+  on $f$'s closure, whereas the outer $\ctwand$ keeps $f$ independent
+  of the surrounding bindings for $x$ and $y$.}  To make
+$x - (f\;(f\;y))$ reach every positive number, $x$ and $f\;(f\;y)$
+must be independent. To ensure this, one might expect that both arrows
+would need to be $\ctwand$, but this would be incorrect. If $f$ had
+the fully independent type
 $y{:}\urt{\Nat}{\vnu > 0} \ctwand \urt{\Nat}{\vnu > 0}$, then each
 application of $f$ would require its argument to be independent from
 $f$'s closure. While the first application $f\;y$ satisfies this, the
@@ -616,7 +616,7 @@ imposing a precise safety constraint on the branches that a typing
 context guarantees exist while placing no constraint on the others.
 
 \cbnewadding{The $\ctoplus$ constructor can also be used to combine
-  type contexts.  When used in a type judgment, it records a partition
+  type contexts.  When used in a type judgement, it records a partition
   of the available environments, just as a sum in the result type
   records a partition of executions.  For example, this combinator can
   be used to decompose the angelic context $x{:}\urt{\Nat}{\top}$ into

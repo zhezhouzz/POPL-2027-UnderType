@@ -32,7 +32,7 @@ bug detection tools.  The question of how to develop type systems for
 reachability, however, has been largely unexplored.  Recent
 works~\cite{RefinementTypeRefutations, CoverageType, Ill-types} that
 have studied type-based reachability reasoning have either focused on
-a particular property, e.g., checking completeness of test input
+a particular property, e.g., checking completeness of test-input
 generators~\cite{CoverageType}, or a particular application, e.g.,
 generating concrete counterexamples refuting refinement type
 specifications~\cite{RefinementTypeRefutations} or proving ill-typed
@@ -93,7 +93,7 @@ every value found in the set the type denotes.
 
 The intuitive meaning of each modality changes subtly when a
 refinement appears in a typing context instead of a result type. To
-establish the typing judgment $x{:} \ort{b}{\phi} \vdash e : \tau$,
+establish the typing judgement $x{:} \ort{b}{\phi} \vdash e : \tau$,
 for example, our type system treats any free occurrences of $x$
 \emph{demonically}, since the surrounding environment is free to
 choose some value of $x$ consistent with $\phi$ that makes $e$ violate
@@ -125,8 +125,8 @@ constraining the type of $f$ to account for the free variable $x$ in
 the expression's closure, however, we cannot guarantee that an
 arbitrary function supplied for $f$ will guarantee the reachability
 requirement of this expression's result.  For example, applying this
-expression to the function $\lambda y.x - y$ yields the constant
-function that always returns $0$.
+expression to the function $\lambda y.x - y$ yields an expression that
+always evaluates to $0$ for any concrete choice of $x$.%
 \vspace{-0.2em}
 \begin{align*}
   & \zlet{x}{e_x}{\boxed{(\lambda f. f\;x)\;(\lambda y.x - y)}} \;\hookrightarrow^*
@@ -154,7 +154,7 @@ in a way that also breaks compositional reasoning:
 \begin{align*}
   y{:}\urt{\Nat}{\vnu > 0} \vdash \lambda f. f(f\;y) : f{:}(\urt{\Nat}{\vnu > 0}\sarr \urt{\Nat}{\vnu > 0}) \sarr \urt{\Nat}{\vnu > 0} \quad \judgfail
 \end{align*}\noindent
-A counter-example to the validity of this judgement is given below:
+A counterexample to the validity of this judgement is given below:
 { \setlength{\jot}{-1pt} % Tighten line space for just this example
 \vspace{-0.2em}
 \begin{align*}
@@ -212,7 +212,7 @@ instantiate must-style reasoning to refute type specifications by
 searching for concrete counterexamples.  Other type systems focus on
 specific reachability properties: for example, \emph{coverage
   types}~\cite{CoverageType} ensure that all desirable test inputs
-will be produced by a test input generator, while~\citet{Ill-types}
+will be produced by a test-input generator, while~\citet{Ill-types}
 guarantees that all ill-typed programs will definitely get stuck.
 
 % Existing approaches, however, typically fix on one style of reasoning
@@ -376,7 +376,7 @@ be made regardless of the other.
 \paragraph{Contributions.}
 The paper makes the following contributions:\footnote{The type system,
   logic, and metatheory have been fully mechanized in Rocq, and are
-  included in the supplemental material.}
+  available on Zenodo~\cite{zhe_zhou_2026_23293018}.}
 \begin{itemize}[leftmargin=*]
 \item We interpret the capability of a context to make angelic or
   demonic choices as a resource, and introduce a resource algebra to
